@@ -6,7 +6,7 @@ namespace yii\phpstan\tests;
 
 use PhpParser\Node\Scalar\String_;
 use PHPUnit\Framework\TestCase;
-use Proget\PHPStan\Yii2\ServiceMap;
+use yii\phpstan\ServiceMap;
 use yii\phpstan\tests\Yii\MyActiveRecord;
 
 final class ServiceMapTest extends TestCase

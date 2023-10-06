@@ -12,14 +12,13 @@
     "require": {
         "php": ">=8.1",
         "nikic/php-parser": "^4.1.0",
-        "phpstan/phpstan": "^1.0"
+        "phpstan/phpstan": "^1.0",
+        "yiisoft/yii2": "^2.2"
     },
     "require-dev": {
         "maglnet/composer-require-checker": "^4.6",
         "phpstan/phpstan-phpunit": "^1.0",
-        "phpunit/phpunit": "^10.2",
-        "proget-hq/phpstan-yii2": "^0.8.0",
-        "yiisoft/yii2": "^2.2"
+        "phpunit/phpunit": "^10.2"
     },
     "autoload": {
         "psr-4": {
