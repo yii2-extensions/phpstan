@@ -25,10 +25,10 @@ final class ServiceMap
             throw new \InvalidArgumentException(sprintf('Provided config path %s must exist', $configPath));
         }
 
-        \defined('YII_DEBUG') or \define('YII_DEBUG', true);
-        \defined('YII_ENV_DEV') or \define('YII_ENV_DEV', false);
-        \defined('YII_ENV_PROD') or \define('YII_ENV_PROD', false);
-        \defined('YII_ENV_TEST') or \define('YII_ENV_TEST', true);
+        \defined('YII_DEBUG') || \define('YII_DEBUG', true);
+        \defined('YII_ENV_DEV') || \define('YII_ENV_DEV', false);
+        \defined('YII_ENV_PROD') || \define('YII_ENV_PROD', false);
+        \defined('YII_ENV_TEST') || \define('YII_ENV_TEST', true);
 
         $config = require $configPath;
         foreach ($config['container']['singletons'] ?? [] as $id => $service) {
@@ -70,9 +70,9 @@ final class ServiceMap
     }
 
     /**
-     * @param string|\Closure|array<mixed> $service
+     * @param array<mixed>|\Closure|string $service
      *
-     * @throws \RuntimeException|\ReflectionException
+     * @throws \ReflectionException|\RuntimeException
      */
     private function addServiceDefinition(string $id, $service): void
     {
@@ -80,9 +80,9 @@ final class ServiceMap
     }
 
     /**
-     * @param string|\Closure|array<mixed> $service
+     * @param array<mixed>|\Closure|string $service
      *
-     * @throws \RuntimeException|\ReflectionException
+     * @throws \ReflectionException|\RuntimeException
      */
     private function guessServiceDefinition(string $id, $service): string
     {

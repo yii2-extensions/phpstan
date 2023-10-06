@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii\phpstan\tests\Yii;
 
 /**
- * @property boolean $flag
+ * @property bool $flag
  */
 final class MyActiveRecord extends \yii\db\ActiveRecord
 {
