@@ -1,0 +1,6 @@
+{
+    "symbol-whitelist": [
+        "PHPStan\\Analyser\\OutOfClassScope",
+        "PHPStan\\Analyser\\Scope"
+    ]
+}
