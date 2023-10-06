@@ -24,7 +24,7 @@ final class ServiceMapTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for no-return-type service closure');
 
-        new ServiceMap(__DIR__.DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR.'yii-config-invalid.php');
+        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid.php');
     }
 
     public function testThrowExceptionWhenServiceHasUnsupportedType(): void
@@ -32,7 +32,7 @@ final class ServiceMapTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Unsupported service definition for unsupported-type');
 
-        new ServiceMap(__DIR__.DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR.'yii-config-invalid-unsupported-type.php');
+        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-type.php');
     }
 
     public function testThrowExceptionWhenServiceHasUnsupportedArray(): void
@@ -40,7 +40,7 @@ final class ServiceMapTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Cannot guess service definition for unsupported-array');
 
-        new ServiceMap(__DIR__.DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR.'yii-config-invalid-unsupported-array.php');
+        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-array.php');
     }
 
     public function testThrowExceptionWhenComponentHasInvalidValue(): void
@@ -48,12 +48,12 @@ final class ServiceMapTest extends TestCase
         $this->expectException(\RuntimeException::class);
         $this->expectExceptionMessage('Invalid value for component with id customComponent. Expected object or array.');
 
-        new ServiceMap(__DIR__.DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR.'yii-config-invalid-component.php');
+        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-component.php');
     }
 
     public function testItLoadsServicesAndComponents(): void
     {
-        $serviceMap = new ServiceMap(__DIR__.DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR.'yii-config-valid.php');
+        $serviceMap = new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-valid.php');
 
         self::assertSame(MyActiveRecord::class, $serviceMap->getServiceClassFromNode(new String_('singleton-string')));
         self::assertSame(MyActiveRecord::class, $serviceMap->getServiceClassFromNode(new String_(MyActiveRecord::class)));
@@ -74,6 +74,6 @@ final class ServiceMapTest extends TestCase
      */
     public function testItAllowsConfigWithoutSingletons(): void
     {
-        new ServiceMap(__DIR__.DIRECTORY_SEPARATOR.'assets'.DIRECTORY_SEPARATOR.'yii-config-no-singletons.php');
+        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-no-singletons.php');
     }
 }
