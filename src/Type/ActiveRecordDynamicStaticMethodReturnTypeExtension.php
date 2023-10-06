@@ -46,11 +46,15 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
 
     public function getTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type
     {
-        /** @var Name $className */
         $className = $methodCall->class;
+        $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
+
+        if (!$className instanceof Name) {
+            return $returnType;
+        }
+
         $name = $scope->resolveName($className);
 
-        $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
         if ($returnType instanceof ThisType) {
             return new ActiveRecordObjectType($name);
         }
