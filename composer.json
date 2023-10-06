@@ -33,6 +33,11 @@
     "extra": {
         "branch-alias": {
             "dev-main": "1.0.x-dev"
+        },
+        "composer-require-checker": {
+            "exclude": [
+              "phpstan/phpstan"
+            ]
         }
     },
     "config": {
