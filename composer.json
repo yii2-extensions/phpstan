@@ -1,7 +1,7 @@
 {
-    "name": "yii2/phpstan",
+    "name": "yii2-extensions/phpstan",
     "type": "library",
-    "description": "PHPStan extension for Yii 2",
+    "description": "PHPStan extension for Yii2",
     "keywords": [
         "yii2",
         "phpstan"
