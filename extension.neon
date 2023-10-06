@@ -1,0 +1,44 @@
+parameters:
+    yii2:
+        config_path: null
+    stubFiles:
+        - stubs/BaseYii.stub
+
+parametersSchema:
+	yii2: structure([
+		config_path: schema(string(), nullable())
+	])
+
+services:
+    -
+        class: yii\phpstan\Reflection\ApplicationPropertiesClassReflectionExtension
+        tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
+        class: yii\phpstan\Reflection\RequestMethodsClassReflectionExtension
+        tags: [phpstan.broker.methodsClassReflectionExtension]
+    -
+        class: yii\phpstan\Reflection\RequestPropertiesClassReflectionExtension
+        tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
+        class: yii\phpstan\Reflection\ResponsePropertiesClassReflectionExtension
+        tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
+        class: yii\phpstan\Reflection\UserPropertiesClassReflectionExtension
+        tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
+        class: yii\phpstan\Type\ActiveQueryDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
+        class: yii\phpstan\Type\ActiveRecordDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
+        class: yii\phpstan\Type\HeaderCollectionDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
+        class: yii\phpstan\Type\ActiveRecordDynamicStaticMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
+    -
+        class: yii\phpstan\Type\ContainerDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+
+    - yii\phpstan\ServiceMap(%yii2.config_path%)

@@ -1,0 +1,33 @@
+{
+    "symbol-whitelist": [
+        "PHPStan\\Analyser\\OutOfClassScope",
+        "PHPStan\\Analyser\\Scope",
+        "PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension",
+        "PHPStan\\Reflection\\ClassReflection",
+        "PHPStan\\Reflection\\Dummy\\DummyPropertyReflection",
+        "PHPStan\\Reflection\\MethodReflection",
+        "PHPStan\\Reflection\\MethodsClassReflectionExtension",
+        "PHPStan\\Reflection\\ParametersAcceptorSelector",
+        "PHPStan\\Reflection\\PropertiesClassReflectionExtension",
+        "PHPStan\\Reflection\\PropertyReflection",
+        "PHPStan\\Reflection\\ReflectionProvider",
+        "PHPStan\\ShouldNotHappenException",
+        "PHPStan\\TrinaryLogic",
+        "PHPStan\\Type\\ArrayType",
+        "PHPStan\\Type\\Constant\\ConstantBooleanType",
+        "PHPStan\\Type\\Constant\\ConstantStringType",
+        "PHPStan\\Type\\DynamicMethodReturnTypeExtension",
+        "PHPStan\\Type\\DynamicStaticMethodReturnTypeExtension",
+        "PHPStan\\Type\\ErrorType",
+        "PHPStan\\Type\\IntegerType",
+        "PHPStan\\Type\\MixedType",
+        "PHPStan\\Type\\NullType",
+        "PHPStan\\Type\\ObjectType",
+        "PHPStan\\Type\\StringType",
+        "PHPStan\\Type\\ThisType",
+        "PHPStan\\Type\\Type",
+        "PHPStan\\Type\\TypeCombinator",
+        "PHPStan\\Type\\UnionType",
+        "PHPStan\\Type\\VerbosityLevel"
+    ]
+}
