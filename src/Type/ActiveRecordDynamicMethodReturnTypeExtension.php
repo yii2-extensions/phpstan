@@ -45,7 +45,8 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
                     'Unexpected arg %s during method call %s at line %d',
                     get_class($arg),
                     $methodReflection->getName(),
-                    $methodCall->getLine()),
+                    $methodCall->getLine()
+                ),
             );
         }
 

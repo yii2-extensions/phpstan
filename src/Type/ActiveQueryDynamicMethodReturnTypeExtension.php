@@ -61,7 +61,10 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
             throw new ShouldNotHappenException(
                 sprintf(
                     'Unexpected type %s during method call %s at line %d',
-                    get_class($calledOnType), $methodReflection->getName(), $methodCall->getLine()),
+                    get_class($calledOnType),
+                    $methodReflection->getName(),
+                    $methodCall->getLine()
+                ),
             );
         }
 

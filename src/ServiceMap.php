@@ -92,7 +92,7 @@ final class ServiceMap
 
     /**
      * @param string $id
-     * @param array|string|Closure|int $service
+     * @param array|Closure|int|string $service
      *
      * @throws ReflectionException
      *
@@ -105,11 +105,11 @@ final class ServiceMap
 
     /**
      * @param string $id
-     * @param string|Closure|array|int $service
-     *
-     * @return string
+     * @param array|Closure|int|string $service
      *
      * @throws ReflectionException
+     *
+     * @return string
      *
      * @phpstan-param string|Closure|array<mixed>|int $service
      */

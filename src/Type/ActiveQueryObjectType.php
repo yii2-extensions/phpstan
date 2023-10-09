@@ -13,7 +13,7 @@ final class ActiveQueryObjectType extends ObjectType
     public function __construct(private readonly string $modelClass, private readonly bool $asArray)
     {
         parent::__construct(ActiveQuery::class);
-   }
+    }
 
     public function getModelClass(): string
     {
