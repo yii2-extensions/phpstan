@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\tests\Yii;
+namespace Yii\PHPStan\Tests\Yii;
 
 /**
  * @property bool $flag

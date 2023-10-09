@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\Type;
+namespace Yii\PHPStan\Type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;

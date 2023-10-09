@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\tests;
+namespace Yii\PHPStan\Tests;
 
 use PhpParser\Node\Scalar\String_;
 use PHPUnit\Framework\TestCase;
-use yii\phpstan\ServiceMap;
-use yii\phpstan\tests\Yii\MyActiveRecord;
+use Yii\PHPStan\ServiceMap;
+use Yii\PHPStan\Tests\Yii\MyActiveRecord;
 
 final class ServiceMapTest extends TestCase
 {

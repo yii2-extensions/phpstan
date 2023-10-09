@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use yii\phpstan\tests\Yii\MyActiveRecord;
+use Yii\PHPStan\Tests\Yii\MyActiveRecord;
 
 return [
     'components' => [

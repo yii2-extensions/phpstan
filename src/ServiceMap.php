@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan;
+namespace Yii\PHPStan;
 
 use PhpParser\Node;
 use yii\base\BaseObject;

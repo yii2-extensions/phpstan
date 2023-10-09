@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\Reflection;
+namespace Yii\PHPStan\Reflection;
 
 use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Reflection\ClassReflection;
