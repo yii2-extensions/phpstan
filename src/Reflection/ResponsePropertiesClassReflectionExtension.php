@@ -6,6 +6,7 @@ namespace Yii\PHPStan\Reflection;
 
 use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Reflection\ClassReflection;
+use PHPStan\Reflection\MissingPropertyFromReflectionException;
 use PHPStan\Reflection\PropertiesClassReflectionExtension;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Reflection\ReflectionProvider;
@@ -14,14 +15,8 @@ use yii\web\Response as WebResponse;
 
 final class ResponsePropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
-    /**
-     * @var ReflectionProvider
-     */
-    private $reflectionProvider;
-
-    public function __construct(ReflectionProvider $reflectionProvider)
+    public function __construct(private readonly ReflectionProvider $reflectionProvider)
     {
-        $this->reflectionProvider = $reflectionProvider;
     }
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
@@ -33,8 +28,13 @@ final class ResponsePropertiesClassReflectionExtension implements PropertiesClas
         return $this->reflectionProvider->getClass(WebResponse::class)->hasProperty($propertyName);
     }
 
+    /**
+     * @throws MissingPropertyFromReflectionException
+     */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
-        return $this->reflectionProvider->getClass(WebResponse::class)->getProperty($propertyName, new OutOfClassScope());
+        return $this->reflectionProvider
+            ->getClass(WebResponse::class)
+            ->getProperty($propertyName, new OutOfClassScope());
     }
 }

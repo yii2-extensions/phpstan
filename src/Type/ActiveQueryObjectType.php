@@ -8,25 +8,12 @@ use PHPStan\Type\ObjectType;
 use PHPStan\Type\VerbosityLevel;
 use yii\db\ActiveQuery;
 
-class ActiveQueryObjectType extends ObjectType
+final class ActiveQueryObjectType extends ObjectType
 {
-    /**
-     * @var string
-     */
-    private $modelClass;
-
-    /**
-     * @var bool
-     */
-    private $asArray;
-
-    public function __construct(string $modelClass, bool $asArray)
+    public function __construct(private readonly string $modelClass, private readonly bool $asArray)
     {
         parent::__construct(ActiveQuery::class);
-
-        $this->modelClass = $modelClass;
-        $this->asArray = $asArray;
-    }
+   }
 
     public function getModelClass(): string
     {

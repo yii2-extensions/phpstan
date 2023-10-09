@@ -9,6 +9,7 @@ use PhpParser\Node\Expr\ConstFetch;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\IntegerType;
@@ -17,7 +18,9 @@ use PHPStan\Type\Type;
 use PHPStan\Type\UnionType;
 use yii\web\HeaderCollection;
 
-class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
+use function count;
+
+final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     public function getClass(): string
     {
@@ -29,9 +32,12 @@ class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicMethodR
         return $methodReflection->getName() === 'get';
     }
 
+    /**
+     * @throws ShouldNotHappenException
+     */
     public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
     {
-        if (\count($methodCall->args) < 3) {
+        if (count($methodCall->args) < 3) {
             // $first === true (the default) and the get-method returns something of type string
             return new StringType();
         }
@@ -51,7 +57,7 @@ class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicMethodR
             }
         }
 
-        // Unable to figure out value of third parameter $first, therefore it can be of either type
+        // Unable to figure out the value of third parameter $first, therefore, it can be of either type
         return new UnionType([new ArrayType(new IntegerType(), new StringType()), new StringType()]);
     }
 }

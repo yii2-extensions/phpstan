@@ -9,6 +9,7 @@ use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NullType;
 use PHPStan\Type\ObjectType;
@@ -19,6 +20,8 @@ use PHPStan\Type\UnionType;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
+use function is_a;
+
 final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
     public function getClass(): string
@@ -26,6 +29,9 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
         return ActiveRecord::class;
     }
 
+    /**
+     * @throws ShouldNotHappenException
+     */
     public function isStaticMethodSupported(MethodReflection $methodReflection): bool
     {
         $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
@@ -36,16 +42,23 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
         if ($returnType instanceof UnionType) {
             foreach ($returnType->getTypes() as $type) {
                 if ($type instanceof ObjectType) {
-                    return \is_a($type->getClassName(), $this->getClass(), true);
+                    return is_a($type->getClassName(), $this->getClass(), true);
                 }
             }
         }
 
-        return $returnType instanceof ObjectType && \is_a($returnType->getClassName(), ActiveQuery::class, true);
+        return $returnType instanceof ObjectType &&
+            is_a($returnType->getClassName(), ActiveQuery::class, true);
     }
 
-    public function getTypeFromStaticMethodCall(MethodReflection $methodReflection, StaticCall $methodCall, Scope $scope): Type
-    {
+    /**
+     * @throws ShouldNotHappenException
+     */
+    public function getTypeFromStaticMethodCall(
+        MethodReflection $methodReflection,
+        StaticCall $methodCall,
+        Scope $scope
+    ): Type {
         $className = $methodCall->class;
         $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
 

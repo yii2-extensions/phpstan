@@ -7,6 +7,7 @@ namespace Yii\PHPStan\Reflection;
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
+use PHPStan\Reflection\MissingPropertyFromReflectionException;
 use PHPStan\Reflection\PropertiesClassReflectionExtension;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Reflection\ReflectionProvider;
@@ -17,29 +18,11 @@ use yii\web\Application as WebApplication;
 
 final class ApplicationPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
-    /**
-     * @var AnnotationsPropertiesClassReflectionExtension
-     */
-    private $annotationsProperties;
-
-    /**
-     * @var ServiceMap
-     */
-    private $serviceMap;
-
-    /**
-     * @var \PHPStan\Reflection\ReflectionProvider
-     */
-    private $reflectionProvider;
-
     public function __construct(
-        AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
-        ReflectionProvider $reflectionProvider,
-        ServiceMap $serviceMap
+        private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
+        private readonly ReflectionProvider $reflectionProvider,
+        private readonly ServiceMap $serviceMap
     ) {
-        $this->annotationsProperties = $annotationsProperties;
-        $this->serviceMap = $serviceMap;
-        $this->reflectionProvider = $reflectionProvider;
     }
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
@@ -57,6 +40,9 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             || $this->serviceMap->getComponentClassById($propertyName);
     }
 
+    /**
+     * @throws MissingPropertyFromReflectionException
+     */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
         if ($classReflection->getName() !== WebApplication::class) {
