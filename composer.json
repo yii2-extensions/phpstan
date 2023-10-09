@@ -22,12 +22,12 @@
     },
     "autoload": {
         "psr-4": {
-            "yii\\phpstan\\": "src"
+            "Yii\\PHPStan\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "yii\\phpstan\\tests\\": "tests"
+            "Yii\\PHPStan\\Tests\\": "tests"
         }
     },
     "extra": {

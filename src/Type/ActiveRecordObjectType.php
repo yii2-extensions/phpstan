@@ -2,23 +2,28 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\Type;
+namespace Yii\PHPStan\Type;
 
+use ArrayAccess;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\TrinaryLogic;
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\ErrorType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
 
-class ActiveRecordObjectType extends ObjectType
+final class ActiveRecordObjectType extends ObjectType
 {
+    /**
+     * @throws ShouldNotHappenException
+     */
     public function hasOffsetValueType(Type $offsetType): TrinaryLogic
     {
         if (!$offsetType instanceof ConstantStringType) {
             return TrinaryLogic::createNo();
         }
 
-        if ($this->isInstanceOf(\ArrayAccess::class)->yes()) {
+        if ($this->isInstanceOf(ArrayAccess::class)->yes()) {
             return TrinaryLogic::createFromBoolean($this->hasProperty($offsetType->getValue())->yes());
         }
 

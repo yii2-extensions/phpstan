@@ -2,11 +2,12 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\Reflection;
+namespace Yii\PHPStan\Reflection;
 
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
+use PHPStan\Reflection\MissingPropertyFromReflectionException;
 use PHPStan\Reflection\PropertiesClassReflectionExtension;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Type\MixedType;
@@ -14,14 +15,8 @@ use yii\web\User;
 
 final class UserPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
-    /**
-     * @var AnnotationsPropertiesClassReflectionExtension
-     */
-    private $annotationsProperties;
-
-    public function __construct(AnnotationsPropertiesClassReflectionExtension $annotationsProperties)
+    public function __construct(private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties)
     {
-        $this->annotationsProperties = $annotationsProperties;
     }
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
@@ -34,6 +29,9 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
             || $this->annotationsProperties->hasProperty($classReflection, $propertyName);
     }
 
+    /**
+     * @throws MissingPropertyFromReflectionException
+     */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
         if ($propertyName === 'identity') {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use yii\phpstan\tests\Yii\MyActiveRecord;
+use Yii\PHPStan\Tests\Yii\MyActiveRecord;
 
 return [
     'components' => [
@@ -14,21 +14,21 @@ return [
     'container' => [
         'singletons' => [
             'singleton-string' => MyActiveRecord::class,
-            'singleton-closure' => function(): SplStack {
-                return new \SplStack();
+            'singleton-closure' => static function(): SplStack {
+                return new SplStack();
             },
-            'singleton-service' => ['class' => \SplObjectStorage::class],
+            'singleton-service' => ['class' => SplObjectStorage::class],
             'singleton-nested-service-class' => [
-                ['class' => \SplFileInfo::class],
+                ['class' => SplFileInfo::class],
             ],
         ],
         'definitions' => [
-            'closure' => function(): SplStack {
-                return new \SplStack();
+            'closure' => static function(): SplStack {
+                return new SplStack();
             },
-            'service' => ['class' => \SplObjectStorage::class],
+            'service' => ['class' => SplObjectStorage::class],
             'nested-service-class' => [
-                ['class' => \SplFileInfo::class],
+                ['class' => SplFileInfo::class],
             ],
             MyActiveRecord::class => [
                 'flag' => 'foo',

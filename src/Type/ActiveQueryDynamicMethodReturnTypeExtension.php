@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\Type;
+namespace Yii\PHPStan\Type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
@@ -22,6 +22,10 @@ use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
 use yii\db\ActiveQuery;
 
+use function get_class;
+use function in_array;
+use function sprintf;
+
 final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     public function getClass(): string
@@ -29,46 +33,72 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
         return ActiveQuery::class;
     }
 
+    /**
+     * @throws ShouldNotHappenException
+     */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
-        if (ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType() instanceof ThisType) {
+        if (
+            ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())
+                ->getReturnType() instanceof ThisType
+        ) {
             return true;
         }
 
-        return \in_array($methodReflection->getName(), ['one', 'all'], true);
+        return in_array($methodReflection->getName(), ['one', 'all'], true);
     }
 
-    public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
-    {
+    /**
+     * @throws ShouldNotHappenException
+     */
+    public function getTypeFromMethodCall(
+        MethodReflection $methodReflection,
+        MethodCall $methodCall,
+        Scope $scope
+    ): Type {
         $calledOnType = $scope->getType($methodCall->var);
         if (!$calledOnType instanceof ActiveQueryObjectType) {
-            throw new ShouldNotHappenException(sprintf('Unexpected type %s during method call %s at line %d', \get_class($calledOnType), $methodReflection->getName(), $methodCall->getLine()));
+            throw new ShouldNotHappenException(
+                sprintf(
+                    'Unexpected type %s during method call %s at line %d',
+                    get_class($calledOnType),
+                    $methodReflection->getName(),
+                    $methodCall->getLine()
+                ),
+            );
         }
 
         $methodName = $methodReflection->getName();
         if ($methodName === 'asArray') {
-            $argType = isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg ? $scope->getType($methodCall->args[0]->value) : new ConstantBooleanType(true);
+            $argType = isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg
+                ? $scope->getType($methodCall->args[0]->value) : new ConstantBooleanType(true);
             if (!$argType instanceof ConstantBooleanType) {
-                throw new ShouldNotHappenException(sprintf('Invalid argument provided to asArray method at line %d', $methodCall->getLine()));
+                throw new ShouldNotHappenException(
+                    sprintf('Invalid argument provided to asArray method at line %d', $methodCall->getLine()),
+                );
             }
 
             return new ActiveQueryObjectType($calledOnType->getModelClass(), $argType->getValue());
         }
 
-        if (!\in_array($methodName, ['one', 'all'], true)) {
+        if (!in_array($methodName, ['one', 'all'], true)) {
             return new ActiveQueryObjectType($calledOnType->getModelClass(), $calledOnType->isAsArray());
         }
 
         if ($methodName === 'one') {
             return TypeCombinator::union(
                 new NullType(),
-                $calledOnType->isAsArray() ? new ArrayType(new StringType(), new MixedType()) : new ActiveRecordObjectType($calledOnType->getModelClass())
+                $calledOnType->isAsArray()
+                    ? new ArrayType(new StringType(), new MixedType())
+                    : new ActiveRecordObjectType($calledOnType->getModelClass())
             );
         }
 
         return new ArrayType(
             new IntegerType(),
-            $calledOnType->isAsArray() ? new ArrayType(new StringType(), new MixedType()) : new ActiveRecordObjectType($calledOnType->getModelClass())
+            $calledOnType->isAsArray()
+                ? new ArrayType(new StringType(), new MixedType())
+                : new ActiveRecordObjectType($calledOnType->getModelClass())
         );
     }
 }

@@ -2,12 +2,14 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\tests\Yii;
+namespace Yii\PHPStan\Tests\Yii;
+
+use yii\db\ActiveRecord;
 
 /**
  * @property bool $flag
  */
-final class MyActiveRecord extends \yii\db\ActiveRecord
+final class MyActiveRecord extends ActiveRecord
 {
     /**
      * @return self<string, mixed>[]
@@ -18,9 +20,9 @@ final class MyActiveRecord extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return self<string, mixed>
+     * @return self<string, mixed>|null
      */
-    public function getMaster(): ?self
+    public function getMaster(): self|null
     {
         return $this->hasOne(self::class, ['link'])->one();
     }

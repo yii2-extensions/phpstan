@@ -2,28 +2,17 @@
 
 declare(strict_types=1);
 
-namespace yii\phpstan\Reflection;
+namespace Yii\PHPStan\Reflection;
 
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\PropertyReflection;
+use PHPStan\TrinaryLogic;
 use PHPStan\Type\Type;
 
 final class ComponentPropertyReflection implements PropertyReflection
 {
-    /**
-     * @var PropertyReflection
-     */
-    private $fallbackProperty;
-
-    /**
-     * @var Type
-     */
-    private $type;
-
-    public function __construct(PropertyReflection $fallbackProperty, Type $type)
+    public function __construct(private readonly PropertyReflection $fallbackProperty, private readonly Type $type)
     {
-        $this->fallbackProperty = $fallbackProperty;
-        $this->type = $type;
     }
 
     public function getType(): Type
@@ -76,7 +65,7 @@ final class ComponentPropertyReflection implements PropertyReflection
         return $this->fallbackProperty->canChangeTypeAfterAssignment();
     }
 
-    public function isDeprecated(): \PHPStan\TrinaryLogic
+    public function isDeprecated(): TrinaryLogic
     {
         return $this->fallbackProperty->isDeprecated();
     }
@@ -86,7 +75,7 @@ final class ComponentPropertyReflection implements PropertyReflection
         return $this->fallbackProperty->getDeprecatedDescription();
     }
 
-    public function isInternal(): \PHPStan\TrinaryLogic
+    public function isInternal(): TrinaryLogic
     {
         return $this->fallbackProperty->isInternal();
     }
