@@ -1,0 +1,18 @@
+<?php
+
+namespace yii\base;
+
+use yii\mail\MailerInterface;
+use yii\web\Request;
+use yii\web\Session;
+
+/**
+ * Module is the base class for module and application classes.
+ *
+ * @property MailerInterface $mailer The mailer component. This property is read-only.
+ * @property Session $session The session component. This property is read-only.
+ * @property Request $request The request component. This property is read-only.
+ */
+class Module
+{
+}

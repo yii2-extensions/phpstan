@@ -12,6 +12,7 @@ parameters:
 
     paths:
         - src
+        - tests
 
     scanFiles:
         - vendor/yiisoft/yii2/Yii.php

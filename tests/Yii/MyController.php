@@ -77,6 +77,10 @@ final class MyController extends Controller
 
         $values = Yii::$app->request->headers->get('X-Key', '', false);
 
+        $mailer = $this->module->mailer;
+        $session = $this->module->session;
+        $request = $this->module->request;
+
         reset($values);
     }
 }
