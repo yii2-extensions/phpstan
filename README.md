@@ -3,7 +3,6 @@
         <img src="https://www.yiiframework.com/image/yii_logo_light.svg" height="100px;">
     </a>
     <h1 align="center">PHPStan extension for Yii2</h1>
-    <br>
 </p>
 
 <p align="center">
