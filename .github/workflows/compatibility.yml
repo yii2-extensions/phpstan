@@ -26,8 +26,7 @@ jobs:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
       composer-command: |
-        composer require yiisoft/yii2:^2.0.49 --prefer-dist --no-progress --no-suggest --no-interaction --no-scripts --ansi
-
+        composer require yiisoft/yii2:^2.0.49 --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       extensions: intl
       os: >-
         ['ubuntu-latest', 'windows-latest']

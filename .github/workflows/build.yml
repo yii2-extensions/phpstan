@@ -25,6 +25,8 @@ jobs:
   phpunit:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
+      composer-command: |
+        composer require yiisoft/yii2:^2.2.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       os: >-
         ['ubuntu-latest', 'windows-latest']
       php: >-
