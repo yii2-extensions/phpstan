@@ -17,16 +17,7 @@
     </a>          
     <a href="https://codecov.io/gh/yii2-extensions/phpstan" target="_blank">
         <img src="https://codecov.io/gh/yii2-extensions/phpstan/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
-    </a>
-    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
-        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="PHPStan">
-    </a>
-    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
-        <img src="https://img.shields.io/badge/PHPStan%20level-6-blue" alt="PHPStan level">
-    </a>    
-    <a href="https://github.styleci.io/repos/701347895?branch=main" target="_blank">
-        <img src="https://github.styleci.io/repos/701347895/shield?branch=main" alt="Code style">
-    </a>        
+    </a>  
 </p>
 
 ## Installation
@@ -46,6 +37,20 @@ or add
 ```
 
 to the require-dev section of your `composer.json` file.
+
+## Quality code
+
+<p>
+    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
+        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="PHPStan">
+    </a>
+    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
+        <img src="https://img.shields.io/badge/PHPStan%20level-6-blue" alt="PHPStan level">
+    </a>    
+    <a href="https://github.styleci.io/repos/701347895?branch=main" target="_blank">
+        <img src="https://github.styleci.io/repos/701347895/shield?branch=main" alt="Code style">
+    </a>     
+</p>
 
 ## Support versions Yii2
 
