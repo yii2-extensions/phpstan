@@ -25,6 +25,8 @@ jobs:
   psalm:
     uses: php-forge/actions/.github/workflows/phpstan.yml@main
     with:
+      composer-command: |
+        composer require yiisoft/yii2:^2.2.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       os: >-
         ['ubuntu-latest']
       php: >-
