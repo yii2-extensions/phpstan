@@ -9,12 +9,12 @@
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
         <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="php-version">
     </a>
-    <a href="https://github.com/yiisoft/yii2/tree/2.2" target="_blank">
-        <img src="https://img.shields.io/badge/Yii2%20version-2.2-blue" alt="yii2-version">
-    </a>
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
         <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
     </a>
+    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/compatibility.yml" target="_blank">
+        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/compatibility.yml/badge.svg" alt="PHPUnit">
+    </a>          
     <a href="https://codecov.io/gh/yii2-extensions/phpstan" target="_blank">
         <img src="https://codecov.io/gh/yii2-extensions/phpstan/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
     </a>
@@ -29,11 +29,34 @@
     </a>        
 </p>
 
-## Requirements
+## Installation
 
-The minimun version of `PHP` required by this package is `PHP 8.1`.
+The preferred way to install this extension is through [composer](https://getcomposer.org/download/).
 
-For install this package, you need [composer](https://getcomposer.org/).
+Either run
+
+```
+composer require --dev --prefer-dist yii2-extensions/phpstan
+```
+
+or add
+
+```
+"yii2-extensions/phpstan": "dev-main"
+```
+
+to the require-dev section of your `composer.json` file.
+
+## Support versions Yii2
+
+<p>
+    <a href="https://github.com/yiisoft/yii2/tree/2.2" target="_blank">
+        <img src="https://img.shields.io/badge/Yii2%20version-2.2-blue" alt="yii2-version">
+    </a>
+    <a href="https://github.com/yiisoft/yii2/tree/2.0.49.3" target="_blank">
+        <img src="https://img.shields.io/badge/Yii2%20version-2.0.49.3-blue" alt="yii2-version">
+    </a>
+</p>
 
 ## Testing
 
