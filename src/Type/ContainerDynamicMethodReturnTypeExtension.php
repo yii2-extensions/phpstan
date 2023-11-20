@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii\PHPStan\Type;
+namespace Yii2\Extensions\PHPStan\Type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
@@ -13,8 +13,8 @@ use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
+use Yii2\Extensions\PHPStan\ServiceMap;
 use yii\di\Container;
-use Yii\PHPStan\ServiceMap;
 
 final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {

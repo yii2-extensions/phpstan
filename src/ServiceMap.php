@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii\PHPStan;
+namespace Yii2\Extensions\PHPStan;
 
 use Closure;
 use InvalidArgumentException;

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii\PHPStan\Type;
+namespace Yii2\Extensions\PHPStan\Type;
 
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\VerbosityLevel;
