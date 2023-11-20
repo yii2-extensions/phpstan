@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii\PHPStan\Reflection;
+namespace Yii2\Extensions\PHPStan\Reflection;
 
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\ClassReflection;
@@ -12,8 +12,8 @@ use PHPStan\Reflection\PropertiesClassReflectionExtension;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
+use Yii2\Extensions\PHPStan\ServiceMap;
 use yii\base\Application as BaseApplication;
-use Yii\PHPStan\ServiceMap;
 use yii\web\Application as WebApplication;
 
 final class ApplicationPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension

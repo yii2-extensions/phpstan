@@ -22,12 +22,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Yii\\PHPStan\\": "src"
+            "Yii2\\Extensions\\PHPStan\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Yii\\PHPStan\\Tests\\": "tests"
+            "Yii2\\Extensions\\PHPStan\\Tests\\": "tests"
         }
     },
     "extra": {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii\PHPStan\Tests;
+namespace Yii2\Extensions\PHPStan\Tests;
 
 use InvalidArgumentException;
 use PhpParser\Node\Scalar\String_;
@@ -12,8 +12,8 @@ use RuntimeException;
 use SplFileInfo;
 use SplObjectStorage;
 use SplStack;
-use Yii\PHPStan\ServiceMap;
-use Yii\PHPStan\Tests\Yii\MyActiveRecord;
+use Yii2\Extensions\PHPStan\ServiceMap;
+use Yii2\Extensions\PHPStan\Tests\Yii\MyActiveRecord;
 
 final class ServiceMapTest extends TestCase
 {
@@ -44,7 +44,9 @@ final class ServiceMapTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported service definition for unsupported-type');
 
-        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-type.php');
+        new ServiceMap(
+            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-type.php'
+        );
     }
 
     /**
@@ -55,7 +57,9 @@ final class ServiceMapTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot guess service definition for unsupported-array');
 
-        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-array.php');
+        new ServiceMap(
+            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-array.php'
+        );
     }
 
     /**
@@ -66,7 +70,9 @@ final class ServiceMapTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Invalid value for component with id customComponent. Expected object or array.');
 
-        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-component.php');
+        new ServiceMap(
+            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-component.php'
+        );
     }
 
     /**
@@ -76,18 +82,42 @@ final class ServiceMapTest extends TestCase
     {
         $serviceMap = new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-valid.php');
 
-        self::assertSame(MyActiveRecord::class, $serviceMap->getServiceClassFromNode(new String_('singleton-string')));
-        self::assertSame(MyActiveRecord::class, $serviceMap->getServiceClassFromNode(new String_(MyActiveRecord::class)));
-        self::assertSame(SplStack::class, $serviceMap->getServiceClassFromNode(new String_('singleton-closure')));
-        self::assertSame(SplObjectStorage::class, $serviceMap->getServiceClassFromNode(new String_('singleton-service')));
-        self::assertSame(SplFileInfo::class, $serviceMap->getServiceClassFromNode(new String_('singleton-nested-service-class')));
+        $this->assertSame(
+            MyActiveRecord::class,
+            $serviceMap->getServiceClassFromNode(new String_('singleton-string')),
+        );
+        $this->assertSame(
+            MyActiveRecord::class,
+            $serviceMap->getServiceClassFromNode(new String_(MyActiveRecord::class)),
+        );
+        $this->assertSame(
+            SplStack::class,
+            $serviceMap->getServiceClassFromNode(new String_('singleton-closure')),
+        );
+        $this->assertSame(
+            SplObjectStorage::class,
+            $serviceMap->getServiceClassFromNode(new String_('singleton-service')),
+        );
+        $this->assertSame(
+            SplFileInfo::class,
+            $serviceMap->getServiceClassFromNode(new String_('singleton-nested-service-class')),
+        );
 
-        self::assertSame(SplStack::class, $serviceMap->getServiceClassFromNode(new String_('closure')));
-        self::assertSame(SplObjectStorage::class, $serviceMap->getServiceClassFromNode(new String_('service')));
-        self::assertSame(SplFileInfo::class, $serviceMap->getServiceClassFromNode(new String_('nested-service-class')));
+        $this->assertSame(
+            SplStack::class,
+            $serviceMap->getServiceClassFromNode(new String_('closure')),
+        );
+        $this->assertSame(
+            SplObjectStorage::class,
+            $serviceMap->getServiceClassFromNode(new String_('service')),
+        );
+        $this->assertSame(
+            SplFileInfo::class,
+            $serviceMap->getServiceClassFromNode(new String_('nested-service-class')),
+        );
 
-        self::assertSame(MyActiveRecord::class, $serviceMap->getComponentClassById('customComponent'));
-        self::assertSame(MyActiveRecord::class, $serviceMap->getComponentClassById('customInitializedComponent'));
+        $this->assertSame(MyActiveRecord::class, $serviceMap->getComponentClassById('customComponent'));
+        $this->assertSame(MyActiveRecord::class, $serviceMap->getComponentClassById('customInitializedComponent'));
     }
 
     /**

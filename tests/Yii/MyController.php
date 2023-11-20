@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii\PHPStan\Tests\Yii;
+namespace Yii2\Extensions\PHPStan\Tests\Yii;
 
 use SplObjectStorage;
 use Yii;
