@@ -15,9 +15,7 @@ use yii\web\Response as WebResponse;
 
 final class ResponsePropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
-    public function __construct(private readonly ReflectionProvider $reflectionProvider)
-    {
-    }
+    public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
