@@ -42,6 +42,7 @@
     },
     "scripts": {
         "check-dependencies": "composer-require-checker",
+        "ecs": "ecs check",
         "phpstan": "phpstan",
         "test": "phpunit"
     },
