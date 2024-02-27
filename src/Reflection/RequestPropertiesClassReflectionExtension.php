@@ -15,9 +15,7 @@ use yii\web\Request as WebRequest;
 
 final class RequestPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
-    public function __construct(private readonly ReflectionProvider $reflectionProvider)
-    {
-    }
+    public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {

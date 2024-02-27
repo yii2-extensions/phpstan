@@ -18,9 +18,7 @@ use yii\di\Container;
 
 final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
-    public function __construct(private readonly ServiceMap $serviceMap)
-    {
-    }
+    public function __construct(private readonly ServiceMap $serviceMap) {}
 
     public function getClass(): string
     {

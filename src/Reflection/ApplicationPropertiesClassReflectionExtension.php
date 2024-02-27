@@ -22,8 +22,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
         private readonly ReflectionProvider $reflectionProvider,
         private readonly ServiceMap $serviceMap
-    ) {
-    }
+    ) {}
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {

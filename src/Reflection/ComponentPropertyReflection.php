@@ -11,9 +11,7 @@ use PHPStan\Type\Type;
 
 final class ComponentPropertyReflection implements PropertyReflection
 {
-    public function __construct(private readonly PropertyReflection $fallbackProperty, private readonly Type $type)
-    {
-    }
+    public function __construct(private readonly PropertyReflection $fallbackProperty, private readonly Type $type) {}
 
     public function getType(): Type
     {

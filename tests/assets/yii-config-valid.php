@@ -14,7 +14,7 @@ return [
     'container' => [
         'singletons' => [
             'singleton-string' => MyActiveRecord::class,
-            'singleton-closure' => static function(): SplStack {
+            'singleton-closure' => static function (): SplStack {
                 return new SplStack();
             },
             'singleton-service' => ['class' => SplObjectStorage::class],
@@ -23,7 +23,7 @@ return [
             ],
         ],
         'definitions' => [
-            'closure' => static function(): SplStack {
+            'closure' => static function (): SplStack {
                 return new SplStack();
             },
             'service' => ['class' => SplObjectStorage::class],

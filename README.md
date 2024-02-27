@@ -26,14 +26,14 @@ The preferred way to install this extension is through [composer](https://getcom
 
 Either run
 
-```
-composer require --dev --prefer-dist yii2-extensions/phpstan
+```shel
+composer require --dev --prefer-dist yii2-extensions/phpstan:^0.1
 ```
 
 or add
 
-```
-"yii2-extensions/phpstan": "dev-main"
+```json
+"yii2-extensions/phpstan": "^0.1"
 ```
 
 to the require-dev section of your `composer.json` file.
@@ -51,7 +51,7 @@ to the require-dev section of your `composer.json` file.
 
 ## Testing
 
-[Check the documentation testing](/docs/testing.md) to learn about testing.
+[Check the documentation testing](docs/testing.md) to learn about testing.
 
 ## Our social networks
 
@@ -59,7 +59,7 @@ to the require-dev section of your `composer.json` file.
 
 ## License
 
-The MIT License. Please see [License File](LICENSE.md) for more information.
+The MIT License. Please see [License File](LICENSE) for more information.
 
 ## Fork 
 

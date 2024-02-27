@@ -14,9 +14,7 @@ use yii\web\Request as WebRequest;
 
 final class RequestMethodsClassReflectionExtension implements MethodsClassReflectionExtension
 {
-    public function __construct(private readonly ReflectionProvider $reflectionProvider)
-    {
-    }
+    public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
 
     public function hasMethod(ClassReflection $classReflection, string $methodName): bool
     {

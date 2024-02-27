@@ -15,9 +15,7 @@ use yii\web\User;
 
 final class UserPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
-    public function __construct(private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties)
-    {
-    }
+    public function __construct(private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties) {}
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
