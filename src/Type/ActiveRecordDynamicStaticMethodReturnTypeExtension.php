@@ -57,7 +57,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
     public function getTypeFromStaticMethodCall(
         MethodReflection $methodReflection,
         StaticCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         $className = $methodCall->class;
         $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
@@ -75,7 +75,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
         if ($returnType instanceof UnionType) {
             return TypeCombinator::union(
                 new NullType(),
-                new ActiveRecordObjectType($name)
+                new ActiveRecordObjectType($name),
             );
         }
 

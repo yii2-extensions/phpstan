@@ -54,7 +54,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         $calledOnType = $scope->getType($methodCall->var);
         if (!$calledOnType instanceof ActiveQueryObjectType) {
@@ -63,7 +63,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
                     'Unexpected type %s during method call %s at line %d',
                     get_class($calledOnType),
                     $methodReflection->getName(),
-                    $methodCall->getLine()
+                    $methodCall->getLine(),
                 ),
             );
         }
@@ -90,7 +90,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
                 new NullType(),
                 $calledOnType->isAsArray()
                     ? new ArrayType(new StringType(), new MixedType())
-                    : new ActiveRecordObjectType($calledOnType->getModelClass())
+                    : new ActiveRecordObjectType($calledOnType->getModelClass()),
             );
         }
 
@@ -98,7 +98,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
             new IntegerType(),
             $calledOnType->isAsArray()
                 ? new ArrayType(new StringType(), new MixedType())
-                : new ActiveRecordObjectType($calledOnType->getModelClass())
+                : new ActiveRecordObjectType($calledOnType->getModelClass()),
         );
     }
 }
