@@ -15,6 +15,7 @@
     },
     "require-dev": {
         "maglnet/composer-require-checker": "^4.7",
+        "phpstan/phpstan-deprecation-rules": "^1.2",
         "phpstan/phpstan-phpunit": "^1.0",
         "phpunit/phpunit": "^10.2",
         "symplify/easy-coding-standard": "^12.1"
