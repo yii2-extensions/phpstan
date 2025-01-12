@@ -38,10 +38,11 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
-        if (
-            ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())
-                ->getReturnType() instanceof ThisType
-        ) {
+        /** @phpstan-ignore staticMethod.deprecated */
+        $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())
+            ->getReturnType();
+
+        if ($returnType instanceof ThisType) {
             return true;
         }
 
@@ -72,7 +73,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
         if ($methodName === 'asArray') {
             $argType = isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg
                 ? $scope->getType($methodCall->args[0]->value) : new ConstantBooleanType(true);
-            if (!$argType instanceof ConstantBooleanType) {
+            if ($argType->isBoolean()->no()) {
                 throw new ShouldNotHappenException(
                     sprintf('Invalid argument provided to asArray method at line %d', $methodCall->getLine()),
                 );

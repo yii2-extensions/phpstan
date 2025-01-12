@@ -9,7 +9,6 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\ShouldNotHappenException;
-use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\Type;
 use yii\db\ActiveRecord;
@@ -51,7 +50,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
         }
 
         $argType = $scope->getType($arg->value);
-        if (!$argType instanceof ConstantStringType) {
+        if (count($argType->getConstantStrings()) === 0) {
             throw new ShouldNotHappenException(
                 sprintf(
                     'Invalid argument provided to method %s' . PHP_EOL .

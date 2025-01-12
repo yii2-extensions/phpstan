@@ -9,10 +9,10 @@ use PhpParser\Node\Name;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NullType;
-use PHPStan\Type\ObjectType;
 use PHPStan\Type\ThisType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
@@ -20,10 +20,16 @@ use PHPStan\Type\UnionType;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 
-use function is_a;
-
 final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
+    private ReflectionProvider $reflectionProvider;
+
+    public function __construct(
+        ReflectionProvider $reflectionProvider,
+    ) {
+        $this->reflectionProvider = $reflectionProvider;
+    }
+
     public function getClass(): string
     {
         return ActiveRecord::class;
@@ -34,6 +40,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      */
     public function isStaticMethodSupported(MethodReflection $methodReflection): bool
     {
+        /** @phpstan-ignore staticMethod.deprecated */
         $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
         if ($returnType instanceof ThisType) {
             return true;
@@ -41,26 +48,27 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
 
         if ($returnType instanceof UnionType) {
             foreach ($returnType->getTypes() as $type) {
-                if ($type instanceof ObjectType) {
-                    return is_a($type->getClassName(), $this->getClass(), true);
+                if ($type->isObject()->yes()) {
+                    return $this->reflectionProvider->hasClass($this->getClass()) &&
+                        $type->getClassName() === $this->getClass();
                 }
             }
         }
 
-        return $returnType instanceof ObjectType &&
-            is_a($returnType->getClassName(), ActiveQuery::class, true);
+        return $returnType->isObject()->yes() && $returnType->getClassName() === ActiveQuery::class;
     }
 
-    /**
-     * @throws ShouldNotHappenException
-     */
     public function getTypeFromStaticMethodCall(
         MethodReflection $methodReflection,
         StaticCall $methodCall,
         Scope $scope,
     ): Type {
         $className = $methodCall->class;
-        $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
+        $returnType = ParametersAcceptorSelector::selectFromArgs(
+            $scope,
+            $methodCall->getArgs(),
+            $methodReflection->getVariants(),
+        )->getReturnType();
 
         if (!$className instanceof Name) {
             return $returnType;
