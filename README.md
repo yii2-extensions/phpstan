@@ -42,6 +42,34 @@ or add
 "yii2-extensions/phpstan": "^0.1"
 ```
 
+## Usage
+
+To use this extension, you need to add the following configuration to your `phpstan.neon` file:
+
+```neon
+includes:
+	- vendor/yii2-extensions/phpstan/extension.neon
+
+parameters:
+    bootstrapFiles:
+        - tests/bootstrap.php
+
+    dynamicConstantNames:
+        - YII_DEBUG
+        - YII_ENV
+
+    level: 5
+
+    paths:
+        - src
+
+    scanFiles:
+        - vendor/yiisoft/yii2/Yii.php
+
+    yii2:
+        config_path: %currentWorkingDirectory%/config/test.php ---> your yii2 configuration file
+```
+
 to the require-dev section of your `composer.json` file.
 
 ## Quality code
