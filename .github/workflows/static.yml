@@ -26,7 +26,7 @@ jobs:
     uses: php-forge/actions/.github/workflows/phpstan.yml@main
     with:
       composer-command: |
-        composer require yiisoft/yii2:^2.2.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
+        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       os: >-
         ['ubuntu-latest']
       php: >-

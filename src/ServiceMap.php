@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan;
+namespace yii2\extensions\phpstan;
 
 use Closure;
 use InvalidArgumentException;
@@ -103,7 +103,7 @@ final class ServiceMap
     /**
      * @throws ReflectionException
      *
-     * @phpstan-param string|Closure|array<mixed>|int $service
+     * @phpstan-param array<mixed>|string|Closure|int $service
      */
     private function guessServiceDefinition(string $id, array|string|Closure|int $service): string
     {

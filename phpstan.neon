@@ -18,4 +18,4 @@ parameters:
         - vendor/yiisoft/yii2/Yii.php
 
     yii2:
-        config_path: tests/assets/yii-config-valid.php
+        config_path: tests/fixture/yii-config-valid.php

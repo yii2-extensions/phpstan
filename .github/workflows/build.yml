@@ -6,8 +6,6 @@ on:
       - 'CHANGELOG.md'
       - '.gitignore'
       - '.gitattributes'
-      - 'infection.json.dist'
-      - 'psalm.xml'
 
   push:
     paths-ignore:
@@ -16,8 +14,6 @@ on:
       - 'CHANGELOG.md'
       - '.gitignore'
       - '.gitattributes'
-      - 'infection.json.dist'
-      - 'psalm.xml'
 
 name: build
 
@@ -26,8 +22,8 @@ jobs:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
     with:
       composer-command: |
-        composer require yiisoft/yii2:^2.2.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
+        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       os: >-
         ['ubuntu-latest', 'windows-latest']
       php: >-
-        ['8.1', '8.2', '8.3']
+        ['8.1', '8.2', '8.3', '8.4']

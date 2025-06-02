@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Type;
+namespace yii2\extensions\phpstan\type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
@@ -51,6 +51,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
 
         $argType = $scope->getType($arg->value);
         $constantStrings = $argType->getConstantStrings();
+
         if (count($constantStrings) === 0) {
             throw new ShouldNotHappenException(
                 sprintf(

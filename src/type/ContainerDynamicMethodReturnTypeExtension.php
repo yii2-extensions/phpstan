@@ -2,19 +2,18 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Type;
+namespace yii2\extensions\phpstan\type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
-use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
-use Yii2\Extensions\PHPStan\ServiceMap;
 use yii\di\Container;
+use yii2\extensions\phpstan\ServiceMap;
 
 final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
@@ -30,9 +29,6 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
         return $methodReflection->getName() === 'get';
     }
 
-    /**
-     * @throws ShouldNotHappenException
-     */
     public function getTypeFromMethodCall(MethodReflection $methodReflection, MethodCall $methodCall, Scope $scope): Type
     {
         if (isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg) {

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Tests;
+namespace yii2\extensions\phpstan\tests;
 
 use InvalidArgumentException;
 use PhpParser\Node\Scalar\String_;
@@ -12,8 +12,8 @@ use RuntimeException;
 use SplFileInfo;
 use SplObjectStorage;
 use SplStack;
-use Yii2\Extensions\PHPStan\ServiceMap;
-use Yii2\Extensions\PHPStan\Tests\Yii\MyActiveRecord;
+use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\tests\yii\MyActiveRecord;
 
 final class ServiceMapTest extends TestCase
 {
@@ -33,7 +33,9 @@ final class ServiceMapTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for no-return-type service closure');
 
-        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid.php');
+        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR . 'yii-config-invalid.php';
+
+        new ServiceMap($fixturePath);
     }
 
     /**
@@ -44,9 +46,10 @@ final class ServiceMapTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported service definition for unsupported-type');
 
-        new ServiceMap(
-            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-type.php',
-        );
+        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR .
+            'yii-config-invalid-unsupported-type.php';
+
+        new ServiceMap($fixturePath);
     }
 
     /**
@@ -57,9 +60,10 @@ final class ServiceMapTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Cannot guess service definition for unsupported-array');
 
-        new ServiceMap(
-            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-array.php',
-        );
+        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR .
+            'yii-config-invalid-unsupported-array.php';
+
+        new ServiceMap($fixturePath);
     }
 
     /**
@@ -70,9 +74,10 @@ final class ServiceMapTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Invalid value for component with id customComponent. Expected object or array.');
 
-        new ServiceMap(
-            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-component.php',
-        );
+        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR .
+            'yii-config-invalid-component.php';
+
+        new ServiceMap($fixturePath);
     }
 
     /**
@@ -80,7 +85,9 @@ final class ServiceMapTest extends TestCase
      */
     public function testItLoadsServicesAndComponents(): void
     {
-        $serviceMap = new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-valid.php');
+        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR . 'yii-config-valid.php';
+
+        $serviceMap = new ServiceMap($fixturePath);
 
         $this->assertSame(
             MyActiveRecord::class,
@@ -121,12 +128,12 @@ final class ServiceMapTest extends TestCase
     }
 
     /**
-     * @doesNotPerformAssertions
-     *
      * @throws ReflectionException
      */
     public function testItAllowsConfigWithoutSingletons(): void
     {
-        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-no-singletons.php');
+        $this->expectNotToPerformAssertions();
+
+        new ServiceMap(__DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR . 'yii-config-no-singletons.php');
     }
 }

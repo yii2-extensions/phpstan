@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Type;
+namespace yii2\extensions\phpstan\type;
 
 use ArrayAccess;
 use PHPStan\ShouldNotHappenException;
@@ -32,7 +32,8 @@ final class ActiveRecordObjectType extends ObjectType
 
     public function setOffsetValueType(?Type $offsetType, Type $valueType, bool $unionValues = true): Type
     {
-        $constantStrings = $offsetType->getConstantStrings();
+        $constantStrings = $offsetType?->getConstantStrings();
+
         if (count($constantStrings) > 0 && $this->hasProperty($constantStrings[0]->getValue())->no()) {
             return new ErrorType();
         }

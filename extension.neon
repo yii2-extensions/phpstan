@@ -11,34 +11,34 @@ parametersSchema:
 
 services:
     -
-        class: Yii2\Extensions\PHPStan\Reflection\ApplicationPropertiesClassReflectionExtension
+        class: yii2\extensions\phpstan\reflection\ApplicationPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
-        class: Yii2\Extensions\PHPStan\Reflection\RequestMethodsClassReflectionExtension
+        class: yii2\extensions\phpstan\reflection\RequestMethodsClassReflectionExtension
         tags: [phpstan.broker.methodsClassReflectionExtension]
     -
-        class: Yii2\Extensions\PHPStan\Reflection\RequestPropertiesClassReflectionExtension
+        class: yii2\extensions\phpstan\reflection\RequestPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
-        class: Yii2\Extensions\PHPStan\Reflection\ResponsePropertiesClassReflectionExtension
+        class: yii2\extensions\phpstan\reflection\ResponsePropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
-        class: Yii2\Extensions\PHPStan\Reflection\UserPropertiesClassReflectionExtension
+        class: yii2\extensions\phpstan\reflection\UserPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
-        class: Yii2\Extensions\PHPStan\Type\ActiveQueryDynamicMethodReturnTypeExtension
+        class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
-        class: Yii2\Extensions\PHPStan\Type\ActiveRecordDynamicMethodReturnTypeExtension
+        class: yii2\extensions\phpstan\type\ActiveRecordDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
-        class: Yii2\Extensions\PHPStan\Type\HeaderCollectionDynamicMethodReturnTypeExtension
+        class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
-        class: Yii2\Extensions\PHPStan\Type\ActiveRecordDynamicStaticMethodReturnTypeExtension
+        class: yii2\extensions\phpstan\type\ActiveRecordDynamicStaticMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
     -
-        class: Yii2\Extensions\PHPStan\Type\ContainerDynamicMethodReturnTypeExtension
+        class: yii2\extensions\phpstan\type\ContainerDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
 
-    - Yii2\Extensions\PHPStan\ServiceMap(%yii2.config_path%)
+    - yii2\extensions\phpstan\ServiceMap(%yii2.config_path%)

@@ -6,19 +6,14 @@ on:
       - 'CHANGELOG.md'
       - '.gitignore'
       - '.gitattributes'
-      - 'infection.json.dist'
-      - 'phpunit.xml.dist'
 
   push:
-    branches: ['main']
     paths-ignore:
       - 'docs/**'
       - 'README.md'
       - 'CHANGELOG.md'
       - '.gitignore'
       - '.gitattributes'
-      - 'infection.json.dist'
-      - 'phpunit.xml.dist'
 
 name: ecs
 
@@ -29,7 +24,7 @@ jobs:
       AUTH_TOKEN: ${{ secrets.AUTH_TOKEN }}
     with:
       composer-command: |
-        composer require yiisoft/yii2:^2.2.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
+        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       os: >-
         ['ubuntu-latest']
       php: >-
