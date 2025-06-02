@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Type;
+namespace yii2\extensions\phpstan\type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
@@ -32,9 +32,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
         return ActiveQuery::class;
     }
 
-    /**
-     * @throws ShouldNotHappenException
-     */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
         $variants = $methodReflection->getVariants();
@@ -73,7 +70,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
             $argType = isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg
                 ? $scope->getType($methodCall->args[0]->value) : new ConstantBooleanType(true);
 
-            $boolValue = true;
             if ($argType->isTrue()->yes()) {
                 $boolValue = true;
             } elseif ($argType->isFalse()->yes()) {

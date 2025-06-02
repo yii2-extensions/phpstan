@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Reflection;
+namespace yii2\extensions\phpstan\reflection;
 
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\PropertyReflection;
@@ -11,7 +11,7 @@ use PHPStan\Type\Type;
 
 final class ComponentPropertyReflection implements PropertyReflection
 {
-    public function __construct(private readonly PropertyReflection $fallbackProperty, private readonly Type $type) {}
+    public function __construct(private PropertyReflection $fallbackProperty, private Type $type) {}
 
     public function getType(): Type
     {

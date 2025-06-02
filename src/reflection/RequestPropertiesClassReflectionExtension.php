@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Reflection;
+namespace yii2\extensions\phpstan\reflection;
 
 use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Reflection\ClassReflection;
@@ -10,20 +10,20 @@ use PHPStan\Reflection\MissingPropertyFromReflectionException;
 use PHPStan\Reflection\PropertiesClassReflectionExtension;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Reflection\ReflectionProvider;
-use yii\console\Response as ConsoleResponse;
-use yii\web\Response as WebResponse;
+use yii\console\Request as ConsoleRequest;
+use yii\web\Request as WebRequest;
 
-final class ResponsePropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
+final class RequestPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
     public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
-        if ($classReflection->getName() !== ConsoleResponse::class) {
+        if ($classReflection->getName() !== ConsoleRequest::class) {
             return false;
         }
 
-        return $this->reflectionProvider->getClass(WebResponse::class)->hasProperty($propertyName);
+        return $this->reflectionProvider->getClass(WebRequest::class)->hasProperty($propertyName);
     }
 
     /**
@@ -32,7 +32,7 @@ final class ResponsePropertiesClassReflectionExtension implements PropertiesClas
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
         return $this->reflectionProvider
-            ->getClass(WebResponse::class)
+            ->getClass(WebRequest::class)
             ->getProperty($propertyName, new OutOfClassScope());
     }
 }

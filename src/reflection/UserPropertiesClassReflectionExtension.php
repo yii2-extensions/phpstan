@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Reflection;
+namespace yii2\extensions\phpstan\reflection;
 
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\ClassReflection;

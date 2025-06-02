@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Type;
+namespace yii2\extensions\phpstan\type;
 
 use PhpParser\Node\Expr\StaticCall;
 use PhpParser\Node\Name;
@@ -10,7 +10,6 @@ use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\Reflection\ReflectionProvider;
-use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NullType;
 use PHPStan\Type\ThisType;
@@ -35,9 +34,6 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
         return ActiveRecord::class;
     }
 
-    /**
-     * @throws ShouldNotHappenException
-     */
     public function isStaticMethodSupported(MethodReflection $methodReflection): bool
     {
         $variants = $methodReflection->getVariants();
@@ -57,7 +53,10 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
                     $className = $classNames[0];
                     if ($this->reflectionProvider->hasClass($className)) {
                         $classReflection = $this->reflectionProvider->getClass($className);
-                        return $classReflection->isSubclassOf($this->getClass());
+
+                        return $classReflection->isSubclassOfClass(
+                            $this->reflectionProvider->getClass($this->getClass()),
+                        );
                     }
                 }
             }
@@ -68,7 +67,8 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
             $className = $classNames[0];
             if ($this->reflectionProvider->hasClass($className)) {
                 $classReflection = $this->reflectionProvider->getClass($className);
-                return $classReflection->isSubclassOf(ActiveQuery::class);
+
+                return $classReflection->isSubclassOfClass($this->reflectionProvider->getClass(ActiveQuery::class));
             }
         }
 

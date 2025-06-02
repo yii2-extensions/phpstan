@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Reflection;
+namespace yii2\extensions\phpstan\reflection;
 
 use PHPStan\Reflection\ClassReflection;
 use PHPStan\Reflection\MethodReflection;
@@ -14,7 +14,7 @@ use yii\web\Request as WebRequest;
 
 final class RequestMethodsClassReflectionExtension implements MethodsClassReflectionExtension
 {
-    public function __construct(private readonly ReflectionProvider $reflectionProvider) {}
+    public function __construct(private ReflectionProvider $reflectionProvider) {}
 
     public function hasMethod(ClassReflection $classReflection, string $methodName): bool
     {

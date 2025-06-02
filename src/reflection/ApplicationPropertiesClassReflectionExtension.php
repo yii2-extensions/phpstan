@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Yii2\Extensions\PHPStan\Reflection;
+namespace yii2\extensions\phpstan\reflection;
 
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\ClassReflection;
@@ -12,21 +12,26 @@ use PHPStan\Reflection\PropertiesClassReflectionExtension;
 use PHPStan\Reflection\PropertyReflection;
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\ObjectType;
-use Yii2\Extensions\PHPStan\ServiceMap;
 use yii\base\Application as BaseApplication;
 use yii\web\Application as WebApplication;
+use yii2\extensions\phpstan\ServiceMap;
 
 final class ApplicationPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
     public function __construct(
-        private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
-        private readonly ReflectionProvider $reflectionProvider,
-        private readonly ServiceMap $serviceMap,
+        private AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
+        private ReflectionProvider $reflectionProvider,
+        private ServiceMap $serviceMap,
     ) {}
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
-        if ($classReflection->getName() !== BaseApplication::class && !$classReflection->isSubclassOf(BaseApplication::class)) {
+        $reflectionProviderBaseApplication = $this->reflectionProvider->getClass(BaseApplication::class);
+
+        if (
+            $classReflection->getName() !== BaseApplication::class &&
+            $classReflection->isSubclassOfClass($reflectionProviderBaseApplication) === false
+        ) {
             return false;
         }
 
@@ -49,7 +54,10 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         }
 
         if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
-            return new ComponentPropertyReflection(new DummyPropertyReflection($propertyName), new ObjectType($componentClass));
+            return new ComponentPropertyReflection(
+                new DummyPropertyReflection($propertyName),
+                new ObjectType($componentClass),
+            );
         }
 
         if ($classReflection->hasNativeProperty($propertyName)) {
