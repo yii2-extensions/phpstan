@@ -45,7 +45,7 @@ final class ServiceMapTest extends TestCase
         $this->expectExceptionMessage('Unsupported service definition for unsupported-type');
 
         new ServiceMap(
-            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-type.php'
+            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-type.php',
         );
     }
 
@@ -58,7 +58,7 @@ final class ServiceMapTest extends TestCase
         $this->expectExceptionMessage('Cannot guess service definition for unsupported-array');
 
         new ServiceMap(
-            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-array.php'
+            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-unsupported-array.php',
         );
     }
 
@@ -71,7 +71,7 @@ final class ServiceMapTest extends TestCase
         $this->expectExceptionMessage('Invalid value for component with id customComponent. Expected object or array.');
 
         new ServiceMap(
-            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-component.php'
+            __DIR__ . DIRECTORY_SEPARATOR . 'assets' . DIRECTORY_SEPARATOR . 'yii-config-invalid-component.php',
         );
     }
 

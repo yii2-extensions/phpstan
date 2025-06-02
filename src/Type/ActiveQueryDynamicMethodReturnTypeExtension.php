@@ -8,7 +8,6 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\Constant\ConstantBooleanType;
@@ -38,11 +37,12 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
-        if (
-            ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())
-                ->getReturnType() instanceof ThisType
-        ) {
-            return true;
+        $variants = $methodReflection->getVariants();
+        if (count($variants) > 0) {
+            $returnType = $variants[0]->getReturnType();
+            if ($returnType instanceof ThisType) {
+                return true;
+            }
         }
 
         return in_array($methodReflection->getName(), ['one', 'all'], true);
@@ -54,7 +54,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         $calledOnType = $scope->getType($methodCall->var);
         if (!$calledOnType instanceof ActiveQueryObjectType) {
@@ -63,7 +63,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
                     'Unexpected type %s during method call %s at line %d',
                     get_class($calledOnType),
                     $methodReflection->getName(),
-                    $methodCall->getLine()
+                    $methodCall->getLine(),
                 ),
             );
         }
@@ -72,13 +72,19 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
         if ($methodName === 'asArray') {
             $argType = isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg
                 ? $scope->getType($methodCall->args[0]->value) : new ConstantBooleanType(true);
-            if (!$argType instanceof ConstantBooleanType) {
+
+            $boolValue = true;
+            if ($argType->isTrue()->yes()) {
+                $boolValue = true;
+            } elseif ($argType->isFalse()->yes()) {
+                $boolValue = false;
+            } else {
                 throw new ShouldNotHappenException(
                     sprintf('Invalid argument provided to asArray method at line %d', $methodCall->getLine()),
                 );
             }
 
-            return new ActiveQueryObjectType($calledOnType->getModelClass(), $argType->getValue());
+            return new ActiveQueryObjectType($calledOnType->getModelClass(), $boolValue);
         }
 
         if (!in_array($methodName, ['one', 'all'], true)) {
@@ -90,7 +96,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
                 new NullType(),
                 $calledOnType->isAsArray()
                     ? new ArrayType(new StringType(), new MixedType())
-                    : new ActiveRecordObjectType($calledOnType->getModelClass())
+                    : new ActiveRecordObjectType($calledOnType->getModelClass()),
             );
         }
 
@@ -98,7 +104,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
             new IntegerType(),
             $calledOnType->isAsArray()
                 ? new ArrayType(new StringType(), new MixedType())
-                : new ActiveRecordObjectType($calledOnType->getModelClass())
+                : new ActiveRecordObjectType($calledOnType->getModelClass()),
         );
     }
 }

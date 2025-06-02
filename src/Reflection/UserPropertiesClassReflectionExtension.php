@@ -33,7 +33,7 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
         if ($propertyName === 'identity') {
-            return new ComponentPropertyReflection(new DummyPropertyReflection(), new MixedType());
+            return new ComponentPropertyReflection(new DummyPropertyReflection($propertyName), new MixedType());
         }
 
         if ($classReflection->hasNativeProperty($propertyName)) {

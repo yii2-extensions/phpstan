@@ -7,7 +7,6 @@ namespace Yii2\Extensions\PHPStan\Type;
 use ArrayAccess;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\TrinaryLogic;
-use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\ErrorType;
 use PHPStan\Type\ObjectType;
 use PHPStan\Type\Type;
@@ -19,12 +18,13 @@ final class ActiveRecordObjectType extends ObjectType
      */
     public function hasOffsetValueType(Type $offsetType): TrinaryLogic
     {
-        if (!$offsetType instanceof ConstantStringType) {
+        $constantStrings = $offsetType->getConstantStrings();
+        if (count($constantStrings) === 0) {
             return TrinaryLogic::createNo();
         }
 
         if ($this->isInstanceOf(ArrayAccess::class)->yes()) {
-            return TrinaryLogic::createFromBoolean($this->hasProperty($offsetType->getValue())->yes());
+            return TrinaryLogic::createFromBoolean($this->hasProperty($constantStrings[0]->getValue())->yes());
         }
 
         return parent::hasOffsetValueType($offsetType);
@@ -32,7 +32,8 @@ final class ActiveRecordObjectType extends ObjectType
 
     public function setOffsetValueType(?Type $offsetType, Type $valueType, bool $unionValues = true): Type
     {
-        if ($offsetType instanceof ConstantStringType && $this->hasProperty($offsetType->getValue())->no()) {
+        $constantStrings = $offsetType->getConstantStrings();
+        if (count($constantStrings) > 0 && $this->hasProperty($constantStrings[0]->getValue())->no()) {
             return new ErrorType();
         }
 

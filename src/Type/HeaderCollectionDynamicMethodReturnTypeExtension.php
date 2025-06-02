@@ -45,7 +45,7 @@ final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicM
         /** @var Arg $arg */
         $arg = $methodCall->args[2];
         if ($arg->value instanceof ConstFetch) {
-            $value = $arg->value->name->parts[0];
+            $value = $arg->value->name->getParts()[0];
             if ($value === 'true') {
                 // $first === true, therefore string
                 return new StringType();

@@ -21,7 +21,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
     public function __construct(
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
         private readonly ReflectionProvider $reflectionProvider,
-        private readonly ServiceMap $serviceMap
+        private readonly ServiceMap $serviceMap,
     ) {}
 
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
@@ -49,7 +49,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         }
 
         if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
-            return new ComponentPropertyReflection(new DummyPropertyReflection(), new ObjectType($componentClass));
+            return new ComponentPropertyReflection(new DummyPropertyReflection($propertyName), new ObjectType($componentClass));
         }
 
         if ($classReflection->hasNativeProperty($propertyName)) {

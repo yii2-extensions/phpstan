@@ -9,7 +9,6 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\ShouldNotHappenException;
-use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\DynamicMethodReturnTypeExtension;
 use PHPStan\Type\Type;
 use yii\db\ActiveRecord;
@@ -35,7 +34,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
-        Scope $scope
+        Scope $scope,
     ): Type {
         $arg = $methodCall->args[0];
 
@@ -45,22 +44,23 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
                     'Unexpected arg %s during method call %s at line %d',
                     get_class($arg),
                     $methodReflection->getName(),
-                    $methodCall->getLine()
+                    $methodCall->getLine(),
                 ),
             );
         }
 
         $argType = $scope->getType($arg->value);
-        if (!$argType instanceof ConstantStringType) {
+        $constantStrings = $argType->getConstantStrings();
+        if (count($constantStrings) === 0) {
             throw new ShouldNotHappenException(
                 sprintf(
                     'Invalid argument provided to method %s' . PHP_EOL .
                     'Hint: You should use ::class instead of ::className()',
-                    $methodReflection->getName()
-                )
+                    $methodReflection->getName(),
+                ),
             );
         }
 
-        return new ActiveQueryObjectType($argType->getValue(), false);
+        return new ActiveQueryObjectType($constantStrings[0]->getValue(), false);
     }
 }
