@@ -13,6 +13,7 @@ use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\DynamicStaticMethodReturnTypeExtension;
 use PHPStan\Type\NullType;
+use PHPStan\Type\ObjectType;
 use PHPStan\Type\ThisType;
 use PHPStan\Type\Type;
 use PHPStan\Type\TypeCombinator;
@@ -40,22 +41,39 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      */
     public function isStaticMethodSupported(MethodReflection $methodReflection): bool
     {
-        /** @phpstan-ignore staticMethod.deprecated */
-        $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())->getReturnType();
+        $variants = $methodReflection->getVariants();
+        if (count($variants) === 0) {
+            return false;
+        }
+
+        $returnType = $variants[0]->getReturnType();
         if ($returnType instanceof ThisType) {
             return true;
         }
 
         if ($returnType instanceof UnionType) {
             foreach ($returnType->getTypes() as $type) {
-                if ($type->isObject()->yes()) {
-                    return $this->reflectionProvider->hasClass($this->getClass()) &&
-                        $type->getClassName() === $this->getClass();
+                $classNames = $type->getObjectClassNames();
+                if (count($classNames) > 0) {
+                    $className = $classNames[0];
+                    if ($this->reflectionProvider->hasClass($className)) {
+                        $classReflection = $this->reflectionProvider->getClass($className);
+                        return $classReflection->isSubclassOf($this->getClass());
+                    }
                 }
             }
         }
 
-        return $returnType->isObject()->yes() && $returnType->getClassName() === ActiveQuery::class;
+        $classNames = $returnType->getObjectClassNames();
+        if (count($classNames) > 0) {
+            $className = $classNames[0];
+            if ($this->reflectionProvider->hasClass($className)) {
+                $classReflection = $this->reflectionProvider->getClass($className);
+                return $classReflection->isSubclassOf(ActiveQuery::class);
+            }
+        }
+
+        return false;
     }
 
     public function getTypeFromStaticMethodCall(

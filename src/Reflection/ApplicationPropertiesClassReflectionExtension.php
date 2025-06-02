@@ -49,7 +49,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         }
 
         if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
-            return new ComponentPropertyReflection(new DummyPropertyReflection(), new ObjectType($componentClass));
+            return new ComponentPropertyReflection(new DummyPropertyReflection($propertyName), new ObjectType($componentClass));
         }
 
         if ($classReflection->hasNativeProperty($propertyName)) {

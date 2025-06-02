@@ -6,6 +6,7 @@ namespace Yii2\Extensions\PHPStan\Type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
+use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\Reflection\ParametersAcceptorSelector;
@@ -38,12 +39,12 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
-        /** @phpstan-ignore staticMethod.deprecated */
-        $returnType = ParametersAcceptorSelector::selectSingle($methodReflection->getVariants())
-            ->getReturnType();
-
-        if ($returnType instanceof ThisType) {
-            return true;
+        $variants = $methodReflection->getVariants();
+        if (count($variants) > 0) {
+            $returnType = $variants[0]->getReturnType();
+            if ($returnType instanceof ThisType) {
+                return true;
+            }
         }
 
         return in_array($methodReflection->getName(), ['one', 'all'], true);
@@ -73,13 +74,19 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
         if ($methodName === 'asArray') {
             $argType = isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg
                 ? $scope->getType($methodCall->args[0]->value) : new ConstantBooleanType(true);
-            if ($argType->isBoolean()->no()) {
+
+            $boolValue = true;
+            if ($argType->isTrue()->yes()) {
+                $boolValue = true;
+            } elseif ($argType->isFalse()->yes()) {
+                $boolValue = false;
+            } else {
                 throw new ShouldNotHappenException(
                     sprintf('Invalid argument provided to asArray method at line %d', $methodCall->getLine()),
                 );
             }
 
-            return new ActiveQueryObjectType($calledOnType->getModelClass(), $argType->getValue());
+            return new ActiveQueryObjectType($calledOnType->getModelClass(), $boolValue);
         }
 
         if (!in_array($methodName, ['one', 'all'], true)) {

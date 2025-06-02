@@ -3,7 +3,6 @@ includes:
 	- vendor/phpstan/phpstan-phpunit/extension.neon
 	- vendor/phpstan/phpstan-phpunit/rules.neon
 	- phar://phpstan.phar/conf/bleedingEdge.neon
-	- vendor/phpstan/phpstan-deprecation-rules/rules.neon
 
 parameters:
     ignoreErrors:

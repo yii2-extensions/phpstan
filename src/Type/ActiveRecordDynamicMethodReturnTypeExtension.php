@@ -50,7 +50,8 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
         }
 
         $argType = $scope->getType($arg->value);
-        if (count($argType->getConstantStrings()) === 0) {
+        $constantStrings = $argType->getConstantStrings();
+        if (count($constantStrings) === 0) {
             throw new ShouldNotHappenException(
                 sprintf(
                     'Invalid argument provided to method %s' . PHP_EOL .
@@ -60,6 +61,6 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
             );
         }
 
-        return new ActiveQueryObjectType($argType->getValue(), false);
+        return new ActiveQueryObjectType($constantStrings[0]->getValue(), false);
     }
 }

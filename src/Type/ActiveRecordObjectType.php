@@ -18,12 +18,13 @@ final class ActiveRecordObjectType extends ObjectType
      */
     public function hasOffsetValueType(Type $offsetType): TrinaryLogic
     {
-        if (count($offsetType->getConstantStrings()) === 0) {
+        $constantStrings = $offsetType->getConstantStrings();
+        if (count($constantStrings) === 0) {
             return TrinaryLogic::createNo();
         }
 
         if ($this->isInstanceOf(ArrayAccess::class)->yes()) {
-            return TrinaryLogic::createFromBoolean($this->hasProperty($offsetType->getValue())->yes());
+            return TrinaryLogic::createFromBoolean($this->hasProperty($constantStrings[0]->getValue())->yes());
         }
 
         return parent::hasOffsetValueType($offsetType);
@@ -31,7 +32,8 @@ final class ActiveRecordObjectType extends ObjectType
 
     public function setOffsetValueType(?Type $offsetType, Type $valueType, bool $unionValues = true): Type
     {
-        if (count($offsetType->getConstantStrings()) > 0 && $this->hasProperty($offsetType->getValue())->no()) {
+        $constantStrings = $offsetType->getConstantStrings();
+        if (count($constantStrings) > 0 && $this->hasProperty($constantStrings[0]->getValue())->no()) {
             return new ErrorType();
         }
 
