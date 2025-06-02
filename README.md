@@ -67,7 +67,8 @@ parameters:
         - vendor/yiisoft/yii2/Yii.php
 
     yii2:
-        config_path: %currentWorkingDirectory%/config/test.php ---> your yii2 configuration file
+        # Path to your Yii2 configuration file
+        config_path: %currentWorkingDirectory%/config/test.php
 ```
 
 to the require-dev section of your `composer.json` file.
