@@ -30,9 +30,6 @@ jobs:
         ['8.1', '8.2', '8.3', '8.4']
   phpunit-compatibility:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
-    concurrency:
-      group: compatibility-${{ github.workflow }}-${{ github.ref }}
-      cancel-in-progress: true
     with:
       concurrency-group: compatibility-${{ github.workflow }}-${{ github.ref }}
       extensions: intl
