@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.2.1 Under development
+
 ## 0.2.0 June 02, 2025
 
 - Enh #12: Upgrade to `PHPStan` `2.1` (@glpzzz)
