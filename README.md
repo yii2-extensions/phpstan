@@ -10,10 +10,10 @@
         <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="php-version">
     </a>
     <a href="https://github.com/yiisoft/yii2/tree/2.0.52" target="_blank">
-        <img src="https://img.shields.io/badge/Yii2%20version-2.0.52-blue" alt="Yii2 version">
+        <img src="https://img.shields.io/badge/Yii2%20version-2.0.52-blue" alt="Yii2 version 2.0.52">
     </a>
     <a href="https://github.com/yiisoft/yii2/tree/22.0" target="_blank">
-        <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2 version">
+        <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2 version 22">
     </a>    
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
         <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
