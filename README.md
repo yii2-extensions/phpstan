@@ -9,11 +9,17 @@
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
         <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="php-version">
     </a>
+    <a href="https://github.com/yiisoft/yii2/tree/2.0.52" target="_blank">
+        <img src="https://img.shields.io/badge/Yii2%20version-2.0.52-blue" alt="Yii2 version">
+    </a>
+    <a href="https://github.com/yiisoft/yii2/tree/22.0" target="_blank">
+        <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2 version">
+    </a>    
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
         <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
     </a>
-    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/compatibility.yml" target="_blank">
-        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/compatibility.yml/badge.svg" alt="PHPUnit">
+    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">        
+        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="Static Analysis">
     </a>          
     <a href="https://codecov.io/gh/yii2-extensions/phpstan" target="_blank">
         <img src="https://codecov.io/gh/yii2-extensions/phpstan/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
@@ -40,14 +46,8 @@ to the require-dev section of your `composer.json` file.
 
 ## Quality code
 
-[![static-analysis](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![phpstan-level](https://img.shields.io/badge/PHPStan%20level-6-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![style-ci](https://github.styleci.io/repos/701347895/shield?branch=main)](https://github.styleci.io/repos/701347895?branch=main)
-
-## Support versions Yii2
-
-[![Yii20](https://img.shields.io/badge/Yii2%20version-2.0-blue)](https://github.com/yiisoft/yii2/tree/2.0.49.3)
-[![Yii22](https://img.shields.io/badge/Yii2%20version-2.2-blue)](https://github.com/yiisoft/yii2/tree/2.2)
 
 ## Testing
 
