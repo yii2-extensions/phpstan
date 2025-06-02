@@ -22,7 +22,7 @@ on:
 name: static analysis
 
 jobs:
-  psalm:
+  phpstan:
     uses: php-forge/actions/.github/workflows/phpstan.yml@main
     with:
       composer-command: |
