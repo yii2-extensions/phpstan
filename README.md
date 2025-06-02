@@ -71,8 +71,6 @@ parameters:
         config_path: %currentWorkingDirectory%/config/test.php
 ```
 
-to the require-dev section of your `composer.json` file.
-
 ## Quality code
 
 [![phpstan-level](https://img.shields.io/badge/PHPStan%20level-6-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
