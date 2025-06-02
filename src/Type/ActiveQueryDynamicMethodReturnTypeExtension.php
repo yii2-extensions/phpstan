@@ -6,10 +6,8 @@ namespace Yii2\Extensions\PHPStan\Type;
 
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
-use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Reflection\ParametersAcceptorSelector;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\ArrayType;
 use PHPStan\Type\Constant\ConstantBooleanType;
