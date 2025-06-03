@@ -20,6 +20,8 @@ name: build
 jobs:
   phpunit:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       composer-command: |
         composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
@@ -30,6 +32,8 @@ jobs:
         ['8.1', '8.2', '8.3', '8.4']
   phpunit-compatibility:
     uses: php-forge/actions/.github/workflows/phpunit.yml@main
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
       concurrency-group: compatibility-${{ github.workflow }}-${{ github.ref }}
       extensions: intl

@@ -1,28 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.2/phpunit.xsd"
-  bootstrap="tests/bootstrap.php"
-  cacheDirectory=".phpunit.cache"
-  colors="true"
-  executionOrder="depends,defects"
-  failOnRisky="true"
-  failOnWarning="true"
-  stopOnFailure="false"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    bootstrap="tests/bootstrap.php"
+    cacheDirectory=".phpunit.cache"
+    colors="true"
+    executionOrder="depends,defects"
+    failOnRisky="true"
+    failOnWarning="true"
+    stopOnFailure="false"
 >
-  <testsuites>
-    <testsuite name="PHPstan">
-      <directory>tests</directory>
-    </testsuite>
-  </testsuites>
-
-  <source>
-    <include>
-      <directory suffix=".php">./src</directory>
-    </include>
-    <exclude>
-      <directory suffix=".php">./src/reflection</directory>
-      <directory suffix=".php">./src/type</directory>
-    </exclude>
-  </source>
+    <testsuites>
+        <testsuite name="PHPstan">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+    <source>
+        <include>
+            <directory suffix=".php">./src</directory>
+        </include>
+        <exclude>
+            <directory suffix=".php">./src/reflection</directory>
+        <directory suffix=".php">./src/type</directory>
+        </exclude>
+    </source>
 </phpunit>
