@@ -33,13 +33,13 @@ The preferred way to install this extension is through [composer](https://getcom
 Either run
 
 ```shel
-composer require --dev --prefer-dist yii2-extensions/phpstan:^0.1
+composer require --dev --prefer-dist yii2-extensions/phpstan:^0.2
 ```
 
 or add
 
 ```json
-"yii2-extensions/phpstan": "^0.1"
+"yii2-extensions/phpstan": "^0.2"
 ```
 
 ## Usage
