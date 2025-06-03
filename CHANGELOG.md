@@ -1,8 +1,9 @@
 # Change Log
 
-## 0.2.1 Under development
+## 0.2.1 June 03, 2025
 
 - Bug #20: Update licenses, docs, configuration, and reflection/type logic (@terabytesoftw)
+- Bug #21: Update `CHANGELOG.md` date for version `0.2.1` and format `phpunit.xml.dist` (@terabytesoftw)
 
 ## 0.2.0 June 02, 2025
 
