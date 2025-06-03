@@ -2,7 +2,7 @@
 <phpunit
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.2/phpunit.xsd"
-  bootstrap="vendor/autoload.php"
+  bootstrap="tests/bootstrap.php"
   cacheDirectory=".phpunit.cache"
   colors="true"
   executionOrder="depends,defects"
@@ -20,5 +20,9 @@
     <include>
       <directory suffix=".php">./src</directory>
     </include>
+    <exclude>
+      <directory suffix=".php">./src/reflection</directory>
+      <directory suffix=".php">./src/type</directory>
+    </exclude>
   </source>
 </phpunit>

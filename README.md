@@ -73,7 +73,7 @@ parameters:
 
 ## Quality code
 
-[![phpstan-level](https://img.shields.io/badge/PHPStan%20level-6-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
+[![phpstan-level](https://img.shields.io/badge/PHPStan%20level-9-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![style-ci](https://github.styleci.io/repos/701347895/shield?branch=main)](https://github.styleci.io/repos/701347895?branch=main)
 
 ## Testing
@@ -86,7 +86,7 @@ parameters:
 
 ## License
 
-The MIT License. Please see [License File](LICENSE) for more information.
+BSD-3-Clause license. Please see [License File](LICENSE.md) for more information.
 
 ## Fork 
 
