@@ -21,7 +21,7 @@ use yii\web\User;
  * Integrates Yii's {@see User::identity] property and annotation-based property reflection into the user component
  * context, enabling accurate type inference and autocompletion for properties that are available on the user class.
  *
- * This extension allows PHPStan to recognize and reflect the {@see User::identity] property on the Yii user instance,
+ * This extension allows PHPStan to recognize and reflect the {@see User::identity} property on the Yii user instance,
  * as well as properties defined natively or via annotations, even if they aren't declared as native properties on the
  * user class.
  *
