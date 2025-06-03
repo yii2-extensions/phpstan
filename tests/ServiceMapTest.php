@@ -6,6 +6,7 @@ namespace yii2\extensions\phpstan\tests;
 
 use PhpParser\Node\Scalar\String_;
 use PHPUnit\Framework\TestCase;
+use ReflectionException;
 use RuntimeException;
 use SplFileInfo;
 use SplObjectStorage;
@@ -39,6 +40,9 @@ use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
  */
 final class ServiceMapTest extends TestCase
 {
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
     public function testItAllowsConfigWithoutSingletons(): void
     {
         $this->expectNotToPerformAssertions();
@@ -48,6 +52,9 @@ final class ServiceMapTest extends TestCase
         );
     }
 
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
     public function testItLoadsServicesAndComponents(): void
     {
         $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR . 'yii-config-valid.php';
@@ -115,6 +122,9 @@ final class ServiceMapTest extends TestCase
         );
     }
 
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
     public function testThrowRuntimeExceptionWhenClosureServiceHasMissingReturnType(): void
     {
         $this->expectException(RuntimeException::class);
@@ -125,6 +135,9 @@ final class ServiceMapTest extends TestCase
         new ServiceMap($fixturePath);
     }
 
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
     public function testThrowRuntimeExceptionWhenComponentHasInvalidValue(): void
     {
         $this->expectException(RuntimeException::class);
@@ -144,6 +157,9 @@ final class ServiceMapTest extends TestCase
         new ServiceMap('invalid-path');
     }
 
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
     public function testThrowRuntimeExceptionWhenServiceHasUnsupportedArray(): void
     {
         $this->expectException(RuntimeException::class);
@@ -155,6 +171,9 @@ final class ServiceMapTest extends TestCase
         new ServiceMap($fixturePath);
     }
 
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
     public function testThrowRuntimeExceptionWhenServiceHasUnsupportedType(): void
     {
         $this->expectException(RuntimeException::class);

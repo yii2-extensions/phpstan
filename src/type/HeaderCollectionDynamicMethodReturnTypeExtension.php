@@ -54,7 +54,7 @@ final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicM
     }
 
     /**
-     * @throws ShouldNotHappenException
+     * @throws ShouldNotHappenException if the method is not supported or the arguments are invalid.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,

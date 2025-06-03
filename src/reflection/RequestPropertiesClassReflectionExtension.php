@@ -60,6 +60,7 @@ final class RequestPropertiesClassReflectionExtension implements PropertiesClass
      * @param string $propertyName Name of the property to retrieve.
      *
      * @throws MissingPropertyFromReflectionException if the property doesn't exist on the web request class.
+     *
      * @return PropertyReflection Property reflection instance for the specified property.
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection

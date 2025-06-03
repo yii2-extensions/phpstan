@@ -7,6 +7,7 @@ namespace yii2\extensions\phpstan\tests\stub;
 use SplObjectStorage;
 use Yii;
 use yii\base\InvalidConfigException;
+use yii\db\Exception;
 use yii\web\Controller;
 
 /**
@@ -36,7 +37,8 @@ use yii\web\Controller;
 final class MyController extends Controller
 {
     /**
-     * @throws InvalidConfigException
+     * @throws Exception if an error occurs during ActiveRecord operations.
+     * @throws InvalidConfigException if the configuration is invalid.
      */
     public function actionMy(): void
     {

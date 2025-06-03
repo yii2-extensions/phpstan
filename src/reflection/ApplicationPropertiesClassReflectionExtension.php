@@ -81,6 +81,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * @param string $propertyName Name of the property to retrieve.
      *
      * @throws MissingPropertyFromReflectionException if the property doesn't exist or can't be resolved.
+     *
      * @return PropertyReflection Property reflection instance for the specified property.
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
