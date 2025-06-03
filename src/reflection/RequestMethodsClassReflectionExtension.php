@@ -57,9 +57,8 @@ final class RequestMethodsClassReflectionExtension implements MethodsClassReflec
      * @param ClassReflection $classReflection Class reflection instance for the Yii console request.
      * @param string $methodName Name of the method to retrieve.
      *
-     * @return MethodReflection Method reflection instance for the specified method.
-     *
      * @throws MissingMethodFromReflectionException if the method doesn't exist on the web request class.
+     * @return MethodReflection Method reflection instance for the specified method.
      */
     public function getMethod(ClassReflection $classReflection, string $methodName): MethodReflection
     {

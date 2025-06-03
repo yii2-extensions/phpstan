@@ -133,7 +133,7 @@ final class ServiceMap
      * definition-based services.
      *
      * @param string $id Service identifier to register in the service map.
-     * @param array|string|Closure|int $service Service definition in supported format.
+     * @param array|Closure|int|string $service Service definition in supported format.
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      *
@@ -194,7 +194,7 @@ final class ServiceMap
      * services for accurate type inference, autocompletion, and service resolution in PHPStan analysis.
      *
      * @param string $id Service identifier being resolved.
-     * @param array|Closure|string|int $service Service definition in supported format.
+     * @param array|Closure|int|string $service Service definition in supported format.
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if the service definition format is unsupported or missing required information.

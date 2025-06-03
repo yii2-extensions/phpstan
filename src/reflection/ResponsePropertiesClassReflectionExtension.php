@@ -59,9 +59,8 @@ final class ResponsePropertiesClassReflectionExtension implements PropertiesClas
      * @param ClassReflection $classReflection Class reflection instance for the Yii console response.
      * @param string $propertyName Name of the property to retrieve.
      *
-     * @return PropertyReflection Property reflection instance for the specified property.
-     *
      * @throws MissingPropertyFromReflectionException if the property doesn't exist on the web response class.
+     * @return PropertyReflection Property reflection instance for the specified property.
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {

@@ -80,9 +80,8 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * @param ClassReflection $classReflection Class reflection instance for the Yii application.
      * @param string $propertyName Name of the property to retrieve.
      *
-     * @return PropertyReflection Property reflection instance for the specified property.
-     *
      * @throws MissingPropertyFromReflectionException if the property doesn't exist or can't be resolved.
+     * @return PropertyReflection Property reflection instance for the specified property.
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
