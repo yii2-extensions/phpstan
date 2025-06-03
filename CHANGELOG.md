@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.2.2 Under development
+
 ## 0.2.1 June 03, 2025
 
 - Bug #20: Update licenses, docs, configuration, and reflection/type logic (@terabytesoftw)
