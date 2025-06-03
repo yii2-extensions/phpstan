@@ -9,7 +9,7 @@ parameters:
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'
         - '#Creating new PHPStan\\Reflection\\Dummy\\DummyPropertyReflection is not covered.+#'
 
-    level: 6
+    level: 9
 
     paths:
         - src
