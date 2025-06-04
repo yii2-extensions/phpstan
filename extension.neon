@@ -11,7 +11,7 @@ parameters:
 
     stubFiles:
         - stubs/BaseYii.stub
-        - vendor/yiisoft/yii2/Yii.php
+        - %currentWorkingDirectory%/vendor/yiisoft/yii2/Yii.php
 
 parametersSchema:
 	yii2: structure(
