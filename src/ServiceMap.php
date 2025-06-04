@@ -71,7 +71,7 @@ final class ServiceMap
      * Creates a new instance of the {@see ServiceMap} class.
      *
      * @param string $configPath Path to the Yii application configuration file (default: `''`). If provided, the
-     * configuration file must exist and be valid. If not provided, an empty configuration is used.
+     * configuration file must exist and be valid. If empty or not provided, operates with empty service/component maps.
      *
      * @throws InvalidArgumentException If the provided config path doesn't exist.
      * @throws ReflectionException If the service definitions can't be resolved or are invalid.

@@ -115,8 +115,9 @@ parameters:
 ```
 
 **Note:** When you define `dynamicConstantNames` in your configuration, it **replaces** the extension's default
-constants. To maintain the `Yii2` constants recognition, you must include them explicitly along with your custom 
-constants as shown above.
+constants. 
+To maintain the `Yii2` constants recognition, you must include them explicitly along with your custom constants, as
+shown above.
 
 ### Advanced Configuration Example
 
