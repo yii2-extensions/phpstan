@@ -70,15 +70,16 @@ final class ServiceMap
     /**
      * Creates a new instance of the {@see ServiceMap} class.
      *
-     * @param string $configPath Path to the Yii application configuration file.
+     * @param string $configPath Path to the Yii application configuration file (default: `''`). If provided, the
+     * configuration file must exist and be valid. If empty or not provided, operates with empty service/component maps.
      *
      * @throws InvalidArgumentException If the provided config path doesn't exist.
      * @throws ReflectionException If the service definitions can't be resolved or are invalid.
      * @throws RuntimeException If the provided configuration path doesn't exist or is invalid.
      */
-    public function __construct(string $configPath)
+    public function __construct(string $configPath = '')
     {
-        if (file_exists($configPath) === false) {
+        if ($configPath !== '' && file_exists($configPath) === false) {
             throw new InvalidArgumentException(sprintf('Provided config path %s must exist', $configPath));
         }
 
@@ -87,7 +88,7 @@ final class ServiceMap
         defined('YII_ENV_PROD') || define('YII_ENV_PROD', false);
         defined('YII_ENV_TEST') || define('YII_ENV_TEST', true);
 
-        $config = require $configPath;
+        $config = $configPath !== '' ? require $configPath : [];
 
         foreach ($config['container']['singletons'] ?? [] as $id => $service) {
             $this->addServiceDefinition($id, $service);

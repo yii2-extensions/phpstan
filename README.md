@@ -32,7 +32,7 @@ The preferred way to install this extension is through [composer](https://getcom
 
 Either run
 
-```shel
+```shell
 composer require --dev --prefer-dist yii2-extensions/phpstan:^0.2
 ```
 
@@ -44,31 +44,117 @@ or add
 
 ## Usage
 
+This extension provides enhanced static analysis for `Yii2` applications by adding:
+
+- **Container service resolution** with proper type inference.
+- **Dynamic method return types** for `ActiveRecord` and `ActiveQuery`.
+- **Header collection dynamic methods** support.
+- **Property reflection extensions** for `Application`, `Request`, `Response`, and `User` components.
+- **Service map integration** for dependency injection analysis.
+
+### Basic Configuration
+
 To use this extension, you need to add the following configuration to your `phpstan.neon` file:
 
 ```neon
 includes:
-	- vendor/yii2-extensions/phpstan/extension.neon
+    - vendor/yii2-extensions/phpstan/extension.neon
 
 parameters:
     bootstrapFiles:
         - tests/bootstrap.php
-
-    dynamicConstantNames:
-        - YII_DEBUG
-        - YII_ENV
 
     level: 5
 
     paths:
         - src
 
-    scanFiles:
-        - vendor/yiisoft/yii2/Yii.php
+    # Exclude paths from analysis
+    excludePaths:
+        - c3.php
+        - requirements.php
+        - config
+        - tests
+        - vendor
 
     yii2:
-        # Path to your Yii2 configuration file
+        # Path to your `Yii2` configuration file (optional)
+        # If not provided or empty, will work without explicit configuration 
         config_path: %currentWorkingDirectory%/config/test.php
+```
+
+### Dynamic Constants Configuration
+
+The extension automatically recognizes common `Yii2` dynamic constants:
+
+- `YII_DEBUG`
+- `YII_ENV`
+- `YII_ENV_DEV`
+- `YII_ENV_PROD`
+- `YII_ENV_TEST`
+
+If you need to add additional dynamic constants, you can extend the configuration:
+
+```neon
+includes:
+    - vendor/yii2-extensions/phpstan/extension.neon
+
+parameters:
+    # Your existing dynamic constants will be merged with the extension's defaults
+    dynamicConstantNames:
+        - YII_DEBUG         # Already included by the extension
+        - YII_ENV           # Already included by the extension
+        - YII_ENV_DEV       # Already included by the extension
+        - YII_ENV_PROD      # Already included by the extension
+        - YII_ENV_TEST      # Already included by the extension
+        - MY_CUSTOM_CONSTANT
+        - ANOTHER_CONSTANT
+
+    yii2:
+        config_path: %currentWorkingDirectory%/config/test.php
+```
+
+**Note:** When you define `dynamicConstantNames` in your configuration, it **replaces** the extension's default
+constants. 
+To maintain the `Yii2` constants recognition, you must include them explicitly along with your custom constants, as
+shown above.
+
+### Advanced Configuration Example
+
+```neon
+includes:
+    - vendor/yii2-extensions/phpstan/extension.neon
+
+parameters:
+    level: 8
+    
+    paths:
+        - src
+        - controllers
+        - models
+        - widgets
+
+    excludePaths:
+        - src/legacy
+        - tests/_support
+        - vendor
+        
+    bootstrapFiles:
+        - config/bootstrap.php
+        - tests/bootstrap.php
+
+    # Complete dynamic constants list (extension defaults + custom)
+    dynamicConstantNames:
+        - YII_DEBUG
+        - YII_ENV
+        - YII_ENV_DEV
+        - YII_ENV_PROD
+        - YII_ENV_TEST
+        - APP_VERSION
+        - MAINTENANCE_MODE
+
+    yii2:
+        config_path: %currentWorkingDirectory%/config/web.php
 ```
 
 ## Quality code
