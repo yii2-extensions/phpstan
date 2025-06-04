@@ -125,6 +125,26 @@ final class ServiceMapTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
+    public function testItAllowsWithoutEmptyConfigPath(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        new ServiceMap();
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testItAllowsWithoutEmptyConfigPathStringValue(): void
+    {
+        $this->expectNotToPerformAssertions();
+
+        new ServiceMap('');
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
     public function testThrowRuntimeExceptionWhenClosureServiceHasMissingReturnType(): void
     {
         $this->expectException(RuntimeException::class);

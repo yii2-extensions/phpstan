@@ -1,6 +1,8 @@
 # Change Log
 
-## 0.2.2 Under development
+## 0.2.2 June 04, 2025
+
+- Bug #22: Make `ServiceMap` `$configPath` optional in constructor and update docs `README.md` (@terabytesoftw)
 
 ## 0.2.1 June 03, 2025
 
