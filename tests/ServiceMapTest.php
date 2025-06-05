@@ -242,7 +242,7 @@ final class ServiceMapTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            'Service definition must be an \'array\', \'integer\', \'object\', \'string\', , got \'resource\'.',
+            'Service definition must be an \'array\', \'integer\', \'object\', or \'string\', got \'resource\'.',
         );
 
         new ServiceMap($fixturePath);

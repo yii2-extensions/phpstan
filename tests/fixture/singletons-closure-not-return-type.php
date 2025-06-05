@@ -6,7 +6,7 @@ return [
     'container' => [
         'singletons' => [
             'closure-not-return-type' => static function () {
-                return new ArrayObject();
+                return new \ArrayObject();
             },
         ],
     ],

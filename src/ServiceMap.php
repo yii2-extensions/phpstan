@@ -138,7 +138,7 @@ final class ServiceMap
                 if (in_array(gettype($service), ['array', 'integer', 'object', 'string'], true) === false) {
                     throw new RuntimeException(
                         sprintf(
-                            'Service definition must be an \'array\', \'integer\', \'object\', \'string\', , got ' .
+                            'Service definition must be an \'array\', \'integer\', \'object\', or \'string\', got ' .
                             '\'%s\'.',
                             gettype($service),
                         ),
@@ -309,7 +309,12 @@ final class ServiceMap
             return $service['class'];
         }
 
-        if (isset($service[0]['class']) && is_string($service[0]['class']) && $service[0]['class'] !== '') {
+        if (
+            isset($service[0]) &&
+            is_array($service[0]) &&
+            is_string($service[0]['class']) &&
+            $service[0]['class'] !== ''
+        ) {
             return $service[0]['class'];
         }
 
