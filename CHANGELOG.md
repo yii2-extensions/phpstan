@@ -2,6 +2,8 @@
 
 ## 0.2.3 Under development
 
+- Enh #25: Add support for PHPStan Extension Installer (@samuelrajan747)
+
 ## 0.2.2 June 04, 2025
 
 - Bug #22: Make `$configPath` optional in constructor `ServiceMap` class and update docs `README.md` (@terabytesoftw)
