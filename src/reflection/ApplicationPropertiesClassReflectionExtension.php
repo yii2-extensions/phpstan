@@ -94,6 +94,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
                 new ObjectType($componentClass),
+                $classReflection,
             );
         }
 

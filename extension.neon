@@ -9,10 +9,6 @@ parameters:
     yii2:
         config_path: ''
 
-    stubFiles:
-        - stubs/BaseYii.stub
-        - %currentWorkingDirectory%/vendor/yiisoft/yii2/Yii.php
-
 parametersSchema:
 	yii2: structure(
         [

@@ -4,6 +4,7 @@
 
 - Bug #22: Make `$configPath` optional in constructor `ServiceMap` class and update docs `README.md` (@terabytesoftw)
 - Bug #23: Update the path to `Yii.php` in the `stubFiles` configuration for correct referencing (@terabytesoftw)
+- Bug #24: Improve `Yii2` integration component property handling.
 
 ## 0.2.1 June 03, 2025
 
