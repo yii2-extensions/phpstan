@@ -8,6 +8,8 @@ use PHPStan\Reflection\{ClassReflection, PropertyReflection};
 use PHPStan\TrinaryLogic;
 use PHPStan\Type\Type;
 
+use function sprintf;
+
 /**
  * Property reflection wrapper for Yii application components in PHPStan analysis.
  *
@@ -110,11 +112,7 @@ final class ComponentPropertyReflection implements PropertyReflection
     {
         $componentTypeName = $this->type->describe(\PHPStan\Type\VerbosityLevel::typeOnly());
 
-        return <<<PHPDOC
-        /**
-         * @var {$componentTypeName}
-         */
-        PHPDOC;
+        return sprintf("/**\n * @var %s\n */", $componentTypeName);
     }
 
     /**
