@@ -41,6 +41,13 @@
             "yiisoft/yii2-composer": true
         }
     },
+	"extra": {
+		"phpstan": {
+			"includes": [
+				"extension.neon"
+			]
+		}
+	},
     "scripts": {
         "check-dependencies": "./vendor/bin/composer-require-checker check",
         "ecs": "./vendor/bin/ecs --fix",
