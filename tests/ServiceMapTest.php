@@ -43,13 +43,13 @@ final class ServiceMapTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testItAllowsConfigWithoutSingletons(): void
+    public function testItAllowsContainerWithoutDefinitionsAndSingletons(): void
     {
         $this->expectNotToPerformAssertions();
 
-        new ServiceMap(
-            __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR . 'yii-config-no-singletons.php',
-        );
+        $ds = DIRECTORY_SEPARATOR;
+
+        new ServiceMap(__DIR__ . "{$ds}fixture{$ds}container-not-definitions.php");
     }
 
     /**
@@ -57,7 +57,8 @@ final class ServiceMapTest extends TestCase
      */
     public function testItLoadsServicesAndComponents(): void
     {
-        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR . 'yii-config-valid.php';
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
 
         $serviceMap = new ServiceMap($fixturePath);
 
@@ -145,12 +146,13 @@ final class ServiceMapTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowRuntimeExceptionWhenClosureServiceHasMissingReturnType(): void
+    public function testThrowRuntimeExceptionWhenComponentsHasUnsupportedIdNotStringValue(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Please provide return type for no-return-type service closure');
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-id-not-string.php";
 
-        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR . 'yii-config-invalid.php';
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Component ID must be a string, got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }
@@ -158,18 +160,18 @@ final class ServiceMapTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowRuntimeExceptionWhenComponentHasInvalidValue(): void
+    public function testThrowRuntimeExceptionWhenComponentsHasUnsupportedTypeIntegerValue(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Invalid value for component with id customComponent. Expected object or array.');
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-type-integer.php";
 
-        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR .
-            'yii-config-invalid-component.php';
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unsupported component definition for \'integer\'.');
 
         new ServiceMap($fixturePath);
     }
 
-    public function testThrowRuntimeExceptionWhenConfigurationFileDoesNotExist(): void
+    public function testThrowRuntimeExceptionWhenConfigPathFileDoesNotExist(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Provided config path invalid-path must exist');
@@ -177,16 +179,13 @@ final class ServiceMapTest extends TestCase
         new ServiceMap('invalid-path');
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenServiceHasUnsupportedArray(): void
+    public function testThrowRuntimeExceptionWhenConfigHasUnsupportedIsNotArrayValue(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Cannot guess service definition for unsupported-array');
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config-unsupported-integer.php";
 
-        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR .
-            'yii-config-invalid-unsupported-array.php';
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Configuration file '{$fixturePath}' must return an array.");
 
         new ServiceMap($fixturePath);
     }
@@ -194,13 +193,155 @@ final class ServiceMapTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowRuntimeExceptionWhenServiceHasUnsupportedType(): void
+    public function testThrowRuntimeExceptionWhenContainerDefinitionsHasClosureForMissingReturnType(): void
     {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported service definition for unsupported-type');
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-closure-not-return-type.php";
 
-        $fixturePath = __DIR__ . DIRECTORY_SEPARATOR . 'fixture' . DIRECTORY_SEPARATOR .
-            'yii-config-invalid-unsupported-type.php';
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerDefinitionsHasUnsupportedIdNotStringValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-id-not-string.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Service ID must be a string, got \'integer\'.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerDefinitionsHasUnsupportedIsNotArrayValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-integer.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unsupported service definition for \'integer\'.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerDefinitionsHasUnsupportedTypeArrayInvalidValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-type-array-invalid.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            'Service definition must be an \'array\', \'integer\', \'object\', \'string\', , got \'resource\'.',
+        );
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerDefinitionsHasUnsupportedTypeEmptyArrayValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-empty-array.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot guess service definition for \'unsupported-empty-array\'.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerDefinitionsHasUnsupportedTypeIntegerValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-type-integer.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unsupported service definition for \'unsupported-type-integer\'.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerSingletonsHasClosureForMissingReturnType(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-closure-not-return-type.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerSingletonsHasUnsupportedIdNotStringValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-id-not-string.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Singleton ID must be a string, got \'integer\'.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerSingletonsHasUnsupportedIsNotArrayValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-is-not-array.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Unsupported singletons definition for \'integer\'.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerSingletonsHasUnsupportedTypeEmptyArrayValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-empty-array.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Cannot guess service definition for \'unsupported-empty-array\'.');
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerSingletonsHasUnsupportedTypeIntegerValue(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-type-integer.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Singleton service definition must be an array, got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }
