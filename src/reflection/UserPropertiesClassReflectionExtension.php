@@ -107,8 +107,14 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      */
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
-        if ($classReflection->getName() !== User::class) {
+        if (
+            $classReflection->getName() !== User::class &&
+            $classReflection->isSubclassOf(User::class) === false) {
             return false;
+        }
+
+        if ($propertyName === 'identity' && $this->serviceMap->getComponentClassById($propertyName) !== null) {
+            return true;
         }
 
         return $classReflection->hasNativeProperty($propertyName)
