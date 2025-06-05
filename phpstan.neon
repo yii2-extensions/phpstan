@@ -5,6 +5,9 @@ includes:
 	- phar://phpstan.phar/conf/bleedingEdge.neon
 
 parameters:
+    bootstrapFiles:
+        - tests/bootstrap.php
+
     ignoreErrors:
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'
         - '#Creating new PHPStan\\Reflection\\Dummy\\DummyPropertyReflection is not covered.+#'
@@ -13,9 +16,3 @@ parameters:
 
     paths:
         - src
-
-    scanFiles:
-        - vendor/yiisoft/yii2/Yii.php
-
-    yii2:
-        config_path: tests/fixture/yii-config-valid.php

@@ -38,9 +38,14 @@ final class ComponentPropertyReflection implements PropertyReflection
      * Creates a new instance of the {@see ComponentPropertyReflection} class.
      *
      * @param PropertyReflection $fallbackProperty Fallback property reflection instance for delegation.
-     * @param Type $type Actual type of the dynamic component as resolved by the service map.
+     * @param Type $type Type of the dynamic component as resolved by the service map or dependency injection.
+     * @param ClassReflection $declaringClass Class reflection of the class declaring the dynamic property.
      */
-    public function __construct(private readonly PropertyReflection $fallbackProperty, private readonly Type $type) {}
+    public function __construct(
+        private readonly PropertyReflection $fallbackProperty,
+        private readonly Type $type,
+        private readonly ClassReflection $declaringClass,
+    ) {}
 
     /**
      * Determines whether the type of the dynamic Yii application component property can change after assignment.
@@ -71,7 +76,7 @@ final class ComponentPropertyReflection implements PropertyReflection
      */
     public function getDeclaringClass(): ClassReflection
     {
-        return $this->fallbackProperty->getDeclaringClass();
+        return $this->declaringClass;
     }
 
     /**
@@ -99,11 +104,17 @@ final class ComponentPropertyReflection implements PropertyReflection
      * This method allows static analysis tools and IDEs to display inline documentation for dynamic application
      * components, supporting accurate code completion, type checking, and developer guidance.
      *
-     * @return string|null PHPDoc comment string if available, or `null` if no documentation is set.
+     * @return string PHPDoc comment string for the property, or an empty string if no comment is set.
      */
-    public function getDocComment(): string|null
+    public function getDocComment(): string
     {
-        return $this->fallbackProperty->getDocComment();
+        $componentTypeName = $this->type->describe(\PHPStan\Type\VerbosityLevel::typeOnly());
+
+        return <<<PHPDOC
+        /**
+         * @var {$componentTypeName}
+         */
+        PHPDOC;
     }
 
     /**
@@ -119,7 +130,7 @@ final class ComponentPropertyReflection implements PropertyReflection
      */
     public function getReadableType(): Type
     {
-        return $this->fallbackProperty->getReadableType();
+        return $this->type;
     }
 
     /**
@@ -151,7 +162,7 @@ final class ComponentPropertyReflection implements PropertyReflection
      */
     public function getWritableType(): Type
     {
-        return $this->fallbackProperty->getWritableType();
+        return $this->type;
     }
 
     /**
@@ -167,7 +178,7 @@ final class ComponentPropertyReflection implements PropertyReflection
      */
     public function isDeprecated(): TrinaryLogic
     {
-        return $this->fallbackProperty->isDeprecated();
+        return TrinaryLogic::createNo();
     }
 
     /**
@@ -183,7 +194,7 @@ final class ComponentPropertyReflection implements PropertyReflection
      */
     public function isInternal(): TrinaryLogic
     {
-        return $this->fallbackProperty->isInternal();
+        return TrinaryLogic::createNo();
     }
 
     /**

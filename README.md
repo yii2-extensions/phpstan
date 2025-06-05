@@ -126,7 +126,20 @@ includes:
     - vendor/yii2-extensions/phpstan/extension.neon
 
 parameters:
-    level: 8
+    bootstrapFiles:
+        - tests/bootstrap.php
+
+    # Complete dynamic constants list (extension defaults + custom)
+    dynamicConstantNames:
+        - YII_DEBUG
+        - YII_ENV
+        - YII_ENV_DEV
+        - YII_ENV_PROD
+        - YII_ENV_TEST
+        - APP_VERSION
+        - MAINTENANCE_MODE        
+
+    level: 8    
     
     paths:
         - src
@@ -138,20 +151,6 @@ parameters:
         - src/legacy
         - tests/_support
         - vendor
-        
-    bootstrapFiles:
-        - config/bootstrap.php
-        - tests/bootstrap.php
-
-    # Complete dynamic constants list (extension defaults + custom)
-    dynamicConstantNames:
-        - YII_DEBUG
-        - YII_ENV
-        - YII_ENV_DEV
-        - YII_ENV_PROD
-        - YII_ENV_TEST
-        - APP_VERSION
-        - MAINTENANCE_MODE
 
     yii2:
         config_path: %currentWorkingDirectory%/config/web.php

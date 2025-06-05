@@ -12,8 +12,9 @@ use PHPStan\Reflection\{
 };
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
-use PHPStan\Type\MixedType;
+use PHPStan\Type\ObjectType;
 use yii\web\User;
+use yii2\extensions\phpstan\ServiceMap;
 
 /**
  * Provides property reflection for a Yii user component in PHPStan analysis.
@@ -49,7 +50,10 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      * @param AnnotationsPropertiesClassReflectionExtension $annotationsProperties Extension for handling
      * annotation-based properties.
      */
-    public function __construct(private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties) {}
+    public function __construct(
+        private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
+        private readonly ServiceMap $serviceMap,
+    ) {}
 
     /**
      * Retrieves the property reflection for a given property on the Yii user component.
@@ -69,8 +73,15 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
-        if ($propertyName === 'identity') {
-            return new ComponentPropertyReflection(new DummyPropertyReflection($propertyName), new MixedType());
+        if (
+            $propertyName === 'identity' &&
+            ($componentClass = $this->serviceMap->getComponentClassById($propertyName)) !== null
+        ) {
+            return new ComponentPropertyReflection(
+                new DummyPropertyReflection($propertyName),
+                new ObjectType($componentClass),
+                $classReflection,
+            );
         }
 
         if ($classReflection->hasNativeProperty($propertyName)) {
