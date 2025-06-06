@@ -88,8 +88,10 @@ final class ServiceMap
      */
     public function __construct(string $configPath = '')
     {
-        if ($configPath !== '' && file_exists($configPath) === false) {
-            throw new InvalidArgumentException(sprintf('Provided config path \'%s\' must exist', $configPath));
+        if ($configPath !== '' && file_exists($configPath) === false && is_readable($configPath) === false) {
+            throw new InvalidArgumentException(
+                sprintf('Provided config path \'%s\' must be a readable file.', $configPath),
+            );
         }
 
         defined('YII_DEBUG') || define('YII_DEBUG', true);
@@ -221,7 +223,7 @@ final class ServiceMap
             return $definition;
         }
 
-        if (is_string($definition) || $definition instanceof Closure) {
+        if ($definition instanceof Closure || (is_string($definition) && is_callable($definition))) {
             $returnType = (new ReflectionFunction($definition))->getReturnType();
 
             if ($returnType instanceof ReflectionNamedType === false) {

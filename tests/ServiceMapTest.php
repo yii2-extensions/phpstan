@@ -181,7 +181,7 @@ final class ServiceMapTest extends TestCase
     public function testThrowRuntimeExceptionWhenConfigPathFileDoesNotExist(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Provided config path \'invalid-path\' must exist');
+        $this->expectExceptionMessage('Provided config path \'invalid-path\' must be a readable file.');
 
         new ServiceMap('invalid-path');
     }
