@@ -1,8 +1,7 @@
 includes:
-	- extension.neon
-	- vendor/phpstan/phpstan-phpunit/extension.neon
-	- vendor/phpstan/phpstan-phpunit/rules.neon
-	- phar://phpstan.phar/conf/bleedingEdge.neon
+    - extension.neon
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
     bootstrapFiles:
@@ -16,3 +15,13 @@ parameters:
 
     paths:
         - src
+
+    # Enable strict advanced checks
+    checkImplicitMixed: true
+    checkBenevolentUnionTypes: true
+    checkUninitializedProperties: true
+    checkMissingCallableSignature: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    reportAnyTypeWideningInVarTag: true
+    reportPossiblyNonexistentConstantArrayOffset: true
+    reportPossiblyNonexistentGeneralArrayOffset: true

@@ -56,6 +56,8 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      * return type logic is applied to service resolution calls.
      *
      * @return string Fully qualified class name of the supported container class.
+     *
+     * @phpstan-return class-string<\yii\di\Container>
      */
     public function getClass(): string
     {

@@ -68,6 +68,8 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      * return type inference is applied to the correct class hierarchy during static analysis and IDE autocompletion.
      *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.
+     *
+     * @phpstan-return class-string<\yii\db\ActiveRecord>
      */
     public function getClass(): string
     {

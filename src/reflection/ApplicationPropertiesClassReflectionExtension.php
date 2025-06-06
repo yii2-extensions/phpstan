@@ -142,6 +142,6 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
 
         return $classReflection->hasNativeProperty($propertyName)
             || $this->annotationsProperties->hasProperty($classReflection, $propertyName)
-            || $this->serviceMap->getComponentClassById($propertyName);
+            || $this->serviceMap->getComponentClassById($propertyName) !== null;
     }
 }

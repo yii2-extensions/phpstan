@@ -62,6 +62,8 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * Returns the class name for which this dynamic return type extension applies.
      *
      * @return string Fully qualified class name of the supported class.
+     *
+     * @phpstan-return class-string<\yii\db\ActiveQuery>
      */
     public function getClass(): string
     {
