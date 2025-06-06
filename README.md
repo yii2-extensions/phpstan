@@ -114,7 +114,7 @@ parameters:
         config_path: %currentWorkingDirectory%/config/test.php
 ```
 
-**Note:** When you define `dynamicConstantNames` in your configuration, it **replaces** the extension's default
+**Note:** When you define `dynamicConstantNames` in your configuration, it **replaces** the extension's default 
 constants. 
 To maintain the `Yii2` constants recognition, you must include them explicitly along with your custom constants, as
 shown above.
@@ -156,9 +156,70 @@ parameters:
         config_path: %currentWorkingDirectory%/config/web.php
 ```
 
+### PHPstan extension installer
+
+You can use the `phpstan-extension-installer` to automatically install this extension.
+
+To do this, you need to add the following configuration to your `composer.json` file:
+
+```shell
+composer require --dev phpstan/extension-installer
+```
+
+or, add the following to your `composer.json`:
+
+```json
+{
+    "require-dev": {
+        "phpstan/extension-installer": "^1.4"
+    },
+    "config": {
+        "allow-plugins": {
+            "phpstan/extension-installer": true
+        }
+    },
+}
+```
+
+### Config `yii2` application for PHPStan
+
+To configure the `yii2` application, you can use the `yii2` section in your `phpstan.neon` file:
+
+```neon
+parameters:
+    yii2:
+        # Path to your `Yii2` configuration file
+        config_path: %currentWorkingDirectory%/config/test.php
+```
+
+`config/test.php` file should return an array with the application configuration, similar to the following:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use yii2\extensions\localeurls\UrlLanguageManager;
+
+return [
+    'components' => [
+        // custom component
+        'helper' => [
+            'class' => \yii2\extensions\helper\Helper::class,
+        ],
+        // your component extended
+        'urlManager' => [
+            'class' => UrlLanguageManager::class,
+        ],
+    ],
+];
+```
+
+
+
 ## Quality code
 
-[![phpstan-level](https://img.shields.io/badge/PHPStan%20level-9-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
+[![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![style-ci](https://github.styleci.io/repos/701347895/shield?branch=main)](https://github.styleci.io/repos/701347895?branch=main)
 
 ## Testing

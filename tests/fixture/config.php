@@ -17,18 +17,26 @@ return [
             'singleton-closure' => static function (): SplStack {
                 return new SplStack();
             },
-            'singleton-service' => ['class' => SplObjectStorage::class],
+            'singleton-service' => [
+                'class' => SplObjectStorage::class,
+            ],
             'singleton-nested-service-class' => [
-                ['class' => SplFileInfo::class],
+                [
+                    'class' => SplFileInfo::class,
+                ],
             ],
         ],
         'definitions' => [
             'closure' => static function (): SplStack {
                 return new SplStack();
             },
-            'service' => ['class' => SplObjectStorage::class],
+            'service' => [
+                'class' => SplObjectStorage::class,
+            ],
             'nested-service-class' => [
-                ['class' => SplFileInfo::class],
+                [
+                    'class' => SplFileInfo::class,
+                ],
             ],
             MyActiveRecord::class => [
                 'flag' => 'foo',
