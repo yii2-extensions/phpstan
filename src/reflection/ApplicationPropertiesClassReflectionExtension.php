@@ -14,6 +14,7 @@ use PHPStan\Reflection\{
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
 use PHPStan\Type\ObjectType;
+use PHPStan\Type\Generic\GenericObjectType;
 use yii2\extensions\phpstan\ServiceMap;
 
 /**
@@ -94,6 +95,14 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
                 new ObjectType($componentClass),
+                $classReflection,
+            );
+        }
+
+        if ($this->serviceMap->isUserComponentClass($propertyName)) {
+            return new ComponentPropertyReflection(
+                new DummyPropertyReflection($propertyName),
+                new GenericObjectType('yii\web\User', [new ObjectType($this->serviceMap->getUserComponentClassById($propertyName))]),
                 $classReflection,
             );
         }
