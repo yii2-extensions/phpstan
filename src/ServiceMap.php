@@ -270,19 +270,19 @@ final class ServiceMap
         if ($config !== []) {
             $components = $config['components'] ?? [];
 
-            foreach ($components as $id => $value) {
+            foreach ($components as $id => $definition) {
                 if (is_string($id) === false) {
                     $this->throwErrorWhenIdIsNotString('Component', gettype($id));
                 }
 
-                if (is_object($value)) {
-                    $this->components[$id] = get_class($value);
+                if (is_object($definition)) {
+                    $this->components[$id] = get_class($definition);
 
                     continue;
                 }
 
-                if (isset($value['class']) && is_string($value['class']) && $value['class'] !== '') {
-                    $this->components[$id] = $value['class'];
+                if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
+                    $this->components[$id] = $definition['class'];
                 }
             }
         }
