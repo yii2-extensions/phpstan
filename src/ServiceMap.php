@@ -48,6 +48,15 @@ use function sprintf;
  * - Supports singleton, definition, and closure-based service registration.
  * - Throws descriptive exceptions for invalid or unsupported definitions.
  *
+ * @phpstan-type DefinitionType = array{class?: mixed}|array{array{class?: mixed}}|int|object|string
+ * @phpstan-type ServiceType = array{
+ *   components?: array<array-key, array<array-key, mixed>|object>,
+ *   container?: array{
+ *     definitions?: array<array-key, DefinitionType>,
+ *     singletons?: array<array-key, DefinitionType>,
+ *   }
+ * }
+ *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
@@ -63,7 +72,7 @@ final class ServiceMap
     /**
      * Component definitions map for Yii application analysis.
      *
-     * @phpstan-var array<string, string>
+     * @phpstan-var string[]
      */
     private array $components = [];
 
@@ -73,14 +82,14 @@ final class ServiceMap
      * @param string $configPath Path to the Yii application configuration file (default: `''`). If provided, the
      * configuration file must exist and be valid. If empty or not provided, operates with empty service/component maps.
      *
-     * @throws InvalidArgumentException If the provided config path doesn't exist.
-     * @throws ReflectionException If the service definitions can't be resolved or are invalid.
-     * @throws RuntimeException If the provided configuration path doesn't exist or is invalid.
+     * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
+     * @throws ReflectionException if the service definitions can't be resolved or are invalid.
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      */
     public function __construct(string $configPath = '')
     {
         if ($configPath !== '' && file_exists($configPath) === false) {
-            throw new InvalidArgumentException(sprintf('Provided config path %s must exist', $configPath));
+            throw new InvalidArgumentException(sprintf('Provided config path \'%s\' must exist', $configPath));
         }
 
         defined('YII_DEBUG') || define('YII_DEBUG', true);
@@ -90,77 +99,22 @@ final class ServiceMap
 
         $config = $this->loadConfig($configPath);
 
-        $this->addServiceDefinition($config);
         $this->processComponents($config);
+        $this->processDefinition($config);
         $this->processSingletons($config);
     }
 
     /**
-     * Registers a service definition in the service map for Yii application analysis.
+     * Retrieves the fully qualified class name of a Yii application component by its identifier.
      *
-     * Adds a service definition to the internal service map resolving the fully qualified `class` name for the
-     * specified service ID.
+     * Looks up the component class name registered under the specified component ID in the internal component map.
      *
-     * This method supports various service definition formats, including `class` names, `array`, `closure`, and
-     * `integer` identifiers, enabling accurate type inference and autocompletion for dependency injected services in
-     * PHPStan analysis.
-     *
-     * The method delegates the resolution of the service class to {@see guessServiceDefinition()} which determines the
-     * appropriate `class` name based on the provided service definition.
-     *
-     * This ensures compatibility with Yii's flexible service registration mechanisms and supports both singleton and
-     * definition-based services.
-     *
-     * @param string $config Service configuration `array` containing the service ID and definition.
-     *
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     *
-     * @phpstan-param array<array-key, mixed> $config
-     */
-    private function addServiceDefinition(array $config): void
-    {
-        $definitions = [];
-
-        if ($config !== [] && isset($config['container']) && is_array($config['container'])) {
-            $definitions = $config['container']['definitions'] ?? [];
-
-            if (is_array($definitions) === false) {
-                throw new RuntimeException(
-                    sprintf('Unsupported service definition for \'%s\'.', gettype($definitions)),
-                );
-            }
-
-            foreach ($definitions as $id => $service) {
-                if (is_string($id) === false) {
-                    throw new RuntimeException(sprintf('Service ID must be a string, got \'%s\'.', gettype($id)));
-                }
-
-                if (in_array(gettype($service), ['array', 'integer', 'object', 'string'], true) === false) {
-                    throw new RuntimeException(
-                        sprintf(
-                            'Service definition must be an \'array\', \'integer\', \'object\', or \'string\', got ' .
-                            '\'%s\'.',
-                            gettype($service),
-                        ),
-                    );
-                }
-
-                $this->services[$id] = $this->processDefinition($id, $service);
-            }
-        }
-    }
-
-    /**
-     * Retrieves the fully qualified `class` name of a Yii application component by its identifier.
-     *
-     * Looks up the component `class` name registered under the specified component ID in the internal component map.
-     *
-     * This method enables static analysis tools and IDEs to resolve the actual `class` type of dynamic application
+     * This method enables static analysis tools and IDEs to resolve the actual class type of dynamic application
      * components for accurate type inference, autocompletion, and property reflection.
      *
      * @param string $id Component identifier to look up in the component map.
      *
-     * @return string|null Fully qualified `class` name of the component, or `null` if not found.
+     * @return string|null Fully qualified class name of the component, or `null` if not found.
      */
     public function getComponentClassById(string $id): string|null
     {
@@ -168,18 +122,18 @@ final class ServiceMap
     }
 
     /**
-     * Resolves the fully qualified `class` name of a service from a PHP-Parser AST node.
+     * Resolves the fully qualified class name of a service from a PHP-Parser AST node.
      *
      * Inspects the provided AST node to determine if it represents a string service identifier, and if so, look up
-     * the corresponding `class` name in the internal service map.
+     * the corresponding class name in the internal service map.
      *
-     * This method enables static analysis tools and IDEs to infer the actual `class` type of services referenced by
+     * This method enables static analysis tools and IDEs to infer the actual class type of services referenced by
      * string IDs in Yii application code supporting accurate type inference, autocompletion, and dependency injection
      * analysis.
      *
      * @param Node $node PHP-Parser AST node representing a service identifier.
      *
-     * @return string|null Fully qualified `class` name of the service, or `null` if not found.
+     * @return string|null Fully qualified class name of the service, or `null` if not found.
      */
     public function getServiceClassFromNode(Node $node): string|null
     {
@@ -193,17 +147,20 @@ final class ServiceMap
     /**
      * Loads and validates the Yii application configuration file.
      *
-     * Reads the specified configuration file and ensures it returns an `array` structure suitable for service and
-     * component registration.
+     * Reads the specified configuration file, ensuring it returns a valid array structure and that all required
+     * sections (such as components, container, container.definitions, and container.singletons) are arrays.
      *
-     * This method is essential for initializing the service and component maps used in PHPStan analysis, supporting
-     * accurate type inference and autocompletion for Yii application dependencies.
+     * This method is responsible for parsing the Yii application configuration, providing a normalized array for
+     * further processing by the service and component mapping logic. It throws descriptive exceptions if the file is
+     * missing, does not return an array, or contains invalid section types, ensuring robust error handling and
+     * predictable static analysis.
      *
-     * @param string $configPath Path to the Yii application configuration file. If empty, returns an empty `array`.
+     * @param string $configPath Path to the Yii application configuration file. If empty, returns an empty array.
      *
-     * @throws RuntimeException if the configuration file does not return an `array`.
+     * @throws RuntimeException if the closure does not have a return type or the definition is unsupported.
      *
-     * @phpstan-return array<array-key, array<array-key, mixed>|mixed>
+     * @phpstan import-type ServiceType from ServiceMap
+     * @phpstan-return array{}|ServiceType Normalized configuration array or empty array if no config is provided.
      */
     private function loadConfig(string $configPath): array
     {
@@ -217,82 +174,55 @@ final class ServiceMap
             throw new RuntimeException(sprintf("Configuration file '%s' must return an array.", $configPath));
         }
 
+        if (isset($config['components']) && is_array($config['components']) === false) {
+            $this->throwErrorWhenConfigFileIsNotArray($configPath, 'components');
+        }
+
+        if (isset($config['container'])) {
+            if (is_array($config['container']) === false) {
+                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'container');
+            }
+
+            if (isset($config['container']['definitions']) && is_array($config['container']['definitions']) === false) {
+                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'container.definitions');
+            }
+
+            if (isset($config['container']['singletons']) && is_array($config['container']['singletons']) === false) {
+                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'container.singletons');
+            }
+        }
+
         return $config;
     }
 
     /**
-     * Processes and registers Yii application components for static analysis.
+     * Normalizes a service definition to its fully qualified class name.
      *
-     * Iterates over the `components` section of the Yii application configuration `array`, extracting and registering
-     * component `class` definitions by their identifiers.
+     * Resolves the provided service definition to a class name string, supporting various Yii configuration patterns
+     * including direct class names, closures, arrays, and object instances.
      *
-     * This enables accurate type inference, autocompletion, and  property reflection for dynamic application components
-     * in PHPStan analysis.
+     * This method enables static analysis tools and IDEs to infer the actual class type of services defined in the Yii
+     * application configuration, supporting accurate type inference and autocompletion.
      *
-     * @param array $config Yii application configuration array containing the `components` section.
+     * @param string $id Service identifier being normalized.
+     * @param array|int|object|string $definition Service definition to normalize.
      *
-     * @throws RuntimeException if a component ID is not a `string` or if the component definition is not an `object` or
-     * `array`.
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     * @throws RuntimeException if the closure does not have a return type or the definition is unsupported.
      *
-     * @phpstan-param array<array-key, mixed> $config
+     * @phpstan-import-type DefinitionType from ServiceMap
+     * @phpstan-param DefinitionType $definition
+     *
+     * @return string Fully qualified class name resolved from the definition.
      */
-    private function processComponents(array $config): void
+    private function normalizeDefinition(string $id, array|int|object|string $definition): string
     {
-        if ($config !== [] && isset($config['components']) && is_array($config['components'])) {
-            foreach ($config['components'] as $id => $component) {
-                if (is_string($id) === false) {
-                    throw new RuntimeException(sprintf('Component ID must be a string, got \'%s\'.', gettype($id)));
-                }
-
-                if (is_object($component)) {
-                    $this->components[$id] = get_class($component);
-
-                    continue;
-                }
-
-                if (is_array($component) === false) {
-                    throw new RuntimeException(
-                        sprintf('Unsupported component definition for \'%s\'.', gettype($component)),
-                    );
-                }
-
-                if (isset($component['class']) && is_string($component['class']) && $component['class'] !== '') {
-                    $this->components[$id] = $component['class'];
-                }
-            }
-        }
-    }
-
-    /**
-     * Infers the fully qualified `class` name for a Yii service definition.
-     *
-     * Resolves the `class` name associated with a service definition provided in supported formats, including `class`
-     * name `string`, configuration `array`, `closure`, or `integer` identifiers.
-     *
-     * This method enables static analysis tools and IDEs to determine the actual class type of dependency injected
-     * services for accurate type inference, autocompletion, and service resolution in PHPStan analysis.
-     *
-     * The implementation inspects the service definition to extract the `class` name, supporting Yii's flexible service
-     * registration mechanisms and ensuring compatibility with both singleton and definition-based services.
-     *
-     * @param string $id Service identifier being resolved.
-     * @param array|int|object|string $service Service definition in supported format.
-     *
-     * @throws ReflectionException if the service definition is invalid or cannot be resolved.
-     * @throws RuntimeException if the service definition format is unsupported or missing required information.
-     *
-     * @return string Fully qualified `class` name of the resolved service.
-     *
-     * @phpstan-param array<mixed>|int|object|string $service
-     */
-    private function processDefinition(string $id, array|int|object|string $service): string
-    {
-        if (is_string($service) && class_exists($service)) {
-            return $service;
+        if (is_string($definition) && class_exists($definition)) {
+            return $definition;
         }
 
-        if ($service instanceof Closure || is_string($service)) {
-            $returnType = (new ReflectionFunction($service))->getReturnType();
+        if (is_string($definition) || $definition instanceof Closure) {
+            $returnType = (new ReflectionFunction($definition))->getReturnType();
 
             if ($returnType instanceof ReflectionNamedType === false) {
                 throw new RuntimeException(sprintf('Please provide return type for \'%s\' service closure.', $id));
@@ -301,78 +231,182 @@ final class ServiceMap
             return $returnType->getName();
         }
 
-        if (is_array($service) === false) {
-            throw new RuntimeException(sprintf('Unsupported service definition for \'%s\'.', $id));
-        }
+        if (is_array($definition)) {
+            $class = $definition['class'] ?? ($definition[0]['class'] ?? null);
 
-        if (isset($service['class']) && is_string($service['class']) && $service['class'] !== '') {
-            return $service['class'];
-        }
-
-        if (
-            isset($service[0]) &&
-            is_array($service[0]) &&
-            is_string($service[0]['class']) &&
-            $service[0]['class'] !== ''
-        ) {
-            return $service[0]['class'];
+            if (is_string($class) && $class !== '') {
+                return $class;
+            }
         }
 
         if (is_subclass_of($id, BaseObject::class)) {
             return $id;
         }
 
-        throw new RuntimeException(sprintf('Cannot guess service definition for \'%s\'.', $id));
+        $this->throwErrorWhenUnsupportedDefinition($id);
     }
 
     /**
-     * Processes and registers singleton service definitions from the Yii application configuration.
+     * Processes component definitions from the Yii application configuration array.
      *
-     * Integrates singleton service definitions declared in the Yii application's `container` configuration with the
-     * internal service map, enabling accurate type inference and autocompletion for dependency-injected singletons in
-     * PHPStan analysis.
+     * Iterates over the components section of the provided configuration array, normalizing and registering each
+     * component definition by its identifier.
      *
-     * This method validates the structure and types of singleton definitions, ensuring that only supported formats
-     * (`arrays`, `objects`, or `class` name `string`) are processed.
+     * This method ensures that all components are mapped to their fully qualified class names for accurate static
+     * analysis and type inference, supporting IDE autocompletion and property reflection for dynamic application
+     * components.
      *
-     * It throws descriptive exceptions for unsupported or invalid singleton definitions, maintaining strict
-     * compatibility with Yii's dependency injection container.
+     * @param array $config Yii application configuration array containing component definitions.
      *
-     * The implementation iterates over each singleton entry, validates the identifier and service definition, and
-     * delegates `class` name resolution to {@see processDefinition()} for accurate type mapping.
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
-     * @param array $config Yii application configuration `array` containing singleton definitions.
+     * @phpstan-import-type ServiceType from ServiceMap
+     * @phpstan-param ServiceType $config
+     */
+    private function processComponents(array $config): void
+    {
+        if ($config !== []) {
+            $components = $config['components'] ?? [];
+
+            foreach ($components as $id => $component) {
+                if (is_string($id) === false) {
+                    $this->throwErrorWhenIdIsNotString('Component', gettype($id));
+                }
+
+                if (is_object($component)) {
+                    $this->components[$id] = get_class($component);
+
+                    continue;
+                }
+
+                if (isset($component['class']) && is_string($component['class']) && $component['class'] !== '') {
+                    $this->components[$id] = $component['class'];
+
+                    continue;
+                }
+
+                $this->throwErrorWhenUnsupportedDefinition($id);
+            }
+        }
+    }
+
+    /**
+     * Processes service definitions from the Yii application configuration array.
      *
-     * @throws RuntimeException if the singleton definitions are invalid or unsupported.
+     * Iterates over the container.definitions section of the provided configuration array, normalizing and registering
+     * each service definition by its identifier.
      *
-     * @phpstan-param array<array-key, mixed> $config
+     * This method ensures that all services are mapped to their fully qualified class names for accurate static
+     * analysis and type inference.
+     *
+     * @param array $config Yii application configuration array containing service definitions.
+     *
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     *
+     * @phpstan-import-type ServiceType from ServiceMap
+     * @phpstan-param ServiceType $config
+     */
+    private function processDefinition(array $config): void
+    {
+        if ($config !== []) {
+            $definitions = $config['container']['definitions'] ?? [];
+
+            foreach ($definitions as $id => $service) {
+                if (is_string($id) === false) {
+                    $this->throwErrorWhenIdIsNotString('Definition', gettype($id));
+                }
+
+                $this->services[$id] = $this->normalizeDefinition($id, $service);
+            }
+        }
+    }
+
+    /**
+     * Processes singleton service definitions from the Yii application configuration array.
+     *
+     * Iterates over the container.singletons section of the provided configuration array, normalizing and registering
+     * each singleton service definition by its identifier.
+     *
+     * This method ensures that all singleton services are mapped to their fully qualified class names for accurate
+     * static analysis and type inference.
+     *
+     * @param array $config Yii application configuration array containing singleton definitions.
+     *
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     *
+     * @phpstan-import-type ServiceType from ServiceMap
+     * @phpstan-param ServiceType $config
      */
     private function processSingletons(array $config): void
     {
-        $singletons = [];
-
-        if ($config !== [] && isset($config['container']) && is_array($config['container'])) {
+        if ($config !== []) {
             $singletons = $config['container']['singletons'] ?? [];
-
-            if (is_array($singletons) === false) {
-                throw new RuntimeException(
-                    sprintf('Unsupported singletons definition for \'%s\'.', gettype($singletons)),
-                );
-            }
 
             foreach ($singletons as $id => $service) {
                 if (is_string($id) === false) {
-                    throw new RuntimeException(sprintf('Singleton ID must be a string, got \'%s\'.', gettype($id)));
+                    $this->throwErrorWhenIdIsNotString('Singleton', gettype($id));
                 }
 
-                if (is_array($service) === false && is_object($service) === false && is_string($service) === false) {
-                    throw new RuntimeException(
-                        sprintf('Singleton service definition must be an array, got \'%s\'.', gettype($service)),
-                    );
-                }
-
-                $this->services[$id] = $this->processDefinition($id, $service);
+                $this->services[$id] = $this->normalizeDefinition($id, $service);
             }
         }
+    }
+
+    /**
+     * Throws a {@see RuntimeException} when a configuration file section is not an array.
+     *
+     * This method is invoked when a required section of the Yii application configuration file (such as components,
+     * container, container.definitions, or container.singletons) does not contain a valid array.
+     *
+     * It ensures that only valid array structures are processed during configuration parsing, providing a clear and
+     * descriptive error message for debugging and static analysis.
+     *
+     * @param string ...$args Arguments describing the configuration file path and the invalid section name.
+     *
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     */
+    private function throwErrorWhenConfigFileIsNotArray(string ...$args): never
+    {
+        throw new RuntimeException(
+            sprintf("Configuration file '%s' must contain a valid '%s' 'array'.", ...$args),
+        );
+    }
+
+    /**
+     * Throws a {@see RuntimeException} when a service or component ID is not a string.
+     *
+     * This method is invoked when the provided identifier for a service, definition, or component is not of type
+     * string, which is required for proper registration and resolution in the Yii application context.
+     *
+     * It ensures that only valid string identifiers are processed during service and component mapping, providing a
+     * clear and descriptive error message for debugging and static analysis.
+     *
+     * @param string ...$args Arguments describing the context and the invalid identifier type.
+     *
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     */
+    private function throwErrorWhenIdIsNotString(string ...$args): never
+    {
+        throw new RuntimeException(sprintf("'%s': ID must be a string, got '%s'.", ...$args));
+    }
+
+    /**
+     * Throws a {@see RuntimeException} when a service or component definition is unsupported.
+     *
+     * This method is invoked when the provided definition for a service or component cannot be resolved to a valid
+     * class name or does not match any supported configuration pattern.
+     *
+     * It ensures that only valid and supported definitions are processed during service and component resolution,
+     * providing a clear and descriptive error message for debugging and static analysis.
+     *
+     * @param string $id Identifier of the service or component with the unsupported definition.
+     *
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     */
+    private function throwErrorWhenUnsupportedDefinition(string $id): never
+    {
+        throw new RuntimeException(sprintf("Unsupported definition for '%s'.", $id));
     }
 }

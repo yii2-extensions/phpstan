@@ -1,9 +1,10 @@
 # Change Log
 
-## 0.2.3 June 05, 2025
+## 0.2.3 June 06, 2025
 
 - Enh #25: Add support for PHPStan Extension Installer (@samuelrajan747)
-- Enh #26: Add PHPStan extension installer instructions and improve `ServiceMap` configuration handling.
+- Enh #26: Add PHPStan extension installer instructions and improve `ServiceMap` configuration handling (@terabytesoftw)
+- Bug #27: Enhance error handling in `ServiceMap` for invalid configuration structures and add corresponding test cases (@terabytesoftw)
 
 ## 0.2.2 June 04, 2025
 

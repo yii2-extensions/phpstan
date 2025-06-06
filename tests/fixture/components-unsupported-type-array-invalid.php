@@ -4,6 +4,6 @@ declare(strict_types=1);
 
 return [
     'components' => [
-        'unsupported-type-integer' => 5,
+        'unsupported-array-invalid' => 1,
     ],
 ];
