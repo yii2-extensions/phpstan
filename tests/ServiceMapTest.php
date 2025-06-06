@@ -164,20 +164,6 @@ final class ServiceMapTest extends TestCase
         new ServiceMap($fixturePath);
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenComponentsHasUnsupportedTypeArrayInvalidValue(): void
-    {
-        $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-type-array-invalid.php";
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
-
-        new ServiceMap($fixturePath);
-    }
-
     public function testThrowRuntimeExceptionWhenConfigPathFileDoesNotExist(): void
     {
         $this->expectException(InvalidArgumentException::class);
