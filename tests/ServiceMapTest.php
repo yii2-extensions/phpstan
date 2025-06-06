@@ -120,6 +120,10 @@ final class ServiceMapTest extends TestCase
             $serviceMap->getComponentClassById('customInitializedComponent'),
             'ServiceMap should resolve component id \'customInitializedComponent\' to \'MyActiveRecord::class\'.',
         );
+        $this->assertNull(
+            $serviceMap->getComponentClassById('assetManager'),
+            'ServiceMap should return \'null\' for \'assetManager\' component id as it is not a class but an array.',
+        );
     }
 
     public function testItAllowsWithoutEmptyConfigPath(): void
