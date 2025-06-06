@@ -48,7 +48,7 @@ use function sprintf;
  * - Supports singleton, definition, and closure-based service registration.
  * - Throws descriptive exceptions for invalid or unsupported definitions.
  *
- * @phpstan-type DefinitionType = array{class?: mixed}|array{array{class?: mixed}}|int|object|string
+ * @phpstan-type DefinitionType = array{class?: mixed}|array{array{class?: mixed}}|object|string
  * @phpstan-type ServiceType = array{
  *   components?: array<array-key, array<array-key, mixed>|object>,
  *   container?: array{
