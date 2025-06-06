@@ -13,7 +13,6 @@ use PHPStan\Type\{DynamicMethodReturnTypeExtension, Type};
 use yii\db\ActiveRecord;
 
 use function count;
-use function get_class;
 use function in_array;
 use function sprintf;
 
@@ -60,6 +59,8 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
      * autocompletion for dynamic relation definitions.
      *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.
+     *
+     * @phpstan-return class-string
      */
     public function getClass(): string
     {
@@ -90,13 +91,12 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
         MethodCall $methodCall,
         Scope $scope,
     ): Type {
-        $arg = $methodCall->args[0];
+        $arg = $methodCall->getRawArgs()[0] ?? null;
 
         if ($arg instanceof Arg === false) {
             throw new ShouldNotHappenException(
                 sprintf(
-                    'Unexpected arg %s during method call %s at line %d',
-                    get_class($arg),
+                    'Invalid or missing argument for method %s at line %d',
                     $methodReflection->getName(),
                     $methodCall->getLine(),
                 ),

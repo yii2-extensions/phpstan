@@ -119,10 +119,12 @@ constants.
 To maintain the `Yii2` constants recognition, you must include them explicitly along with your custom constants, as
 shown above.
 
-### Advanced Configuration Example
+### Strict Configuration
 
 ```neon
 includes:
+    - phar://phpstan.phar/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-strict-rules/rules.neon
     - vendor/yii2-extensions/phpstan/extension.neon
 
 parameters:
@@ -154,6 +156,16 @@ parameters:
 
     yii2:
         config_path: %currentWorkingDirectory%/config/web.php
+
+    # Enable strict advanced checks
+    checkImplicitMixed: true
+    checkBenevolentUnionTypes: true
+    checkUninitializedProperties: true
+    checkMissingCallableSignature: true
+    checkTooWideReturnTypesInProtectedAndPublicMethods: true
+    reportAnyTypeWideningInVarTag: true
+    reportPossiblyNonexistentConstantArrayOffset: true
+    reportPossiblyNonexistentGeneralArrayOffset: true    
 ```
 
 ### PHPstan extension installer

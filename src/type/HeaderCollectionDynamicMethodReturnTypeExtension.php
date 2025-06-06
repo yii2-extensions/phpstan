@@ -48,6 +48,19 @@ use function count;
  */
 final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
+    /**
+     * Returns the class name for which this dynamic return type extension applies.
+     *
+     * Specifies the fully qualified class name of the Yii {@see HeaderCollection} class that this extension targets
+     * for dynamic return type inference in PHPStan analysis.
+     *
+     * This enables PHPStan to apply custom return type logic for the {@see HeaderCollection::get()} method, supporting
+     * accurate type inference and IDE autocompletion for header value retrieval in Yii HTTP handling.
+     *
+     * @return string Fully qualified class name of the supported header collection class.
+     *
+     * @phpstan-return class-string
+     */
     public function getClass(): string
     {
         return HeaderCollection::class;
@@ -61,12 +74,14 @@ final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicM
         MethodCall $methodCall,
         Scope $scope,
     ): Type {
-        if (count($methodCall->args) < 3) {
+        $args = $methodCall->getArgs();
+
+        if (count($args) < 3) {
             return new StringType();
         }
 
         /** @var Arg $arg */
-        $arg = $methodCall->args[2];
+        $arg = $args[2] ?? null;
 
         if ($arg->value instanceof ConstFetch) {
             $value = $arg->value->name->getParts()[0];
