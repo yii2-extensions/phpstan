@@ -60,7 +60,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
      *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.
      *
-     * @phpstan-return class-string<\yii\db\ActiveRecord>
+     * @phpstan-return class-string
      */
     public function getClass(): string
     {
@@ -91,7 +91,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
         MethodCall $methodCall,
         Scope $scope,
     ): Type {
-        $arg = $methodCall->args[0] ?? null;
+        $arg = $methodCall->getRawArgs()[0] ?? null;
 
         if ($arg instanceof Arg === false) {
             throw new ShouldNotHappenException(

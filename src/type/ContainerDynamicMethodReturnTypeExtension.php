@@ -57,7 +57,7 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      *
      * @return string Fully qualified class name of the supported container class.
      *
-     * @phpstan-return class-string<\yii\di\Container>
+     * @phpstan-return class-string
      */
     public function getClass(): string
     {

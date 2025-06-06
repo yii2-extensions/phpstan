@@ -69,7 +69,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.
      *
-     * @phpstan-return class-string<\yii\db\ActiveRecord>
+     * @phpstan-return class-string
      */
     public function getClass(): string
     {

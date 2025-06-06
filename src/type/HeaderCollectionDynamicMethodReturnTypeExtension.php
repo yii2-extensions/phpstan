@@ -59,7 +59,7 @@ final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicM
      *
      * @return string Fully qualified class name of the supported header collection class.
      *
-     * @phpstan-return class-string<\yii\web\HeaderCollection>
+     * @phpstan-return class-string
      */
     public function getClass(): string
     {
@@ -74,7 +74,7 @@ final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicM
         MethodCall $methodCall,
         Scope $scope,
     ): Type {
-        $args = $methodCall->args ?? [];
+        $args = $methodCall->getArgs();
 
         if (count($args) < 3) {
             return new StringType();
