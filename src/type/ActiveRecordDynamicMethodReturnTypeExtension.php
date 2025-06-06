@@ -13,7 +13,6 @@ use PHPStan\Type\{DynamicMethodReturnTypeExtension, Type};
 use yii\db\ActiveRecord;
 
 use function count;
-use function get_class;
 use function in_array;
 use function sprintf;
 
