@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'container' => [
         'singletons' => [
-            'unsupported-type-integer' => 1,
+            'unsupported-array-invalid' => 1,
         ],
     ],
 ];
