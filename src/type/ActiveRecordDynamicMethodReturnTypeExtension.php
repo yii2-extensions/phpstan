@@ -91,7 +91,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
         MethodCall $methodCall,
         Scope $scope,
     ): Type {
-        $arg = isset($methodCall->args[0]) ? $methodCall->args[0] : null;
+        $arg = $methodCall->args[0] ?? null;
 
         if ($arg instanceof Arg === false) {
             throw new ShouldNotHappenException(
