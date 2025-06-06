@@ -6,6 +6,9 @@ use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
 
 return [
     'components' => [
+        'assetManager' => [
+            'basePath' => '@runtime/assets',
+        ],
         'customComponent' => [
             'class' => MyActiveRecord::class,
         ],

@@ -120,6 +120,10 @@ final class ServiceMapTest extends TestCase
             $serviceMap->getComponentClassById('customInitializedComponent'),
             'ServiceMap should resolve component id \'customInitializedComponent\' to \'MyActiveRecord::class\'.',
         );
+        $this->assertNull(
+            $serviceMap->getComponentClassById('assetManager'),
+            'ServiceMap should return \'null\' for \'assetManager\' component id as it is not a class but an array.',
+        );
     }
 
     public function testItAllowsWithoutEmptyConfigPath(): void
@@ -160,20 +164,6 @@ final class ServiceMapTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Component\': ID must be a string, got \'integer\'.');
-
-        new ServiceMap($fixturePath);
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenComponentsHasUnsupportedTypeArrayInvalidValue(): void
-    {
-        $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-type-array-invalid.php";
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
 
         new ServiceMap($fixturePath);
     }
