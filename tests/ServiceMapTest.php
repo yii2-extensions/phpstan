@@ -222,7 +222,7 @@ final class ServiceMapTest extends TestCase
     public function testThrowRuntimeExceptionWhenConfigContainerHasUnsupportedIsNotArrayValue(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config-container-unsupported-is-not-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config-container-unsupported-type-array-invalid.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'container' 'array'.");
