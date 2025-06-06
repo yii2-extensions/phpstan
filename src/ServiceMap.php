@@ -88,7 +88,7 @@ final class ServiceMap
      */
     public function __construct(string $configPath = '')
     {
-        if ($configPath !== '' && file_exists($configPath) === false && is_readable($configPath) === false) {
+        if ($configPath !== '' && (file_exists($configPath) === false || is_readable($configPath) === false)) {
             throw new InvalidArgumentException(
                 sprintf('Provided config path \'%s\' must be a readable file.', $configPath),
             );
