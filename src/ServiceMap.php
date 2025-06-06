@@ -77,6 +77,11 @@ final class ServiceMap
     private array $components = [];
 
     /**
+     * @phpstan-var array<string, string>
+     */
+    private array $userComponents = [];
+
+    /**
      * Creates a new instance of the {@see ServiceMap} class.
      *
      * @param string $configPath Path to the Yii application configuration file (default: `''`). If provided, the
@@ -121,6 +126,16 @@ final class ServiceMap
     public function getComponentClassById(string $id): string|null
     {
         return $this->components[$id] ?? null;
+    }
+
+    public function isUserComponentClass(string $id): bool
+    {
+        return key_exists($id, $this->userComponents);
+    }
+
+    public function getUserComponentClassById(string $id): string|null
+    {
+        return $this->userComponents[$id] ?? null;
     }
 
     /**
@@ -282,7 +297,12 @@ final class ServiceMap
                 }
 
                 if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
-                    $this->components[$id] = $definition['class'];
+                    if ($definition['class'] === 'yii\web\User' && isset($definition['identityClass']) && is_string($definition['identityClass']) && $definition['identityClass'] !== '') {
+                        $this->processUserComponent($id, $definition['identityClass']);
+                    }
+                    else {
+                        $this->components[$id] = $definition['class'];
+                    }
                 }
             }
         }
@@ -350,6 +370,10 @@ final class ServiceMap
                 $this->services[$id] = $this->normalizeDefinition($id, $service);
             }
         }
+    }
+
+    private function processUserComponent(string $id, string $identityClass) {
+        $this->userComponents[$id] = $identityClass;
     }
 
     /**
