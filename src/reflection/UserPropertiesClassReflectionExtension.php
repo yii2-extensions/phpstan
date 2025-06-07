@@ -71,9 +71,7 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
-        if (
-            $propertyName === 'identity'
-        ) {
+        if ($propertyName === 'identity') {
             return $this->annotationsProperties->getProperty($classReflection, $propertyName);
         }
 
@@ -106,7 +104,7 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
             return false;
         }
 
-        if ($propertyName === 'identity' && $this->serviceMap->getComponentClassById($propertyName) !== null) {
+        if ($propertyName === 'identity' && $this->serviceMap->getUserComponentClassById($propertyName) !== null) {
             return true;
         }
 

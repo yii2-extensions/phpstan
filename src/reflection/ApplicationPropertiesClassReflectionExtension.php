@@ -15,10 +15,10 @@ use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\ObjectType;
-use yii2\extensions\phpstan\ServiceMap;
 use yii\base\Application as BaseApplication;
 use yii\web\Application as WebApplication;
 use yii\web\User;
+use yii2\extensions\phpstan\ServiceMap;
 
 /**
  * Provides property reflection for Yii application components in PHPStan analysis.
@@ -154,6 +154,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
 
         return $classReflection->hasNativeProperty($propertyName)
             || $this->annotationsProperties->hasProperty($classReflection, $propertyName)
-            || $this->serviceMap->getComponentClassById($propertyName) !== null;
+            || $this->serviceMap->getComponentClassById($propertyName) !== null
+            || $this->serviceMap->getUserComponentClassById($propertyName) !== null;
     }
 }
