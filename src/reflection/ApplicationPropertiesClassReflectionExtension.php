@@ -95,17 +95,19 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         }
 
         if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
+            if ($componentClass === User::class) {
+                $identityClass = $this->serviceMap->getComponentPropertyById($propertyName, 'identityClass');
+                if (is_string($identityClass) && $identityClass !== '') {
+                    return new ComponentPropertyReflection(
+                        new DummyPropertyReflection($propertyName),
+                        new GenericObjectType(User::class, [new ObjectType($identityClass)]),
+                        $classReflection,
+                    );
+                }
+            }
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
                 new ObjectType($componentClass),
-                $classReflection,
-            );
-        }
-
-        if (null !== $userComponentClass = $this->serviceMap->getUserComponentClassById($propertyName)) {
-            return new ComponentPropertyReflection(
-                new DummyPropertyReflection($propertyName),
-                new GenericObjectType(User::class, [new ObjectType($userComponentClass)]),
                 $classReflection,
             );
         }
@@ -154,7 +156,6 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
 
         return $classReflection->hasNativeProperty($propertyName)
             || $this->annotationsProperties->hasProperty($classReflection, $propertyName)
-            || $this->serviceMap->getComponentClassById($propertyName) !== null
-            || $this->serviceMap->getUserComponentClassById($propertyName) !== null;
+            || $this->serviceMap->getComponentClassById($propertyName) !== null;
     }
 }

@@ -104,10 +104,6 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
             return false;
         }
 
-        if ($propertyName === 'identity' && $this->serviceMap->getUserComponentClassById($propertyName) !== null) {
-            return true;
-        }
-
         return $classReflection->hasNativeProperty($propertyName)
             || $this->annotationsProperties->hasProperty($classReflection, $propertyName);
     }

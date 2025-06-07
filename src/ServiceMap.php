@@ -17,7 +17,6 @@ use function class_exists;
 use function define;
 use function defined;
 use function file_exists;
-use function get_class;
 use function is_array;
 use function is_object;
 use function is_string;
@@ -73,14 +72,9 @@ final class ServiceMap
     /**
      * Component definitions map for Yii application analysis.
      *
-     * @phpstan-var string[]
+     * @phpstan-var array<string,array<string,mixed>|object>
      */
     private array $components = [];
-
-    /**
-     * @phpstan-var array<string, string>
-     */
-    private array $userComponents = [];
 
     /**
      * Creates a new instance of the {@see ServiceMap} class.
@@ -126,24 +120,60 @@ final class ServiceMap
      */
     public function getComponentClassById(string $id): string|null
     {
-        return $this->components[$id] ?? null;
+        $definition = $this->components[$id] ?? null;
+        if ($definition === null) {
+            return null;
+        }
+
+        if (is_object($definition)) {
+            var_dump($id, is_object($definition), is_object($definition) ? get_class($definition) : null);
+            return get_class($definition);
+        }
+
+        if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
+            return $definition['class'];
+        }
+
+        return null;
     }
 
     /**
-     * Retrieves the fully qualified identityClass name of a Yii application user-component by its identifier.
+     * Retrieves the definition of a Yii application component by its identifier.
      *
-     * Looks up the user-component class name registered under the specified component ID in the internal component map.
+     * Looks up the component definition under the specified component ID in the internal component map.
      *
      * This method enables static analysis tools and IDEs to resolve the actual class type of dynamic application
-     * user-components for accurate type inference, autocompletion, and property reflection.
+     * components for accurate type inference, autocompletion, and property reflection.
      *
      * @param string $id Component identifier to look up in the component map.
      *
-     * @return string|null Fully qualified class name of the component, or `null` if not found.
+     * @return array<string,mixed>|object|null Fully qualified class name of the component, or `null` if not found.
      */
-    public function getUserComponentClassById(string $id): string|null
+    public function getComponentById(string $id): array|object|null
     {
-        return $this->userComponents[$id] ?? null;
+        return $this->components[$id] ?? null;
+    }
+
+    public function getComponentPropertyById(string $id, string $propertyName): mixed
+    {
+        $definition = $this->components[$id] ?? null;
+
+        if ($definition === null) {
+            return null;
+        }
+
+        if (is_object($definition)) {
+            if (property_exists($definition, $propertyName)) {
+                return $definition->$propertyName;
+            }
+            return null;
+        }
+
+        if (isset($definition[$propertyName])) {
+            return $definition[$propertyName];
+        }
+
+        return null;
     }
 
     /**
@@ -299,24 +329,12 @@ final class ServiceMap
                 }
 
                 if (is_object($definition)) {
-                    if ($definition instanceof User) {
-                        $this->userComponents[$id] = $definition->identityClass;
-                    } else {
-                        $this->components[$id] = get_class($definition);
-                    }
-
+                    $this->components[$id] = $definition;
                     continue;
                 }
 
                 if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
-                    if (
-                        $definition['class'] === User::class && isset($definition['identityClass']) &&
-                        is_string($definition['identityClass']) && $definition['identityClass'] !== ''
-                    ) {
-                        $this->userComponents[$id] = $definition['identityClass'];
-                    } else {
-                        $this->components[$id] = $definition['class'];
-                    }
+                    $this->components[$id] = $definition;
                 }
             }
         }

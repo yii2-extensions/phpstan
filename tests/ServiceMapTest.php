@@ -12,9 +12,9 @@ use SplFileInfo;
 use SplObjectStorage;
 use SplStack;
 use yii\base\InvalidArgumentException;
+use yii\web\User;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
-use yii2\extensions\phpstan\tests\stub\MyUser;
 
 /**
  * Test suite for {@see ServiceMap} class functionality and behavior.
@@ -112,22 +112,14 @@ final class ServiceMapTest extends TestCase
             $serviceMap->getComponentClassById('customComponent'),
             'ServiceMap should resolve component id \'customComponent\' to \'MyActiveRecord::class\'.',
         );
-        $this->assertNull(
+        $this->assertSame(
+            User::class,
             $serviceMap->getComponentClassById('customUser'),
-            'ServiceMap should not resolve component id \'customUser\' to \'User::class\'.',
+            'ServiceMap should resolve user component id \'customUser\' to \'User::class\'.',
         );
         $this->assertSame(
-            MyUser::class,
-            $serviceMap->getUserComponentClassById('customUser'),
-            'ServiceMap should resolve user component id \'customUser\' to \'MyUser::class\'.',
-        );
-        $this->assertNull(
+            User::class,
             $serviceMap->getComponentClassById('customInitializedUser'),
-            'ServiceMap should not resolve component id \'customInitializedUser\' to \'User::class\'.',
-        );
-        $this->assertSame(
-            MyUser::class,
-            $serviceMap->getUserComponentClassById('customInitializedUser'),
             'ServiceMap should resolve user component id \'customInitializedUser\' to \'MyUser::class\'.',
         );
         $this->assertNull(
