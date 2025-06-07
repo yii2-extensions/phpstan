@@ -11,6 +11,7 @@ use ReflectionFunction;
 use ReflectionNamedType;
 use RuntimeException;
 use yii\base\{BaseObject, InvalidArgumentException};
+use yii\web\User;
 
 use function class_exists;
 use function define;
@@ -126,11 +127,6 @@ final class ServiceMap
     public function getComponentClassById(string $id): string|null
     {
         return $this->components[$id] ?? null;
-    }
-
-    public function isUserComponentClass(string $id): bool
-    {
-        return key_exists($id, $this->userComponents);
     }
 
     public function getUserComponentClassById(string $id): string|null
@@ -291,16 +287,19 @@ final class ServiceMap
                 }
 
                 if (is_object($definition)) {
-                    $this->components[$id] = get_class($definition);
+                    if ($definition instanceof User) {
+                        $this->processUserComponent($id, $definition->identityClass);
+                    } else {
+                        $this->components[$id] = get_class($definition);
+                    }
 
                     continue;
                 }
 
                 if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
-                    if ($definition['class'] === 'yii\web\User' && isset($definition['identityClass']) && is_string($definition['identityClass']) && $definition['identityClass'] !== '') {
+                    if ($definition['class'] === User::class && isset($definition['identityClass']) && is_string($definition['identityClass']) && $definition['identityClass'] !== '') {
                         $this->processUserComponent($id, $definition['identityClass']);
-                    }
-                    else {
+                    } else {
                         $this->components[$id] = $definition['class'];
                     }
                 }
@@ -372,7 +371,8 @@ final class ServiceMap
         }
     }
 
-    private function processUserComponent(string $id, string $identityClass) {
+    private function processUserComponent(string $id, string $identityClass): void
+    {
         $this->userComponents[$id] = $identityClass;
     }
 

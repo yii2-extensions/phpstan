@@ -11,8 +11,6 @@ use PHPStan\Reflection\{
     PropertyReflection,
 };
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
-use PHPStan\Reflection\Dummy\DummyPropertyReflection;
-use PHPStan\Type\ObjectType;
 use yii\web\User;
 use yii2\extensions\phpstan\ServiceMap;
 
@@ -83,6 +81,7 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
             return $classReflection->getNativeProperty($propertyName);
         }
 
+        return $this->annotationsProperties->getProperty($classReflection, $propertyName);
     }
 
     /**

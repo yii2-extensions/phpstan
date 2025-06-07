@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use yii\web\User;
 use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
+use yii2\extensions\phpstan\tests\stub\MyUser;
 
 return [
     'components' => [
@@ -13,6 +15,11 @@ return [
             'class' => MyActiveRecord::class,
         ],
         'customInitializedComponent' => new MyActiveRecord(),
+        'customUser' => [
+            'class' => User::class,
+            'identityClass' => MyUser::class,
+        ],
+        'customInitializedUser' => new User(['identityClass' => MyUser::class]),
     ],
     'container' => [
         'singletons' => [

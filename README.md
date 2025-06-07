@@ -14,16 +14,16 @@
     </a>
     <a href="https://github.com/yiisoft/yii2/tree/22.0" target="_blank">
         <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2-22">
-    </a>    
+    </a>
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
         <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
     </a>
-    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">        
+    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
         <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="Static-Analysis">
-    </a>          
+    </a>
     <a href="https://codecov.io/gh/yii2-extensions/phpstan" target="_blank">
         <img src="https://codecov.io/gh/yii2-extensions/phpstan/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
-    </a>  
+    </a>
 </p>
 
 ## Installation
@@ -139,10 +139,10 @@ parameters:
         - YII_ENV_PROD
         - YII_ENV_TEST
         - APP_VERSION
-        - MAINTENANCE_MODE        
+        - MAINTENANCE_MODE
 
-    level: 8    
-    
+    level: 8
+
     paths:
         - src
         - controllers
@@ -165,7 +165,7 @@ parameters:
     checkTooWideReturnTypesInProtectedAndPublicMethods: true
     reportAnyTypeWideningInVarTag: true
     reportPossiblyNonexistentConstantArrayOffset: true
-    reportPossiblyNonexistentGeneralArrayOffset: true    
+    reportPossiblyNonexistentGeneralArrayOffset: true
 ```
 
 ### PHPstan extension installer

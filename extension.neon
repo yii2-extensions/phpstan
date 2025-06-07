@@ -9,6 +9,7 @@ parameters:
         - stubs/Configurable.stub
         - stubs/BaseObject.stub
         - stubs/Component.stub
+        - stubs/IdentityInterface.stub
         - stubs/User.stub
 
     yii2:

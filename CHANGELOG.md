@@ -7,6 +7,7 @@
 - Bug #27: Enhance error handling in `ServiceMap` for invalid configuration structures and add corresponding test cases (@terabytesoftw)
 - Bug #28: Refactor component handling in `ServiceMap` to improve variable naming and streamline logic (@terabytesoftw)
 - Enh #29: Enable strict rules and bleeding edge analysis, and update `README.md` with strict configuration examples (@terabytesoftw)
+- Enh #31: Add support for IdentityClass Components (@samuelrajan747)
 
 ## 0.2.2 June 04, 2025
 
