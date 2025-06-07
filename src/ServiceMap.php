@@ -72,7 +72,7 @@ final class ServiceMap
     /**
      * Component definitions map for Yii application analysis.
      *
-     * @phpstan-var array<string,array<string,mixed>|object>
+     * @phpstan-var array<string,array<string,mixed>>
      */
     private array $components = [];
 
@@ -125,10 +125,6 @@ final class ServiceMap
             return null;
         }
 
-        if (is_object($definition)) {
-            return get_class($definition);
-        }
-
         if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
             return $definition['class'];
         }
@@ -146,9 +142,9 @@ final class ServiceMap
      *
      * @param string $id Component identifier to look up in the component map.
      *
-     * @return array<string,mixed>|object|null Fully qualified class name of the component, or `null` if not found.
+     * @return array<string,mixed>|null Fully qualified class name of the component, or `null` if not found.
      */
-    public function getComponentById(string $id): array|object|null
+    public function getComponentById(string $id): array|null
     {
         return $this->components[$id] ?? null;
     }
@@ -166,13 +162,6 @@ final class ServiceMap
         $definition = $this->components[$id] ?? null;
 
         if ($definition === null) {
-            return null;
-        }
-
-        if (is_object($definition)) {
-            if (property_exists($definition, $propertyName)) {
-                return $definition->$propertyName;
-            }
             return null;
         }
 
@@ -336,8 +325,8 @@ final class ServiceMap
                 }
 
                 if (is_object($definition)) {
-                    // TODO: can possibly do get_object_vars() here and keep the components array property as array of array, not array of objects.
-                    $this->components[$id] = $definition;
+                    $this->components[$id] = get_object_vars($definition);
+                    $this->components[$id]['class'] = get_class($definition);
                     continue;
                 }
 
