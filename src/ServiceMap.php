@@ -11,12 +11,12 @@ use ReflectionFunction;
 use ReflectionNamedType;
 use RuntimeException;
 use yii\base\{BaseObject, InvalidArgumentException};
+use yii\web\User;
 
 use function class_exists;
 use function define;
 use function defined;
 use function file_exists;
-use function get_class;
 use function is_array;
 use function is_object;
 use function is_string;
@@ -72,7 +72,7 @@ final class ServiceMap
     /**
      * Component definitions map for Yii application analysis.
      *
-     * @phpstan-var string[]
+     * @phpstan-var array<string,array<string,mixed>>
      */
     private array $components = [];
 
@@ -120,7 +120,56 @@ final class ServiceMap
      */
     public function getComponentClassById(string $id): string|null
     {
+        $definition = $this->components[$id] ?? null;
+        if ($definition === null) {
+            return null;
+        }
+
+        if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
+            return $definition['class'];
+        }
+
+        return null;
+    }
+
+    /**
+     * Retrieves the definition of a Yii application component by its identifier.
+     *
+     * Looks up the component definition under the specified component ID in the internal component map.
+     *
+     * This method enables static analysis tools and IDEs to resolve the actual class type of dynamic application
+     * components for accurate type inference, autocompletion, and property reflection.
+     *
+     * @param string $id Component identifier to look up in the component map.
+     *
+     * @return array<string,mixed>|null Fully qualified class name of the component, or `null` if not found.
+     */
+    public function getComponentById(string $id): array|null
+    {
         return $this->components[$id] ?? null;
+    }
+
+    /**
+     * Retrieves a specific property value from a component definition by ID.
+     *
+     * @param string $id Component identifier to look up.
+     * @param string $propertyName Property name to retrieve from the component.
+     *
+     * @return mixed The property value if found, null otherwise.
+     */
+    public function getComponentPropertyById(string $id, string $propertyName): mixed
+    {
+        $definition = $this->components[$id] ?? null;
+
+        if ($definition === null) {
+            return null;
+        }
+
+        if (isset($definition[$propertyName])) {
+            return $definition[$propertyName];
+        }
+
+        return null;
     }
 
     /**
@@ -249,14 +298,14 @@ final class ServiceMap
     }
 
     /**
-     * Processes component definitions from the Yii application configuration array.
+     * Processes component definitions and user-component definitions from the Yii application configuration array.
      *
      * Iterates over the components section of the provided configuration array, normalizing and registering each
-     * component definition by its identifier.
+     * component definition / user-component identity class definition by its identifier.
      *
-     * This method ensures that all components are mapped to their fully qualified class names for accurate static
-     * analysis and type inference, supporting IDE autocompletion and property reflection for dynamic application
-     * components.
+     * This method ensures that all components and user-components are mapped to their fully qualified class names
+     * and fully qualified identityClass names respectively for accurate static analysis and type inference,
+     * supporting IDE autocompletion and property reflection for dynamic application components.
      *
      * @param array $config Yii application configuration array containing component definitions.
      *
@@ -276,13 +325,13 @@ final class ServiceMap
                 }
 
                 if (is_object($definition)) {
-                    $this->components[$id] = get_class($definition);
-
+                    $this->components[$id] = get_object_vars($definition);
+                    $this->components[$id]['class'] = get_class($definition);
                     continue;
                 }
 
                 if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
-                    $this->components[$id] = $definition['class'];
+                    $this->components[$id] = $definition;
                 }
             }
         }

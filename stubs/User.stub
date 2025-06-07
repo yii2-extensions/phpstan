@@ -1,0 +1,11 @@
+<?php
+
+namespace yii\web;
+
+use yii\base\Component;
+
+/**
+ * @template T of IdentityInterface
+ * @property ?T $identity
+ */
+class User extends Component {}

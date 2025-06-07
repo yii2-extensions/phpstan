@@ -21,7 +21,7 @@
         </include>
         <exclude>
             <directory suffix=".php">./src/reflection</directory>
-        <directory suffix=".php">./src/type</directory>
+            <directory suffix=".php">./src/type</directory>
         </exclude>
     </source>
 </phpunit>
