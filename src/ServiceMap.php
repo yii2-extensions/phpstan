@@ -153,6 +153,14 @@ final class ServiceMap
         return $this->components[$id] ?? null;
     }
 
+    /**
+     * Retrieves a specific property value from a component definition by ID.
+     *
+     * @param string $id Component identifier to look up.
+     * @param string $propertyName Property name to retrieve from the component.
+     *
+     * @return mixed The property value if found, null otherwise.
+     */
     public function getComponentPropertyById(string $id, string $propertyName): mixed
     {
         $definition = $this->components[$id] ?? null;
@@ -328,6 +336,7 @@ final class ServiceMap
                 }
 
                 if (is_object($definition)) {
+                    // TODO: can possibly do get_object_vars() here and keep the components array property as array of array, not array of objects.
                     $this->components[$id] = $definition;
                     continue;
                 }
