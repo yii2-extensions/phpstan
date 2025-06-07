@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.2.3 June 06, 2025
+## 0.2.3 Under development
 
 - Enh #25: Add support for `PHPStan` Extension Installer (@samuelrajan747)
 - Enh #26: Add `PHPStan` extension installer instructions and improve `ServiceMap` configuration handling (@terabytesoftw)
