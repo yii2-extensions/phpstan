@@ -126,7 +126,6 @@ final class ServiceMap
         }
 
         if (is_object($definition)) {
-            var_dump($id, is_object($definition), is_object($definition) ? get_class($definition) : null);
             return get_class($definition);
         }
 
