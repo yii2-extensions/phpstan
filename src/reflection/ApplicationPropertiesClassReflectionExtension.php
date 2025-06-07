@@ -16,6 +16,9 @@ use PHPStan\Reflection\Dummy\DummyPropertyReflection;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\ObjectType;
 use yii2\extensions\phpstan\ServiceMap;
+use yii\base\Application as BaseApplication;
+use yii\web\Application as WebApplication;
+use yii\web\User;
 
 /**
  * Provides property reflection for Yii application components in PHPStan analysis.
@@ -87,8 +90,8 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
-        if ($classReflection->getName() !== \yii\web\Application::class) {
-            $classReflection = $this->reflectionProvider->getClass(\yii\web\Application::class);
+        if ($classReflection->getName() !== WebApplication::class) {
+            $classReflection = $this->reflectionProvider->getClass(WebApplication::class);
         }
 
         if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
@@ -99,11 +102,10 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             );
         }
 
-        $identityClass = $this->serviceMap->getUserComponentClassById($propertyName);
-        if (!is_null($identityClass)) {
+        if (null !== $userComponentClass = $this->serviceMap->getUserComponentClassById($propertyName)) {
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
-                new GenericObjectType('yii\web\User', [new ObjectType($identityClass)]),
+                new GenericObjectType(User::class, [new ObjectType($userComponentClass)]),
                 $classReflection,
             );
         }
@@ -137,17 +139,17 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      */
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
-        $reflectionProviderBaseApplication = $this->reflectionProvider->getClass(\yii\base\Application::class);
+        $reflectionProviderBaseApplication = $this->reflectionProvider->getClass(BaseApplication::class);
 
         if (
-            $classReflection->getName() !== \yii\base\Application::class &&
+            $classReflection->getName() !== BaseApplication::class &&
             $classReflection->isSubclassOfClass($reflectionProviderBaseApplication) === false
         ) {
             return false;
         }
 
-        if ($classReflection->getName() !== \yii\web\Application::class) {
-            $classReflection = $this->reflectionProvider->getClass(\yii\web\Application::class);
+        if ($classReflection->getName() !== WebApplication::class) {
+            $classReflection = $this->reflectionProvider->getClass(WebApplication::class);
         }
 
         return $classReflection->hasNativeProperty($propertyName)

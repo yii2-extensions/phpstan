@@ -129,6 +129,18 @@ final class ServiceMap
         return $this->components[$id] ?? null;
     }
 
+    /**
+     * Retrieves the fully qualified identityClass name of a Yii application user-component by its identifier.
+     *
+     * Looks up the user-component class name registered under the specified component ID in the internal component map.
+     *
+     * This method enables static analysis tools and IDEs to resolve the actual class type of dynamic application
+     * user-components for accurate type inference, autocompletion, and property reflection.
+     *
+     * @param string $id Component identifier to look up in the component map.
+     *
+     * @return string|null Fully qualified class name of the component, or `null` if not found.
+     */
     public function getUserComponentClassById(string $id): string|null
     {
         return $this->userComponents[$id] ?? null;
@@ -260,14 +272,14 @@ final class ServiceMap
     }
 
     /**
-     * Processes component definitions from the Yii application configuration array.
+     * Processes component definitions and user-component definitions from the Yii application configuration array.
      *
      * Iterates over the components section of the provided configuration array, normalizing and registering each
-     * component definition by its identifier.
+     * component definition / user-component identity class definition by its identifier.
      *
-     * This method ensures that all components are mapped to their fully qualified class names for accurate static
-     * analysis and type inference, supporting IDE autocompletion and property reflection for dynamic application
-     * components.
+     * This method ensures that all components and user-components are mapped to their fully qualified class names
+     * and fully qualified identityClass names respectively for accurate static analysis and type inference,
+     * supporting IDE autocompletion and property reflection for dynamic application components.
      *
      * @param array $config Yii application configuration array containing component definitions.
      *
@@ -288,7 +300,7 @@ final class ServiceMap
 
                 if (is_object($definition)) {
                     if ($definition instanceof User) {
-                        $this->processUserComponent($id, $definition->identityClass);
+                        $this->userComponents[$id] = $definition->identityClass;
                     } else {
                         $this->components[$id] = get_class($definition);
                     }
@@ -297,8 +309,11 @@ final class ServiceMap
                 }
 
                 if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
-                    if ($definition['class'] === User::class && isset($definition['identityClass']) && is_string($definition['identityClass']) && $definition['identityClass'] !== '') {
-                        $this->processUserComponent($id, $definition['identityClass']);
+                    if (
+                        $definition['class'] === User::class && isset($definition['identityClass']) &&
+                        is_string($definition['identityClass']) && $definition['identityClass'] !== ''
+                    ) {
+                        $this->userComponents[$id] = $definition['identityClass'];
                     } else {
                         $this->components[$id] = $definition['class'];
                     }
@@ -369,11 +384,6 @@ final class ServiceMap
                 $this->services[$id] = $this->normalizeDefinition($id, $service);
             }
         }
-    }
-
-    private function processUserComponent(string $id, string $identityClass): void
-    {
-        $this->userComponents[$id] = $identityClass;
     }
 
     /**
