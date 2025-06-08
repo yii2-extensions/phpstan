@@ -130,6 +130,10 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
         if (count($classNames) > 0) {
             $className = $classNames[0];
 
+            if ($className === ActiveQuery::class) {
+                return true;
+            }
+
             if ($this->reflectionProvider->hasClass($className)) {
                 $classReflection = $this->reflectionProvider->getClass($className);
 
@@ -165,6 +169,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
         Scope $scope,
     ): Type {
         $className = $methodCall->class;
+
         $returnType = ParametersAcceptorSelector::selectFromArgs(
             $scope,
             $methodCall->getArgs(),
@@ -185,6 +190,12 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
             return TypeCombinator::union(new NullType(), new ActiveRecordObjectType($name));
         }
 
-        return new ActiveQueryObjectType($name, false);
+        $classNames = $returnType->getObjectClassNames();
+
+        if (count($classNames) > 0 && $classNames[0] === ActiveQuery::class) {
+            return new ActiveQueryObjectType($name, false);
+        }
+
+        return $returnType;
     }
 }

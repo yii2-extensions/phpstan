@@ -7,6 +7,7 @@
 - Bug #27: Enhance error handling in `ServiceMap` for invalid configuration structures and add corresponding test cases (@terabytesoftw)
 - Bug #28: Refactor component handling in `ServiceMap` to improve variable naming and streamline logic (@terabytesoftw)
 - Enh #29: Enable strict rules and bleeding edge analysis, and update `README.md` with strict configuration examples (@terabytesoftw)
+- Bug #33: Enhance `ActiveRecordDynamicStaticMethodReturnTypeExtension` type inference for `ActiveQuery` support, and fix phpstan errors max lvl in tests (@terabytesoftw)
 
 ## 0.2.2 June 04, 2025
 
