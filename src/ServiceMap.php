@@ -77,6 +77,13 @@ final class ServiceMap
     private array $components = [];
 
     /**
+     * Component definitions for Yii application analysis.
+     *
+     * @phpstan-var array<string, mixed>
+     */
+    private array $componentsDefinitions = [];
+
+    /**
      * Creates a new instance of the {@see ServiceMap} class.
      *
      * @param string $configPath Path to the Yii application configuration file (default: `''`). If provided, the
@@ -124,6 +131,53 @@ final class ServiceMap
     }
 
     /**
+     * Retrieves the component definition array by its identifier.
+     *
+     * Looks up the component definition registered under the specified component ID in the internal component
+     * definitions map.
+     *
+     * This method provides access to the raw component configuration array, enabling static analysis tools and IDEs to
+     * inspect component properties, dependencies, and configuration options for accurate type inference and reflection
+     * analysis.
+     *
+     * @param string $id Component identifier to look up in the component definitions map.
+     *
+     * @return array|null Component definition array with configuration options, or `null` if not found.
+     *
+     * @phpstan-return array<array-key, mixed>|null
+     */
+    public function getComponentDefinitionById(string $id): array|null
+    {
+        $definition = $this->componentsDefinitions[$id] ?? null;
+
+        return is_array($definition) ? $definition : null;
+    }
+
+    /**
+     * Retrieves the component definition for a given class.
+     *
+     * @param string $class Fully qualified class name to look up.
+     *
+     * @return array|null The component definition array, or null if not found.
+     *
+     * @phpstan-return array<array-key, mixed>|null
+     */
+    public function getComponentDefinitionByClassName(string $class): array|null
+    {
+        foreach ($this->components as $id => $componentClass) {
+            if (
+                $componentClass === $class &&
+                isset($this->componentsDefinitions[$id])
+                && is_array($this->componentsDefinitions[$id])
+            ) {
+                return $this->componentsDefinitions[$id];
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Resolves the fully qualified class name of a service from a PHP-Parser AST node.
      *
      * Inspects the provided AST node to determine if it represents a string service identifier, and if so, look up
@@ -154,12 +208,12 @@ final class ServiceMap
      *
      * This method is responsible for parsing the Yii application configuration, providing a normalized array for
      * further processing by the service and component mapping logic. It throws descriptive exceptions if the file is
-     * missing, does not return an array, or contains invalid section types, ensuring robust error handling and
+     * missing, doesn't return an array, or contains invalid section types, ensuring robust error handling and
      * predictable static analysis.
      *
-     * @param string $configPath Path to the Yii application configuration file. If empty, returns an empty array.
+     * @param string $configPath Path to the Yii application configuration file. If empty, return an empty array.
      *
-     * @throws RuntimeException if the closure does not have a return type or the definition is unsupported.
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
      * @phpstan import-type ServiceType from ServiceMap
      * @phpstan-return array{}|ServiceType Normalized configuration array or empty array if no config is provided.
@@ -210,7 +264,7 @@ final class ServiceMap
      * @param array|int|object|string $definition Service definition to normalize.
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     * @throws RuntimeException if the closure does not have a return type or the definition is unsupported.
+     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
      * @phpstan-import-type DefinitionType from ServiceMap
      * @phpstan-param DefinitionType $definition
@@ -283,6 +337,10 @@ final class ServiceMap
 
                 if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
                     $this->components[$id] = $definition['class'];
+
+                    unset($definition['class']);
+
+                    $this->componentsDefinitions[$id] = $definition;
                 }
             }
         }
@@ -356,7 +414,7 @@ final class ServiceMap
      * Throws a {@see RuntimeException} when a configuration file section is not an array.
      *
      * This method is invoked when a required section of the Yii application configuration file (such as components,
-     * container, container.definitions, or container.singletons) does not contain a valid array.
+     * container, container.definitions, or container.singletons) doesn't contain a valid array.
      *
      * It ensures that only valid array structures are processed during configuration parsing, providing a clear and
      * descriptive error message for debugging and static analysis.
@@ -393,8 +451,8 @@ final class ServiceMap
     /**
      * Throws a {@see RuntimeException} when a service or component definition is unsupported.
      *
-     * This method is invoked when the provided definition for a service or component cannot be resolved to a valid
-     * class name or does not match any supported configuration pattern.
+     * This method is invoked when the provided definition for a service or component can't be resolved to a valid
+     * class name or doesn't match any supported configuration pattern.
      *
      * It ensures that only valid and supported definitions are processed during service and component resolution,
      * providing a clear and descriptive error message for debugging and static analysis.

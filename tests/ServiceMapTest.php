@@ -12,6 +12,7 @@ use SplFileInfo;
 use SplObjectStorage;
 use SplStack;
 use yii\base\InvalidArgumentException;
+use yii\web\User;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
 
@@ -110,6 +111,24 @@ final class ServiceMapTest extends TestCase
             MyActiveRecord::class,
             $serviceMap->getComponentClassById('customComponent'),
             'ServiceMap should resolve component id \'customComponent\' to \'MyActiveRecord::class\'.',
+        );
+        self::assertSame(
+            [
+                'identityClass' => 'yii2\extensions\phpstan\tests\stub\User',
+            ],
+            $serviceMap->getComponentDefinitionByClassName(User::class),
+            'ServiceMap should return the component definition for \'yii\web\User\'.',
+        );
+        self::assertNull(
+            $serviceMap->getComponentDefinitionByClassName('nonExistentComponent'),
+            'ServiceMap should return \'null\' for a \'non-existent\' component class.',
+        );
+        self::assertSame(
+            [
+                'identityClass' => 'yii2\extensions\phpstan\tests\stub\User',
+            ],
+            $serviceMap->getComponentDefinitionById('user'),
+            'ServiceMap should return the component definition for \'user\'.',
         );
         self::assertNull(
             $serviceMap->getComponentClassById('nonExistentComponent'),

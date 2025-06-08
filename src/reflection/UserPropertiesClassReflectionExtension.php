@@ -9,6 +9,7 @@ use PHPStan\Reflection\{
     MissingPropertyFromReflectionException,
     PropertiesClassReflectionExtension,
     PropertyReflection,
+    ReflectionProvider,
 };
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
@@ -49,9 +50,12 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      *
      * @param AnnotationsPropertiesClassReflectionExtension $annotationsProperties Extension for handling
      * annotation-based properties.
+     * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
+     * @param ServiceMap $serviceMap Service map for resolving component classes by ID.
      */
     public function __construct(
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
+        private readonly ReflectionProvider $reflectionProvider,
         private readonly ServiceMap $serviceMap,
     ) {}
 
@@ -59,10 +63,9 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      * Retrieves the property reflection for a given property on the Yii user component.
      *
      * Resolves the property reflection for the specified property name by checking for the dynamic
-     * {@see User::identity] property, native properties, and annotation-based properties on the Yii user instance.
+     * {@see User::identity} property, native properties, and annotation-based properties on the Yii user instance.
      *
-     * This method ensures that the {@see User::identity] property and properties defined native or via annotations are
-     * accessible for static analysis and IDE support.
+     * For the 'identity' property, it resolves the type based on the configured identityClass in the user component.
      *
      * @param ClassReflection $classReflection Class reflection instance for the Yii user component.
      * @param string $propertyName Name of the property to retrieve.
@@ -73,15 +76,24 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
-        if (
-            $propertyName === 'identity' &&
-            ($componentClass = $this->serviceMap->getComponentClassById($propertyName)) !== null
-        ) {
-            return new ComponentPropertyReflection(
-                new DummyPropertyReflection($propertyName),
-                new ObjectType($componentClass),
-                $classReflection,
-            );
+        if (in_array($propertyName, ['id', 'identity', 'isGuest'], true) === true) {
+            $identityClass = $this->getIdentityClass();
+
+            if ($identityClass !== null) {
+                return new ComponentPropertyReflection(
+                    new DummyPropertyReflection($propertyName),
+                    new ObjectType($identityClass),
+                    $classReflection,
+                );
+            }
+
+            if (($componentClass = $this->serviceMap->getComponentClassById($propertyName)) !== null) {
+                return new ComponentPropertyReflection(
+                    new DummyPropertyReflection($propertyName),
+                    new ObjectType($componentClass),
+                    $classReflection,
+                );
+            }
         }
 
         if ($classReflection->hasNativeProperty($propertyName)) {
@@ -94,30 +106,46 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
     /**
      * Determines whether the specified property exists on the Yii user component.
      *
-     * Checks for the existence of a property on the user instance by considering native properties and
-     * annotation-based properties.
-     *
-     * This method ensures compatibility with the user component context, enabling accurate property reflection for
-     * static analysis and IDE autocompletion.
+     * Checks for the existence of a property on the user instance by considering native properties,
+     * annotation-based properties, and the special 'identity' property.
      *
      * @param ClassReflection $classReflection Class reflection instance for the Yii user component.
      * @param string $propertyName Name of the property to check for existence.
      *
-     * @return bool `true` if the property exists as a native or annotated property; `false` otherwise.
+     * @return bool `true` if the property exists as a native, annotated, or identity property; `false` otherwise.
      */
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
         if (
             $classReflection->getName() !== User::class &&
-            $classReflection->isSubclassOf(User::class) === false) {
+            $classReflection->isSubclassOfClass($this->reflectionProvider->getClass(User::class)) === false
+        ) {
             return false;
         }
 
-        if ($propertyName === 'identity' && $this->serviceMap->getComponentClassById($propertyName) !== null) {
-            return true;
+        return
+            $this->getIdentityClass() !== null ||
+            $this->serviceMap->getComponentClassById($propertyName) !== null;
+    }
+
+    /**
+     * Attempts to resolve the identity class from the user component configuration.
+     *
+     * This method tries to determine the identityClass configured for the user component
+     * by looking at the service map's user component configuration.
+     *
+     * @return string|null The fully qualified identity class name, or null if not found.
+     */
+    private function getIdentityClass(): string|null
+    {
+        $identityClass = null;
+
+        $definition = $this->serviceMap->getComponentDefinitionByClassName(User::class);
+
+        if (isset($definition['identityClass']) && is_string($definition['identityClass'])) {
+            $identityClass = $definition['identityClass'];
         }
 
-        return $classReflection->hasNativeProperty($propertyName)
-            || $this->annotationsProperties->hasProperty($classReflection, $propertyName);
+        return $identityClass;
     }
 }
