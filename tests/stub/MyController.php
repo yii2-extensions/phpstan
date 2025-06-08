@@ -47,7 +47,7 @@ final class MyController extends Controller
 
         $record = MyActiveRecord::find()->where(['flag' => Yii::$app->request->post('flag', true)])->one();
 
-        if ($record) {
+        if ($record !== null) {
             $record->flag = false;
             $flag = $record[$offsetProp];
             $record[$offsetProp] = true;
@@ -56,14 +56,14 @@ final class MyController extends Controller
 
         $record = MyActiveRecord::findOne(['condition']);
 
-        if ($record) {
+        if ($record !== null) {
             $flag = $record->flag;
             $flag = $record['flag'];
         }
 
         $record = MyActiveRecord::findBySql('');
 
-        if ($record = $record->one()) {
+        if (($record = $record->one()) !== null) {
             $flag = $record->flag;
             $flag = $record['flag'];
         }

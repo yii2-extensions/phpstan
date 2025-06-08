@@ -62,65 +62,65 @@ final class ServiceMapTest extends TestCase
 
         $serviceMap = new ServiceMap($fixturePath);
 
-        $this->assertNull(
+        self::assertNull(
             $serviceMap->getServiceClassFromNode(new String_('non-existent-service')),
             'ServiceMap should return \'null\' for a \'non-existent service\'.',
         );
-        $this->assertSame(
+        self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getServiceClassFromNode(new String_('singleton-string')),
             'ServiceMap should resolve \'singleton-string\' to \'MyActiveRecord::class\'.',
         );
-        $this->assertSame(
+        self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getServiceClassFromNode(new String_(MyActiveRecord::class)),
             'ServiceMap should resolve \'MyActiveRecord::class\' as a singleton string service.',
         );
-        $this->assertSame(
+        self::assertSame(
             SplStack::class,
             $serviceMap->getServiceClassFromNode(new String_('singleton-closure')),
             'ServiceMap should resolve \'singleton-closure\' to \'SplStack::class\'.',
         );
-        $this->assertSame(
+        self::assertSame(
             SplObjectStorage::class,
             $serviceMap->getServiceClassFromNode(new String_('singleton-service')),
             'ServiceMap should resolve \'singleton-service\' to \'SplObjectStorage::class\'.',
         );
-        $this->assertSame(
+        self::assertSame(
             SplFileInfo::class,
             $serviceMap->getServiceClassFromNode(new String_('singleton-nested-service-class')),
             'ServiceMap should resolve \'singleton-nested-service-class\' to \'SplFileInfo::class\'.',
         );
-        $this->assertSame(
+        self::assertSame(
             SplStack::class,
             $serviceMap->getServiceClassFromNode(new String_('closure')),
             'ServiceMap should resolve \'closure\' to \'SplStack::class\'.',
         );
-        $this->assertSame(
+        self::assertSame(
             SplObjectStorage::class,
             $serviceMap->getServiceClassFromNode(new String_('service')),
             'ServiceMap should resolve \'service\' to \'SplObjectStorage::class\'.',
         );
-        $this->assertSame(
+        self::assertSame(
             SplFileInfo::class,
             $serviceMap->getServiceClassFromNode(new String_('nested-service-class')),
             'ServiceMap should resolve \'nested-service-class\' to \'SplFileInfo::class\'.',
         );
-        $this->assertSame(
+       self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getComponentClassById('customComponent'),
             'ServiceMap should resolve component id \'customComponent\' to \'MyActiveRecord::class\'.',
         );
-        $this->assertNull(
+        self::assertNull(
             $serviceMap->getComponentClassById('nonExistentComponent'),
             'ServiceMap should return \'null\' for a \'non-existent\' component id.',
         );
-        $this->assertSame(
+        self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getComponentClassById('customInitializedComponent'),
             'ServiceMap should resolve component id \'customInitializedComponent\' to \'MyActiveRecord::class\'.',
         );
-        $this->assertNull(
+        self::assertNull(
             $serviceMap->getComponentClassById('assetManager'),
             'ServiceMap should return \'null\' for \'assetManager\' component id as it is not a class but an array.',
         );
