@@ -91,6 +91,7 @@ final class MyController extends Controller
         Yii::$app->response->data = Yii::$app->request->rawBody;
 
         $guest = Yii::$app->user->isGuest;
+        $id = Yii::$app->user->id;
 
         Yii::$app->user->identity->getAuthKey();
         Yii::$app->user->identity->doSomething();
