@@ -107,10 +107,10 @@ final class ServiceMapTest extends TestCase
             'ServiceMap should resolve \'nested-service-class\' to \'SplFileInfo::class\'.',
         );
        self::assertSame(
-            MyActiveRecord::class,
-            $serviceMap->getComponentClassById('customComponent'),
-            'ServiceMap should resolve component id \'customComponent\' to \'MyActiveRecord::class\'.',
-        );
+           MyActiveRecord::class,
+           $serviceMap->getComponentClassById('customComponent'),
+           'ServiceMap should resolve component id \'customComponent\' to \'MyActiveRecord::class\'.',
+       );
         self::assertNull(
             $serviceMap->getComponentClassById('nonExistentComponent'),
             'ServiceMap should return \'null\' for a \'non-existent\' component id.',
