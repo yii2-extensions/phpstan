@@ -9,27 +9,27 @@ use yii\web\IdentityInterface;
 
 class User extends ActiveRecord implements IdentityInterface
 {
-    public static function findIdentity($id): IdentityInterface
+    public static function findIdentity($id)
     {
         return new static();
     }
 
-    public static function findIdentityByAccessToken($token, $type = null): IdentityInterface
+    public static function findIdentityByAccessToken($token, $type = null)
     {
         return new static();
     }
 
-    public function getId(): int
+    public function getId()
     {
         return 1;
     }
 
-    public function getAuthKey(): string
+    public function getAuthKey()
     {
         return '';
     }
 
-    public function validateAuthKey($authKey): bool
+    public function validateAuthKey($authKey)
     {
         return true;
     }

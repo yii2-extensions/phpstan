@@ -13,7 +13,13 @@ use PHPStan\Reflection\{
 };
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
-use PHPStan\Type\ObjectType;
+use PHPStan\Type\{
+    BooleanType,
+    IntegerType,
+    ObjectType,
+    StringType,
+    TypeCombinator,
+};
 use yii\web\User;
 use yii2\extensions\phpstan\ServiceMap;
 
@@ -79,10 +85,26 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
         if (in_array($propertyName, ['id', 'identity', 'isGuest'], true) === true) {
             $identityClass = $this->getIdentityClass();
 
-            if ($identityClass !== null) {
+            if ($propertyName === 'identity' && $identityClass !== null) {
                 return new ComponentPropertyReflection(
                     new DummyPropertyReflection($propertyName),
                     new ObjectType($identityClass),
+                    $classReflection,
+                );
+            }
+
+            if ($propertyName === 'id') {
+                return new ComponentPropertyReflection(
+                    new DummyPropertyReflection($propertyName),
+                    TypeCombinator::union(new IntegerType(), new StringType()),
+                    $classReflection,
+                );
+            }
+
+            if ($propertyName === 'isGuest') {
+                return new ComponentPropertyReflection(
+                    new DummyPropertyReflection($propertyName),
+                    new BooleanType(),
                     $classReflection,
                 );
             }
