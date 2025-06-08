@@ -103,14 +103,14 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
                     $classReflection,
                 );
             }
+        }
 
-            if (($componentClass = $this->serviceMap->getComponentClassById($propertyName)) !== null) {
-                return new ComponentPropertyReflection(
-                    new DummyPropertyReflection($propertyName),
-                    new ObjectType($componentClass),
-                    $classReflection,
-                );
-            }
+        if (($componentClass = $this->serviceMap->getComponentClassById($propertyName)) !== null) {
+            return new ComponentPropertyReflection(
+                new DummyPropertyReflection($propertyName),
+                new ObjectType($componentClass),
+                $classReflection,
+            );
         }
 
         if ($classReflection->hasNativeProperty($propertyName)) {
