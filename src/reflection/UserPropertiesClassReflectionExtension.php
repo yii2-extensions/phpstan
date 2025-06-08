@@ -140,9 +140,9 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
             return false;
         }
 
-        return
-            $this->getIdentityClass() !== null ||
-            $this->serviceMap->getComponentClassById($propertyName) !== null;
+        return in_array($propertyName, ['id', 'identity', 'isGuest'], true)
+            ? $this->getIdentityClass() !== null
+            : $this->serviceMap->getComponentClassById($propertyName) !== null;
     }
 
     /**
