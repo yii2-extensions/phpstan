@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.2.4 Under development
+
 ## 0.2.3 June 09, 2025
 
 - Enh #25: Add support for `PHPStan` Extension Installer (@samuelrajan747)
