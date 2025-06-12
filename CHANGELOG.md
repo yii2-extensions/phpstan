@@ -1,6 +1,8 @@
 # Change Log
 
-## 0.2.4 Under development
+## 0.3.0 Under development
+
+- Enh #35: feat: move config fixtures into `config` subdirectory.
 
 ## 0.2.3 June 09, 2025
 
