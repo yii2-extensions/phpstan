@@ -28,7 +28,6 @@ use yii\db\ActiveQuery;
 
 use function count;
 use function in_array;
-use function sprintf;
 
 /**
  * Provides dynamic return type extension for Yii Active Query methods in PHPStan analysis.
