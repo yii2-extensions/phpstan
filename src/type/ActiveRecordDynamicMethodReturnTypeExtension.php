@@ -9,38 +9,35 @@ use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\MethodReflection;
 use PHPStan\ShouldNotHappenException;
-use PHPStan\Type\{DynamicMethodReturnTypeExtension, Type};
-use yii\db\ActiveRecord;
+use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, Type};
+use PHPStan\Type\Generic\GenericObjectType;
+use yii\db\{ActiveQuery, ActiveRecord};
 
 use function count;
 use function in_array;
 use function sprintf;
 
 /**
- * Provides dynamic return type extension for Yii {@see ActiveRecord} relation methods in PHPStan analysis.
+ * Provides dynamic return type extension for Yii Active Record relation methods in PHPStan analysis.
  *
- * Integrates Yii's {@see ActiveRecord} relation methods with PHPStan's static analysis, enabling accurate type
- * inference for methods such as {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()} based on the provided
- * model class argument.
+ * Integrates Yii Active Record relation methods with PHPStan dynamic return type extension system, enabling precise
+ * type inference for relation methods such as {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()}.
  *
- * This extension allows PHPStan to infer the correct return type for {@see ActiveRecord} relation methods, supporting
- * dynamic relation definitions and ensuring that static analysis and IDE autocompletion reflect the actual runtime
- * behavior of relation methods in Yii ORM.
+ * This extension analyzes the method arguments to determine the most accurate return type for relation definitions,
+ * returning a generic {@see ActiveQuery} type parameterized with the related model class.
  *
- * The implementation inspects the method arguments to determine the related model class, returning an
- * {@see ActiveQueryObjectType} for the specified relation.
- *
- * This enables precise type information for relation queries and supports strict analysis of relation usage in Yii
- * applications.
+ * It ensures that static analysis and IDE autocompletion provide correct type information for Yii Active Record
+ * relation calls.
  *
  * Key features.
- * - Dynamic return type inference for `hasOne()` and `hasMany()` relation methods.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
- * - Handles runtime context and method argument inspection for relation definitions.
- * - Provides accurate type information for IDEs and static analysis tools.
- * - Supports both single and multiple record relation types.
+ * - Accurate return type inference for {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()} relation
+ *   methods.
+ * - Compatibility with PHPStan's strict static analysis and autocompletion.
+ * - Exception handling for invalid or missing arguments in relation method calls.
+ * - Returns a generic {@see ActiveQuery} type with the related model class as type parameter.
  *
- * @see ActiveQueryObjectType for custom query object type handling.
+ * @see ActiveQuery for query API details.
+ * @see ActiveRecord for relation method definitions.
  * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -51,11 +48,11 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
     /**
      * Returns the class name for which this dynamic return type extension applies.
      *
-     * Specifies the fully qualified class name of the Yii {@see ActiveRecord} base class that this extension targets
-     * for dynamic return type inference in PHPStan analysis.
+     * Specifies the fully qualified class name of the {@see ActiveRecord} base class that this extension targets for
+     * dynamic return type inference in PHPStan analysis.
      *
      * This enables PHPStan to apply custom return type logic for {@see ActiveRecord} relation methods such as
-     * {@see ActiveRecord}::hasOne()} and {@see ActiveRecord::hasMany()}, supporting accurate type inference and IDE
+     * {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()}, supporting accurate type inference and IDE
      * autocompletion for dynamic relation definitions.
      *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.
@@ -68,23 +65,19 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
     }
 
     /**
-     * Infers the return type for a relation method call on a Yii {@see ActiveRecord} instance based on the provided
-     * model class argument.
+     * Infers the return type for a relation method call on a {@see ActiveRecord} instance based on the provided model
+     * class argument.
      *
      * Determines the correct return type for {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()} relation
      * methods by inspecting the first argument which should be a constant string representing the related model class.
-     *
-     * Returns an {@see ActiveQueryObjectType} for the specified relation, enabling accurate type inference for static
-     * analysis and IDE support.
      *
      * @param MethodReflection $methodReflection Reflection instance for the called relation method.
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *
-     * @throws ShouldNotHappenException if the method argument is missing, not a constant string, or invalid for
-     * relation definition.
+     * @throws ShouldNotHappenException if the method argument is missing or invalid.
      *
-     * @return Type Inferred return type for the relation method call as an {@see ActiveQueryObjectType}.
+     * @return Type Inferred return type for the relation method call.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
@@ -93,7 +86,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
     ): Type {
         $arg = $methodCall->getRawArgs()[0] ?? null;
 
-        if ($arg instanceof Arg === false) {
+        if ($arg === null || $arg::class !== Arg::class) {
             throw new ShouldNotHappenException(
                 sprintf(
                     'Invalid or missing argument for method %s at line %d',
@@ -116,7 +109,9 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
             );
         }
 
-        return new ActiveQueryObjectType($constantStrings[0]->getValue(), false);
+        $modelClass = $constantStrings[0]->getValue();
+
+        return new GenericObjectType(ActiveQuery::class, [new ObjectType($modelClass)]);
     }
 
     /**
@@ -124,8 +119,6 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
      *
      * Checks if the method name is one of the supported relation methods {@see ActiveRecord::hasOne},
      * {@see ActiveRecord::hasMany} for which this extension provides dynamic return type inference.
-     *
-     * Only these methods are eligible for custom type resolution.
      *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *

@@ -39,11 +39,11 @@ services:
         class: yii2\extensions\phpstan\type\ActiveRecordDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
-        class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
-        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
-    -
         class: yii2\extensions\phpstan\type\ActiveRecordDynamicStaticMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
+    -
+        class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
         class: yii2\extensions\phpstan\type\ContainerDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
