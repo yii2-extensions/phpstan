@@ -34,6 +34,16 @@ use function PHPStan\Testing\assertType;
  */
 final class ActiveQueryDynamicMethodReturnType
 {
+    public function testReturnActiveQueryWhenAsArrayWithVariableArgument(): void
+    {
+        $userPreference = $_POST['format'] ?? 'default';
+        $useArrayFormat = ($userPreference === 'json');
+
+        $query = MyActiveRecord::find()->asArray($useArrayFormat);
+
+        assertType('yii\db\ActiveQuery<array{flag: bool}|yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $query);
+    }
+
     public function testReturnMyActiveRecordArrayQueryWhenAsArrayExplicitTrue(): void
     {
         $explicitArrayQuery = MyActiveRecord::find()->asArray(true);
@@ -168,5 +178,19 @@ final class ActiveQueryDynamicMethodReturnType
         $chainedQuery = $query->where(['active' => 1]) -> andWhere(['status' => 'published']);
 
         assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $chainedQuery);
+    }
+
+    public function testReturnUnionResultsWhenAsArrayWithVariableArgument(): void
+    {
+        $configValue = getenv('RESPONSE_FORMAT');
+        $asArray = $configValue === 'array';
+
+        $results = MyActiveRecord::find()->asArray($asArray)->all();
+
+        assertType('array<int, array{flag: bool}|yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $results);
+
+        foreach ($results as $result) {
+            assertType('array{flag: bool}|yii2\extensions\phpstan\tests\stub\MyActiveRecord', $result);
+        }
     }
 }

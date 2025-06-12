@@ -398,8 +398,11 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
             return new GenericObjectType(ActiveQuery::class, [$modelType]);
         }
 
-        throw new ShouldNotHappenException(
-            sprintf("Invalid argument provided to 'asArray' method at line '%d'", $methodCall->getLine()),
+        return new GenericObjectType(
+            ActiveQuery::class,
+            [
+                TypeCombinator::union($modelType, $this->getArrayTypeFromModelProperties($modelType)),
+            ],
         );
     }
 

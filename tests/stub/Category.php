@@ -30,10 +30,6 @@ use yii\db\ActiveRecord;
  */
 class Category extends ActiveRecord
 {
-    public int $id = 1;
-    public string $name = 'Sample Category';
-    public int|null $parent_id = null;
-
     public static function tableName(): string
     {
         return 'categories';
