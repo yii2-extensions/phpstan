@@ -2,7 +2,8 @@
 
 ## 0.3.0 Under development
 
-- Enh #35: feat: move config fixtures into `config` subdirectory.
+- Enh #35: Move config fixtures into `config` subdirectory (@terabytesoftw)
+- Enh #36: Update `ActiveQuery` and `ActiveRecord` dynamic return type extensions for improved type inference and error handling; remove deprecated `ActiveQueryObjectType` and `ActiveRecordObjectType` classes (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 
