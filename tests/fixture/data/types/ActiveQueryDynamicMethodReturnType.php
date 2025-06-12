@@ -6,6 +6,7 @@ namespace yii2\extensions\phpstan\tests\fixture\data\types;
 
 use yii\db\{ActiveQuery, ActiveRecord};
 use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
+use yii2\extensions\phpstan\tests\stub\Post;
 
 use function PHPStan\Testing\assertType;
 
@@ -192,5 +193,43 @@ final class ActiveQueryDynamicMethodReturnType
         foreach ($results as $result) {
             assertType('array{flag: bool}|yii2\extensions\phpstan\tests\stub\MyActiveRecord', $result);
         }
+    }
+
+    public function testReturnActiveQueryWhenCustomQuerySubclass(): void
+    {
+        $customQuery = Post::find();
+
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\PostQuery<yii2\extensions\phpstan\tests\stub\Post>',
+            $customQuery,
+        );
+
+        $customQueryWithAsArray = $customQuery->asArray();
+
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\PostQuery<array{title: string, content: string}>',
+            $customQueryWithAsArray,
+        );
+
+        $customQueryResult = $customQuery->one();
+
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\Post|null',
+            $customQueryResult,
+        );
+
+        $customQueryResults = $customQuery->all();
+
+        assertType(
+            'array<int, yii2\extensions\phpstan\tests\stub\Post>',
+            $customQueryResults,
+        );
+
+        $publishedQuery = $customQuery->published();
+
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\PostQuery<yii2\extensions\phpstan\tests\stub\Post>',
+            $publishedQuery,
+        );
     }
 }

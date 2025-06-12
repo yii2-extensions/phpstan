@@ -8,7 +8,6 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\{ClassReflection, MethodReflection, ReflectionProvider};
-use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\{
     ArrayType,
     IntegerType,
@@ -32,21 +31,19 @@ use function in_array;
 /**
  * Provides dynamic return type extension for Yii Active Query methods in PHPStan analysis.
  *
- * Implements dynamic return type resolution for the {@see ActiveQuery} class, enabling PHPStan to infer precise return
- * types for the {@see ActiveQuery::one()}, {@see ActiveQuery::all()}, and {@see ActiveQuery::asArray()} methods based
- * on the model type and method arguments.
+ * Enables PHPStan to infer precise return types for {@see ActiveQuery} methods such as {@see ActiveQuery::one()},
+ * {@see ActiveQuery::all()}, and {@see ActiveQuery::asArray()} based on the model type and method arguments.
  *
- * This extension analyzes the generic type parameter of {@see ActiveQuery} to determine the model type, and inspects
+ * This extension analyzes the generic type parameter of {@see ActiveQuery} to determine the model type and inspects
  * method arguments to resolve array or object return types for {@see ActiveQuery::asArray()}.
  *
- * It also supports union and array types for {@see ActiveQuery::one()} and {@see ActiveQuery::all()} respectively, and
+ * It supports union and array types for {@see ActiveQuery::one()} and {@see ActiveQuery::all()} respectively, and
  * preserves the generic type for fluent interface methods.
  *
- * Key features:
+ * Key features.
  * - Array shape inference from PHPDoc property tags for model classes.
  * - Dynamic return type inference for {@see ActiveQuery::one()}, {@see ActiveQuery::all()}, and
  *   {@see ActiveQuery::asArray()} methods.
- * - Exception handling for invalid method arguments.
  * - Extraction of model type from generic {@see ActiveQuery} instances.
  * - Integration with PHPStan's type combinators and file type mapper for accurate analysis.
  * - Support for union, array, and generic object types in method return values.
@@ -96,17 +93,23 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Infers the return type for a method call on an {@see ActiveQuery} instance based on method name and arguments.
+     * Infers the return type for a method call on an {@see ActiveQuery} instance.
      *
-     * Determines the correct return type for {@see ActiveQuery::asArray()}, {@see ActiveQuery::one()}, and
-     * {@see ActiveQuery::all()} methods by inspecting the method arguments and runtime context, enabling accurate type
-     * inference for static analysis and IDE support.
+     * Resolves the return type for {@see ActiveQuery::all()}, {@see ActiveQuery::one()}, and
+     * {@see ActiveQuery::asArray()} methods by analyzing the model type and method context.
      *
-     * @param MethodReflection $methodReflection Reflection instance for the called method.
+     * This enables precise type inference for static analysis and IDE autocompletion.
+     *
+     * The method inspects the called method name and delegates to specialized handlers for supported methods,
+     * returning.
+     * - For {@see ActiveQuery::all()}: an array of the model type indexed by integer.
+     * - For {@see ActiveQuery::asArray()}: the result of {@see handleAsArray()} with the current model type.
+     * - For {@see ActiveQuery::one()}: a union of the model type and null.
+     * - For other methods: the result of {@see handleDefaultCase()}.
+     *
+     * @param MethodReflection $methodReflection Reflection for the called method.
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
-     *
-     * @throws ShouldNotHappenException if the method call context or arguments are invalid.
      *
      * @return Type Inferred return type for the method call.
      */
@@ -120,20 +123,22 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
         $methodName = $methodReflection->getName();
 
         return match ($methodName) {
+            'all' => new ArrayType(new IntegerType(), $modelType),
             'asArray' => $this->handleAsArray($methodCall, $scope, $modelType),
             'one' => TypeCombinator::union(new NullType(), $modelType),
-            'all' => new ArrayType(new IntegerType(), $modelType),
             default => $this->handleDefaultCase($methodReflection, $calledOnType, $modelType),
         };
     }
 
     /**
-     * Determines whether the given method is supported for dynamic return type inference.
+     * Checks if the given method is supported for dynamic return type inference.
      *
-     * Checks if the method returns `$this` or is one of the supported methods {@see ActiveQuery::one()}, and
-     * {@see ActiveQuery::all()}.
+     * Determines support by verifying if the method name is in {@see self::SUPPORTED_METHODS} or if the first variant's
+     * return type is {@see ThisType}.
      *
-     * @param MethodReflection $methodReflection Reflection instance for the method.
+     * This ensures that only methods with dynamic return types or fluent interfaces are handled by this extension.
+     *
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *
      * @return bool `true` if the method is supported for dynamic return type inference; `false` otherwise.
      */
@@ -155,25 +160,17 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Creates a constant array type from a set of property types for array shape inference.
+     * Constructs a {@see ConstantArrayType} representing an array shape for model property types.
      *
-     * Constructs a {@see ConstantArrayType} instance representing an array shape, where each key corresponds to a
-     * property name and each value to its associated type.
+     * Iterates over the provided property map, creating a constant array type where each key is a property name and
+     * each value is its associated type.
      *
-     * This is used to provide precise array type inference for model properties when analyzing {@see ActiveQuery}
-     * results with {@see ActiveQuery::asArray()} in PHPStan static analysis.
+     * Used for precise array shape inference in {@see ActiveQuery} results with {@see ActiveQuery::asArray()} during
+     * static analysis.
      *
-     * The method iterates over the provided property types, mapping each property name to a {@see ConstantStringType}
-     * key and its type to the corresponding value.
+     * @param array<string, Type> $properties Map of property names to their types.
      *
-     * The resulting {@see ConstantArrayType} enables accurate type checking and autocompletion for associative arrays
-     * returned by {@see ActiveQuery} methods.
-     *
-     * @param array $properties Map of property names to their types.
-     *
-     * @return ConstantArrayType Array shape type representing the model's properties.
-     *
-     * @phpstan-param array<string, Type> $properties
+     * @return ConstantArrayType Array shape type for the model's properties.
      */
     private function createConstantArrayType(array $properties): ConstantArrayType
     {
@@ -189,13 +186,12 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Creates a generic array type with string keys and mixed values for model property inference.
+     * Returns a generic array type with string keys and mixed values.
      *
-     * Constructs an {@see ArrayType} instance representing an associative array with string keys and mixed values.
+     * Provides a fallback associative array type for {@see ActiveQuery} results when the model type can't be determined
+     * or property extraction from PHPDoc is unavailable.
      *
-     * This method is used as a fallback when the model type is unknown or when property extraction from PHPDoc fails,
-     * ensuring that static analysis and IDE autocompletion provide a safe, general array type for {@see ActiveQuery}
-     * results.
+     * This ensures static analysis and IDE autocompletion remain safe and general for dynamic query scenarios.
      *
      * @return ArrayType Generic array type with string keys and mixed values.
      */
@@ -207,46 +203,62 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     /**
      * Extracts the model type from a {@see GenericObjectType} instance of {@see ActiveQuery}.
      *
-     * Determines the generic type parameter representing the model class for the given {@see ActiveQuery} instance.
+     * Resolves the generic type parameter representing the model class for the given {@see ActiveQuery} instance.
      *
-     * If the provided type is a generic {@see ActiveQuery}, it returns the first generic type argument as the model
-     * type; otherwise, it returns {@see MixedType} as a fallback.
+     * If the provided type is a generic {@see ActiveQuery}, returns the first generic type argument as the model type;
+     * otherwise, returns {@see MixedType} as a fallback.
      *
-     * This method is essential for enabling precise type inference in dynamic return type extensions, allowing PHPStan
-     * to resolve the model type used in {@see ActiveQuery} method calls such as {@see ActiveQuery::one()},
-     * {@see ActiveQuery::all()}, and {@see ActiveQuery::asArray()}.
+     * This method enables precise type inference for dynamic return type extensions, allowing PHPStan to determine the
+     * model type used in {@see ActiveQuery} method calls such as {@see ActiveQuery::one()}, {@see ActiveQuery::all()},
+     * and {@see ActiveQuery::asArray()}.
      *
-     * @param Type $calledOnType Type on which the method is called, expected to be a {@see GenericObjectType} of
-     * {@see ActiveQuery}.
+     * @param Type $calledOnType Type on which the method is called. Expected to be a {@see GenericObjectType} of
+     * {@see ActiveQuery} or its subclass.
      *
-     * @return Type Extracted model type if available, or {@see MixedType} if not resolvable.
+     * @return Type The extracted model type if available, or {@see MixedType} if not resolvable.
      */
     private function extractModelType(Type $calledOnType): Type
     {
-        if ($calledOnType::class === GenericObjectType::class && $calledOnType->getClassName() === ActiveQuery::class) {
-            $types = $calledOnType->getTypes();
+        if ($calledOnType::class === GenericObjectType::class) {
+            $className = $calledOnType->getClassName();
 
-            return $types[0] ?? new MixedType();
+            if ($className === ActiveQuery::class) {
+                $types = $calledOnType->getTypes();
+
+                return $types[0] ?? new MixedType();
+            }
+
+            if ($this->reflectionProvider->hasClass($className)) {
+                $classReflection = $this->reflectionProvider->getClass($className);
+
+                if ($classReflection->isSubclassOfClass($this->reflectionProvider->getClass(ActiveQuery::class))) {
+                    $types = $calledOnType->getTypes();
+
+                    return $types[0] ?? new MixedType();
+                }
+            }
         }
 
         return new MixedType();
     }
 
     /**
-     * Extracts property types from the PHPDoc block of a given class reflection.
+     * Extracts property types from the PHPDoc block of the given class reflection.
      *
      * Parses the PHPDoc comment of the provided {@see ClassReflection} to retrieve property tags and their associated
-     * types, enabling array shape inference for model classes in static analysis.
+     * types.
      *
-     * This method is used to support precise type inference for associative arrays returned by {@see ActiveQuery}
-     * methods when the {@see ActiveQuery::asArray()} method is used, allowing PHPStan to provide accurate type checking
-     * and autocompletion for model properties based on documented PHPDoc annotations.
+     * This enables array shape inference for model classes in static analysis, supporting precise type inference for
+     * associative arrays returned by {@see ActiveQuery} methods when {@see ActiveQuery::asArray()} is used.
+     *
+     * Only properties explicitly documented in the PHPDoc block are considered.
+     *
+     * If the file name or doc comment is unavailable, or if no property tags are found, an empty array is returned.
      *
      * @param ClassReflection $classReflection Class reflection instance for the model.
      *
-     * @return array Associative array of property names to their types, or an empty array if not available.
-     *
-     * @phpstan-return array<string, Type>
+     * @return array<string, Type> Associative array of property names to their types, or an empty array if not
+     * available.
      */
     private function extractPropertiesFromPhpDoc(ClassReflection $classReflection): array
     {
@@ -294,22 +306,43 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Infers an array shape type from the model's PHPDoc property annotations for static analysis.
+     * Extracts the query class name from the provided type for dynamic return type inference.
      *
-     * Constructs a {@see ConstantArrayType} representing the array shape of the model's properties, based on PHPDoc
-     * property tags extracted from the model class.
+     * If the given type is a {@see GenericObjectType}, returns its class name; otherwise, returns the base
+     * {@see ActiveQuery} class name.
      *
-     * If the model type is unknown, not a single class, or property extraction fails, a generic associative array type
-     * is returned as a fallback.
+     * This method is used to determine the correct query class for type analysis and ensures compatibility with
+     * subclasses of {@see ActiveQuery} during static analysis.
      *
-     * This method enables precise type inference for associative arrays returned by {@see ActiveQuery} methods such as
-     * {@see ActiveQuery::asArray()}, allowing PHPStan to provide accurate type checking and autocompletion for model
-     * properties in array results.
+     * @param Type $calledOnType Type on which the method is called.
+     *
+     * @return string Fully qualified class name of the query object.
+     */
+    private function extractQueryClass(Type $calledOnType): string
+    {
+        if ($calledOnType::class === GenericObjectType::class) {
+            return $calledOnType->getClassName();
+        }
+
+        return ActiveQuery::class;
+    }
+
+    /**
+     * Infers the array shape type for a model from its PHPDoc property annotations.
+     *
+     * Examines the provided model type and attempts to extract property types from its PHPDoc block using reflection.
+     *
+     * If the model type is not a single class is unknown, or property extraction fails, a generic associative array
+     * type is returned.
+     *
+     * This method is used to provide accurate array shape types for associative arrays returned by {@see ActiveQuery}
+     * methods such as {@see ActiveQuery::asArray()} in static analysis, enabling precise type checking and
+     * autocompletion for model properties.
      *
      * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
      *
-     * @return Type A {@see ConstantArrayType} representing the model's array shape, or a generic associative array type
-     * if property extraction is impossible.
+     * @return Type {@see ConstantArrayType} for the model's array shape, or a generic associative array type if
+     * extraction fails.
      */
     private function getArrayTypeFromModelProperties(Type $modelType): Type
     {
@@ -339,18 +372,18 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Retrieves the argument type for the {@see ActiveQuery::asArray()} method call.
+     * Returns the type of the first argument passed to {@see ActiveQuery::asArray()} for static analysis.
      *
-     * Determines the type of the first argument passed to the {@see ActiveQuery::asArray()} method, enabling dynamic
-     * return type inference based on whether the argument is present and its value.
+     * Determines the type of the first argument provided to the {@see ActiveQuery::asArray()} method call.
      *
-     * If the argument is not provided or is not an instance of {@see Arg}, the method returns a constant boolean
-     * type representing `true` as the default behavior for {@see ActiveQuery::asArray()} in Yii Active Query.
+     * If no argument is given or the argument is not an instance of {@see Arg}, this method returns a
+     * {@see ConstantBooleanType} representing `true`, which is the default behavior for {@see ActiveQuery::asArray()}
+     * in Yii Active Query.
      *
-     * The dynamic return type extension uses this method internally to resolve the correct return type for
+     * This method is used internally by the dynamic return type extension to support accurate type inference for
      * {@see ActiveQuery::asArray()} calls during static analysis.
      *
-     * @param MethodCall $methodCall AST node for the method call expression.
+     * @param MethodCall $methodCall AST node for the {@see asArray()} method call.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *
      * @return Type Type of the first argument if present, or {@see ConstantBooleanType} `true` if not provided.
@@ -365,40 +398,43 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Infers the return type for the {@see ActiveQuery::asArray()} method call based on the provided argument.
+     * Infers the return type for the {@see ActiveQuery::asArray()} method call based on the argument value.
      *
      * Determines the resulting generic type for the {@see ActiveQuery} instance by analyzing the argument passed to
      * {@see ActiveQuery::asArray()}.
      *
-     * - If the argument is `true` (or omitted), the return type is an {@see ActiveQuery} with an array shape type
-     * inferred from the model's PHPDoc properties.
-     * - If the argument is `false`, the return type is an {@see ActiveQuery} with the original model type.
+     * - If the argument is `true` (or omitted), returns a {@see GenericObjectType} for the query class with an array
+     *   shape type inferred from the model's PHPDoc properties.
+     * - If the argument is `false`, returns a {@see GenericObjectType} for the query class with the original model
+     *   type.
+     * - If the argument is dynamic or unknown, returns a {@see GenericObjectType} for the query class with a union of
+     *   the model type and the array shape type.
      *
-     * This method enables precise static analysis and autocompletion for chained {@see asArray()} calls, ensuring that
-     * the correct type is inferred for later method calls on the {@see ActiveQuery} instance.
+     * This method enables precise type inference for chained {@see asArray()} calls, ensuring that the correct type is
+     * propagated for subsequent method calls on the {@see ActiveQuery} instance during static analysis.
      *
-     * @param MethodCall $methodCall AST node for the {@see asArray()} method call expression.
+     * @param MethodCall $methodCall AST node for the {@see asArray()} method call.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
      *
-     * @throws ShouldNotHappenException if the method call context or arguments are invalid.
-     *
-     * @return Type Inferred generic {@see ActiveQuery} type with either an array shape or the original model type.
+     * @return Type Inferred {@see GenericObjectType} for the query class with the appropriate generic type argument.
      */
     private function handleAsArray(MethodCall $methodCall, Scope $scope, Type $modelType): Type
     {
+        $calledOnType = $scope->getType($methodCall->var);
+        $queryClass = $this->extractQueryClass($calledOnType);
         $argType = $this->getAsArrayArgument($methodCall, $scope);
 
         if ($argType->isTrue()->yes()) {
-            return new GenericObjectType(ActiveQuery::class, [$this->getArrayTypeFromModelProperties($modelType)]);
+            return new GenericObjectType($queryClass, [$this->getArrayTypeFromModelProperties($modelType)]);
         }
 
         if ($argType->isFalse()->yes()) {
-            return new GenericObjectType(ActiveQuery::class, [$modelType]);
+            return new GenericObjectType($queryClass, [$modelType]);
         }
 
         return new GenericObjectType(
-            ActiveQuery::class,
+            $queryClass,
             [
                 TypeCombinator::union($modelType, $this->getArrayTypeFromModelProperties($modelType)),
             ],
@@ -406,24 +442,20 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Handles the default case for dynamic return type inference in {@see ActiveQuery} methods.
+     * Returns the inferred return type for ActiveQuery methods not handled by specific logic.
      *
-     * Determines the return type for methods that aren't explicitly handled by other logic, such as fluent interface
-     * methods returning `$this`.
+     * If the method's return type is {@see ThisType}, preserves the generic model type for the {@see ActiveQuery}
+     * instance; otherwise, returns the type on which the method is called.
      *
-     * If the method's return type is {@see ThisType}, it preserves the generic model type for the {@see ActiveQuery}
-     * instance; otherwise, it returns the type on which the method was called.
+     * This ensures that fluent interface methods maintain correct generic type propagation for static analysis and IDE
+     * support.
      *
-     * This method ensures that chained method calls on {@see ActiveQuery} maintain accurate type information for static
-     * analysis and IDE autocompletion, supporting fluent interface patterns and generic type propagation.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the called method.
-     * @param Type $calledOnType Type on which the method is called, expected to be a {@see GenericObjectType} of
-     * {@see ActiveQuery}.
+     * @param MethodReflection $methodReflection Reflection for the called method.
+     * @param Type $calledOnType Type on which the method is called.
      * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
      *
-     * @return Type Inferred return type for the method call, preserving the generic model type for fluent methods or
-     * returning the original called-on type otherwise.
+     * @return Type Inferred return type, preserving the generic model type for fluent methods or returning the original
+     * type.
      */
     private function handleDefaultCase(MethodReflection $methodReflection, Type $calledOnType, Type $modelType): Type
     {
@@ -441,29 +473,27 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Preserves the generic model type for {@see ActiveQuery} fluent interface methods.
+     * Preserves the generic model type for fluent interface methods on {@see ActiveQuery}.
      *
-     * Ensures that chained method calls on {@see ActiveQuery} maintain accurate generic type information for static
-     * analysis and IDE autocompletion.
+     * Returns the original {@see GenericObjectType} if present, ensuring that chained method calls on
+     * {@see ActiveQuery} maintain the correct generic type for static analysis and IDE autocompletion.
      *
-     * - If the called-on type is a generic {@see ActiveQuery} instance, it is returned as-is to preserve the model
-     *   type.
-     * - If the model type is not {@see MixedType}, a new generic {@see ActiveQuery} type is constructed with the
-     *   provided model type; otherwise, the original called-on type is returned as a fallback.
+     * If the called-on type is not a {@see GenericObjectType} but the model type is not {@see MixedType}, constructs a
+     * new {@see GenericObjectType} for {@see ActiveQuery} with the provided model type; otherwise, returns the original
+     * type.
      *
-     * This method is used internally by the dynamic return type extension to support fluent interface patterns and
-     * generic type propagation in {@see ActiveQuery} method chains.
+     * This method is used internally to support fluent interface patterns and generic type propagation in dynamic
+     * return type extension logic.
      *
-     * @param Type $calledOnType Type on which the method is called, expected to be a {@see GenericObjectType} of
-     * {@see ActiveQuery}.
-     * @param Type $modelType Extracted model type from the generic {@see ActiveQuery} instance.
+     * @param Type $calledOnType The type on which the method is called.
+     * @param Type $modelType The extracted model type from the generic {@see ActiveQuery} instance.
      *
-     * @return Type Preserved generic {@see ActiveQuery} type with the correct model type, or the original type if
-     * preservation is impossible.
+     * @return Type The preserved generic {@see ActiveQuery} type with the correct model type, or the original type if
+     * preservation is not possible.
      */
     private function preserveModelType(Type $calledOnType, Type $modelType): Type
     {
-        if ($calledOnType::class === GenericObjectType::class && $calledOnType->getClassName() === ActiveQuery::class) {
+        if ($calledOnType::class === GenericObjectType::class) {
             return $calledOnType;
         }
 
