@@ -15,6 +15,7 @@ parameters:
 
     paths:
         - src
+        - tests
 
     # Enable strict advanced checks
     checkImplicitMixed: true
@@ -25,3 +26,6 @@ parameters:
     reportAnyTypeWideningInVarTag: true
     reportPossiblyNonexistentConstantArrayOffset: true
     reportPossiblyNonexistentGeneralArrayOffset: true
+
+    yii2:
+        config_path: tests/fixture/config/config.php

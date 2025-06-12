@@ -11,39 +11,38 @@ use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector, Reflection
 use PHPStan\Type\{
     DynamicStaticMethodReturnTypeExtension,
     NullType,
+    ObjectType,
     ThisType,
     Type,
     TypeCombinator,
     UnionType,
 };
+use PHPStan\Type\Generic\GenericObjectType;
 use yii\db\{ActiveQuery, ActiveRecord};
 
 use function count;
 
 /**
- * Provides dynamic return type extension for Yii {@see ActiveRecord} static methods in PHPStan analysis.
+ * Provides dynamic return type extension for Yii Active Record static methods in PHPStan analysis.
  *
- * Integrates Yii's {@see ActiveRecord} static method return types with PHPStan's static analysis, enabling accurate
- * type inference for static methods such as {@see ActiveRecord::findOne()}, {@see ActiveRecord::findAll()}, and custom
- * query methods based on runtime context and method signatures.
+ * Integrates Yii Active Record with PHPStan dynamic static method return type extension system, enabling precise type
+ * inference for static {@see ActiveRecord} methods such as {@see ActiveRecord::find()}, {@see ActiveRecord::findOne()},
+ * and custom static query methods.
  *
- * This extension allows PHPStan to infer the correct return type for {@see ActiveRecord} static methods, supporting
- * both {@see ActiveRecord} object and ActiveQuery result types, and handling the dynamic behavior of static query
- * result types in Yii ORM.
+ * This extension analyzes the static method's return type and the called class context to determine the most accurate
+ * return type, including model type preservation for generic queries, nullability for single-record fetches, and
+ * generic {@see ActiveQuery} wrapping.
  *
- * The implementation inspects the method's return type and class context to determine the appropriate return type,
- * ensuring that static analysis and IDE autocompletion reflect the actual runtime behavior of {@see ActiveRecord}
- * static methods.
+ * The implementation supports:
+ * - Accurate return type inference for static ActiveRecord methods returning {@see ThisType}, {@see UnionType},
+ *   {@see ActiveQuery}, or custom {@see ActiveQuery} subclasses.
+ * - Compatibility with PHPStan's strict static analysis and autocompletion.
+ * - Model type preservation for generic {@see ActiveQuery} results.
+ * - Nullability handling for methods like {@see ActiveRecord::findOne()}.
+ * - Support for custom {@see ActiveQuery} subclasses and generic parameter propagation.
  *
- * Key features.
- * - Dynamic return type inference for static {@see ActiveRecord} query methods.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
- * - Handles runtime context and method signature inspection.
- * - Provides accurate type information for IDEs and static analysis tools.
- * - Supports both {@see ActiveRecord} object and ActiveQuery result types.
- *
- * @see ActiveQueryObjectType for custom query object type handling.
- * @see ActiveRecordObjectType for custom {@see ActiveRecord} object type handling.
+ * @see ActiveQuery for query API details.
+ * @see ActiveRecord for ActiveRecord API details.
  * @see DynamicStaticMethodReturnTypeExtension for PHPStan dynamic static method return type extension contract.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -103,11 +102,11 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
 
         $returnType = $variants[0]->getReturnType();
 
-        if ($returnType instanceof ThisType) {
+        if ($returnType::class === ThisType::class) {
             return true;
         }
 
-        if ($returnType instanceof UnionType) {
+        if ($returnType::class === UnionType::class) {
             foreach ($returnType->getTypes() as $type) {
                 $classNames = $type->getObjectClassNames();
 
@@ -141,7 +140,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
             }
         }
 
-        return false;
+        return $returnType::class === GenericObjectType::class && $returnType->getClassName() === ActiveQuery::class;
     }
 
     /**
@@ -176,26 +175,106 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
             $methodReflection->getVariants(),
         )->getReturnType();
 
-        if ($className instanceof Name === false) {
+        if ($className::class !== Name::class) {
             return $returnType;
         }
 
         $name = $scope->resolveName($className);
+        $modelType = new ObjectType($name);
 
-        if ($returnType instanceof ThisType) {
-            return new ActiveRecordObjectType($name);
+        if ($returnType::class === ThisType::class) {
+            return $modelType;
         }
 
-        if ($returnType instanceof UnionType) {
-            return TypeCombinator::union(new NullType(), new ActiveRecordObjectType($name));
+        if ($returnType::class === UnionType::class) {
+            $hasNull = false;
+            $hasActiveRecord = false;
+
+            foreach ($returnType->getTypes() as $type) {
+                if ($type::class === NullType::class) {
+                    $hasNull = true;
+                }
+
+                $classNames = $type->getObjectClassNames();
+
+                if (count($classNames) > 0 && $this->isActiveRecordClass($classNames[0])) {
+                    $hasActiveRecord = true;
+                }
+            }
+
+            if ($hasNull && $hasActiveRecord) {
+                return TypeCombinator::union(new NullType(), $modelType);
+            }
         }
 
         $classNames = $returnType->getObjectClassNames();
 
         if (count($classNames) > 0 && $classNames[0] === ActiveQuery::class) {
-            return new ActiveQueryObjectType($name, false);
+            return new GenericObjectType(ActiveQuery::class, [$modelType]);
+        }
+
+        if ($returnType::class === GenericObjectType::class && $returnType->getClassName() === ActiveQuery::class) {
+            return new GenericObjectType(ActiveQuery::class, [$modelType]);
+        }
+
+        if (count($classNames) > 0 && $this->isActiveQueryClass($classNames[0])) {
+            return new GenericObjectType($classNames[0], [$modelType]);
         }
 
         return $returnType;
+    }
+
+    /**
+     * Determines whether the specified class is {@see ActiveRecord} or a subclass.
+     *
+     * Checks if the given class name corresponds to the {@see ActiveRecord} base class or any of its subclasses by
+     * leveraging the reflection provider.
+     *
+     * This is used to ensure type compatibility and accurate type inference for static {@see ActiveRecord} methods
+     * during PHPStan analysis.
+     *
+     * This method is essential for supporting dynamic return type inference in scenarios where union types or generic
+     * {@see ActiveRecord} subclasses are involved, enabling precise type checks and autocompletion.
+     *
+     * @param string $className Fully qualified class name to check.
+     *
+     * @return bool `true` if the class is {@see ActiveRecord} or a subclass; `false` otherwise.
+     */
+    private function isActiveRecordClass(string $className): bool
+    {
+        if ($this->reflectionProvider->hasClass($className) === false) {
+            return false;
+        }
+
+        return $this->reflectionProvider->getClass($className)->isSubclassOfClass(
+            $this->reflectionProvider->getClass(ActiveRecord::class),
+        );
+    }
+
+    /**
+     * Determines whether the specified class is {@see ActiveQuery} or a subclass.
+     *
+     * Checks if the given class name corresponds to the {@see ActiveQuery} base class or any of its subclasses by
+     * leveraging the reflection provider.
+     *
+     * This is used to ensure type compatibility and accurate type inference for static {@see ActiveRecord} methods that
+     * return query objects during PHPStan analysis.
+     *
+     * This method is essential for supporting dynamic return type inference in scenarios where union types or generic
+     * {@see ActiveQuery} subclasses are involved, enabling precise type checks and autocompletion for query methods.
+     *
+     * @param string $className Fully qualified class name to check.
+     *
+     * @return bool `true` if the class is {@see ActiveQuery} or a subclass; `false` otherwise.
+     */
+    private function isActiveQueryClass(string $className): bool
+    {
+        if ($this->reflectionProvider->hasClass($className) === false) {
+            return false;
+        }
+
+        return $this->reflectionProvider->getClass($className)->isSubclassOfClass(
+            $this->reflectionProvider->getClass(ActiveQuery::class),
+        );
     }
 }

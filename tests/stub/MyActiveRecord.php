@@ -7,26 +7,21 @@ namespace yii2\extensions\phpstan\tests\stub;
 use yii\db\ActiveRecord;
 
 /**
- * Stub ActiveRecord implementation for testing model relations and query scenarios.
+ * Custom ActiveRecord implementation for testing dynamic return types and relations.
  *
- * Provides a minimal ActiveRecord subclass for verifying relation methods, query building, and type inference in static
- * analysis and test environments.
+ * Provides a minimal ActiveRecord subclass with a boolean property and methods for testing Yii Active Record dynamic
+ * return types, including single and multiple relation retrieval and query result scenarios.
  *
- * This stub is designed to simulate realistic ActiveRecord usage patterns without requiring a full database or
- * application context.
- *
- * The class defines example relation methods {@see getMaster()}, {@see getSiblings()} and a static query method
- * {@see test()} to demonstrate return type annotations, self-referencing relations, and integration with static
- * analysis tools.
+ * This class is used in type inference and static analysis tests to validate PHPStan's ability to correctly infer
+ * return types for ActiveRecord queries, relations, and chained method calls.
  *
  * Key features.
- * - Designed for static analysis and test coverage validation.
- * - Example of property annotation for dynamic property support.
- * - No external dependencies or database required.
- * - Self-referencing relation methods for testing hasMany and hasOne patterns.
- * - Usage of PHPStan generics for precise return types.
+ * - Declares a boolean property {@see $flag} for property access tests.
+ * - Defines {@see getMaster()} for single related record retrieval via hasOne().
+ * - Defines {@see getSiblings()} for multiple related records retrieval via hasMany().
+ * - Defines {@see test()} for returning all records using a static query.
  *
- * @property bool $flag
+ * @property bool $flag Boolean property for test assertions.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
