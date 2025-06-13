@@ -265,7 +265,9 @@ final class ServiceMapServiceTest extends TestCase
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}singletons-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'container.singletons' 'array'.");
+        $this->expectExceptionMessage(
+            "Configuration file '{$fixturePath}' must contain a valid 'container.singletons' 'array'.",
+        );
 
         new ServiceMap($fixturePath);
     }
