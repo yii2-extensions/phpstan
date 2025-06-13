@@ -42,7 +42,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtensionTest extends TypeInferen
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [dirname(__DIR__, 2) . '/extension.neon'];
+        return [dirname(__DIR__) . '/extension-tests.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

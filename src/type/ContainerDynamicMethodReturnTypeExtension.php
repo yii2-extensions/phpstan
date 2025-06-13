@@ -8,28 +8,25 @@ use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector};
-use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, Type};
+use PHPStan\Type\Constant\ConstantStringType;
+use PHPStan\Type\{DynamicMethodReturnTypeExtension, MixedType, ObjectType, Type};
 use yii\di\Container;
 use yii2\extensions\phpstan\ServiceMap;
 
 /**
- * Provides dynamic return type extension for Yii DI {@see Container::get()} in PHPStan analysis.
+ * Provides dynamic return type extension for Yii DI container service resolution in PHPStan analysis.
  *
- * Integrates Yii's dependency injection container with PHPStan's static analysis, enabling accurate type inference for
- * the {@see Container::get()} method based on the requested service identifier or class name.
+ * Integrates the Yii dependency injection {@see Container} with PHPStan's dynamic method return type extension system,
+ * enabling precise type inference for {@see Container::get()} calls based on service ID and the {@see ServiceMap}.
  *
- * This extension allows PHPStan to infer the correct return type for service lookups, supporting both string-based and
- * class-based service resolution, and handling dynamic service mapping via the {@see ServiceMap}.
- *
- * The implementation inspects the first argument of the `get()` method call to determine the appropriate return type,
- * ensuring that static analysis and IDE autocompletion reflect the actual runtime behavior of the DI container.
+ * This extension analyzes the first argument of {@see Container::get()} to determine the most accurate return type,
+ * returning an {@see ObjectType} for known service classes or a {@see MixedType} for unknown or dynamic IDs.
  *
  * Key features.
- * - Dynamic return type inference for {@see Container::get()} based on service ID or class name.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
- * - Handles both string and class-based service lookups.
- * - Integrates with {@see ServiceMap} for accurate service class resolution.
- * - Provides accurate type information for IDEs and static analysis tools.
+ * - Accurate return type inference for {@see Container::get()} based on service ID string.
+ * - Compatible with PHPStan strict static analysis and autocompletion.
+ * - Falls back to method signature return type for unsupported or invalid calls.
+ * - Uses {@see ServiceMap} to resolve component class names.
  *
  * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
  * @see ServiceMap for component class resolution.
@@ -65,16 +62,19 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
     }
 
     /**
-     * Infers the return type for a method call on a Yii DI Container instance based on the service identifier argument.
+     * Infers the return type for a {@see Container::get()} method call based on the provided service ID argument.
      *
-     * Determines the correct return type for {@see Container::get()} by inspecting the first argument, which may be a
-     * service ID or class name, and resolving the corresponding class using the {@see ServiceMap}.
+     * Analyzes the first argument of the {@see Container::get()} call to determine the most accurate return type for
+     * service resolution.
      *
-     * If the service class can be determined, returns an {@see ObjectType} for that class; otherwise, falls back to the
-     * default return type as defined by the method signature and arguments.
+     * If the argument is a constant string and matches a known service in the {@see ServiceMap}, returns an
+     * {@see ObjectType} for the resolved class; otherwise, returns a {@see MixedType} to indicate an unknown or dynamic
+     * service type.
      *
-     * This method enables PHPStan and IDEs to provide accurate type inference and autocompletion for service lookups
-     * performed via the DI container, supporting both string and class-based service resolution.
+     * Falls back to the default method signature return type for unsupported or invalid calls.
+     *
+     * This method enables precise type inference for dependency injection container lookups, improving static analysis
+     * and IDE autocompletion for service resolution scenarios.
      *
      * @param MethodReflection $methodReflection Reflection instance for the called method.
      * @param MethodCall $methodCall AST node for the method call expression.
@@ -87,33 +87,39 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
         MethodCall $methodCall,
         Scope $scope,
     ): Type {
-        if (isset($methodCall->args[0]) && $methodCall->args[0] instanceof Arg) {
-            $serviceClass = $this->serviceMap->getServiceClassFromNode($methodCall->args[0]->value);
-
-            if ($serviceClass !== null) {
-                return new ObjectType($serviceClass);
-            }
+        if (isset($methodCall->args[0]) === false || $methodCall->args[0]::class !== Arg::class) {
+            return ParametersAcceptorSelector::selectFromArgs(
+                $scope,
+                $methodCall->getArgs(),
+                $methodReflection->getVariants(),
+            )->getReturnType();
         }
 
-        return ParametersAcceptorSelector::selectFromArgs(
-            $scope,
-            $methodCall->getArgs(),
-            $methodReflection->getVariants(),
-        )->getReturnType();
+        $argType = $scope->getType($methodCall->args[0]->value);
+
+        if ($argType::class === ConstantStringType::class) {
+            $constantString = $argType->getConstantStrings()[0] ?? null;
+            $value = $constantString?->getValue() ?? '';
+            $serviceClass = $this->serviceMap->getServiceById($value);
+
+            return $serviceClass !== null ? new ObjectType($serviceClass) : new MixedType();
+        }
+
+        return new MixedType();
     }
 
     /**
-     * Determines whether the given method is supported for dynamic return type inference.
+     * Determines whether the specified method is supported for dynamic return type inference.
      *
-     * Checks if the provided {@see MethodReflection} instance corresponds to the {@see Container::get()} method,
-     * indicating that this extension should handle dynamic return type inference for the call.
+     * Checks if the method name is {@see Container::get}, which is the only method supported by this extension for
+     * dynamic return type analysis.
      *
-     * This method enables PHPStan to apply the extension logic only to supported methods, ensuring accurate type
-     * inference for service resolution calls and avoiding unintended behavior for other methods.
+     * This enables PHPStan to apply custom type inference logic exclusively to service resolution calls on the Yii
+     * dependency injection container.
      *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *
-     * @return bool `true` if the method is supported for dynamic return type inference; `false` otherwise.
+     * @return bool `true` if the method is {@see Container::get}; `false` otherwise.
      */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
