@@ -8,6 +8,8 @@ use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use yii\db\ActiveQuery;
 
+use function dirname;
+
 /**
  * Test suite for type inference of dynamic return types in {@see ActiveQuery} for Yii Active Record scenarios.
  *
@@ -42,7 +44,7 @@ final class ActiveQueryDynamicReturnTypeExtensionTest extends TypeInferenceTestC
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [dirname(__DIR__, 2) . '/extension.neon'];
+        return [dirname(__DIR__) . '/extension-tests.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

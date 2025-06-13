@@ -5,47 +5,43 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan;
 
 use Closure;
-use PhpParser\Node;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionNamedType;
 use RuntimeException;
 use yii\base\{BaseObject, InvalidArgumentException};
 
-use function class_exists;
 use function define;
 use function defined;
 use function file_exists;
 use function get_class;
+use function gettype;
 use function is_array;
 use function is_object;
+use function is_readable;
 use function is_string;
 use function is_subclass_of;
 use function sprintf;
 
 /**
- * Provides service and component class resolution for Yii application analysis in PHPStan.
+ * Service and component map for Yii application static analysis.
  *
- * Integrates Yii's dependency injection and component configuration with PHPStan's static analysis, enabling accurate
- * type inference, autocompletion, and service/component resolution for dynamic application services and components.
+ * Provides mapping and normalization of service and component definitions from Yii application configuration files,
+ * enabling static analysis tools and IDEs to resolve class types, configuration arrays, and dependencies for accurate
+ * type inference, autocompletion, and property reflection.
  *
- * This class parses the Yii application configuration to extract service and component definitions mapping service IDs
- * and component IDs to their corresponding class names.
+ * The class loads, validates, and processes configuration files, extracting service and component definitions and
+ * exposing methods to retrieve class names and configuration arrays by identifier or class name.
  *
- * It supports both singleton and definition-based service registration, as well as component configuration via arrays
- * or instantiated objects.
+ * It supports various Yii configuration patterns, including direct class names, closures, arrays, and object instances,
+ * ensuring robust handling of dynamic application structures.
  *
- * The implementation provides lookup methods for resolving the class name of a service or component by its ID, which
- * are used by PHPStan reflection extensions to enable static analysis and IDE support for dynamic properties and
- * dependency-injected services.
- *
- * Key features.
- * - Handles both array and object component configuration.
- * - Integrates with PHPStan reflection and type extensions for accurate analysis.
- * - Maps service and component IDs to their fully qualified class names.
- * - Parses Yii application config for service and component definitions.
- * - Provides lookup methods for service and component class resolution by ID.
- * - Supports singleton, definition, and closure-based service registration.
+ * Key features:
+ * - Enables accurate type inference and autocompletion for dynamic Yii application components.
+ * - Handles multiple Yii configuration patterns (class names, closures, arrays, objects).
+ * - Loads and validates Yii application configuration files for static analysis.
+ * - Normalizes service and component definitions to fully qualified class names.
+ * - Provides lookup methods for component class names and configuration arrays by ID or class name.
  * - Throws descriptive exceptions for invalid or unsupported definitions.
  *
  * @phpstan-type DefinitionType = array{class?: mixed}|array{array{class?: mixed}}|object|string
@@ -63,13 +59,6 @@ use function sprintf;
 final class ServiceMap
 {
     /**
-     * Service definitions map for Yii application analysis.
-     *
-     * @phpstan-var string[]
-     */
-    private array $services = [];
-
-    /**
      * Component definitions map for Yii application analysis.
      *
      * @phpstan-var string[]
@@ -77,11 +66,25 @@ final class ServiceMap
     private array $components = [];
 
     /**
+     * Reverse index mapping class names to component IDs for optimized lookups.
+     *
+     * @phpstan-var array<string, string>
+     */
+    private array $componentClassToIdMap = [];
+
+    /**
      * Component definitions for Yii application analysis.
      *
      * @phpstan-var array<string, mixed>
      */
     private array $componentsDefinitions = [];
+
+    /**
+     * Service definitions map for Yii application analysis.
+     *
+     * @phpstan-var class-string[]|string[]
+     */
+    private array $services = [];
 
     /**
      * Creates a new instance of the {@see ServiceMap} class.
@@ -154,50 +157,50 @@ final class ServiceMap
     }
 
     /**
-     * Retrieves the component definition for a given class.
+     * Retrieves the component definition array for a given class name.
      *
-     * @param string $class Fully qualified class name to look up.
+     * Searches the internal component map for a component whose class name matches the provided fully qualified class
+     * name.
      *
-     * @return array|null The component definition array, or null if not found.
+     * This method enables static analysis tools and IDEs to inspect the configuration of a component by its class,
+     * supporting type inference and property reflection for Yii application analysis.
+     *
+     * @param string $class Fully qualified class name to look up in the component map.
+     *
+     * @return array|null Component definition array with configuration options, or `null` if not found or not an array.
      *
      * @phpstan-return array<array-key, mixed>|null
      */
     public function getComponentDefinitionByClassName(string $class): array|null
     {
-        foreach ($this->components as $id => $componentClass) {
-            if (
-                $componentClass === $class &&
-                isset($this->componentsDefinitions[$id])
-                && is_array($this->componentsDefinitions[$id])
-            ) {
-                return $this->componentsDefinitions[$id];
-            }
+        $id = $this->componentClassToIdMap[$class] ?? null;
+
+        if ($id === null) {
+            return null;
         }
 
-        return null;
+        $definition = $this->componentsDefinitions[$id] ?? null;
+
+        return is_array($definition) ? $definition : null;
     }
 
     /**
-     * Resolves the fully qualified class name of a service from a PHP-Parser AST node.
+     * Retrieves the fully qualified class name of a Yii Service by its identifier.
      *
-     * Inspects the provided AST node to determine if it represents a string service identifier, and if so, look up
-     * the corresponding class name in the internal service map.
+     * Looks up the service class name registered under the specified service ID in the internal service map.
      *
-     * This method enables static analysis tools and IDEs to infer the actual class type of services referenced by
-     * string IDs in Yii application code supporting accurate type inference, autocompletion, and dependency injection
-     * analysis.
+     * This method enables static analysis tools and IDEs to resolve the actual class type of dynamic Yii Application
+     * services for accurate type inference, autocompletion, and property reflection.
      *
-     * @param Node $node PHP-Parser AST node representing a service identifier.
+     * @param string $id Service identifier to look up in the service map.
      *
      * @return string|null Fully qualified class name of the service, or `null` if not found.
+     *
+     * @phpstan-return class-string|string|null
      */
-    public function getServiceClassFromNode(Node $node): string|null
+    public function getServiceById(string $id): string|null
     {
-        if ($node instanceof Node\Scalar\String_ && isset($this->services[$node->value])) {
-            return $this->services[$node->value];
-        }
-
-        return null;
+        return $this->services[$id] ?? null;
     }
 
     /**
@@ -252,35 +255,37 @@ final class ServiceMap
     }
 
     /**
-     * Normalizes a service definition to its fully qualified class name.
+     * Resolves a service definition to its fully qualified class name for Yii static analysis.
      *
-     * Resolves the provided service definition to a class name string, supporting various Yii configuration patterns
-     * including direct class names, closures, arrays, and object instances.
+     * Supports multiple Yii configuration patterns, including direct class names, closures with return types,
+     * configuration arrays, and object instances.
      *
-     * This method enables static analysis tools and IDEs to infer the actual class type of services defined in the Yii
-     * application configuration, supporting accurate type inference and autocompletion.
+     * This method is essential for enabling accurate type inference and autocompletion in static analysis tools and
+     * IDEs by extracting the class name from the provided service definition.
      *
-     * @param string $id Service identifier being normalized.
-     * @param array|int|object|string $definition Service definition to normalize.
+     * @param string $id Identifier of the service being normalized.
+     * @param array|int|object|string $definition Service definition to normalize (class name, closure, array, or
+     * object).
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
+     * @return string Fully qualified class name resolved from the definition.
+     *
      * @phpstan-import-type DefinitionType from ServiceMap
      * @phpstan-param DefinitionType $definition
-     *
-     * @return string Fully qualified class name resolved from the definition.
+     * @phpstan-return class-string|string
      */
     private function normalizeDefinition(string $id, array|int|object|string $definition): string
     {
-        if (is_string($definition) && class_exists($definition)) {
+        if (is_string($definition)) {
             return $definition;
         }
 
-        if ($definition instanceof Closure || (is_string($definition) && is_callable($definition))) {
+        if (is_object($definition) && $definition::class === Closure::class) {
             $returnType = (new ReflectionFunction($definition))->getReturnType();
 
-            if ($returnType instanceof ReflectionNamedType === false) {
+            if ($returnType === null || $returnType::class !== ReflectionNamedType::class) {
                 throw new RuntimeException(sprintf('Please provide return type for \'%s\' service closure.', $id));
             }
 
@@ -330,13 +335,19 @@ final class ServiceMap
                 }
 
                 if (is_object($definition)) {
-                    $this->components[$id] = get_class($definition);
+                    $className = get_class($definition);
+
+                    $this->components[$id] = $className;
+                    $this->componentClassToIdMap[$className] = $id;
 
                     continue;
                 }
 
                 if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
-                    $this->components[$id] = $definition['class'];
+                    $className = $definition['class'];
+
+                    $this->components[$id] = $className;
+                    $this->componentClassToIdMap[$className] = $id;
 
                     unset($definition['class']);
 
