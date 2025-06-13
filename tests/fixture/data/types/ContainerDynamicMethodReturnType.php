@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\fixture\data\types;
 
+use Exception;
 use yii\base\InvalidConfigException;
-use yii\di\Container;
-use yii\di\NotInstantiableException;
+use yii\di\{Container, NotInstantiableException};
 use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
 
 use function PHPStan\Testing\assertType;
@@ -27,6 +27,7 @@ use function random_int;
  * - Coverage for singleton, closure, and nested service definitions.
  * - Mixed type handling for unknown or dynamic service IDs.
  * - Parameterized instantiation and property assertions.
+ * - Priority testing: ServiceMap > Real classes > Unknown.
  * - Type assertions for class-string and string service identifiers.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -141,6 +142,32 @@ final class ContainerDynamicMethodReturnType
         $unknown = $container->get('unknown-service');
 
         assertType('mixed', $unknown);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnServiceWhenGetRealClassNotInServiceMap(): void
+    {
+        $container = new Container();
+
+        $realClass = $container->get(Exception::class);
+
+        assertType('Exception', $realClass);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnServiceWhenGetServiceMapWithStringConstant(): void
+    {
+        $container = new Container();
+
+        $instance = $container->get('yii2\extensions\phpstan\tests\stub\MyActiveRecord');
+
+        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $instance);
     }
 
     /**

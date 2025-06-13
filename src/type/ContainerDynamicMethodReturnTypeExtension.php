@@ -7,7 +7,7 @@ namespace yii2\extensions\phpstan\type;
 use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector};
+use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector, ReflectionProvider};
 use PHPStan\Type\Constant\ConstantStringType;
 use PHPStan\Type\{DynamicMethodReturnTypeExtension, MixedType, ObjectType, Type};
 use yii\di\Container;
@@ -39,9 +39,13 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
     /**
      * Creates a new instance of the {@see ContainerDynamicMethodReturnTypeExtension} class.
      *
+     * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service map for resolving component classes by ID.
      */
-    public function __construct(private readonly ServiceMap $serviceMap) {}
+    public function __construct(
+        private readonly ReflectionProvider $reflectionProvider,
+        private readonly ServiceMap $serviceMap,
+    ) {}
 
     /**
      * Returns the class name for which this dynamic return type extension applies.
@@ -64,19 +68,19 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
     /**
      * Infers the return type for a {@see Container::get()} method call based on the provided service ID argument.
      *
-     * Analyzes the first argument of the {@see Container::get()} call to determine the most accurate return type for
-     * service resolution.
+     * Determines the most accurate return type for service resolution by analyzing the first argument of the
+     * {@see Container::get()} call.
      *
-     * If the argument is a constant string and matches a known service in the {@see ServiceMap}, returns an
-     * {@see ObjectType} for the resolved class; otherwise, returns a {@see MixedType} to indicate an unknown or dynamic
-     * service type.
+     * - If the argument is a constant string and matches a known service in the {@see ServiceMap}, returns an
+     *   {@see ObjectType} for the resolved class.
+     * - If the argument is a class name known to the {@see ReflectionProvider}, returns an {@see ObjectType} for that
+     *   class.
+     * - Otherwise, returns a {@see MixedType} to indicate an unknown or dynamic service type.
      *
-     * Falls back to the default method signature return type for unsupported or invalid calls.
+     * Falls back to the default method signature return type for unsupported or invalid calls, ensuring compatibility
+     * with PHPStan static analysis and IDE autocompletion.
      *
-     * This method enables precise type inference for dependency injection container lookups, improving static analysis
-     * and IDE autocompletion for service resolution scenarios.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the called method.
+     * @param MethodReflection $methodReflection Reflection for the called method.
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *
@@ -102,7 +106,13 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
             $value = $constantString?->getValue() ?? '';
             $serviceClass = $this->serviceMap->getServiceById($value);
 
-            return $serviceClass !== null ? new ObjectType($serviceClass) : new MixedType();
+            if ($serviceClass !== null) {
+                return new ObjectType($serviceClass);
+            }
+
+            if ($this->reflectionProvider->hasClass($value)) {
+                return new ObjectType($value);
+            }
         }
 
         return new MixedType();
