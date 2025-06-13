@@ -121,7 +121,7 @@ final class ServiceMapComponentTest extends TestCase
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertNull(
-            $serviceMap->getComponentDefinitionByClassName('nonExistentComponent'),
+            $serviceMap->getComponentDefinitionById('nonExistentComponent'),
             'ServiceMap should return \'null\' for a non-existent component class.',
         );
     }

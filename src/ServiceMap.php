@@ -179,9 +179,7 @@ final class ServiceMap
             return null;
         }
 
-        $definition = $this->componentsDefinitions[$id] ?? null;
-
-        return is_array($definition) ? $definition : null;
+        return $this->getComponentDefinitionById($id);
     }
 
     /**
