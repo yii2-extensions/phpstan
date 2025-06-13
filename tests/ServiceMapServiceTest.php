@@ -235,7 +235,9 @@ final class ServiceMapServiceTest extends TestCase
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'container.definitions' 'array'.");
+        $this->expectExceptionMessage(
+            "Configuration file '{$fixturePath}' must contain a valid 'container.definitions' 'array'.",
+        );
 
         new ServiceMap($fixturePath);
     }
@@ -328,20 +330,6 @@ final class ServiceMapServiceTest extends TestCase
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
     public function testThrowExceptionWhenDefinitionNotArray(): void
-    {
-        $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-type-integer.php";
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-type-integer\'.');
-
-        new ServiceMap($fixturePath);
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowExceptionWhenDefinitionTypeInteger(): void
     {
         $ds = DIRECTORY_SEPARATOR;
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-type-integer.php";

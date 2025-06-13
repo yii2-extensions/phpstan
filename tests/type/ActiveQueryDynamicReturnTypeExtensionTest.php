@@ -8,8 +8,6 @@ use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use yii\db\ActiveQuery;
 
-use function dirname;
-
 /**
  * Test suite for type inference of dynamic return types in {@see ActiveQuery} for Yii Active Record scenarios.
  *

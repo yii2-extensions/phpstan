@@ -8,8 +8,6 @@ use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use yii\di\Container;
 
-use function dirname;
-
 /**
  * Test suite for type inference of dynamic method return types in {@see Container} for Yii DI scenarios.
  *

@@ -7,8 +7,6 @@ namespace yii2\extensions\phpstan\tests\type;
 use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
-use function dirname;
-
 /**
  * Test suite for type inference of dynamic static method return types in {@see ActiveRecord} for Yii Active Record
  * scenarios.

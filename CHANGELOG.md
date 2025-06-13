@@ -4,7 +4,7 @@
 
 - Enh #35: Move config fixtures into `config` subdirectory (@terabytesoftw)
 - Enh #36: Update `ActiveQuery` and `ActiveRecord` dynamic return type extensions for improved type inference and error handling; remove deprecated `ActiveQueryObjectType` and `ActiveRecordObjectType` classes (@terabytesoftw)
-- Enh #37: Enhance `DI container type inference and testing (@terabytesoftw)
+- Enh #37: Enhance `DI` container type inference and testing (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 
