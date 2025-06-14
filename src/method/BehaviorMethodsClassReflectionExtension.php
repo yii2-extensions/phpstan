@@ -9,7 +9,6 @@ use PHPStan\Reflection\{
     ClassReflection,
     MethodReflection,
     MethodsClassReflectionExtension,
-    MissingMethodFromReflectionException,
     ReflectionProvider,
 };
 use yii\base\Component;
@@ -62,15 +61,15 @@ final class BehaviorMethodsClassReflectionExtension implements MethodsClassRefle
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $methodName Name of the method to resolve.
      *
-     * @throws MissingMethodFromReflectionException if the method doesn't exist on the class.
-     *
      * @return MethodReflection Reflection instance for the resolved method.
      */
     public function getMethod(ClassReflection $classReflection, string $methodName): MethodReflection
     {
         $behaviorMethod = $this->findMethodInBehaviors($classReflection, $methodName);
 
-        return $behaviorMethod ?? $this->reflectionProvider->getClass(Component::class)->getNativeMethod($methodName);
+        assert($behaviorMethod !== null);
+
+        return $behaviorMethod;
     }
 
     /**
