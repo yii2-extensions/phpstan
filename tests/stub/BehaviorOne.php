@@ -51,6 +51,6 @@ final class BehaviorOne extends Behavior
      */
     public function methodWithoutReturnType()
     {
-        return "test string";
+        return 'test string';
     }
 }
