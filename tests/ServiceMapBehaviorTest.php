@@ -66,7 +66,7 @@ final class ServiceMapBehaviorTest extends TestCase
         self::assertSame(
             [
                 'yii2\extensions\phpstan\tests\stub\BehaviorOne',
-                'yii2\extensions\phpstan\tests\stub\BehaviorTwo'
+                'yii2\extensions\phpstan\tests\stub\BehaviorTwo',
             ],
             $behaviors,
             'ServiceMap should return behaviors for MyComponent class.',
