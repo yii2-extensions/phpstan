@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\property;
 
 use PHPStan\Analyser\OutOfClassScope;
-use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\{
     ClassReflection,
     MissingPropertyFromReflectionException,
@@ -13,6 +12,7 @@ use PHPStan\Reflection\{
     PropertyReflection,
     ReflectionProvider,
 };
+use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use yii\base\Component;
 use yii2\extensions\phpstan\ServiceMap;
 

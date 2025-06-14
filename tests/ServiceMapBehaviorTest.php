@@ -138,7 +138,7 @@ final class ServiceMapBehaviorTest extends TestCase
     }
 
     /**
-      * @throws ReflectionException if the component definition is invalid or can't be resolved.
+     * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
     public function testThrowExceptionWhenBehaviorsNotArray(): void
     {

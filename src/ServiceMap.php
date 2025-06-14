@@ -356,7 +356,7 @@ final class ServiceMap
 
                 if (is_array($definition) === false) {
                     throw new RuntimeException(
-                        sprintf("Behavior definition for '%s' must be an array.", $id)
+                        sprintf("Behavior definition for '%s' must be an array.", $id),
                     );
                 }
 

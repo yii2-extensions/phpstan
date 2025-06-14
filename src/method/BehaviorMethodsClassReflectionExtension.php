@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\method;
 
+use PHPStan\Analyser\OutOfClassScope;
 use PHPStan\Reflection\{
     ClassReflection,
     MethodReflection,
@@ -11,7 +12,6 @@ use PHPStan\Reflection\{
     MissingMethodFromReflectionException,
     ReflectionProvider,
 };
-use PHPStan\Analyser\OutOfClassScope;
 use yii\base\Component;
 use yii2\extensions\phpstan\ServiceMap;
 
