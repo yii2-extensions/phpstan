@@ -73,4 +73,13 @@ final class BehaviorMethodsClassReflectionType
 
         assertType('string', $result);
     }
+
+    public function testReturnTypeInferenceForMethodWithoutExplicitReturnType(): void
+    {
+       $component = new MyComponent();
+
+       $result = $component->methodWithoutReturnType();
+
+       assertType('string', $result);
+    }
 }
