@@ -29,7 +29,7 @@ use PHPStan\Reflection\{
  * Key features.
  * - Delegates property reflection to the web request class.
  * - Enables accurate type inference for shared request properties.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
+ * - Ensures compatibility with PHPStan strict analysis and autocompletion.
  * - Handles both console and web request contexts.
  * - Supports dynamic property resolution for console requests.
  *

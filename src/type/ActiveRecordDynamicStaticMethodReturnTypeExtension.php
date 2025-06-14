@@ -36,7 +36,7 @@ use function count;
  * The implementation supports:
  * - Accurate return type inference for static ActiveRecord methods returning {@see ThisType}, {@see UnionType},
  *   {@see ActiveQuery}, or custom {@see ActiveQuery} subclasses.
- * - Compatibility with PHPStan's strict static analysis and autocompletion.
+ * - Compatibility with PHPStan strict static analysis and autocompletion.
  * - Model type preservation for generic {@see ActiveQuery} results.
  * - Nullability handling for methods like {@see ActiveRecord::findOne()}.
  * - Support for custom {@see ActiveQuery} subclasses and generic parameter propagation.
@@ -63,7 +63,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      * Specifies the fully qualified class name of the supported class, enabling PHPStan to associate this extension
      * with static method calls on the {@see ActiveRecord} base class and its subclasses.
      *
-     * This method is essential for registering the extension with PHPStan's type system, ensuring that static method
+     * This method is essential for registering the extension with PHPStan type system, ensuring that static method
      * return type inference is applied to the correct class hierarchy during static analysis and IDE autocompletion.
      *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.

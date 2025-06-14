@@ -32,7 +32,7 @@ use function sprintf;
  * Key features.
  * - Accurate return type inference for {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()} relation
  *   methods.
- * - Compatibility with PHPStan's strict static analysis and autocompletion.
+ * - Compatibility with PHPStan strict static analysis and autocompletion.
  * - Exception handling for invalid or missing arguments in relation method calls.
  * - Returns a generic {@see ActiveQuery} type with the related model class as type parameter.
  *

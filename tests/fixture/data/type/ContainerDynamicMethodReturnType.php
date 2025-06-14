@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\fixture\data\types;
+namespace yii2\extensions\phpstan\tests\fixture\data\type;
 
 use Exception;
 use yii\base\InvalidConfigException;

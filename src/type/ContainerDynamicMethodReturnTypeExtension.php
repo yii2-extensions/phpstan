@@ -16,7 +16,7 @@ use yii2\extensions\phpstan\ServiceMap;
 /**
  * Provides dynamic return type extension for Yii DI container service resolution in PHPStan analysis.
  *
- * Integrates the Yii dependency injection {@see Container} with PHPStan's dynamic method return type extension system,
+ * Integrates the Yii DI container service {@see Container} with PHPStan dynamic method return type extension system,
  * enabling precise type inference for {@see Container::get()} calls based on service ID and the {@see ServiceMap}.
  *
  * This extension analyzes the first argument of {@see Container::get()} to determine the most accurate return type,
@@ -50,8 +50,8 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
     /**
      * Returns the class name for which this dynamic return type extension applies.
      *
-     * Specifies the fully qualified class name of the Yii dependency injection container that this extension targets
-     * for dynamic return type inference in PHPStan analysis.
+     * Specifies the fully qualified class name of the Yii DI container service {@see Container} that this extension
+     * targets for dynamic return type inference in PHPStan analysis.
      *
      * This method enables PHPStan to associate the extension with the {@see Container} class, ensuring that dynamic
      * return type logic is applied to service resolution calls.
@@ -124,8 +124,8 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      * Checks if the method name is {@see Container::get}, which is the only method supported by this extension for
      * dynamic return type analysis.
      *
-     * This enables PHPStan to apply custom type inference logic exclusively to service resolution calls on the Yii
-     * dependency injection container.
+     * This enables PHPStan to apply custom type inference logic exclusively to service resolution calls on the Yii DI
+     * container service {@see Container}.
      *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *

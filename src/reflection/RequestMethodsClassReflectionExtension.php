@@ -27,7 +27,7 @@ use PHPStan\Reflection\{
  * Key features.
  * - Delegates method reflection to the web request class.
  * - Enables accurate type inference for shared request methods.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
+ * - Ensures compatibility with PHPStan strict analysis and autocompletion.
  * - Handles both console and web request contexts.
  * - Supports dynamic method resolution for console requests.
  *

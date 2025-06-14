@@ -45,7 +45,7 @@ use function in_array;
  * - Dynamic return type inference for {@see ActiveQuery::one()}, {@see ActiveQuery::all()}, and
  *   {@see ActiveQuery::asArray()} methods.
  * - Extraction of model type from generic {@see ActiveQuery} instances.
- * - Integration with PHPStan's type combinators and file type mapper for accurate analysis.
+ * - Integration with PHPStan type combinators and file type mapper for accurate analysis.
  * - Support for union, array, and generic object types in method return values.
  *
  * @see ActiveQuery for query API details.
@@ -80,7 +80,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * Specifies the fully qualified class name of the supported class, enabling PHPStan to associate this extension
      * with method calls on the {@see ActiveQuery} base class and its subclasses.
      *
-     * This method is essential for registering the extension with PHPStan's type system, ensuring that static method
+     * This method is essential for registering the extension with PHPStan type system, ensuring that static method
      * return type inference is applied to the correct class hierarchy during static analysis and IDE autocompletion.
      *
      * @return string Fully qualified class name of the supported {@see ActiveQuery} class.
