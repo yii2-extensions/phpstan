@@ -18,6 +18,9 @@ parametersSchema:
 
 services:
     -
+        class: yii2\extensions\phpstan\method\BehaviorMethodsClassReflectionExtension
+        tags: [phpstan.broker.methodsClassReflectionExtension]
+    -
         class: yii2\extensions\phpstan\reflection\ApplicationPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
@@ -33,6 +36,9 @@ services:
         class: yii2\extensions\phpstan\reflection\UserPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
+        class: yii2\extensions\phpstan\property\BehaviorPropertiesClassReflectionExtension
+        tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
         class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
@@ -42,10 +48,13 @@ services:
         class: yii2\extensions\phpstan\type\ActiveRecordDynamicStaticMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
     -
-        class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
+        class: yii2\extensions\phpstan\type\BehaviorDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
         class: yii2\extensions\phpstan\type\ContainerDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
+        class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
 
     - yii2\extensions\phpstan\ServiceMap(%yii2.config_path%)

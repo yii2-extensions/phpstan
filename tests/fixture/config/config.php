@@ -2,10 +2,18 @@
 
 declare(strict_types=1);
 
-use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
-use yii2\extensions\phpstan\tests\stub\User;
+use yii2\extensions\phpstan\tests\stub\{BehaviorOne, BehaviorTwo, MyActiveRecord, MyComponent, User};
 
 return [
+    'behaviors' => [
+        MyComponent::class => [
+            BehaviorOne::class,
+            BehaviorTwo::class,
+        ],
+        'OtherComponent' => [
+            'BehaviorThree',
+        ],
+    ],
     'components' => [
         'assetManager' => [
             'basePath' => '@runtime/assets',

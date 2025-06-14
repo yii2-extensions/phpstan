@@ -46,6 +46,7 @@ use function sprintf;
  *
  * @phpstan-type DefinitionType = array{class?: mixed}|array{array{class?: mixed}}|object|string
  * @phpstan-type ServiceType = array{
+ *   behaviors?: array<array-key, mixed>,
  *   components?: array<array-key, array<array-key, mixed>|object>,
  *   container?: array{
  *     definitions?: array<array-key, DefinitionType>,
@@ -58,6 +59,13 @@ use function sprintf;
  */
 final class ServiceMap
 {
+    /**
+     * Behavior definitions map for Yii application analysis.
+     *
+     * @phpstan-var array<string, string[]>
+     */
+    private array $behaviors = [];
+
     /**
      * Component definitions map for Yii application analysis.
      *
@@ -111,9 +119,30 @@ final class ServiceMap
 
         $config = $this->loadConfig($configPath);
 
+        $this->processBehaviors($config);
         $this->processComponents($config);
         $this->processDefinition($config);
         $this->processSingletons($config);
+    }
+
+    /**
+     * Retrieves the behavior class names associated with the specified class.
+     *
+     * Looks up the internal behavior definitions map for the provided fully qualified class name and return an array
+     * of associated behavior class names.
+     *
+     * This method enables static analysis tools and IDEs to infer attached behaviors for Yii application classes,
+     * supporting accurate type inference and property reflection.
+     *
+     * @param string $class Fully qualified class name for which to retrieve behavior class names.
+     *
+     * @return string[] Array of behavior class names, or an empty array if none are defined.
+     *
+     * @phpstan-return string[]
+     */
+    public function getBehaviorsByClassName(string $class): array
+    {
+        return $this->behaviors[$class] ?? [];
     }
 
     /**
@@ -145,15 +174,15 @@ final class ServiceMap
      *
      * @param string $id Component identifier to look up in the component definitions map.
      *
-     * @return array|null Component definition array with configuration options, or `null` if not found.
+     * @return array Component definition array with configuration options, or empty array if not found.
      *
-     * @phpstan-return array<array-key, mixed>|null
+     * @phpstan-return array<array-key, mixed>
      */
-    public function getComponentDefinitionById(string $id): array|null
+    public function getComponentDefinitionById(string $id): array
     {
         $definition = $this->componentsDefinitions[$id] ?? null;
 
-        return is_array($definition) ? $definition : null;
+        return is_array($definition) ? $definition : [];
     }
 
     /**
@@ -231,6 +260,10 @@ final class ServiceMap
             throw new RuntimeException(sprintf("Configuration file '%s' must return an array.", $configPath));
         }
 
+        if (isset($config['behaviors']) && is_array($config['behaviors']) === false) {
+            $this->throwErrorWhenConfigFileIsNotArray($configPath, 'behaviors');
+        }
+
         if (isset($config['components']) && is_array($config['components']) === false) {
             $this->throwErrorWhenConfigFileIsNotArray($configPath, 'components');
         }
@@ -303,6 +336,33 @@ final class ServiceMap
         }
 
         $this->throwErrorWhenUnsupportedDefinition($id);
+    }
+
+    /**
+     * @param array $config Yii application configuration array containing behavior definitions.
+     *
+     * @phpstan-import-type ServiceType from ServiceMap
+     * @phpstan-param ServiceType $config
+     */
+    private function processBehaviors(array $config): void
+    {
+        if ($config !== []) {
+            $behaviors = $config['behaviors'] ?? [];
+
+            foreach ($behaviors as $id => $definition) {
+                if (is_string($id) === false) {
+                    $this->throwErrorWhenIdIsNotString('Behavior class', gettype($id));
+                }
+
+                if (is_array($definition) === false) {
+                    throw new RuntimeException(
+                        sprintf("Behavior definition for '%s' must be an array.", $id)
+                    );
+                }
+
+                $this->behaviors[$id] = array_values(array_filter($definition, 'is_string'));
+            }
+        }
     }
 
     /**

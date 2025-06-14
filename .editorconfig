@@ -17,5 +17,14 @@ ij_php_space_after_type_cast = true
 [*.md]
 trim_trailing_whitespace = false
 
+[*.neon]
+indent_size = 4
+
 [*.yml]
+indent_size = 2
+
+[*.xml]
+indent_size = 2
+
+[*.xml.dist]
 indent_size = 2

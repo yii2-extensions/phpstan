@@ -7,6 +7,7 @@
 - Enh #37: Enhance `DI` container type inference and testing (@terabytesoftw)
 - Bug #38: Correct exception message formatting in `ServiceMapServiceTest` (@terabytesoftw)
 - Bug #39: Resolve `Container::get()` type inference for unconfigured classes in config (`ServiceMap`) (@terabytesoftw)
+- Enh #40: Enhance `PHPStan` analysis for `Behavior` type inference and testing.
 
 ## 0.2.3 June 09, 2025
 

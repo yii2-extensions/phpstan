@@ -120,9 +120,10 @@ final class ServiceMapComponentTest extends TestCase
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
-        self::assertNull(
+        self::assertSame(
+            [],
             $serviceMap->getComponentDefinitionById('nonExistentComponent'),
-            'ServiceMap should return \'null\' for a non-existent component class.',
+            'ServiceMap should return an empty array for a \'nonExistentComponent\' id.',
         );
     }
 
