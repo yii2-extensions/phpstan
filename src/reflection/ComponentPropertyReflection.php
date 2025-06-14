@@ -25,7 +25,7 @@ use function sprintf;
  * Key features.
  * - Accurate type reflection for dynamic Yii application components.
  * - Delegates property behavior to a fallback property reflection instance.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
+ * - Ensures compatibility with PHPStan strict analysis and autocompletion.
  * - Integrates with service-map-based component resolution.
  * - Supports all property visibility and mutability checks.
  *

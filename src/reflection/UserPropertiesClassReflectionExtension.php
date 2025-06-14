@@ -32,7 +32,7 @@ use yii2\extensions\phpstan\ServiceMap;
  * while providing a custom reflection for the dynamic {@see User::identity] property.
  *
  * Key features.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
+ * - Ensures compatibility with PHPStan strict analysis and autocompletion.
  * - Integrates annotation-based and native property reflection for the user component.
  * - Provides accurate type inference for the dynamic {@see User::identity] property.
  * - Supports dynamic and annotated property resolution for the user component.

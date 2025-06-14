@@ -7,7 +7,7 @@ namespace yii2\extensions\phpstan\tests\stub;
 use yii\db\ActiveRecord;
 
 /**
- * Category model representing hierarchical category data for testing Active Record scenarios.
+ * Representing hierarchical category data for testing Active Record scenarios.
  *
  * Provides a simple Active Record implementation with integer and string properties, supporting nullable parent
  * relationships for hierarchical data structures.

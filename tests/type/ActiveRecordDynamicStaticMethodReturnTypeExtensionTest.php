@@ -38,7 +38,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtensionTest extends TypeI
         $directory = dirname(__DIR__);
 
         yield from self::gatherAssertTypes(
-            "{$directory}/fixture/data/types/ActiveRecordDynamicStaticMethodReturnType.php",
+            "{$directory}/fixture/data/type/ActiveRecordDynamicStaticMethodReturnType.php",
         );
     }
 

@@ -24,7 +24,7 @@ use function count;
 /**
  * Provides dynamic return type extension for Yii {@see HeaderCollection::get()} method in PHPStan analysis.
  *
- * Integrates Yii's {@see HeaderCollection} dynamic return types with PHPStan's static analysis, enabling accurate type
+ * Integrates Yii's {@see HeaderCollection} dynamic return types with PHPStan static analysis, enabling accurate type
  * inference for the {@see HeaderCollection::get()} method based on the runtime context and method arguments.
  *
  * This extension allows PHPStan to infer the correct return type for the {@see HeaderCollection::get()}` method,
@@ -36,7 +36,7 @@ use function count;
  *
  * Key features.
  * - Dynamic return type inference for the {@see HeaderCollection::get()} method based on the third argument.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
+ * - Ensures compatibility with PHPStan strict analysis and autocompletion.
  * - Handles runtime context and method argument inspection.
  * - Provides accurate type information for IDEs and static analysis tools.
  * - Supports both string and array result types for header retrieval.

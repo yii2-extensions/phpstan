@@ -37,7 +37,7 @@ final class ContainerDynamicMethodReturnTypeExtensionTest extends TypeInferenceT
     {
         $directory = dirname(__DIR__);
 
-        yield from self::gatherAssertTypes("{$directory}/fixture/data/types/ContainerDynamicMethodReturnType.php");
+        yield from self::gatherAssertTypes("{$directory}/fixture/data/type/ContainerDynamicMethodReturnType.php");
     }
 
     public static function getAdditionalConfigFiles(): array

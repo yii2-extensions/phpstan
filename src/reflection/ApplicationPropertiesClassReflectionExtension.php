@@ -19,7 +19,7 @@ use yii2\extensions\phpstan\ServiceMap;
 /**
  * Provides property reflection for Yii application components in PHPStan analysis.
  *
- * Integrates Yii's dependency injection and service map with PHPStan's property reflection system, enabling accurate
+ * Integrates Yii's dependency injection and service map with PHPStan property reflection system, enabling accurate
  * type inference and autocompletion for dynamic application components and services.
  *
  * This extension allows PHPStan to recognize properties on the Yii application instance that are defined via
@@ -33,7 +33,7 @@ use yii2\extensions\phpstan\ServiceMap;
  *
  * Key features.
  * - Enables accurate type inference for injected services and components.
- * - Ensures compatibility with PHPStan's strict analysis and autocompletion.
+ * - Ensures compatibility with PHPStan strict analysis and autocompletion.
  * - Handles both base and web application contexts.
  * - Integrates annotation-based and native property reflection.
  * - Supports dynamic Yii application properties via service map lookup.
