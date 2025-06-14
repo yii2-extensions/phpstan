@@ -125,7 +125,7 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      * dynamic return type analysis.
      *
      * This enables PHPStan to apply custom type inference logic exclusively to service resolution calls on the Yii DI
-     * container service {@see Container}
+     * container service {@see Container}.
      *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *
