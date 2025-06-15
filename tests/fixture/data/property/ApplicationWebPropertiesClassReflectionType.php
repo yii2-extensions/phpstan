@@ -104,8 +104,11 @@ final class ApplicationWebPropertiesClassReflectionType
     {
         $app = new Application(['id' => 'testApp']);
 
+        Yii::$app = $app;
+
         assertType(Session::class, $app->session);
         assertType('string', $app->id);
+        assertType(Session::class, Yii::$app->session);
     }
 
     /**
