@@ -13,8 +13,7 @@ use PHPStan\Reflection\{
 };
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
-use PHPStan\Type\Constant\ConstantBooleanType;
-use PHPStan\Type\{IntegerType, NullType, ObjectType, StringType, TypeCombinator};
+use PHPStan\Type\{BooleanType, IntegerType, NullType, ObjectType, StringType, TypeCombinator};
 use yii\web\User;
 use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
 use yii2\extensions\phpstan\ServiceMap;
@@ -104,7 +103,7 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
             if ($propertyName === 'isGuest') {
                 return new ComponentPropertyReflection(
                     new DummyPropertyReflection($propertyName),
-                    new ConstantBooleanType(true),
+                    new BooleanType(),
                     $classReflection,
                 );
             }

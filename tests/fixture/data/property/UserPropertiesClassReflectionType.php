@@ -30,7 +30,7 @@ final class UserPropertiesClassReflectionType
 {
     public function testReturnBooleanFromIsGuestProperty(): void
     {
-        assertType('true', Yii::$app->user->isGuest);
+        assertType('bool', Yii::$app->user->isGuest);
     }
 
     public function testReturnBooleanOrNullFromValidateAuthKeyMethod(): void
