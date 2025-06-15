@@ -120,6 +120,5 @@ final class ApplicationConsolePropertiesClassReflectionType
 
         assertType('string', $app->id);
         assertType('string', Yii::$app->id);
-
     }
 }
