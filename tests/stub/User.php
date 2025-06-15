@@ -25,14 +25,14 @@ use yii\web\IdentityInterface;
  */
 final class User extends ActiveRecord implements IdentityInterface
 {
-    public static function findIdentity($id)
+    public static function findIdentity($id): IdentityInterface|null
     {
-        return YII_ENV_DEV ? new self() : null;
+        return \defined('YII_ENV_DEV') && YII_ENV_DEV ? new self() : null;
     }
 
-    public static function findIdentityByAccessToken($token, $type = null)
+    public static function findIdentityByAccessToken($token, $type = null): IdentityInterface|null
     {
-        return YII_ENV_DEV ? new self() : null;
+        return \defined('YII_ENV_DEV') && YII_ENV_DEV ? new self() : null;
     }
 
     public function getId()
@@ -40,14 +40,14 @@ final class User extends ActiveRecord implements IdentityInterface
         return YII_ENV_DEV ? 'dev-id' : 1;
     }
 
-    public function getAuthKey()
+    public function getAuthKey(): string|null
     {
         return YII_ENV_DEV ? 'dev-auth' : null;
     }
 
-    public function validateAuthKey($authKey)
+    public function validateAuthKey($authKey): bool|null
     {
-        return true;
+        return YII_ENV_DEV ? true : null;
     }
 
     public static function tableName(): string
