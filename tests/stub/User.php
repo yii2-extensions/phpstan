@@ -16,6 +16,7 @@ use yii\web\IdentityInterface;
  * This class is used in PHPStan and static analysis scenarios to validate correct type inference for property access
  * and rule configuration in Yii Active Record models.
  *
+ * @property int $id
  * @property string $name
  * @property string $email
  *
