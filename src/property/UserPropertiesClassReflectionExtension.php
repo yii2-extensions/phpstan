@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\reflection;
+namespace yii2\extensions\phpstan\property;
 
 use PHPStan\Reflection\{
     ClassReflection,
@@ -16,29 +16,33 @@ use PHPStan\Reflection\Dummy\DummyPropertyReflection;
 use PHPStan\Type\Constant\ConstantBooleanType;
 use PHPStan\Type\{IntegerType, NullType, ObjectType, StringType, TypeCombinator};
 use yii\web\User;
+use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
 use yii2\extensions\phpstan\ServiceMap;
 
+use function in_array;
+use function is_string;
+
 /**
- * Provides property reflection for a Yii user component in PHPStan analysis.
+ * Provides property reflection for a Yii User component in PHPStan analysis.
  *
- * Integrates Yii's {@see User::identity] property and annotation-based property reflection into the user component
- * context, enabling accurate type inference and autocompletion for properties that are available on the user class.
+ * Integrates a Yii User component {@see User::identity} property and annotation-based property reflection into the user
+ * component context, enabling accurate type inference and autocompletion for properties that are available on the user
+ * class.
  *
  * This extension allows PHPStan to recognize and reflect the {@see User::identity} property on the Yii user instance,
  * as well as properties defined natively or via annotations, even if they aren't declared as native properties on the
  * user class.
  *
  * The implementation delegates property lookups to annotation-based property extensions and native property reflection,
- * while providing a custom reflection for the dynamic {@see User::identity] property.
+ * while providing a custom reflection for the dynamic {@see User::identity} property.
  *
  * Key features.
  * - Ensures compatibility with PHPStan strict analysis and autocompletion.
- * - Integrates annotation-based and native property reflection for the user component.
- * - Provides accurate type inference for the dynamic {@see User::identity] property.
- * - Supports dynamic and annotated property resolution for the user component.
+ * - Integrates annotation-based and native property reflection for the {@see User} component.
+ * - Provides accurate type inference for the dynamic {@see User::identity} property.
+ * - Supports dynamic and annotated property resolution for the {@see User} component.
  *
- * @see AnnotationsPropertiesClassReflectionExtension for annotation support.
- * @see ComponentPropertyReflection for dynamic property reflection.
+ * @see ComponentPropertyReflection for dynamic property reflection class.
  * @see PropertiesClassReflectionExtension for custom properties class reflection extension contract.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -61,15 +65,16 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
     ) {}
 
     /**
-     * Retrieves the property reflection for a given property on the Yii user component.
+     * Retrieves the property reflection for a given property on the Yii User component.
      *
      * Resolves the property reflection for the specified property name by checking for the dynamic
-     * {@see User::identity} property, native properties, and annotation-based properties on the Yii user instance.
+     * {@see User::identity} property, native properties, and annotation-based properties on the Yii User instance.
      *
-     * For the 'identity' property, it resolves the type based on the configured identityClass in the user component.
+     * For the {@see User::identity} property, it resolves the type based on the configured {@see User::identityClass}
+     * in the {@see User} component.
      *
-     * @param ClassReflection $classReflection Class reflection instance for the Yii user component.
-     * @param string $propertyName Name of the property to retrieve.
+     * @param ClassReflection $classReflection Reflection of the class being analyzed.
+     * @param string $propertyName Name of the property to resolve.
      *
      * @throws MissingPropertyFromReflectionException if the property doesn't exist or can't be resolved.
      *
@@ -121,15 +126,16 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
     }
 
     /**
-     * Determines whether the specified property exists on the Yii user component.
+     * Determines whether the specified property exists on the Yii User component.
      *
-     * Checks for the existence of a property on the user instance by considering native properties,
-     * annotation-based properties, and the special 'identity' property.
+     * Checks for the existence of a property on the user instance by considering native properties, annotation-based
+     * properties, and the special {@see User::identity} property.
      *
-     * @param ClassReflection $classReflection Class reflection instance for the Yii user component.
-     * @param string $propertyName Name of the property to check for existence.
+     * @param ClassReflection $classReflection Reflection of the class being analyzed.
+     * @param string $propertyName Name of the property to resolve.
      *
-     * @return bool `true` if the property exists as a native, annotated, or identity property; `false` otherwise.
+     * @return bool `true` if the property exists as a native, annotated, or {@see User::identity} property; `false`
+     * otherwise.
      */
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
@@ -146,12 +152,12 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
     }
 
     /**
-     * Attempts to resolve the identity class from the user component configuration.
+     * Attempts to resolve the {@see User::identityClass} from the user component configuration.
      *
-     * This method tries to determine the identityClass configured for the user component
-     * by looking at the service map's user component configuration.
+     * This method tries to determine the {@see User::identityClass} configured for the user component by looking at the
+     * service map's user component configuration.
      *
-     * @return string|null The fully qualified identity class name, or null if not found.
+     * @return string|null Fully qualified {@see User::identityClass} name, or `null` if not found.
      */
     private function getIdentityClass(): string|null
     {
