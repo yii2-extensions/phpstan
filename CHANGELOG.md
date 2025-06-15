@@ -10,6 +10,7 @@
 - Enh #40: Enhance `PHPStan` analysis for `Behavior` type inference and testing (@terabytesoftw)
 - Enh #41: Refactor `PHPDoc` comments for consistency and clarity (@terabytesoftw)
 - Bug #42: Move `ApplicationPropertiesClassReflectionExtension` to `property` directory and add testing (@terabytesoftw)
+- Enh #43: Add tests for session property availability in `Console` and `Web` `Applications` (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 

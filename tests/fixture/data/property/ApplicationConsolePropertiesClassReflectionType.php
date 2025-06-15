@@ -121,4 +121,21 @@ final class ApplicationConsolePropertiesClassReflectionType
         assertType('string', Yii::$app->request->method);
         assertType('string', Yii::$app->response->format);
     }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     *
+     * Session property doesn't exist natively in Yii Console Application.
+     */
+    public function testSessionPropertyNotAvailableInConsoleApplication(): void
+    {
+        $app = new Application(['id' => 'testApp']);
+
+        Yii::$app = $app;
+
+        // @phpstan-ignore-next-line property.notFound
+        assertType('*ERROR*', $app->session);
+        // @phpstan-ignore-next-line property.notFound
+        assertType('*ERROR*', Yii::$app->session);
+    }
 }
