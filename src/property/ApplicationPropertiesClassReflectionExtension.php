@@ -38,7 +38,6 @@ use function in_array;
  * available for static analysis and IDE support.
  *
  * Key features.
- * - Caches reflection results for improved performance.
  * - Enables accurate type inference for injected services and components.
  * - Ensures compatibility with PHPStan strict analysis and autocompletion.
  * - Handles base, web, and console application contexts.
