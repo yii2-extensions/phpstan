@@ -137,5 +137,7 @@ final class ApplicationConsolePropertiesClassReflectionType
         assertType('*ERROR*', $app->session);
         // @phpstan-ignore-next-line property.notFound
         assertType('*ERROR*', Yii::$app->session);
+
+        unset(Yii::$app);
     }
 }
