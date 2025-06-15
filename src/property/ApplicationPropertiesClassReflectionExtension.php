@@ -56,7 +56,7 @@ use function in_array;
 final class ApplicationPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
     /**
-     * Creates a new instance of the {@see ApplicationPropertiesClassReflectionExtension) class.
+     * Creates a new instance of the {@see ApplicationPropertiesClassReflectionExtension} class.
      *
      * @param AnnotationsPropertiesClassReflectionExtension $annotationsProperties Extension for handling
      * annotation-based properties.

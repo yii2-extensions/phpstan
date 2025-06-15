@@ -79,19 +79,6 @@ final class ApplicationConsolePropertiesClassReflectionType
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnMixedWhenComplexChainedAccess(): void
-    {
-        $app = new Application(['id' => 'testApp']);
-
-        assertType('string', $app->response->format);
-        assertType('string', $app->request->method);
-        assertType('string', Yii::$app->request->method);
-        assertType('string', Yii::$app->response->format);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnMyActiveRecordFromCustomComponent(): void
     {
         $app = new Application(['id' => 'testApp']);
@@ -103,7 +90,7 @@ final class ApplicationConsolePropertiesClassReflectionType
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnMyActiveRecordFormCustomInitializedComponent(): void
+    public function testReturnMyActiveRecordFromCustomInitializedComponent(): void
     {
         $app = new Application(['id' => 'testApp']);
 
@@ -120,5 +107,18 @@ final class ApplicationConsolePropertiesClassReflectionType
 
         assertType('string', $app->id);
         assertType('string', Yii::$app->id);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnStringWhenComplexChainedAccess(): void
+    {
+        $app = new Application(['id' => 'testApp']);
+
+        assertType('string', $app->response->format);
+        assertType('string', $app->request->method);
+        assertType('string', Yii::$app->request->method);
+        assertType('string', Yii::$app->response->format);
     }
 }
