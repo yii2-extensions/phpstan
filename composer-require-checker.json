@@ -14,6 +14,7 @@
         "PHPStan\\ShouldNotHappenException",
         "PHPStan\\TrinaryLogic",
         "PHPStan\\Type\\ArrayType",
+        "PHPStan\\Type\\BooleanType",
         "PHPStan\\Type\\Constant\\ConstantArrayType",
         "PHPStan\\Type\\Constant\\ConstantBooleanType",
         "PHPStan\\Type\\Constant\\ConstantStringType",

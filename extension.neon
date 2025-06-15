@@ -27,6 +27,9 @@ services:
         class: yii2\extensions\phpstan\property\BehaviorPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
+        class: yii2\extensions\phpstan\property\UserPropertiesClassReflectionExtension
+        tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
         class: yii2\extensions\phpstan\reflection\RequestMethodsClassReflectionExtension
         tags: [phpstan.broker.methodsClassReflectionExtension]
     -
@@ -34,9 +37,6 @@ services:
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
         class: yii2\extensions\phpstan\reflection\ResponsePropertiesClassReflectionExtension
-        tags: [phpstan.broker.propertiesClassReflectionExtension]
-    -
-        class: yii2\extensions\phpstan\reflection\UserPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
         class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
