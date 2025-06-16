@@ -11,7 +11,7 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
 {
     private const APPLICATION_TYPE_STUBS = [
         \yii\base\Application::class => 'BaseYii.stub',
-        \yii\console\Application::class => 'BaseyiiConsole.stub',
+        \yii\console\Application::class => 'BaseYiiConsole.stub',
         \yii\web\Application::class => 'BaseYiiWeb.stub',
     ];
 
