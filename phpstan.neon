@@ -28,4 +28,4 @@ parameters:
     reportPossiblyNonexistentGeneralArrayOffset: true
 
     yii2:
-        config_path: tests/web/config/config.php
+        config_path: tests/config/config.php
