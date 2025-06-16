@@ -23,6 +23,7 @@ use yii2\extensions\phpstan\ServiceMap;
  * - Ensures compatibility with fixture-based configuration files for both web and console applications.
  * - Provides coverage for both default and alternative application types.
  * - Resolves an application type using the 'phpstan.application_type' key in configuration.
+ * - Throws exceptions for invalid or unsupported application type configurations.
  * - Validates correct class-string is returned for each application type scenario.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
