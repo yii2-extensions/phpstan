@@ -8,9 +8,9 @@ use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
- * Test suite for type inference of property reflection in Yii Application for PHPStan analysis.
+ * Test suite for type inference of property reflection in Yii Web Application for PHPStan analysis.
  *
- * Validates that PHPStan correctly infers types for properties provided by the Yii Application, using fixture-based
+ * Validates that PHPStan correctly infers types for properties provided by the Yii Web Application, using fixture-based
  * assertions for direct property access, parameterized properties, and shared property resolution.
  *
  * The test class loads type assertions from a fixture file and delegates checks to the parent
