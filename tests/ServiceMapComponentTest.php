@@ -21,7 +21,7 @@ use yii2\extensions\phpstan\tests\stub\User;
  * exception handling for misconfigured or malformed component arrays.
  *
  * Key features.
- * - Ensures compatibility with fixture-based configuration files.
+ * - Ensures compatibility with based configuration files.
  * - Resolves component class by ID for valid and initialized components.
  * - Retrieves component definitions by ID and class name.
  * - Returns `null` for non-existent or non-class component IDs.
@@ -38,8 +38,8 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentClassWhenCustomComponentValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-        $serviceMap = new ServiceMap($fixturePath);
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
             MyActiveRecord::class,
@@ -54,8 +54,8 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentClassWhenCustomInitializedComponentValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-        $serviceMap = new ServiceMap($fixturePath);
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
             MyActiveRecord::class,
@@ -70,8 +70,8 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentDefinitionWhenClassNameValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-        $serviceMap = new ServiceMap($fixturePath);
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
             ['identityClass' => 'yii2\extensions\phpstan\tests\stub\User'],
@@ -86,8 +86,8 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentDefinitionWhenUserIdValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-        $serviceMap = new ServiceMap($fixturePath);
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
             ['identityClass' => User::class],
@@ -102,8 +102,8 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentClassNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-        $serviceMap = new ServiceMap($fixturePath);
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $serviceMap = new ServiceMap($configPath);
 
         self::assertNull(
             $serviceMap->getComponentDefinitionByClassName('nonExistentComponent'),
@@ -117,8 +117,8 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentIdNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-        $serviceMap = new ServiceMap($fixturePath);
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
             [],
@@ -133,8 +133,8 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentIdNotClass(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-        $serviceMap = new ServiceMap($fixturePath);
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $serviceMap = new ServiceMap($configPath);
 
         self::assertNull(
             $serviceMap->getComponentClassById('assetManager'),
@@ -148,12 +148,12 @@ final class ServiceMapComponentTest extends TestCase
     public function testThrowExceptionWhenComponentIdNotString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-id-not-string.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}components-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Component\': \'ID\' must be a \'string\', got \'integer\'.');
 
-        new ServiceMap($fixturePath);
+        new ServiceMap($configPath);
     }
 
     /**
@@ -162,11 +162,11 @@ final class ServiceMapComponentTest extends TestCase
     public function testThrowExceptionWhenComponentsNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-is-not-array.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}components-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'components' 'array'.");
+        $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'components' 'array'.");
 
-        new ServiceMap($fixturePath);
+        new ServiceMap($configPath);
     }
 }

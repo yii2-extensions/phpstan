@@ -29,9 +29,9 @@ final class StubFilesExtensionTest extends TestCase
     public function testGetFilesReturnsExpectedStubFilesForWebApplicationType(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
 
-        $serviceMap = new ServiceMap($fixturePath);
+        $serviceMap = new ServiceMap($configPath);
 
         $stubFilesExtension = new StubFilesExtension($serviceMap);
         $stubFiles = dirname(__DIR__) . "{$ds}stub{$ds}BaseYiiWeb.stub";
