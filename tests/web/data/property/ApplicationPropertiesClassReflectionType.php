@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\web\fixture\data\property;
 
 use Yii;
-
 use yii\db\Connection;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
