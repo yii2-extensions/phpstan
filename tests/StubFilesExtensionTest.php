@@ -42,10 +42,4 @@ final class StubFilesExtensionTest extends TestCase
             'Expected stub files to match the web application type configuration.',
         );
     }
-
-    public function test(): void
-    {
-        $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
-    }
 }
