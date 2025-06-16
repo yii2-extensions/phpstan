@@ -58,7 +58,7 @@ final class ServiceMapServiceTest extends TestCase
         $this->expectNotToPerformAssertions();
 
         $ds = DIRECTORY_SEPARATOR;
-        new ServiceMap(__DIR__ . "{$ds}fixture{$ds}config{$ds}config-container-empty.php");
+        new ServiceMap(__DIR__ . "{$ds}fixture{$ds}config-container-empty.php");
     }
 
     /**
@@ -67,7 +67,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnNullWhenServiceNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertNull(
@@ -82,7 +82,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenClosureValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -98,7 +98,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenNestedValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -114,7 +114,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenServiceValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -130,7 +130,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonClassNameValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -146,7 +146,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonClosureValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -162,7 +162,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonNestedValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -178,7 +178,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonServiceValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -194,7 +194,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonStringValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -210,7 +210,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenConfigNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config-unsupported-is-not-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$fixturePath}' must return an array.");
@@ -232,7 +232,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenContainerDefinitionsNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-is-not-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
@@ -248,7 +248,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenContainerNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config-container-unsupported-type-array-invalid.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config-container-unsupported-type-array-invalid.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'container' 'array'.");
@@ -262,7 +262,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenContainerSingletonsNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}singletons-unsupported-is-not-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
@@ -278,7 +278,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenDefinitionArrayInvalid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-type-array-invalid.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-type-array-invalid.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
@@ -292,7 +292,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenDefinitionClosureMissingReturnType(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-closure-not-return-type.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-closure-not-return-type.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
@@ -306,7 +306,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenDefinitionEmptyArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-empty-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-empty-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
@@ -320,10 +320,10 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenDefinitionIdNotString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-id-not-string.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Definition\': ID must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Definition\': \'ID\' must be a string, got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }
@@ -334,7 +334,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenDefinitionNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}definitions-unsupported-type-integer.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-type-integer.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-type-integer\'.');
@@ -348,7 +348,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenSingletonArrayInvalid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}singletons-unsupported-type-array-invalid.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-type-array-invalid.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
@@ -362,7 +362,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenSingletonClosureMissingReturnType(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}singletons-closure-not-return-type.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-closure-not-return-type.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
@@ -376,7 +376,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenSingletonEmptyArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}singletons-unsupported-empty-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-empty-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
@@ -390,10 +390,10 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowExceptionWhenSingletonIdNotString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}singletons-unsupported-id-not-string.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Singleton\': ID must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Singleton\': \'ID\' must be a string, got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }

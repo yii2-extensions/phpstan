@@ -41,7 +41,7 @@ final class ComponentPropertyReflection implements PropertyReflection
      *
      * @param PropertyReflection $fallbackProperty Fallback property reflection instance for delegation.
      * @param Type $type Type of the dynamic component as resolved by the service map or dependency injection.
-     * @param ClassReflection $declaringClass Class reflection of the class declaring the dynamic property.
+     * @param ClassReflection $declaringClass Reflection of the class being analyzed.
      */
     public function __construct(
         private readonly PropertyReflection $fallbackProperty,

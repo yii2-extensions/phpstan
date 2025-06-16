@@ -38,7 +38,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentClassWhenCustomComponentValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -54,7 +54,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentClassWhenCustomInitializedComponentValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -70,7 +70,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentDefinitionWhenClassNameValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -86,7 +86,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentDefinitionWhenUserIdValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -102,7 +102,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentClassNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertNull(
@@ -117,7 +117,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentIdNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertSame(
@@ -133,7 +133,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentIdNotClass(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         self::assertNull(
@@ -148,10 +148,10 @@ final class ServiceMapComponentTest extends TestCase
     public function testThrowExceptionWhenComponentIdNotString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}components-unsupported-id-not-string.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Component\': ID must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Component\': \'ID\' must be a string, got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }
@@ -162,7 +162,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testThrowExceptionWhenComponentsNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}components-unsupported-is-not-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'components' 'array'.");

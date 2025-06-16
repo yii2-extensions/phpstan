@@ -15,12 +15,6 @@ use yii\db\ActiveRecord;
  * This class is used in type inference and static analysis tests to validate PHPStan's ability to correctly infer
  * return types for ActiveRecord queries, relations, and chained method calls.
  *
- * Key features.
- * - Declares a boolean property {@see $flag} for property access tests.
- * - Defines {@see getMaster()} for single related record retrieval via hasOne().
- * - Defines {@see getSiblings()} for multiple related records retrieval via hasMany().
- * - Defines {@see test()} for returning all records using a static query.
- *
  * @property bool $flag Boolean property for test assertions.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.

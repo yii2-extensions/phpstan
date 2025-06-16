@@ -97,7 +97,7 @@ final class BehaviorPropertiesClassReflectionExtension implements PropertiesClas
      * component class, supporting accurate static analysis and autocompletion.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
-     * @param string $propertyName Name of the property to check for existence.
+     * @param string $propertyName Name of the property to resolve.
      *
      * @return bool `true` if the property exists on the class via an attached behavior; `false` otherwise.
      */
@@ -123,7 +123,7 @@ final class BehaviorPropertiesClassReflectionExtension implements PropertiesClas
      * properties that aren't natively declared on the component class but are available via attached behaviors.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
-     * @param string $propertyName Name of the property to search for in attached behaviors.
+     * @param string $propertyName Name of the property to resolve.
      *
      * @return PropertyReflection|null Reflection instance for the resolved property if found in a behavior; {@see null}
      * otherwise.

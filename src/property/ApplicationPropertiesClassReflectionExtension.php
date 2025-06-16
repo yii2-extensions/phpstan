@@ -14,9 +14,6 @@ use PHPStan\Reflection\{
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
 use PHPStan\Type\{MixedType, ObjectType};
-use yii\base\Application as BaseApplication;
-use yii\console\Application as ConsoleApplication;
-use yii\web\Application as WebApplication;
 use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
 use yii2\extensions\phpstan\ServiceMap;
 
@@ -44,16 +41,34 @@ use function in_array;
  * - Integrates annotation-based and native property reflection.
  * - Supports dynamic Yii Application properties via service map lookup.
  *
- * @see BaseApplication for Yii Base Application class.
- * @see ConsoleApplication for Yii Console Application class.
+ * @see \yii\base\Application::class for Yii Base Application class.
+ * @see \yii\console\Application::class for Yii Console Application class.
+ * @see \yii\web\Application::class for Yii Web Application class.
  * @see PropertiesClassReflectionExtension for custom properties class reflection extension contract.
- * @see WebApplication for Yii Web Application class.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ApplicationPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
+    /**
+     * List of supported Yii Application classes for property reflection.
+     *
+     * This array contains the fully qualified class names of the Yii Application base, console, and web application
+     * classes that this extension supports for dynamic property resolution.
+     *
+     * It ensures that the extension only applies to valid Yii Application contexts, enabling accurate property
+     * reflection and IDE autocompletion.
+     *
+     * @var array<int, class-string|string>
+     * @phpstan-var array<int, class-string|string>
+     */
+    private const SUPPORTED_APPLICATION_CLASSES = [
+        \yii\base\Application::class,
+        \yii\console\Application::class,
+        \yii\web\Application::class,
+    ];
+
     /**
      * Creates a new instance of the {@see ApplicationPropertiesClassReflectionExtension} class.
      *
@@ -92,16 +107,16 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             return $normalizedClassReflection->getNativeProperty($propertyName);
         }
 
-        if ($this->annotationsProperties->hasProperty($normalizedClassReflection, $propertyName)) {
-            return $this->annotationsProperties->getProperty($normalizedClassReflection, $propertyName);
-        }
-
         if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
                 new ObjectType($componentClass),
                 $normalizedClassReflection,
             );
+        }
+
+        if ($this->annotationsProperties->hasProperty($normalizedClassReflection, $propertyName)) {
+            return $this->annotationsProperties->getProperty($normalizedClassReflection, $propertyName);
         }
 
         return new ComponentPropertyReflection(
@@ -155,12 +170,14 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
     {
         $className = $classReflection->getName();
 
-        if (in_array($className, [BaseApplication::class, ConsoleApplication::class, WebApplication::class], true)) {
+        if (in_array($className, self::SUPPORTED_APPLICATION_CLASSES, true)) {
             return true;
         }
 
-        if ($this->reflectionProvider->hasClass(BaseApplication::class)) {
-            return $classReflection->isSubclassOfClass($this->reflectionProvider->getClass(BaseApplication::class));
+        if ($this->reflectionProvider->hasClass(\yii\base\Application::class)) {
+            return $classReflection->isSubclassOfClass(
+                $this->reflectionProvider->getClass(\yii\base\Application::class),
+            );
         }
 
         return false;
@@ -169,38 +186,22 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
     /**
      * Normalizes the class reflection for Yii Application subclasses to ensure consistent property resolution.
      *
-     * This method checks if the provided {@see ClassReflection} instance represents the base Yii Application, console
-     * application, web application, or any subclass.
+     * This method uses the configured application type from the service map to provide a consistent application
+     * class reflection, resolving the union type issue in PHPStan analysis.
      *
-     * The normalization process is essential for property reflection logic, as it ensures that dynamic property
-     * resolution and component lookup are only applied to valid Yii Application contexts.
+     * The normalization process ensures that dynamic property resolution and component lookup use the explicitly
+     * configured application type rather than attempting to infer it from context.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      *
-     * @return ClassReflection Normalized class reflection for the application.
+     * @return ClassReflection Normalized class reflection for the configured application type.
      */
     private function normalizeClassReflection(ClassReflection $classReflection): ClassReflection
     {
-        $className = $classReflection->getName();
+        $configuredApplicationType = $this->serviceMap->getApplicationType();
 
-        if (in_array($className, [BaseApplication::class, ConsoleApplication::class, WebApplication::class], true)) {
-            return $classReflection;
-        }
-
-        if ($this->reflectionProvider->hasClass(ConsoleApplication::class)) {
-            $consoleAppReflection = $this->reflectionProvider->getClass(ConsoleApplication::class);
-
-            if ($classReflection->isSubclassOfClass($consoleAppReflection)) {
-                return $classReflection;
-            }
-        }
-
-        if ($this->reflectionProvider->hasClass(WebApplication::class)) {
-            $webAppReflection = $this->reflectionProvider->getClass(WebApplication::class);
-
-            if ($classReflection->isSubclassOfClass($webAppReflection)) {
-                return $classReflection;
-            }
+        if ($this->reflectionProvider->hasClass($configuredApplicationType)) {
+            return $this->reflectionProvider->getClass($configuredApplicationType);
         }
 
         return $classReflection;

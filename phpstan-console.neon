@@ -15,7 +15,7 @@ parameters:
 
     paths:
         - src
-        - tests/web
+        - tests/console
 
     # Enable strict advanced checks
     checkImplicitMixed: true
@@ -28,4 +28,4 @@ parameters:
     reportPossiblyNonexistentGeneralArrayOffset: true
 
     yii2:
-        config_path: tests/web/config/config.php
+        config_path: tests/console/config/config.php

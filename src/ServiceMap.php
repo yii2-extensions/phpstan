@@ -46,6 +46,9 @@ use function sprintf;
  *
  * @phpstan-type DefinitionType = array{class?: mixed}|array{array{class?: mixed}}|object|string
  * @phpstan-type ServiceType = array{
+ *   phpstan?: array{
+ *     application_type?: class-string|string,
+ *   },
  *   behaviors?: array<array-key, mixed>,
  *   components?: array<array-key, array<array-key, mixed>|object>,
  *   container?: array{
@@ -59,6 +62,13 @@ use function sprintf;
  */
 final class ServiceMap
 {
+    /**
+     * Application type for PHPStan analysis.
+     *
+     * @phpstan-var class-string<\yii\base\Application>|string
+     */
+    private string $applicationType = '';
+
     /**
      * Behavior definitions map for Yii application analysis.
      *
@@ -119,10 +129,21 @@ final class ServiceMap
 
         $config = $this->loadConfig($configPath);
 
+        $this->processApplicationType($config);
         $this->processBehaviors($config);
         $this->processComponents($config);
         $this->processDefinition($config);
         $this->processSingletons($config);
+    }
+
+    /**
+     * @return string Fully qualified class name of the application type.
+     *
+     * @phpstan-return class-string|string
+     */
+    public function getApplicationType(): string
+    {
+        return $this->applicationType;
     }
 
     /**
@@ -260,6 +281,23 @@ final class ServiceMap
             throw new RuntimeException(sprintf("Configuration file '%s' must return an array.", $configPath));
         }
 
+        if (isset($config['phpstan'])) {
+            if (is_array($config['phpstan']) === false) {
+                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'phpstan');
+            }
+
+            if (
+                isset($config['phpstan']['application_type']) &&
+                is_string($config['phpstan']['application_type']) === false
+            ) {
+                $this->throwErrorWhenIsNotString(
+                    'Configuration file',
+                    'phpstan.application_type',
+                    gettype($config['phpstan']['application_type']),
+                );
+            }
+        }
+
         if (isset($config['behaviors']) && is_array($config['behaviors']) === false) {
             $this->throwErrorWhenConfigFileIsNotArray($configPath, 'behaviors');
         }
@@ -339,6 +377,17 @@ final class ServiceMap
     }
 
     /**
+     * @param array $config Yii application configuration array containing phpstan settings.
+     *
+     * @phpstan-import-type ServiceType from ServiceMap
+     * @phpstan-param ServiceType $config
+     */
+    private function processApplicationType(array $config): void
+    {
+        $this->applicationType = $config['phpstan']['application_type'] ?? \yii\web\Application::class;
+    }
+
+    /**
      * @param array $config Yii application configuration array containing behavior definitions.
      *
      * @phpstan-import-type ServiceType from ServiceMap
@@ -351,7 +400,7 @@ final class ServiceMap
 
             foreach ($behaviors as $id => $definition) {
                 if (is_string($id) === false) {
-                    $this->throwErrorWhenIdIsNotString('Behavior class', gettype($id));
+                    $this->throwErrorWhenIsNotString('Behavior class', 'ID', gettype($id));
                 }
 
                 if (is_array($definition) === false) {
@@ -389,7 +438,7 @@ final class ServiceMap
 
             foreach ($components as $id => $definition) {
                 if (is_string($id) === false) {
-                    $this->throwErrorWhenIdIsNotString('Component', gettype($id));
+                    $this->throwErrorWhenIsNotString('Component', 'ID', gettype($id));
                 }
 
                 if (is_object($definition)) {
@@ -439,7 +488,7 @@ final class ServiceMap
 
             foreach ($definitions as $id => $service) {
                 if (is_string($id) === false) {
-                    $this->throwErrorWhenIdIsNotString('Definition', gettype($id));
+                    $this->throwErrorWhenIsNotString('Definition', 'ID', gettype($id));
                 }
 
                 $this->services[$id] = $this->normalizeDefinition($id, $service);
@@ -471,7 +520,7 @@ final class ServiceMap
 
             foreach ($singletons as $id => $service) {
                 if (is_string($id) === false) {
-                    $this->throwErrorWhenIdIsNotString('Singleton', gettype($id));
+                    $this->throwErrorWhenIsNotString('Singleton', 'ID', gettype($id));
                 }
 
                 $this->services[$id] = $this->normalizeDefinition($id, $service);
@@ -512,9 +561,9 @@ final class ServiceMap
      *
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      */
-    private function throwErrorWhenIdIsNotString(string ...$args): never
+    private function throwErrorWhenIsNotString(string ...$args): never
     {
-        throw new RuntimeException(sprintf("'%s': ID must be a string, got '%s'.", ...$args));
+        throw new RuntimeException(sprintf("'%s': '%s' must be a string, got '%s'.", ...$args));
     }
 
     /**

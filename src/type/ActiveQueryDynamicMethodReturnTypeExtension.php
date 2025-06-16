@@ -255,7 +255,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      *
      * If the file name or doc comment is unavailable, or if no property tags are found, an empty array is returned.
      *
-     * @param ClassReflection $classReflection Class reflection instance for the model.
+     * @param ClassReflection $classReflection Reflection of the class being analyzed.
      *
      * @return array<string, Type> Associative array of property names to their types, or an empty array if not
      * available.

@@ -37,7 +37,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnBehaviorsWhenValidClassIsClassString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName(MyComponent::class);
@@ -58,7 +58,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnBehaviorsWhenValidClassIsString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName('yii2\extensions\phpstan\tests\stub\MyComponent');
@@ -79,7 +79,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnEmptyArrayWhenClassHasNotBehaviors(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName('NonExistentClass');
@@ -97,7 +97,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnEmptyArrayWhenNotBehaviorsConfigured(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}config.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config.php";
         $serviceMap = new ServiceMap($fixturePath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName('AnyClass');
@@ -115,7 +115,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testThrowExceptionWhenBehaviorDefinitionNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}behaviors-unsupported-definition-not-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}behaviors-unsupported-definition-not-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Behavior definition for \'MyComponent\' must be an array.');
@@ -129,10 +129,10 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testThrowExceptionWhenBehaviorIdNotString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}behaviors-unsupported-id-not-string.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}behaviors-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Behavior class\': ID must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Behavior class\': \'ID\' must be a string, got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }
@@ -143,7 +143,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testThrowExceptionWhenBehaviorsNotArray(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $fixturePath = __DIR__ . "{$ds}fixture{$ds}config{$ds}behaviors-unsupported-is-not-array.php";
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}behaviors-unsupported-is-not-array.php";
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'behaviors' 'array'.");
