@@ -6,6 +6,7 @@ namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\TestCase;
 use ReflectionException;
+use RuntimeException;
 use yii\web\Application;
 use yii2\extensions\phpstan\ServiceMap;
 
@@ -61,5 +62,35 @@ final class ServiceMapTest extends TestCase
             $serviceMap->getApplicationType(),
             'ServiceMap should resolve the application type to \'yii\console\Application\'.',
         );
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowExceptionWhenPHPStanApplicationTypeIsNotArray(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}phpstan-unsupported-type-array-invalid.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            '\'Application type\': \'phpstan.application_type\' must be a \'string\', got \'integer\'.',
+        );
+
+        new ServiceMap($fixturePath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowExceptionWhenPHPStanConfigIsNotArray(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $fixturePath = __DIR__ . "{$ds}fixture{$ds}phpstan-unsupported-is-not-array.php";
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Configuration file '{$fixturePath}' must contain a valid 'phpstan' 'array'.");
+
+        new ServiceMap($fixturePath);
     }
 }

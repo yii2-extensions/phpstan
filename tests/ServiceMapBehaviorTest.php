@@ -132,7 +132,7 @@ final class ServiceMapBehaviorTest extends TestCase
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}behaviors-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Behavior class\': \'ID\' must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Behavior class\': \'ID\' must be a \'string\', got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }

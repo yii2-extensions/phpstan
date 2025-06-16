@@ -136,7 +136,7 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getServiceById(MyActiveRecord::class),
-            'ServiceMap should resolve \'MyActiveRecord::class\' as a singleton string service.',
+            'ServiceMap should resolve \'MyActiveRecord::class\' as a singleton \'string\' service.',
         );
     }
 
@@ -323,7 +323,7 @@ final class ServiceMapServiceTest extends TestCase
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}definitions-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Definition\': \'ID\' must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Definition\': \'ID\' must be a \'string\', got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }
@@ -393,7 +393,7 @@ final class ServiceMapServiceTest extends TestCase
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}singletons-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Singleton\': \'ID\' must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Singleton\': \'ID\' must be a \'string\', got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }

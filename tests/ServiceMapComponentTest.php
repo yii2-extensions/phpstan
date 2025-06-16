@@ -151,7 +151,7 @@ final class ServiceMapComponentTest extends TestCase
         $fixturePath = __DIR__ . "{$ds}fixture{$ds}components-unsupported-id-not-string.php";
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Component\': \'ID\' must be a string, got \'integer\'.');
+        $this->expectExceptionMessage('\'Component\': \'ID\' must be a \'string\', got \'integer\'.');
 
         new ServiceMap($fixturePath);
     }

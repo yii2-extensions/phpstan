@@ -585,7 +585,7 @@ final class ServiceMap
      */
     private function throwErrorWhenIsNotString(string ...$args): never
     {
-        throw new RuntimeException(sprintf("'%s': '%s' must be a string, got '%s'.", ...$args));
+        throw new RuntimeException(sprintf("'%s': '%s' must be a 'string', got '%s'.", ...$args));
     }
 
     /**
