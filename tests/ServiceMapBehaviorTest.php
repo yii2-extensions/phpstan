@@ -20,7 +20,7 @@ use yii2\extensions\phpstan\tests\stub\{BehaviorOne, BehaviorTwo, MyComponent};
  * misconfigured or malformed behavior arrays.
  *
  * Key features.
- * - Ensures compatibility with based configuration files.
+ * - Ensures compatibility with the provided configuration files.
  * - Resolves behaviors by class name (as string or class-string).
  * - Returns an empty array for classes with no behaviors or when not configured.
  * - Throws exceptions for invalid behavior definitions, non-array structures, and non-string IDs.

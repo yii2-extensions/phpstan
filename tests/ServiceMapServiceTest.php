@@ -24,7 +24,7 @@ use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
  * exception handling for misconfigured or malformed service arrays.
  *
  * Key features.
- * - Ensures compatibility with based configuration files.
+ * - Ensures compatibility with the provided configuration files.
  * - Resolves service class by ID for valid and initialized services.
  * - Retrieves service definitions by ID and class name.
  * - Returns `null` for non-existent or non-class service IDs.

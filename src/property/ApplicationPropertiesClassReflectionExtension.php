@@ -41,9 +41,9 @@ use function in_array;
  * - Integrates annotation-based and native property reflection.
  * - Supports dynamic Yii Application properties via service map lookup.
  *
- * @see \yii\base\Application::class for Yii Base Application class.
- * @see \yii\console\Application::class for Yii Console Application class.
- * @see \yii\web\Application::class for Yii Web Application class.
+ * @see \yii\base\Application for Yii Base Application class.
+ * @see \yii\console\Application for Yii Console Application class.
+ * @see \yii\web\Application for Yii Web Application class.
  * @see PropertiesClassReflectionExtension for custom properties class reflection extension contract.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.

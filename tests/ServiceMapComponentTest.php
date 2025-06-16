@@ -21,7 +21,7 @@ use yii2\extensions\phpstan\tests\stub\User;
  * exception handling for misconfigured or malformed component arrays.
  *
  * Key features.
- * - Ensures compatibility with based configuration files.
+ * - Ensures compatibility with the provided configuration files.
  * - Resolves component class by ID for valid and initialized components.
  * - Retrieves component definitions by ID and class name.
  * - Returns `null` for non-existent or non-class component IDs.

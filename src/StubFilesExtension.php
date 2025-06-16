@@ -26,7 +26,7 @@ use yii\base\Application;
  * - Resolves stub file paths relative to the extension directory.
  * - Supports web, console, and base application contexts.
  *
- * @see ServiceMap for application class resolution.
+ * @see ServiceMap for component/service class resolution.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

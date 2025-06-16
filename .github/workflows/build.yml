@@ -35,7 +35,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      concurrency-group: compatibility-${{ github.workflow }}-${{ github.ref }}
+      concurrency-group: phpunit-compatibility-${{ github.workflow }}-${{ github.ref }}
       extensions: intl
       os: >-
         ['ubuntu-latest', 'windows-latest']
