@@ -37,12 +37,14 @@ final class ActiveQueryDynamicReturnTypeExtensionTest extends TypeInferenceTestC
     {
         $directory = dirname(__DIR__);
 
-        yield from self::gatherAssertTypes("{$directory}/fixture/data/type/ActiveQueryDynamicMethodReturnType.php");
+        yield from self::gatherAssertTypes(
+            "{$directory}/data/type/ActiveQueryDynamicMethodReturnType.php",
+        );
     }
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [dirname(__DIR__) . '/extension-tests.neon'];
+        return [dirname(__DIR__) . '/extension-test.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

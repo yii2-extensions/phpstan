@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use yii\web\View;
 use yii2\extensions\phpstan\tests\stub\{BehaviorOne, BehaviorTwo, MyActiveRecord, MyComponent, User};
 
 return [
@@ -25,6 +26,9 @@ return [
         'user' => [
             'class' => 'yii\web\User',
             'identityClass' => User::class,
+        ],
+        'view' => [
+            'class' => View::class,
         ],
     ],
     'container' => [

@@ -29,7 +29,7 @@ use yii2\extensions\phpstan\ServiceMap;
  * - Uses {@see ServiceMap} to resolve component class names.
  *
  * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- * @see ServiceMap for component class resolution.
+ * @see ServiceMap for component/service class resolution.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

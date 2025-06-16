@@ -1,0 +1,6 @@
+includes:
+    - ../../extension.neon
+
+parameters:
+    yii2:
+        config_path: %rootDir%/../../../tests/console/config/config.php

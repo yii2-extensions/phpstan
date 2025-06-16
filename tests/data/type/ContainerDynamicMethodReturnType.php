@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\fixture\data\type;
+namespace yii2\extensions\phpstan\tests\data\type;
 
 use Exception;
 use yii\base\InvalidConfigException;
@@ -58,9 +58,7 @@ final class ContainerDynamicMethodReturnType
         $container = new Container();
         $className = 'yii2\extensions\phpstan\tests\stub\MyActiveRecord';
 
-        $instance = $container->get($className);
-
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $instance);
+        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $container->get($className));
     }
 
     /**
@@ -87,9 +85,10 @@ final class ContainerDynamicMethodReturnType
 
         $params = ['flag' => true];
 
-        $instance = $container->get(MyActiveRecord::class, $params);
-
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $instance);
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\MyActiveRecord',
+            $container->get(MyActiveRecord::class, $params),
+        );
     }
 
     /**
@@ -100,9 +99,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $closure = $container->get('closure');
-
-        assertType('SplStack', $closure);
+        assertType('SplStack', $container->get('closure'));
     }
 
     /**
@@ -113,9 +110,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $nestedService = $container->get('nested-service-class');
-
-        assertType('SplFileInfo', $nestedService);
+        assertType('SplFileInfo', $container->get('nested-service-class'));
     }
 
     /**
@@ -126,9 +121,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $service = $container->get('service');
-
-        assertType('SplObjectStorage', $service);
+        assertType('SplObjectStorage', $container->get('service'));
     }
 
     /**
@@ -139,9 +132,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $unknown = $container->get('unknown-service');
-
-        assertType('mixed', $unknown);
+        assertType('mixed', $container->get('unknown-service'));
     }
 
     /**
@@ -152,9 +143,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $realClass = $container->get(Exception::class);
-
-        assertType('Exception', $realClass);
+        assertType('Exception', $container->get(Exception::class));
     }
 
     /**
@@ -165,9 +154,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $instance = $container->get('yii2\extensions\phpstan\tests\stub\MyActiveRecord');
-
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $instance);
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\MyActiveRecord',
+            $container->get('yii2\extensions\phpstan\tests\stub\MyActiveRecord'),
+        );
     }
 
     /**
@@ -178,9 +168,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $singletonClosure = $container->get('singleton-closure');
-
-        assertType('SplStack', $singletonClosure);
+        assertType('SplStack', $container->get('singleton-closure'));
     }
 
     /**
@@ -191,9 +179,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $nestedService = $container->get('singleton-nested-service-class');
-
-        assertType('SplFileInfo', $nestedService);
+        assertType('SplFileInfo', $container->get('singleton-nested-service-class'));
     }
 
     /**
@@ -204,9 +190,7 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $singletonService = $container->get('singleton-service');
-
-        assertType('SplObjectStorage', $singletonService);
+        assertType('SplObjectStorage', $container->get('singleton-service'));
     }
 
     /**
@@ -217,8 +201,6 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        $singletonString = $container->get('singleton-string');
-
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $singletonString);
+        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $container->get('singleton-string'));
     }
 }

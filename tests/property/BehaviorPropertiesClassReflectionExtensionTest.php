@@ -10,8 +10,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 /**
  * Test suite for type inference of property reflection in Yii Behaviors for PHPStan analysis.
  *
- * Validates that PHPStan correctly infers types for properties provided by attached behaviors on {@see MyComponent},
- * using fixture-based assertions for direct property access, parameterized properties, and shared property resolution.
+ * Validates that PHPStan correctly infers types for properties provided by attached behaviors, using fixture-based
+ * assertions for direct property access, parameterized properties, and shared property resolution.
  *
  * The test class loads type assertions from a fixture file and delegates checks to the parent
  * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see BehaviorPropertiesClassReflectionExtension} is
@@ -35,12 +35,14 @@ final class BehaviorPropertiesClassReflectionExtensionTest extends TypeInference
     {
         $directory = dirname(__DIR__);
 
-        yield from self::gatherAssertTypes("{$directory}/fixture/data/property/BehaviorPropertiesClassReflectionType.php");
+        yield from self::gatherAssertTypes(
+            "{$directory}/data/property/BehaviorPropertiesClassReflectionType.php",
+        );
     }
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [dirname(__DIR__) . '/extension-tests.neon'];
+        return [dirname(__DIR__) . '/extension-test.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

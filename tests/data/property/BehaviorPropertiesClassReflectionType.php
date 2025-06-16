@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\fixture\data\property;
+namespace yii2\extensions\phpstan\tests\data\property;
 
 use yii2\extensions\phpstan\tests\stub\MyComponent;
 
@@ -33,62 +33,48 @@ final class BehaviorPropertiesClassReflectionType
     {
         $component = new MyComponent();
 
-        $result = $component->arrayProperty;
-
-        assertType('array<mixed>', $result);
+        assertType('array<mixed>', $component->arrayProperty);
     }
 
     public function testReturnBooleanFromBooleanProperty(): void
     {
         $component = new MyComponent();
 
-        $result = $component->booleanProperty;
-
-        assertType('bool', $result);
+        assertType('bool', $component->booleanProperty);
     }
 
     public function testReturnIntegerFromBehaviorTwoProperty(): void
     {
         $component = new MyComponent();
 
-        $result = $component->behaviorTwoProperty;
-
-        assertType('int', $result);
+        assertType('int', $component->behaviorTwoProperty);
     }
 
     public function testReturnMixedFromMixedProperty(): void
     {
         $component = new MyComponent();
 
-        $result = $component->mixedProperty;
-
-        assertType('mixed', $result);
+        assertType('mixed', $component->mixedProperty);
     }
 
     public function testReturnStringFromBehaviorOneProperty(): void
     {
         $component = new MyComponent();
 
-        $result = $component->behaviorOneProperty;
-
-        assertType('string', $result);
+        assertType('string', $component->behaviorOneProperty);
     }
 
     public function testReturnStringFromSharedProperty(): void
     {
         $component = new MyComponent();
 
-        $result = $component->sharedProperty;
-
-        assertType('string', $result);
+        assertType('string', $component->sharedProperty);
     }
 
     public function testReturnStringFromVirtualProperty(): void
     {
         $component = new MyComponent();
 
-        $result = $component->virtualProperty;
-
-        assertType('string', $result);
+        assertType('string', $component->virtualProperty);
     }
 }

@@ -1,0 +1,23 @@
+<?php
+
+namespace yii\base {
+    abstract class Application {}
+}
+
+namespace yii\web {
+    class Application extends \yii\base\Application {}
+}
+
+namespace yii {
+    class BaseYii
+    {
+        /**
+         * @var \yii\web\Application
+         */
+        public static $app;
+    }
+}
+
+namespace {
+    class Yii extends \yii\BaseYii {}
+}

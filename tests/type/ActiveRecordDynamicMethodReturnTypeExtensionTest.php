@@ -37,12 +37,14 @@ final class ActiveRecordDynamicMethodReturnTypeExtensionTest extends TypeInferen
     {
         $directory = dirname(__DIR__);
 
-        yield from self::gatherAssertTypes("{$directory}/fixture/data/type/ActiveRecordDynamicMethodReturnType.php");
+        yield from self::gatherAssertTypes(
+            "{$directory}/data/type/ActiveRecordDynamicMethodReturnType.php",
+        );
     }
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [dirname(__DIR__) . '/extension-tests.neon'];
+        return [dirname(__DIR__) . '/extension-test.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

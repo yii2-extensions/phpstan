@@ -2,14 +2,14 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\fixture\data\property;
+namespace yii2\extensions\phpstan\tests\data\property;
 
 use Yii;
 
 use function PHPStan\Testing\assertType;
 
 /**
- * Data provider for property reflection of Yii User component in PHPStan analysis.
+ * Data provider for property reflection of a Yii User component in PHPStan analysis.
  *
  * Validates type inference and return types for properties provided by the Yii User component, ensuring that PHPStan
  * correctly recognizes and infers types for available properties as if they were natively declared on the user object.
@@ -19,7 +19,7 @@ use function PHPStan\Testing\assertType;
  *
  * Key features.
  * - Coverage for identity, guest, and parameterized properties.
- * - Ensures compatibility with PHPStan property reflection for Yii user component.
+ * - Ensures compatibility with PHPStan property reflection for a Yii user component.
  * - Type assertion for native and user-provided properties.
  * - Validates correct type inference for all supported property types.
  *

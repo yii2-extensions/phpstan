@@ -2,6 +2,7 @@
     "symbol-whitelist": [
         "PHPStan\\Analyser\\OutOfClassScope",
         "PHPStan\\Analyser\\Scope",
+        "PHPStan\\PhpDoc\\StubFilesExtension",
         "PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension",
         "PHPStan\\Reflection\\ClassReflection",
         "PHPStan\\Reflection\\Dummy\\DummyPropertyReflection",

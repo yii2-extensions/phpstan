@@ -30,15 +30,6 @@ services:
         class: yii2\extensions\phpstan\property\UserPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
-        class: yii2\extensions\phpstan\reflection\RequestMethodsClassReflectionExtension
-        tags: [phpstan.broker.methodsClassReflectionExtension]
-    -
-        class: yii2\extensions\phpstan\reflection\RequestPropertiesClassReflectionExtension
-        tags: [phpstan.broker.propertiesClassReflectionExtension]
-    -
-        class: yii2\extensions\phpstan\reflection\ResponsePropertiesClassReflectionExtension
-        tags: [phpstan.broker.propertiesClassReflectionExtension]
-    -
         class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
@@ -53,5 +44,9 @@ services:
     -
         class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
+        class: yii2\extensions\phpstan\StubFilesExtension
+        tags:
+            - phpstan.stubFilesExtension
 
     - yii2\extensions\phpstan\ServiceMap(%yii2.config_path%)
