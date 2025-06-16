@@ -10,6 +10,7 @@ use ReflectionFunction;
 use ReflectionNamedType;
 use RuntimeException;
 use yii\base\{BaseObject, InvalidArgumentException};
+use yii\web\Application;
 
 use function define;
 use function defined;
@@ -24,9 +25,9 @@ use function is_subclass_of;
 use function sprintf;
 
 /**
- * Service and component map for Yii application static analysis.
+ * Service and component map for Yii Application static analysis.
  *
- * Provides mapping and normalization of service and component definitions from Yii application configuration files,
+ * Provides mapping and normalization of service and component definitions from Yii Application configuration files,
  * enabling static analysis tools and IDEs to resolve class types, configuration arrays, and dependencies for accurate
  * type inference, autocompletion, and property reflection.
  *
@@ -37,9 +38,9 @@ use function sprintf;
  * ensuring robust handling of dynamic application structures.
  *
  * Key features:
- * - Enables accurate type inference and autocompletion for dynamic Yii application components.
+ * - Enables accurate type inference and autocompletion for dynamic Yii Application components.
  * - Handles multiple Yii configuration patterns (class names, closures, arrays, objects).
- * - Loads and validates Yii application configuration files for static analysis.
+ * - Loads and validates Yii Application configuration files for static analysis.
  * - Normalizes service and component definitions to fully qualified class names.
  * - Provides lookup methods for component class names and configuration arrays by ID or class name.
  * - Throws descriptive exceptions for invalid or unsupported definitions.
@@ -70,14 +71,14 @@ final class ServiceMap
     private string $applicationType = '';
 
     /**
-     * Behavior definitions map for Yii application analysis.
+     * Behavior definitions map for Yii Application analysis.
      *
      * @phpstan-var array<string, string[]>
      */
     private array $behaviors = [];
 
     /**
-     * Component definitions map for Yii application analysis.
+     * Component definitions map for Yii Application analysis.
      *
      * @phpstan-var string[]
      */
@@ -91,14 +92,14 @@ final class ServiceMap
     private array $componentClassToIdMap = [];
 
     /**
-     * Component definitions for Yii application analysis.
+     * Component definitions for Yii Application analysis.
      *
      * @phpstan-var array<string, mixed>
      */
     private array $componentsDefinitions = [];
 
     /**
-     * Service definitions map for Yii application analysis.
+     * Service definitions map for Yii Application analysis.
      *
      * @phpstan-var class-string[]|string[]
      */
@@ -107,7 +108,7 @@ final class ServiceMap
     /**
      * Creates a new instance of the {@see ServiceMap} class.
      *
-     * @param string $configPath Path to the Yii application configuration file (default: `''`). If provided, the
+     * @param string $configPath Path to the Yii Application configuration file (default: `''`). If provided, the
      * configuration file must exist and be valid. If empty or not provided, operates with empty service/component maps.
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
@@ -137,6 +138,11 @@ final class ServiceMap
     }
 
     /**
+     * Retrieves the fully qualified class name of the application type for PHPStan analysis.
+     *
+     * This method enables static analysis tools and IDEs to infer the correct application type for type checking,
+     * autocompletion, and property reflection.
+     *
      * @return string Fully qualified class name of the application type.
      *
      * @phpstan-return class-string|string
@@ -152,7 +158,7 @@ final class ServiceMap
      * Looks up the internal behavior definitions map for the provided fully qualified class name and return an array
      * of associated behavior class names.
      *
-     * This method enables static analysis tools and IDEs to infer attached behaviors for Yii application classes,
+     * This method enables static analysis tools and IDEs to infer attached behaviors for Yii Application classes,
      * supporting accurate type inference and property reflection.
      *
      * @param string $class Fully qualified class name for which to retrieve behavior class names.
@@ -167,7 +173,7 @@ final class ServiceMap
     }
 
     /**
-     * Retrieves the fully qualified class name of a Yii application component by its identifier.
+     * Retrieves the fully qualified class name of a Yii Application component by its identifier.
      *
      * Looks up the component class name registered under the specified component ID in the internal component map.
      *
@@ -213,7 +219,7 @@ final class ServiceMap
      * name.
      *
      * This method enables static analysis tools and IDEs to inspect the configuration of a component by its class,
-     * supporting type inference and property reflection for Yii application analysis.
+     * supporting type inference and property reflection for Yii Application analysis.
      *
      * @param string $class Fully qualified class name to look up in the component map.
      *
@@ -252,22 +258,19 @@ final class ServiceMap
     }
 
     /**
-     * Loads and validates the Yii application configuration file.
+     * Loads and validates the Yii Application configuration file for static analysis.
      *
-     * Reads the specified configuration file, ensuring it returns a valid array structure and that all required
-     * sections (such as components, container, container.definitions, and container.singletons) are arrays.
+     * Ensures the specified configuration file returns a valid array structure and that all required sections including
+     * `phpstan`, `behaviors`, `components`, `container`, `container.definitions`, and `container.singletons` are arrays
+     * when present.
      *
-     * This method is responsible for parsing the Yii application configuration, providing a normalized array for
-     * further processing by the service and component mapping logic. It throws descriptive exceptions if the file is
-     * missing, doesn't return an array, or contains invalid section types, ensuring robust error handling and
-     * predictable static analysis.
-     *
-     * @param string $configPath Path to the Yii application configuration file. If empty, return an empty array.
+     * @param string $configPath Path to the Yii Application configuration file. If empty, return an empty array.
      *
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
-     * @phpstan import-type ServiceType from ServiceMap
-     * @phpstan-return array{}|ServiceType Normalized configuration array or empty array if no config is provided.
+     * @return array Normalized configuration array for further processing, or an empty array if no config is provided.
+     *
+     * @phpstan-return array{}|ServiceType
      */
     private function loadConfig(string $configPath): array
     {
@@ -290,11 +293,9 @@ final class ServiceMap
                 isset($config['phpstan']['application_type']) &&
                 is_string($config['phpstan']['application_type']) === false
             ) {
-                $this->throwErrorWhenIsNotString(
-                    'Configuration file',
-                    'phpstan.application_type',
-                    gettype($config['phpstan']['application_type']),
-                );
+                $applicationType = gettype($config['phpstan']['application_type']);
+
+                $this->throwErrorWhenIsNotString('Application type', 'phpstan.application_type', $applicationType);
             }
         }
 
@@ -377,18 +378,39 @@ final class ServiceMap
     }
 
     /**
-     * @param array $config Yii application configuration array containing phpstan settings.
+     * Sets the application type for PHPStan analysis from the configuration array.
+     *
+     * Extracts the application type from the `phpstan.application_type` key in the provided configuration array.
+     *
+     * If not set, defaults to {@see Application::class}.
+     *
+     * This method enables static analysis tools to determine the correct application type for type checking and
+     * autocompletion by setting the internal {@see $applicationType} property.
+     *
+     * @param array $config Yii Application configuration array containing PHPStan settings.
      *
      * @phpstan-import-type ServiceType from ServiceMap
      * @phpstan-param ServiceType $config
      */
     private function processApplicationType(array $config): void
     {
-        $this->applicationType = $config['phpstan']['application_type'] ?? \yii\web\Application::class;
+        $this->applicationType = $config['phpstan']['application_type'] ?? Application::class;
     }
 
     /**
-     * @param array $config Yii application configuration array containing behavior definitions.
+     * Processes and registers behavior definitions from the Yii Application configuration array.
+     *
+     * Iterates over the `behaviors` section of the provided configuration array, validating each behavior ID and
+     * definition.
+     *
+     * For each valid behavior, stores an array of associated behavior class names indexed by the behavior ID.
+     *
+     * This enables static analysis tools and IDEs to resolve attached behaviors for Yii Application classes, supporting
+     * accurate type inference and property reflection.
+     *
+     * @param array $config Yii Application configuration array containing behavior definitions.
+     *
+     * @throws RuntimeException if a behavior ID is not a string, or if a behavior definition is not an array.
      *
      * @phpstan-import-type ServiceType from ServiceMap
      * @phpstan-param ServiceType $config
@@ -415,7 +437,7 @@ final class ServiceMap
     }
 
     /**
-     * Processes component definitions from the Yii application configuration array.
+     * Processes component definitions from the Yii Application configuration array.
      *
      * Iterates over the components section of the provided configuration array, normalizing and registering each
      * component definition by its identifier.
@@ -424,7 +446,7 @@ final class ServiceMap
      * analysis and type inference, supporting IDE autocompletion and property reflection for dynamic application
      * components.
      *
-     * @param array $config Yii application configuration array containing component definitions.
+     * @param array $config Yii Application configuration array containing component definitions.
      *
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
@@ -465,7 +487,7 @@ final class ServiceMap
     }
 
     /**
-     * Processes service definitions from the Yii application configuration array.
+     * Processes service definitions from the Yii Application configuration array.
      *
      * Iterates over the container.definitions section of the provided configuration array, normalizing and registering
      * each service definition by its identifier.
@@ -473,7 +495,7 @@ final class ServiceMap
      * This method ensures that all services are mapped to their fully qualified class names for accurate static
      * analysis and type inference.
      *
-     * @param array $config Yii application configuration array containing service definitions.
+     * @param array $config Yii Application configuration array containing service definitions.
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
@@ -497,7 +519,7 @@ final class ServiceMap
     }
 
     /**
-     * Processes singleton service definitions from the Yii application configuration array.
+     * Processes singleton service definitions from the Yii Application configuration array.
      *
      * Iterates over the container.singletons section of the provided configuration array, normalizing and registering
      * each singleton service definition by its identifier.
@@ -505,7 +527,7 @@ final class ServiceMap
      * This method ensures that all singleton services are mapped to their fully qualified class names for accurate
      * static analysis and type inference.
      *
-     * @param array $config Yii application configuration array containing singleton definitions.
+     * @param array $config Yii Application configuration array containing singleton definitions.
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
@@ -531,7 +553,7 @@ final class ServiceMap
     /**
      * Throws a {@see RuntimeException} when a configuration file section is not an array.
      *
-     * This method is invoked when a required section of the Yii application configuration file (such as components,
+     * This method is invoked when a required section of the Yii Application configuration file (such as components,
      * container, container.definitions, or container.singletons) doesn't contain a valid array.
      *
      * It ensures that only valid array structures are processed during configuration parsing, providing a clear and
