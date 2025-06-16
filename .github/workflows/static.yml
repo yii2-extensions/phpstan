@@ -22,6 +22,16 @@ on:
 name: static analysis
 
 jobs:
+  phpstan:
+    uses: php-forge/actions/.github/workflows/phpstan.yml@main
+    with:
+      composer-command: |
+        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
+      concurrency-group: compatibility-${{ github.workflow }}-${{ github.ref }}
+      os: >-
+        ['ubuntu-latest']
+      php: >-
+        ['8.4']
   phpstan-console:
     uses: php-forge/actions/.github/workflows/phpstan.yml@main
     with:
@@ -29,16 +39,6 @@ jobs:
       composer-command: |
         composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
-      os: >-
-        ['ubuntu-latest']
-      php: >-
-        ['8.4']
-  phpstan-web:
-    uses: php-forge/actions/.github/workflows/phpstan.yml@main
-    with:
-      composer-command: |
-        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
-      concurrency-group: compatibility-${{ github.workflow }}-${{ github.ref }}
       os: >-
         ['ubuntu-latest']
       php: >-
