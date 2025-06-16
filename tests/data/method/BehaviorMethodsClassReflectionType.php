@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\data\method;
+namespace yii2\extensions\phpstan\tests\data\method;
 
 use yii2\extensions\phpstan\tests\stub\MyComponent;
 
@@ -33,53 +33,41 @@ final class BehaviorMethodsClassReflectionType
     {
         $component = new MyComponent();
 
-        $result = $component->methodWithReturnType();
-
-        assertType('int', $result);
+        assertType('int', $component->methodWithReturnType());
     }
 
     public function testReturnStringFromBehaviorOneMethod(): void
     {
         $component = new MyComponent();
 
-        $result = $component->behaviorOneMethod();
-
-        assertType('string', $result);
+        assertType('string', $component->behaviorOneMethod());
     }
 
     public function testReturnStringFromBehaviorTwoMethod(): void
     {
         $component = new MyComponent();
 
-        $result = $component->behaviorTwoMethod();
-
-        assertType('string', $result);
+        assertType('string', $component->behaviorTwoMethod());
     }
 
     public function testReturnStringFromMethodWithParameters(): void
     {
         $component = new MyComponent();
 
-        $result = $component->methodWithParameters('test', 123);
-
-        assertType('string', $result);
+        assertType('string', $component->methodWithParameters('test', 123));
     }
 
     public function testReturnStringFromSharedMethod(): void
     {
         $component = new MyComponent();
 
-        $result = $component->sharedMethod();
-
-        assertType('string', $result);
+        assertType('string', $component->sharedMethod());
     }
 
     public function testReturnTypeInferenceForMethodWithoutExplicitReturnType(): void
     {
         $component = new MyComponent();
 
-        $result = $component->methodWithoutReturnType();
-
-        assertType('string', $result);
+        assertType('string', $component->methodWithoutReturnType());
     }
 }
