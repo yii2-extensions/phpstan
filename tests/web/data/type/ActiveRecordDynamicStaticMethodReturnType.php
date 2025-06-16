@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\fixture\data\type;
+namespace yii2\extensions\phpstan\tests\web\data\type;
 
 use yii\db\{ActiveQuery, ActiveRecord};
 use yii2\extensions\phpstan\tests\stub\{Category, MyActiveRecord, User};
@@ -26,8 +26,7 @@ use function PHPStan\Testing\assertType;
  * - Result types for {@see ActiveQuery::all()}, {@see ActiveQuery::one()} methods on static queries.
  * - Type assertions for property and array access on static query results.
  * - Type inference for {@see ActiveRecord::find()}, {@see ActiveRecord::findOne()}, {@see ActiveRecord::findAll()}, and
- *   {@see ActiveRecord::findBySql()} with and without.
- *   chaining.
+ *   {@see ActiveRecord::findBySql()} with and without chaining.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

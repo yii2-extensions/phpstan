@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\fixture\data\type;
+namespace yii2\extensions\phpstan\tests\web\data\type;
 
 use yii\db\{ActiveQuery, ActiveRecord};
 use yii2\extensions\phpstan\tests\stub\{Category, MyActiveRecord, User};

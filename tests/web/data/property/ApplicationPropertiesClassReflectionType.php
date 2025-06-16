@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\fixture\data\property;
+namespace yii2\extensions\phpstan\tests\web\data\property;
 
 use Yii;
 use yii\db\Connection;
@@ -24,6 +24,26 @@ use yii\web\{
 
 use function PHPStan\Testing\assertType;
 
+/**
+ * Data provider for property reflection of Yii Application properties in PHPStan analysis.
+ *
+ * Validates type inference and return types for core properties and components of {@see Application} via `Yii::$app`,
+ * ensuring that PHPStan correctly recognizes and infers types for all supported application level properties as if they
+ * were natively declared on the application class.
+ *
+ * These tests cover scenarios including direct property access, component-based properties, nullable and interface
+ * typed properties, and type assertions for both native and dynamic attached components, verifying that type assertions
+ * match the expected return types for each case.
+ *
+ * Key features.
+ * - Coverage for all documented core application properties and components.
+ * - Ensures compatibility with PHPStan property reflection for Yii application context.
+ * - Type assertion for native, interface, and nullable properties.
+ * - Validates correct type inference for all supported property types, including interfaces and union types.
+ *
+ * @copyright Copyright (C) 2023 Terabytesoftw.
+ * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+*/
 final class ApplicationPropertiesClassReflectionType
 {
     public function testReturnApplicationInstanceFromYiiApp(): void

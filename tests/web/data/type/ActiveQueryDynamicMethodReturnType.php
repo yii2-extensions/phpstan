@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\fixture\data\type;
+namespace yii2\extensions\phpstan\tests\web\data\type;
 
-use yii\db\{ActiveQuery, ActiveRecord};
+use yii\db\{ActiveQuery, ActiveRecord, Exception};
 use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
 use yii2\extensions\phpstan\tests\stub\Post;
 
@@ -115,6 +115,9 @@ final class ActiveQueryDynamicMethodReturnType
         }
     }
 
+    /**
+     * @throws Exception
+     */
     public function testReturnMyActiveRecordOrNullWhenChainedWithOne(): void
     {
         $offsetProp = 'flag';

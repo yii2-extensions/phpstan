@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\fixture\data\property;
+namespace yii2\extensions\phpstan\tests\web\data\property;
 
 use Yii;
 
