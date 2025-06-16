@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\data\type;
+namespace yii2\extensions\phpstan\tests\data\type;
 
 use yii\db\{ActiveQuery, ActiveRecord};
 use yii2\extensions\phpstan\tests\stub\{Category, MyActiveRecord, User};
@@ -37,110 +37,122 @@ final class ActiveRecordDynamicMethodReturnType
     {
         $model = new MyActiveRecord();
 
-        $relation = $model->hasMany(Category::class, ['parent_id' => 'id'])->asArray();
-
-        assertType('yii\db\ActiveQuery<array{id: int, name: string, parent_id: int|null}>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<array{id: int, name: string, parent_id: int|null}>',
+            $model->hasMany(Category::class, ['parent_id' => 'id'])->asArray(),
+        );
     }
 
     public function testReturnCategoryArrayWhenHasManyAsArrayWithAll(): void
     {
         $model = new MyActiveRecord();
 
-        $relationResults = $model->hasMany(Category::class, ['parent_id' => 'id'])->asArray()->all();
-
-        assertType('array<int, array{id: int, name: string, parent_id: int|null}>', $relationResults);
+        assertType(
+            'array<int, array{id: int, name: string, parent_id: int|null}>',
+            $model->hasMany(Category::class, ['parent_id' => 'id'])->asArray()->all(),
+        );
     }
 
     public function testReturnCategoryArrayWhenHasManyWithAll(): void
     {
         $model = new MyActiveRecord();
 
-        $relationResults = $model->hasMany(Category::class, ['parent_id' => 'id'])->all();
-
-        assertType('array<int, yii2\extensions\phpstan\tests\stub\Category>', $relationResults);
+        assertType(
+            'array<int, yii2\extensions\phpstan\tests\stub\Category>',
+            $model->hasMany(Category::class, ['parent_id' => 'id'])->all(),
+        );
     }
 
     public function testReturnCategoryQueryWhenHasManyChainedWithOrderAndLimit(): void
     {
         $model = new MyActiveRecord();
 
-        $relation = $model->hasMany(Category::class, ['parent_id' => 'id'])->orderBy('name ASC')->limit(10);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>',
+            $model->hasMany(Category::class, ['parent_id' => 'id'])->orderBy('name ASC')->limit(10),
+        );
     }
 
     public function testReturnCategoryQueryWhenHasManyWithCategoryClass(): void
     {
         $model = new MyActiveRecord();
 
-        $relation = $model->hasMany(Category::class, ['parent_id' => 'id']);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>',
+            $model->hasMany(Category::class, ['parent_id' => 'id']),
+        );
     }
 
     public function testReturnCategoryQueryWhenHasManyWithStringClass(): void
     {
         $model = new User();
 
-        $relation = $model->hasMany('yii2\extensions\phpstan\tests\stub\Category', ['user_id' => 'id']);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>',
+            $model->hasMany('yii2\extensions\phpstan\tests\stub\Category', ['user_id' => 'id']),
+        );
     }
 
     public function testReturnUserArrayQueryWhenHasOneAsArray(): void
     {
         $model = new MyActiveRecord();
 
-        $relation = $model->hasOne(User::class, ['id' => 'user_id'])->asArray();
-
-        assertType('yii\db\ActiveQuery<array{id: int, name: string, email: string}>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<array{id: int, name: string, email: string}>',
+            $model->hasOne(User::class, ['id' => 'user_id'])->asArray(),
+        );
     }
 
     public function testReturnUserArrayWhenHasOneAsArrayWithOne(): void
     {
         $model = new MyActiveRecord();
 
-        $relationResult = $model->hasOne(User::class, ['id' => 'user_id'])->asArray()->one();
-
-        assertType('array{id: int, name: string, email: string}|null', $relationResult);
+        assertType(
+            'array{id: int, name: string, email: string}|null',
+            $model->hasOne(User::class, ['id' => 'user_id'])->asArray()->one(),
+        );
     }
 
     public function testReturnUserOrNullWhenHasOneWithOne(): void
     {
         $model = new MyActiveRecord();
 
-        $relationResult = $model->hasOne(User::class, ['id' => 'user_id'])->one();
-
-        assertType('yii2\extensions\phpstan\tests\stub\User|null', $relationResult);
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\User|null',
+            $model->hasOne(User::class, ['id' => 'user_id'])->one(),
+        );
     }
 
     public function testReturnUserQueryWhenHasOneChainedWithWhereConditions(): void
     {
         $model = new MyActiveRecord();
 
-        $relation = $model
-            ->hasOne(User::class, ['id' => 'user_id'])
-            ->where(['active' => 1])
-            ->andWhere(['status' => 'published']);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            $model
+                ->hasOne(User::class, ['id' => 'user_id'])
+                ->where(['active' => 1])
+                ->andWhere(['status' => 'published']),
+        );
     }
 
     public function testReturnUserQueryWhenHasOneWithStringClass(): void
     {
         $model = new Category();
 
-        $relation = $model->hasOne('yii2\extensions\phpstan\tests\stub\User', ['id' => 'user_id']);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            $model->hasOne('yii2\extensions\phpstan\tests\stub\User', ['id' => 'user_id']),
+        );
     }
 
     public function testReturnUserQueryWhenHasOneWithUserClass(): void
     {
         $model = new MyActiveRecord();
 
-        $relation = $model->hasOne(User::class, ['id' => 'user_id']);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', $relation);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            $model->hasOne(User::class, ['id' => 'user_id']),
+        );
     }
 }

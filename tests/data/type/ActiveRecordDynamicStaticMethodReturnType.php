@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\data\type;
+namespace yii2\extensions\phpstan\tests\data\type;
 
 use yii\db\{ActiveQuery, ActiveRecord};
 use yii2\extensions\phpstan\tests\stub\{Category, MyActiveRecord, User};
@@ -35,127 +35,112 @@ final class ActiveRecordDynamicStaticMethodReturnType
 {
     public function testReturnCategoryArrayQueryWhenFindBySqlWithAsArray(): void
     {
-        $query = Category::findBySql('SELECT * FROM categories')->asArray();
-
-        assertType('yii\db\ActiveQuery<array{id: int, name: string, parent_id: int|null}>', $query);
+        assertType(
+            'yii\db\ActiveQuery<array{id: int, name: string, parent_id: int|null}>',
+            Category::findBySql('SELECT * FROM categories')->asArray(),
+        );
     }
 
     public function testReturnCategoryQueryWhenFindOnCategory(): void
     {
-        $categoryQuery = Category::find();
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>', $categoryQuery);
+        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>', Category::find());
     }
 
     public function testReturnMyActiveRecordArrayQueryWhenFindAsArray(): void
     {
-        $query = MyActiveRecord::find()->asArray();
-
-        assertType('yii\db\ActiveQuery<array{flag: bool}>', $query);
+        assertType('yii\db\ActiveQuery<array{flag: bool}>', MyActiveRecord::find()->asArray());
     }
 
     public function testReturnMyActiveRecordArrayWhenFindAllWithIds(): void
     {
-        $records = MyActiveRecord::findAll([1, 2, 3]);
-
-        assertType('array<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $records);
+        assertType('array<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', MyActiveRecord::findAll([1, 2, 3]));
     }
 
     public function testReturnMyActiveRecordOrNullWhenFindOneAfterChaining(): void
     {
-        $record = MyActiveRecord::find()->where(['status' => 'published'])->one();
-
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord|null', $record);
+        assertType(
+            'yii2\extensions\phpstan\tests\stub\MyActiveRecord|null',
+            MyActiveRecord::find()->where(['status' => 'published'])->one(),
+        );
     }
 
     public function testReturnMyActiveRecordOrNullWhenFindOneById(): void
     {
-        $record = MyActiveRecord::findOne(1);
-
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord|null', $record);
+        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord|null', MyActiveRecord::findOne(1));
     }
 
     public function testReturnMyActiveRecordQueryWhenFind(): void
     {
-        $query = MyActiveRecord::find();
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $query);
+        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', MyActiveRecord::find());
     }
 
     public function testReturnMyActiveRecordQueryWhenFindBySqlWithParameters(): void
     {
-        $query = MyActiveRecord::findBySql('SELECT * FROM my_table WHERE id = :id', [':id' => 1]);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $query);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            MyActiveRecord::findBySql('SELECT * FROM my_table WHERE id = :id', [':id' => 1]),
+        );
     }
 
     public function testReturnMyActiveRecordQueryWhenFindWithChaining(): void
     {
-        $query = MyActiveRecord::find()->where(['status' => 'active'])->orderBy('created_at DESC');
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $query);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            MyActiveRecord::find()->where(['status' => 'active'])->orderBy('created_at DESC'),
+        );
     }
 
     public function testReturnMyActiveRecordWhenInstantiating(): void
     {
-        $model = new MyActiveRecord();
-
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $model);
+        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', new MyActiveRecord());
     }
 
     public function testReturnUserArrayQueryWhenFindAsArray(): void
     {
-        $userQuery = User::find()->asArray();
-
-        assertType('yii\db\ActiveQuery<array{id: int, name: string, email: string}>', $userQuery);
+        assertType('yii\db\ActiveQuery<array{id: int, name: string, email: string}>', User::find()->asArray());
     }
 
     public function testReturnUserArrayWhenFindAllAfterChaining(): void
     {
-        $records = User::find()->where(['active' => 1])->orderBy('name ASC')->all();
-
-        assertType('array<int, yii2\extensions\phpstan\tests\stub\User>', $records);
+        assertType(
+            'array<int, yii2\extensions\phpstan\tests\stub\User>',
+            User::find()->where(['active' => 1])->orderBy('name ASC')->all(),
+        );
     }
 
     public function testReturnUserArrayWhenFindAllWithCondition(): void
     {
-        $userRecords = User::findAll(['status' => 'active']);
-
-        assertType('array<yii2\extensions\phpstan\tests\stub\User>', $userRecords);
+        assertType('array<yii2\extensions\phpstan\tests\stub\User>', User::findAll(['status' => 'active']));
     }
 
     public function testReturnUserOrNullWhenFindOneByCondition(): void
     {
-        $userRecord = User::findOne(['id' => 1]);
-
-        assertType('yii2\extensions\phpstan\tests\stub\User|null', $userRecord);
+        assertType('yii2\extensions\phpstan\tests\stub\User|null', User::findOne(['id' => 1]));
     }
 
     public function testReturnUserQueryWhenFindBySql(): void
     {
-        $userQuery = User::findBySql('SELECT * FROM users');
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', $userQuery);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            User::findBySql('SELECT * FROM users'),
+        );
     }
 
     public function testReturnUserQueryWhenFindBySqlWithChaining(): void
     {
-        $query = User::findBySql('SELECT * FROM users')->andWhere(['active' => 1])->limit(10);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', $query);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            User::findBySql('SELECT * FROM users')->andWhere(['active' => 1])->limit(10),
+        );
     }
 
     public function testReturnUserQueryWhenFindOnUser(): void
     {
-        $userQuery = User::find();
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', $userQuery);
+        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', User::find());
     }
 
     public function testReturnUserWhenInstantiating(): void
     {
-        $userModel = new User();
-
-        assertType('yii2\extensions\phpstan\tests\stub\User', $userModel);
+        assertType('yii2\extensions\phpstan\tests\stub\User', new User());
     }
 }

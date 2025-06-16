@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\web\data\type;
+namespace yii2\extensions\phpstan\tests\data\type;
 
 use yii\db\{ActiveQuery, ActiveRecord, Exception};
 use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
@@ -40,16 +40,15 @@ final class ActiveQueryDynamicMethodReturnType
         $userPreference = $_POST['format'] ?? 'default';
         $useArrayFormat = ($userPreference === 'json');
 
-        $query = MyActiveRecord::find()->asArray($useArrayFormat);
-
-        assertType('yii\db\ActiveQuery<array{flag: bool}|yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $query);
+        assertType(
+            'yii\db\ActiveQuery<array{flag: bool}|yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            MyActiveRecord::find()->asArray($useArrayFormat),
+        );
     }
 
     public function testReturnMyActiveRecordArrayQueryWhenAsArrayExplicitTrue(): void
     {
-        $explicitArrayQuery = MyActiveRecord::find()->asArray(true);
-
-        assertType('yii\db\ActiveQuery<array{flag: bool}>', $explicitArrayQuery);
+        assertType('yii\db\ActiveQuery<array{flag: bool}>', MyActiveRecord::find()->asArray(true));
     }
 
     public function testReturnMyActiveRecordArrayQueryWhenChainedWithAsArray(): void
@@ -61,10 +60,7 @@ final class ActiveQueryDynamicMethodReturnType
             ->limit(10);
 
         assertType('yii\db\ActiveQuery<array{flag: bool}>', $complexQuery);
-
-        $complexResult = $complexQuery->all();
-
-        assertType('array<int, array{flag: bool}>', $complexResult);
+        assertType('array<int, array{flag: bool}>', $complexQuery->all());
     }
 
     public function testReturnMyActiveRecordArrayWhenArraysWithCondition(): void
@@ -84,10 +80,7 @@ final class ActiveQueryDynamicMethodReturnType
         $arrayQuery = MyActiveRecord::find()->asArray();
 
         assertType('yii\db\ActiveQuery<array{flag: bool}>', $arrayQuery);
-
-        $arrayQueryResult = $arrayQuery->all();
-
-        assertType('array<int, array{flag: bool}>', $arrayQueryResult);
+        assertType('array<int, array{flag: bool}>', $arrayQuery->all());
     }
 
     public function testReturnMyActiveRecordArrayWhenFindAllWithCondition(): void
@@ -168,20 +161,24 @@ final class ActiveQueryDynamicMethodReturnType
 
     public function testReturnMyActiveRecordQueryWhenAsArrayExplicitFalse(): void
     {
-        $explicitObjectQuery = MyActiveRecord::find()->asArray(false);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $explicitObjectQuery);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            MyActiveRecord::find()->asArray(false),
+        );
     }
 
     public function testReturnMyActiveRecordQueryWhenChainedWithConditions(): void
     {
         $query = MyActiveRecord::find();
 
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $query);
-
-        $chainedQuery = $query->where(['active' => 1]) -> andWhere(['status' => 'published']);
-
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', $chainedQuery);
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            $query,
+        );
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            $query->where(['active' => 1]) -> andWhere(['status' => 'published']),
+        );
     }
 
     public function testReturnUnionResultsWhenAsArrayWithVariableArgument(): void
@@ -206,33 +203,21 @@ final class ActiveQueryDynamicMethodReturnType
             'yii2\extensions\phpstan\tests\stub\PostQuery<yii2\extensions\phpstan\tests\stub\Post>',
             $customQuery,
         );
-
-        $customQueryWithAsArray = $customQuery->asArray();
-
         assertType(
             'yii2\extensions\phpstan\tests\stub\PostQuery<array{title: string, content: string}>',
-            $customQueryWithAsArray,
+            $customQuery->asArray(),
         );
-
-        $customQueryResult = $customQuery->one();
-
         assertType(
             'yii2\extensions\phpstan\tests\stub\Post|null',
-            $customQueryResult,
+             $customQuery->one(),
         );
-
-        $customQueryResults = $customQuery->all();
-
         assertType(
             'array<int, yii2\extensions\phpstan\tests\stub\Post>',
-            $customQueryResults,
+            $customQuery->all(),
         );
-
-        $publishedQuery = $customQuery->published();
-
         assertType(
             'yii2\extensions\phpstan\tests\stub\PostQuery<yii2\extensions\phpstan\tests\stub\Post>',
-            $publishedQuery,
+            $customQuery->published(),
         );
     }
 }
