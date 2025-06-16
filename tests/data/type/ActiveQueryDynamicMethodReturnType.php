@@ -209,7 +209,7 @@ final class ActiveQueryDynamicMethodReturnType
         );
         assertType(
             'yii2\extensions\phpstan\tests\stub\Post|null',
-             $customQuery->one(),
+            $customQuery->one(),
         );
         assertType(
             'array<int, yii2\extensions\phpstan\tests\stub\Post>',
