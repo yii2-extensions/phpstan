@@ -711,5 +711,5 @@ analysis.
 
 ## Next Steps
 
-- 📚 [Installation Guide](docs/installation.md)
+- 📚 [Installation Guide](installation.md)
 - ⚙️ [Configuration Guide](configuration.md)

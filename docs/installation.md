@@ -249,5 +249,5 @@ vendor/bin/phpstan --version
 
 Once installation is complete:
 
-- ⚙️ [Configuration Reference](docs/configuration.md)
-- 💡 [Usage Examples](docs/examples.md)
+- ⚙️ [Configuration Reference](configuration.md)
+- 💡 [Usage Examples](examples.md)
