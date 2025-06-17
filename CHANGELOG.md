@@ -13,6 +13,7 @@
 - Enh #43: Add tests for session property availability in `Console` and `Web` `Applications` (@terabytesoftw)
 - Bug #44: Move `UserPropertiesClassReflectionExtension` to `property` directory and add testing (@terabytesoftw)
 - Bug #45: Improve `ServiceMap` configuration for application types (`Base`, `Console`, `Web`) (@terabytesoftw)
+- Bug #46: Update `README.md` to enhance clarity and structure of `docs/installation.md`, `docs/configuration.md` and `docs/examples.md` (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 
