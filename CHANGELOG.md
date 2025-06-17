@@ -14,6 +14,7 @@
 - Bug #44: Move `UserPropertiesClassReflectionExtension` to `property` directory and add testing (@terabytesoftw)
 - Bug #45: Improve `ServiceMap` configuration for application types (`Base`, `Console`, `Web`) (@terabytesoftw)
 - Bug #46: Update `README.md` to enhance clarity and structure of `docs/installation.md`, `docs/configuration.md` and `docs/examples.md` (@terabytesoftw)
+- Enh #47: Add `ActiveRecordGetAttributeDynamicMethodReturnTypeExtension` to provide precise type inference for `getAttribute()` method calls based on PHPDoc annotations (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 

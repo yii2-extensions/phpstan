@@ -41,7 +41,11 @@ composer require --dev yii2-extensions/phpstan
 - Array/object result type inference based on `asArray()` usage.
 - Dynamic return type inference for `find()`, `findOne()`, `findAll()` methods.
 - Generic type support for `ActiveQuery<Model>` with proper chaining.
+- Hierarchical type resolution: model properties take precedence over behavior properties.
+- Precise type inference for `getAttribute()` method calls based on PHPDoc annotations.
+- Property type resolution from both model classes and attached behaviors.
 - Relation methods (`hasOne()`, `hasMany()`) with accurate return types.
+- Support for behavior property definitions through ServiceMap integration.
 
 ✅ **Application Component Resolution**
 - Automatic type inference for `Yii::$app->component` access.
@@ -119,6 +123,12 @@ $query = User::find()->where(['active' => 1])->orderBy('name');
 
 // ✅ Array results properly typed as array{id: int, name: string}[]
 $userData = User::find()->asArray()->all();
+
+// ✅ Properly typed based on model property annotations string
+$userName = $user->getAttribute('name');
+
+// ✅ Behavior property resolution string
+$slug = $user->getAttribute('slug');
 ```
 
 ### Application Components
