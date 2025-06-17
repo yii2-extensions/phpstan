@@ -552,6 +552,72 @@ class ServiceFactory
 
 ## Behavior Examples
 
+### Dynamic Attribute Type Inference
+
+```php
+<?php
+
+/**
+ * Behavior with PHPDoc property definitions.
+ * 
+ * @template T of ActiveRecord
+ * @extends Behavior<T>
+ *
+ * @property int $lft
+ * @property int $rgt
+ * @property int $depth
+ * @property int|false $tree
+ */
+class NestedSetsBehavior extends Behavior
+{
+    /** @phpstan-var 'lft' */
+    public string $leftAttribute = 'lft';
+    
+    /** @phpstan-var 'rgt' */
+    public string $rightAttribute = 'rgt';
+    
+    /** @phpstan-var 'depth' */
+    public string $depthAttribute = 'depth';
+    
+    public function moveAsRoot(): bool
+    {
+        // ✅ PHPStan now knows these are int types
+        $leftValue = $this->getOwner()->getAttribute($this->leftAttribute);   // int
+        $rightValue = $this->getOwner()->getAttribute($this->rightAttribute); // int
+        $depthValue = $this->getOwner()->getAttribute($this->depthAttribute); // int
+        
+        // No more manual casting needed!
+        return $this->performMove($leftValue, $rightValue, $depthValue);
+    }
+}
+
+class Category extends ActiveRecord
+{
+    public function behaviors(): array
+    {
+        return [
+            'nestedSets' => [
+                'class' => NestedSetsBehavior::class,
+            ],
+        ];
+    }
+}
+
+class CategoryService
+{
+    public function getNodeInfo(Category $category): array
+    {
+        // ✅ PHPStan knows these are int types from behavior
+        return [
+            'left' => $category->getAttribute('lft'),    // int
+            'right' => $category->getAttribute('rgt'),   // int
+            'depth' => $category->getAttribute('depth'), // int
+            'tree' => $category->getAttribute('tree'),   // int|false
+        ];
+    }
+}
+```
+
 ### Property and Method Access through Behaviors
 
 ```php

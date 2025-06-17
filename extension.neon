@@ -39,6 +39,9 @@ services:
         class: yii2\extensions\phpstan\type\ActiveRecordDynamicStaticMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
     -
+        class: yii2\extensions\phpstan\type\ActiveRecordGetAttributeDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
         class: yii2\extensions\phpstan\type\ContainerDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -

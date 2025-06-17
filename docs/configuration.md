@@ -209,6 +209,25 @@ return [
 ];
 ```
 
+### Behavior PHPDoc Requirements
+
+For accurate type inference, behaviors should define their properties using PHPDoc.
+
+```php
+<?php
+
+/**
+ * @template T of ActiveRecord
+ * @extends Behavior<T>
+ *
+ * @property int $depth
+ * @property int $lft
+ * @property int $rgt
+ * @property int|false $tree
+ */
+class NestedSetsBehavior extends Behavior {}
+```
+
 ### Container Configuration
 
 Define DI container services.

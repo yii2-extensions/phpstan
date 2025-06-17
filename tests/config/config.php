@@ -3,10 +3,31 @@
 declare(strict_types=1);
 
 use yii\web\View;
-use yii2\extensions\phpstan\tests\stub\{BehaviorOne, BehaviorTwo, MyActiveRecord, MyComponent, User};
+use yii2\extensions\phpstan\tests\stub\{
+    BehaviorOne,
+    BehaviorTwo,
+    ModelWithConflictingProperty,
+    ModelWithMultipleBehaviors,
+    MyActiveRecord,
+    MyComponent,
+    NestedSetsBehavior,
+    NestedSetsModel,
+    SlugBehavior,
+    User,
+};
 
 return [
     'behaviors' => [
+        ModelWithConflictingProperty::class => [
+            NestedSetsBehavior::class,
+        ],
+        ModelWithMultipleBehaviors::class => [
+            NestedSetsBehavior::class,
+            SlugBehavior::class,
+        ],
+        NestedSetsModel::class => [
+            NestedSetsBehavior::class,
+        ],
         MyComponent::class => [
             BehaviorOne::class,
             BehaviorTwo::class,
@@ -32,35 +53,35 @@ return [
         ],
     ],
     'container' => [
-        'singletons' => [
-            'singleton-string' => MyActiveRecord::class,
-            'singleton-closure' => static function (): SplStack {
-                return new SplStack();
-            },
-            'singleton-service' => [
-                'class' => SplObjectStorage::class,
-            ],
-            'singleton-nested-service-class' => [
-                [
-                    'class' => SplFileInfo::class,
-                ],
-            ],
-        ],
         'definitions' => [
             'closure' => static function (): SplStack {
                 return new SplStack();
             },
-            'service' => [
-                'class' => SplObjectStorage::class,
+            MyActiveRecord::class => [
+                'flag' => 'foo',
             ],
             'nested-service-class' => [
                 [
                     'class' => SplFileInfo::class,
                 ],
             ],
-            MyActiveRecord::class => [
-                'flag' => 'foo',
+            'service' => [
+                'class' => SplObjectStorage::class,
             ],
+        ],
+        'singletons' => [
+            'singleton-closure' => static function (): SplStack {
+                return new SplStack();
+            },
+            'singleton-nested-service-class' => [
+                [
+                    'class' => SplFileInfo::class,
+                ],
+            ],
+            'singleton-service' => [
+                'class' => SplObjectStorage::class,
+            ],
+            'singleton-string' => MyActiveRecord::class,
         ],
     ],
 ];
