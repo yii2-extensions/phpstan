@@ -83,7 +83,7 @@ return [
 ];
 ```
 
-Use a separate PHPStan configuration for console.
+Use a separate PHPStan configuration for the console.
 
 ```neon
 # phpstan-console.neon
