@@ -343,7 +343,7 @@ This will work with basic type inference but won't have custom component types.
 For projects with both web and console applications:
 
 ### Project Structure
-```
+```text
 phpstan-web.neon      # Web-specific configuration
 phpstan-console.neon  # Console-specific configuration
 phpstan.neon          # Base configuration
@@ -430,4 +430,4 @@ vendor/bin/phpstan analyse --generate-baseline
 
 ## Next Steps
 
-- 💡 See [Usage Examples](examples.md) for practical examples
+- 💡 [Usage Examples](examples.md)

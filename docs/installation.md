@@ -61,7 +61,7 @@ Add the plugin configuration to your `composer.json`.
 }
 ```
 
-With this setup, the extension will be automatically registered and you only need to configure the Yii2-specific settings.
+With this setup, the extension will be automatically registered, and you only need to configure the Yii2-specific settings.
 
 ### Manual Extension Registration
 
@@ -111,7 +111,6 @@ return [
     'components' => [
         'db' => [
             'class' => \yii\db\Connection::class,
-            'dsn' => 'sqlite::memory:',
         ],
         'user' => [
             'class' => \yii\web\User::class,
@@ -209,7 +208,7 @@ vendor/bin/phpstan analyse test-phpstan.php --level=5
 
 ## Bootstrap Configuration
 
-If your application requires custom bootstrap logic, create a bootstrap file:
+If your application requires custom bootstrap logic, create a bootstrap file.
 
 ```php
 <?php
@@ -250,4 +249,5 @@ vendor/bin/phpstan --version
 
 Once installation is complete:
 
-- 📖 Read the [Configuration Guide](configuration.md) for advanced settings
+- ⚙️ [Configuration Reference](docs/configuration.md)
+- 💡 [Usage Examples](docs/examples.md)

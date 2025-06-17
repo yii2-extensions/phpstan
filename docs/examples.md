@@ -708,3 +708,8 @@ class ApiController extends \yii\web\Controller
 This comprehensive examples guide shows how the `Yii2` `PHPStan` extension provides precise type inference across all 
 major `Yii2` patterns and use cases, making your code more maintainable and reducing runtime errors through static 
 analysis.
+
+## Next Steps
+
+- 📚 [Installation Guide](docs/installation.md)
+- ⚙️ [Configuration Guide](configuration.md)

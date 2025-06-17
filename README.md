@@ -2,7 +2,7 @@
     <a href="https://github.com/yii2-extensions/phpstan" target="_blank">
         <img src="https://www.yiiframework.com/image/yii_logo_light.svg" height="100px;">
     </a>
-    <h1 align="center">Extension for PHPStan.</h1>
+    <h1 align="center">Extension for PHPStan</h1>
 </p>
 
 <p align="center">
