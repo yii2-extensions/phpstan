@@ -2,7 +2,7 @@
     <a href="https://github.com/yii2-extensions/phpstan" target="_blank">
         <img src="https://www.yiiframework.com/image/yii_logo_light.svg" height="100px;">
     </a>
-    <h1 align="center">Extension for PHPStan.</h1>
+    <h1 align="center">Extension for PHPStan</h1>
 </p>
 
 <p align="center">
@@ -26,208 +26,133 @@
     </a>  
 </p>
 
+A comprehensive PHPStan extension that provides enhanced static analysis for Yii2 applications with precise type 
+inference, dynamic method resolution, and comprehensive property reflection.
+
 ## Installation
 
-The preferred way to install this extension is through [composer](https://getcomposer.org/download/).
-
-Either run
-
-```shell
-composer require --dev --prefer-dist yii2-extensions/phpstan:^0.2
+```bash
+composer require --dev yii2-extensions/phpstan
 ```
 
-or add
+## Features
 
-```json
-"yii2-extensions/phpstan": "^0.2"
-```
+✅ **ActiveRecord & ActiveQuery Analysis**
+- Array/object result type inference based on `asArray()` usage.
+- Dynamic return type inference for `find()`, `findOne()`, `findAll()` methods.
+- Generic type support for `ActiveQuery<Model>` with proper chaining.
+- Relation methods (`hasOne()`, `hasMany()`) with accurate return types.
 
-## Usage
+✅ **Application Component Resolution**
+- Automatic type inference for `Yii::$app->component` access.
+- Behavior property and method reflection.
+- Support for custom component configurations.
+- User component with `identity`, `id`, `isGuest` property types.
 
-This extension provides enhanced static analysis for `Yii2` applications by adding:
+✅ **Dependency Injection Container**
+- Service map integration for custom services.
+- Support for closures, singletons, and nested definitions.
+- Type-safe `Container::get()` method resolution.
 
-- **Container service resolution** with proper type inference.
-- **Dynamic method return types** for `ActiveRecord` and `ActiveQuery`.
-- **Header collection dynamic methods** support.
-- **Property reflection extensions** for `Application`, `Request`, `Response`, and `User` components.
-- **Service map integration** for dependency injection analysis.
+✅ **Framework Integration**
+- Header collection dynamic method types.
+- Stub files for different application types (web, console, base).
+- Support for Yii2 constants (`YII_DEBUG`, `YII_ENV_*`).
 
-### Basic Configuration
+## Quick Start
 
-To use this extension, you need to add the following configuration to your `phpstan.neon` file:
+Create a `phpstan.neon` file in your project root.
 
 ```neon
 includes:
     - vendor/yii2-extensions/phpstan/extension.neon
 
 parameters:
-    bootstrapFiles:
-        - tests/bootstrap.php
-
     level: 5
-
-    paths:
-        - src
-
-    # Exclude paths from analysis
-    excludePaths:
-        - c3.php
-        - requirements.php
-        - config
-        - tests
-        - vendor
-
-    yii2:
-        # Path to your `Yii2` configuration file (optional)
-        # If not provided or empty, will work without explicit configuration 
-        config_path: %currentWorkingDirectory%/config/test.php
-```
-
-### Dynamic Constants Configuration
-
-The extension automatically recognizes common `Yii2` dynamic constants:
-
-- `YII_DEBUG`
-- `YII_ENV`
-- `YII_ENV_DEV`
-- `YII_ENV_PROD`
-- `YII_ENV_TEST`
-
-If you need to add additional dynamic constants, you can extend the configuration:
-
-```neon
-includes:
-    - vendor/yii2-extensions/phpstan/extension.neon
-
-parameters:
-    # Your existing dynamic constants will be merged with the extension's defaults
-    dynamicConstantNames:
-        - YII_DEBUG         # Already included by the extension
-        - YII_ENV           # Already included by the extension
-        - YII_ENV_DEV       # Already included by the extension
-        - YII_ENV_PROD      # Already included by the extension
-        - YII_ENV_TEST      # Already included by the extension
-        - MY_CUSTOM_CONSTANT
-        - ANOTHER_CONSTANT
-
-    yii2:
-        config_path: %currentWorkingDirectory%/config/test.php
-```
-
-**Note:** When you define `dynamicConstantNames` in your configuration, it **replaces** the extension's default 
-constants. 
-To maintain the `Yii2` constants recognition, you must include them explicitly along with your custom constants, as
-shown above.
-
-### Strict Configuration
-
-```neon
-includes:
-    - phar://phpstan.phar/conf/bleedingEdge.neon
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
-    - vendor/yii2-extensions/phpstan/extension.neon
-
-parameters:
-    bootstrapFiles:
-        - tests/bootstrap.php
-
-    # Complete dynamic constants list (extension defaults + custom)
-    dynamicConstantNames:
-        - YII_DEBUG
-        - YII_ENV
-        - YII_ENV_DEV
-        - YII_ENV_PROD
-        - YII_ENV_TEST
-        - APP_VERSION
-        - MAINTENANCE_MODE        
-
-    level: 8    
-    
     paths:
         - src
         - controllers
         - models
-        - widgets
-
-    excludePaths:
-        - src/legacy
-        - tests/_support
-        - vendor
-
+    
     yii2:
-        config_path: %currentWorkingDirectory%/config/web.php
-
-    # Enable strict advanced checks
-    checkImplicitMixed: true
-    checkBenevolentUnionTypes: true
-    checkUninitializedProperties: true
-    checkMissingCallableSignature: true
-    checkTooWideReturnTypesInProtectedAndPublicMethods: true
-    reportAnyTypeWideningInVarTag: true
-    reportPossiblyNonexistentConstantArrayOffset: true
-    reportPossiblyNonexistentGeneralArrayOffset: true    
+        config_path: config/test.php
 ```
 
-### PHPstan extension installer
-
-You can use the `phpstan-extension-installer` to automatically install this extension.
-
-To do this, you need to add the following configuration to your `composer.json` file:
-
-```shell
-composer require --dev phpstan/extension-installer
-```
-
-or, add the following to your `composer.json`:
-
-```json
-{
-    "require-dev": {
-        "phpstan/extension-installer": "^1.4"
-    },
-    "config": {
-        "allow-plugins": {
-            "phpstan/extension-installer": true
-        }
-    },
-}
-```
-
-### Config `yii2` application for PHPStan
-
-To configure the `yii2` application, you can use the `yii2` section in your `phpstan.neon` file:
-
-```neon
-parameters:
-    yii2:
-        # Path to your `Yii2` configuration file
-        config_path: %currentWorkingDirectory%/config/test.php
-```
-
-`config/test.php` file should return an array with the application configuration, similar to the following:
+Create a PHPStan-specific config file (`config/test.php`).
 
 ```php
 <?php
-
-declare(strict_types=1);
-
-use yii2\extensions\localeurls\UrlLanguageManager;
-
 return [
     'components' => [
-        // custom component
-        'helper' => [
-            'class' => \yii2\extensions\helper\Helper::class,
+        'db' => [
+            'class' => yii\db\Connection::class,
+            'dsn' => 'sqlite::memory:',
         ],
-        // your component extended
-        'urlManager' => [
-            'class' => UrlLanguageManager::class,
+        'user' => [
+            'class' => yii\web\User::class,
+            'identityClass' => app\models\User::class,
         ],
+        // Add your custom components here
     ],
 ];
 ```
 
+Run `PHPStan`.
 
+```bash
+vendor/bin/phpstan analyse
+```
+
+## Type Inference Examples
+
+### ActiveRecord
+
+```php
+// ✅ Properly typed as User|null
+$user = User::findOne(1);
+
+// ✅ Properly typed as User[]
+$users = User::findAll(['status' => 'active']);
+
+// ✅ Generic ActiveQuery<User> with method chaining
+$query = User::find()->where(['active' => 1])->orderBy('name');
+
+// ✅ Array results properly typed as array{id: int, name: string}[]
+$userData = User::find()->asArray()->all();
+```
+
+### Application Components
+
+```php
+// ✅ Properly typed based on your configuration
+$mailer = Yii::$app->mailer; // MailerInterface
+$db = Yii::$app->db;         // Connection
+$user = Yii::$app->user;     // User
+
+// ✅ User identity with proper type inference
+if (Yii::$app->user->isGuest === false) {
+    $userId = Yii::$app->user->id;           // int|string|null
+    $identity = Yii::$app->user->identity;   // YourUserClass
+}
+```
+
+### Dependency Injection
+
+```php
+$container = new Container();
+
+// ✅ Type-safe service resolution
+$service = $container->get(MyService::class); // MyService
+$logger = $container->get('logger');          // LoggerInterface (if configured)
+```
+
+## Documentation
+
+For detailed configuration options and advanced usage.
+
+- 📚 [Installation Guide](docs/installation.md)
+- ⚙️ [Configuration Reference](docs/configuration.md)
+- 💡 [Usage Examples](docs/examples.md)
 
 ## Quality code
 
