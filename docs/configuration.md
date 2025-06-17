@@ -216,6 +216,9 @@ For accurate type inference, behaviors should define their properties using PHPD
 ```php
 <?php
 
+use yii\base\Behavior;
+use yii\db\ActiveRecord;
+
 /**
  * @template T of ActiveRecord
  * @extends Behavior<T>

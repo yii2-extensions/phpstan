@@ -557,6 +557,9 @@ class ServiceFactory
 ```php
 <?php
 
+use yii\behaviors\Behavior;
+use yii\db\ActiveRecord;
+
 /**
  * Behavior with PHPDoc property definitions.
  * 
