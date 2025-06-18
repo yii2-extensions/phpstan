@@ -18,6 +18,7 @@
 - Bug #48: Update `PHPStan` configuration paths and create new config files for improved structure and clarity (@terabytesoftw)
 - Bug #49: Update documentation for `ServiceMap` and related classes to enhance clarity for Yii Application static analysis (@terabytesoftw)
 - Bug #50: Add Testing Guide link to `installation` and `examples` documentation (@terabytesoftw)
+- Bug #51: Reorder Installation section in `README.md` for improved clarity (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 
