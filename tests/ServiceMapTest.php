@@ -37,7 +37,7 @@ final class ServiceMapTest extends TestCase
     public function testReturnApplicationTypeWhenConfigValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -53,7 +53,7 @@ final class ServiceMapTest extends TestCase
     public function testReturnApplicationTypeWhenConsoleConfigValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}console{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}console{$ds}config{$ds}phpstan-console-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(

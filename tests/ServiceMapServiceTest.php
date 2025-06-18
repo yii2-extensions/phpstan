@@ -67,7 +67,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnNullWhenServiceNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertNull(
@@ -82,7 +82,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenClosureValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -98,7 +98,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenNestedValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -114,7 +114,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenServiceValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -130,7 +130,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonClassNameValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -146,7 +146,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonClosureValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -162,7 +162,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonNestedValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -178,7 +178,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonServiceValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -194,7 +194,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testReturnServiceClassWhenSingletonStringValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
