@@ -3,4 +3,4 @@ includes:
 
 parameters:
     yii2:
-        config_path: %rootDir%/../../../tests/console/config/phpstan-console-config.php
+        config_path: %rootDir%/../../../tests/config/phpstan-console-config.php

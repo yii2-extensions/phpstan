@@ -20,7 +20,7 @@ parameters:
     tmpDir: %currentWorkingDirectory%/tests/runtime
 
     yii2:
-        config_path: tests/console/config/phpstan-console-config.php
+        config_path: tests/config/phpstan-console-config.php
 
     # Enable strict advanced checks
     checkImplicitMixed: true

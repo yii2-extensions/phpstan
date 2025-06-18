@@ -85,7 +85,7 @@ parameters:
         config_path: config/phpstan-config.php
 ```
 
-Create a PHPStan-specific config file (`config/test.php`).
+Create a PHPStan-specific config file (`config/phpstan-config.php`).
 
 ```php
 <?php

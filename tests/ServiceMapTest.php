@@ -32,13 +32,16 @@ use yii2\extensions\phpstan\ServiceMap;
 final class ServiceMapTest extends TestCase
 {
     /**
+     * Base path for configuration files used in tests.
+     */
+    private const BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
+
+    /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
     public function testReturnApplicationTypeWhenConfigValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             Application::class,
@@ -52,9 +55,7 @@ final class ServiceMapTest extends TestCase
      */
     public function testReturnApplicationTypeWhenConsoleConfigValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}console{$ds}config{$ds}phpstan-console-config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-console-config.php');
 
         self::assertSame(
             \yii\console\Application::class,
@@ -68,15 +69,12 @@ final class ServiceMapTest extends TestCase
      */
     public function testThrowExceptionWhenPHPStanApplicationTypeIsNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-unsupported-type-array-invalid.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
             '\'Application type\': \'phpstan.application_type\' must be a \'string\', got \'integer\'.',
         );
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'phpstan-unsupported-type-array-invalid.php');
     }
 
     /**
@@ -84,8 +82,7 @@ final class ServiceMapTest extends TestCase
      */
     public function testThrowExceptionWhenPHPStanConfigIsNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-unsupported-is-not-array.php";
+        $configPath = self::BASE_PATH . 'phpstan-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'phpstan' 'array'.");
