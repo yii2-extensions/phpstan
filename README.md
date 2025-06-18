@@ -1,11 +1,11 @@
-<p align="center">
+<p style="text-align: center;">
     <a href="https://github.com/yii2-extensions/phpstan" target="_blank">
-        <img src="https://www.yiiframework.com/image/yii_logo_light.svg" height="100px;">
+        <img src="https://www.yiiframework.com/image/yii_logo_light.svg" height="100px;" alt="Yii Framework">
     </a>
-    <h1 align="center">Extension for PHPStan</h1>
+    <h1 style="text-align: center;">Extension for PHPStan</h1>
 </p>
 
-<p align="center">
+<p style="text-align: center;">
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
         <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="PHP-Version">
     </a>
@@ -63,7 +63,7 @@ inference, dynamic method resolution, and comprehensive property reflection.
 composer require --dev yii2-extensions/phpstan
 ```
 
-## Quick Start
+## Quick start
 
 Create a `phpstan.neon` file in your project root.
 
@@ -110,34 +110,34 @@ Run `PHPStan`.
 vendor/bin/phpstan analyse
 ```
 
-## Type Inference Examples
+## Type inference examples
 
-### ActiveRecord
+### Active Record
 
 ```php
-// ✅ Properly typed as User|null
+// ✅ Typed as User|null
 $user = User::findOne(1);
 
-// ✅ Properly typed as User[]
+// ✅ Typed as User[]
 $users = User::findAll(['status' => 'active']);
 
 // ✅ Generic ActiveQuery<User> with method chaining
 $query = User::find()->where(['active' => 1])->orderBy('name');
 
-// ✅ Array results properly typed as array{id: int, name: string}[]
+// ✅ Array results typed as array{id: int, name: string}[]
 $userData = User::find()->asArray()->all();
 
-// ✅ Properly typed based on model property annotations string
+// ✅ Typed based on model property annotations string
 $userName = $user->getAttribute('name');
 
 // ✅ Behavior property resolution string
 $slug = $user->getAttribute('slug');
 ```
 
-### Application Components
+### Application components
 
 ```php
-// ✅ Properly typed based on your configuration
+// ✅ Typed based on your configuration
 $mailer = Yii::$app->mailer; // MailerInterface
 $db = Yii::$app->db;         // Connection
 $user = Yii::$app->user;     // User
@@ -149,7 +149,7 @@ if (Yii::$app->user->isGuest === false) {
 }
 ```
 
-### Dependency Injection
+### Dependency injection
 
 ```php
 $container = new Container();
