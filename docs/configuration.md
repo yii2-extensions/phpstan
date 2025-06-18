@@ -1,12 +1,12 @@
-# Configuration Reference
+# Configuration reference
 
 ## Overview
 
 This guide covers all configuration options for the Yii2 PHPStan extension, from basic setup to advanced scenarios.
 
-## Basic Configuration
+## Basic configuration
 
-### Minimal Setup
+### Minimal setup
 
 ```neon
 includes:
@@ -24,7 +24,7 @@ parameters:
         config_path: config/phpstan-config.php
 ```
 
-### Standard Web Application
+### Standard web application
 
 ```neon
 includes:
@@ -54,9 +54,9 @@ parameters:
         config_path: config/phpstan-config.php
 ```
 
-## Application Type Configuration
+## Application type configuration
 
-### Web Application (Default)
+### Web application (default)
 
 ```php
 <?php
@@ -69,7 +69,7 @@ return [
 ];
 ```
 
-### Console Application
+### Console application
 
 For console applications, you **must** explicitly specify the application type.
 
@@ -107,9 +107,9 @@ parameters:
         config_path: config/phpstan-console-config.php
 ```
 
-## Dynamic Constants Configuration
+## Dynamic constants configuration
 
-### Default Constants
+### Default constants
 
 The extension automatically recognizes these Yii2 constants:
 
@@ -123,7 +123,7 @@ parameters:
         - YII_ENV_TEST
 ```
 
-### Adding Custom Constants
+### Adding custom constants
 
 ⚠️ **Important**: When you define `dynamicConstantNames`, it **replaces** the defaults. Include Yii2 constants explicitly.
 
@@ -142,9 +142,9 @@ parameters:
         - FEATURE_FLAGS
 ```
 
-## Service Map Configuration
+## Service map configuration
 
-### Component Configuration
+### Component configuration
 
 Define your application components for proper type inference:
 
@@ -197,7 +197,7 @@ return [
 ];
 ```
 
-### Behavior Configuration
+### Behavior configuration
 
 Configure behaviors for proper method and property reflection.
 
@@ -217,7 +217,7 @@ return [
 ];
 ```
 
-### Behavior PHPDoc Requirements
+### Behavior PHPDoc requirements
 
 For accurate type inference, behaviors should define their properties using PHPDoc.
 
@@ -239,7 +239,7 @@ use yii\db\ActiveRecord;
 class NestedSetsBehavior extends Behavior {}
 ```
 
-### Container Configuration
+### Container configuration
 
 Define DI container services.
 
@@ -276,9 +276,9 @@ return [
 ];
 ```
 
-## Advanced Configuration
+## Advanced configuration
 
-### Strict Analysis Setup
+### Strict analysis setup
 
 ```neon
 includes:
@@ -322,7 +322,7 @@ parameters:
         - '#Access to an undefined property.*#'
 ```
 
-### Performance Optimization
+### Performance optimization
 
 ```neon
 parameters:   
@@ -350,7 +350,7 @@ declare(strict_types=1);
 
 error_reporting(-1);
 
-// Define constants without full application bootstrap
+// Define constants without a full application bootstrap
 defined('YII_DEBUG') or define('YII_DEBUG', true);
 defined('YII_ENV') or define('YII_ENV', 'test');
 
@@ -358,7 +358,7 @@ defined('YII_ENV') or define('YII_ENV', 'test');
 require(dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php');
 ```
 
-## Configuration Without Config File
+## Configuration without a config file
 
 If you don't want to create a separate configuration file:
 
@@ -370,18 +370,18 @@ parameters:
 
 This will work with basic type inference but won't have custom component types.
 
-## Multiple Application Types
+## Multiple application types
 
 For projects with both web and console applications:
 
-### Project Structure
+### Project structure
 ```text
 phpstan-web.neon      # Web-specific configuration
 phpstan-console.neon  # Console-specific configuration
 phpstan.neon          # Base configuration
 ```
 
-### Base Configuration
+### Base configuration
 ```neon
 # phpstan.neon
 includes:
@@ -393,7 +393,7 @@ parameters:
     tmpDir: %currentWorkingDirectory%/tests/runtime
 ```
 
-### Web Configuration
+### Web configuration
 ```neon
 # phpstan-web.neon
 includes:
@@ -410,7 +410,7 @@ parameters:
         config_path: config/phpstan-config.php
 ```
 
-### Console Configuration
+### Console configuration
 ```neon
 # phpstan-console.neon
 includes:
@@ -434,7 +434,7 @@ vendor/bin/phpstan analyse -c phpstan-web.neon
 vendor/bin/phpstan analyse -c phpstan-console.neon
 ```
 
-### File-Level Suppression
+### File-Level suppression
 
 ```php
 <?php
@@ -461,6 +461,6 @@ vendor/bin/phpstan analyse -v
 vendor/bin/phpstan analyse --generate-baseline
 ```
 
-## Next Steps
+## Next steps
 
 - 💡 [Usage Examples](examples.md)

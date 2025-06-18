@@ -1,11 +1,11 @@
-# Usage Examples
+# Usage examples
 
 This document provides comprehensive examples of how the Yii2 PHPStan extension enhances type inference and static 
 analysis in real-world scenarios.
 
-## ActiveRecord Examples
+## Active Record examples
 
-### Basic CRUD Operations
+### Basic CRUD operations
 
 ```php
 <?php
@@ -29,7 +29,7 @@ class UserService
     
     public function getUsersAsArray(): array
     {
-        // ✅ PHPStan knows this returns array<int, array{id: int, name: string, email: string}>
+        // ✅ PHPStan knows this return array<int, array{id: int, name: string, email: string}>
         return User::find()->asArray()->all();
     }
     
@@ -39,7 +39,7 @@ class UserService
         $user->setAttributes($attributes);
         
         if ($user->save()) {
-            // ✅ PHPStan knows $user is User type
+            // ✅ PHPStan knows $user is a User type
             return $user;
         }
         
@@ -48,7 +48,7 @@ class UserService
 }
 ```
 
-### Complex Queries with Method Chaining
+### Complex queries with method chaining
 
 ```php
 <?php
@@ -73,7 +73,7 @@ class PostRepository
     
     public function getPostsAsArrayWithAuthor(): array
     {
-        // ✅ PHPStan knows this returns array<int, array{...}>
+        // ✅ PHPStan knows this return array<int, array{...}>
         return Post::find()
             ->joinWith('author')
             ->asArray()
@@ -91,13 +91,13 @@ class PostRepository
     
     public function getPostsByAuthor(User $author): ActiveQuery
     {
-        // ✅ Return type is properly inferred as ActiveQuery<Post>
+        // ✅ Return type is inferred as ActiveQuery<Post>
         return Post::find()->where(['author_id' => $author->id]);
     }
 }
 ```
 
-### Relations and Eager Loading
+### Relations and eager loading
 
 ```php
 <?php
@@ -132,7 +132,7 @@ class PostService
         if ($user !== null) {
             // ✅ PHPStan knows $user->posts is Post[]
             foreach ($user->posts as $post) {
-                // ✅ $post is properly typed as Post
+                // ✅ $post is typed as Post
                 echo $post->title;
             }
             
@@ -156,7 +156,7 @@ class PostService
 }
 ```
 
-### Custom ActiveQuery Classes
+### Custom Active Query classes
 
 ```php
 <?php
@@ -208,7 +208,7 @@ class PostController
     
     public function actionAsArray(): array
     {
-        // ✅ Array results are properly typed
+        // ✅ Array results are typed
         return Post::find()
             ->published()
             ->asArray()
@@ -217,9 +217,9 @@ class PostController
 }
 ```
 
-## Application Component Examples
+## Application component examples
 
-### Built-in Components
+### Built-in components
 
 ```php
 <?php
@@ -278,7 +278,7 @@ class SiteController extends Controller
 }
 ```
 
-### User Component with Identity
+### User component with identity
 
 ```php
 <?php
@@ -315,7 +315,7 @@ class UserService
         // ✅ PHPStan knows the identity type
         $user = Yii::$app->user->identity;
         
-        // ✅ Method calls are properly typed
+        // ✅ Method calls are typed
         return $user->hasPermission($permission);
     }
     
@@ -333,7 +333,7 @@ class UserService
 }
 ```
 
-### Custom Components
+### Custom components
 
 ```php
 <?php
@@ -381,7 +381,7 @@ class PaymentController extends Controller
         $uploadedFile = \yii\web\UploadedFile::getInstanceByName('image');
         
         if ($uploadedFile !== null) {
-            // ✅ Method calls are properly typed
+            // ✅ Method calls are typed
             $processedPath = $imageProcessor->resize($uploadedFile->tempName, 800, 600);
             
             return $processedPath; // string
@@ -392,9 +392,9 @@ class PaymentController extends Controller
 }
 ```
 
-## Dependency Injection Container Examples
+## Dependency injection container examples
 
-### Basic Service Resolution
+### Basic service resolution
 
 ```php
 <?php
@@ -438,7 +438,7 @@ class ServiceManager
 }
 ```
 
-### Service Configuration Examples
+### Service configuration examples
 
 ```php
 <?php
@@ -455,7 +455,7 @@ return [
                 'class' => \Monolog\Logger::class,
             ],
             
-            // Closure definition with return type hint
+            // Closure definition with a return type hint
             'eventDispatcher' => function(): \app\services\EventDispatcher {
                 return new \app\services\EventDispatcher();
             },
@@ -505,7 +505,7 @@ class ApplicationService
 }
 ```
 
-### Advanced DI Patterns
+### Advanced DI patterns
 
 ```php
 <?php
@@ -550,9 +550,9 @@ class ServiceFactory
 }
 ```
 
-## Behavior Examples
+## Behavior examples
 
-### Dynamic Attribute Type Inference
+### Dynamic attribute type inference
 
 ```php
 <?php
@@ -621,7 +621,7 @@ class CategoryService
 }
 ```
 
-### Property and Method Access through Behaviors
+### Property and method access through behaviors
 
 ```php
 <?php
@@ -651,7 +651,7 @@ class UserService
         
         // ✅ PHPStan knows about behavior properties
         // TimestampBehavior adds these automatically
-        // $user->created_at and $user->updated_at are properly typed
+        // $user->created_at and $user->updated_at are typed
         
         if ($user->save()) {
             // ✅ PHPStan knows about behavior methods
@@ -714,9 +714,9 @@ class PostService
 }
 ```
 
-## Header Collection Examples
+## Header collection examples
 
-### Dynamic Method Types
+### Dynamic method types
 
 ```php
 <?php
@@ -767,7 +767,7 @@ class ApiController extends \yii\web\Controller
         $acceptHeaders = $headers->get('Accept', null, false); // array<int, string>
         
         foreach ($acceptHeaders as $accept) {
-            // ✅ $accept is properly typed as string
+            // ✅ $accept is typed as string
             $this->processAcceptType($accept);
         }
     }
@@ -777,7 +777,7 @@ class ApiController extends \yii\web\Controller
 This comprehensive examples guide shows how the Yii2 PHPStan extension provides precise type inference across all major
 Yii2 patterns and use cases, making your code more maintainable and reducing runtime errors through static analysis.
 
-## Next Steps
+## Next steps
 
 - 📚 [Installation Guide](installation.md)
 - ⚙️ [Configuration Guide](configuration.md)

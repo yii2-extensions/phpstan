@@ -21,7 +21,7 @@ composer run ecs
 
 ## Static analysis
 
-The code is statically analyzed with [Phpstan](https://phpstan.org/). To run static analysis:
+The code is statically analyzed with [PHPStan](https://phpstan.org/). To run static analysis:
 
 ```shell
 composer run phpstan

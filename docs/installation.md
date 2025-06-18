@@ -1,6 +1,6 @@
-# Installation Guide
+# Installation guide
 
-## System Requirements
+## System requirements
 
 - [`PHP`](https://www.php.net/downloads) 8.1 or higher.
 - [`PHPStan`](https://github.com/phpstan/phpstan) 2.1 or higher.
@@ -8,7 +8,7 @@
 
 ## Installation
 
-### Method 1: Using [composer](https://getcomposer.org/download/) (Recommended)
+### Method 1: Using [composer](https://getcomposer.org/download/) (recommended)
 
 Install the extension as a development dependency.
 
@@ -16,7 +16,7 @@ Install the extension as a development dependency.
 composer require --dev yii2-extensions/phpstan
 ```
 
-### Method 2: Manual Installation
+### Method 2: Manual installation
 
 Add to your `composer.json`.
 
@@ -34,9 +34,9 @@ Then run.
 composer update
 ```
 
-## Automatic Extension Installation
+## Automatic extension installation
 
-### Using PHPStan Extension Installer (Recommended)
+### Using PHPStan extension installer (recommended)
 
 The easiest way is to use the official PHPStan extension installer.
 
@@ -63,7 +63,7 @@ Add the plugin configuration to your `composer.json`.
 
 With this setup, the extension will be automatically registered, and you only need to configure the Yii2 specific settings.
 
-### Manual Extension Registration
+### Manual extension registration
 
 If you prefer manual control, include the extension in your `phpstan.neon`.
 
@@ -94,11 +94,11 @@ parameters:
         config_path: config/phpstan-config.php
 ```
 
-## Creating PHPStan Configuration File
+## Creating PHPStan configuration file
 
 Create a dedicated configuration file for PHPStan analysis. This should be separate from your main application configuration.
 
-### Web Application Configuration
+### Web application configuration
 
 Create `config/phpstan-config.php`.
 
@@ -139,7 +139,7 @@ return [
 ];
 ```
 
-### Console Application Configuration
+### Console application configuration
 
 For console applications, create `config/phpstan-console-config.php`.
 
@@ -185,7 +185,7 @@ PHPStan - PHP Static Analysis Tool
  [OK] No errors
 ```
 
-### Test Type Inference
+### Test type inference
 
 Create a simple test file to verify type inference is working.
 
@@ -195,7 +195,7 @@ Create a simple test file to verify type inference is working.
 
 use yii\web\Application;
 
-// This should be properly typed as Application
+// This should be typed as an Application
 $app = \Yii::$app;
 
 // This should show proper component types
@@ -209,7 +209,7 @@ Run PHPStan on this file.
 vendor/bin/phpstan analyse test-phpstan.php --level=5
 ```
 
-## Bootstrap Configuration
+## Bootstrap configuration
 
 If your application requires custom bootstrap logic, create a bootstrap file.
 
@@ -234,9 +234,9 @@ parameters:
         - tests/bootstrap.php
 ```
 
-### Debugging Installation
+### Debugging installation
 
-Enable verbose output to see what's happening.
+Enable verbose output to see what is happening.
 
 ```bash
 vendor/bin/phpstan --debug -vvv --error-format=table --memory-limit=1G
@@ -248,7 +248,7 @@ Check which extensions are loaded.
 vendor/bin/phpstan --version
 ```
 
-## Next Steps
+## Next steps
 
 Once installation is complete:
 
