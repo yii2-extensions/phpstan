@@ -37,7 +37,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnBehaviorsWhenValidClassIsClassString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName(MyComponent::class);
@@ -58,7 +58,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnBehaviorsWhenValidClassIsString(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName('yii2\extensions\phpstan\tests\stub\MyComponent');
@@ -79,7 +79,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnEmptyArrayWhenClassHasNotBehaviors(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName('NonExistentClass');
@@ -97,7 +97,7 @@ final class ServiceMapBehaviorTest extends TestCase
     public function testReturnEmptyArrayWhenNotBehaviorsConfigured(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         $behaviors = $serviceMap->getBehaviorsByClassName('AnyClass');

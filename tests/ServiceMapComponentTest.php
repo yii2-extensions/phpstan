@@ -38,7 +38,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentClassWhenCustomComponentValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -54,7 +54,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentClassWhenCustomInitializedComponentValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -70,7 +70,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentDefinitionWhenClassNameValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -86,7 +86,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnComponentDefinitionWhenUserIdValid(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -102,7 +102,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentClassNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertNull(
@@ -117,7 +117,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentIdNonExistent(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertSame(
@@ -133,7 +133,7 @@ final class ServiceMapComponentTest extends TestCase
     public function testReturnNullWhenComponentIdNotClass(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
         $serviceMap = new ServiceMap($configPath);
 
         self::assertNull(

@@ -82,13 +82,16 @@ includes:
 
 parameters:
     level: 5
+
     paths:
         - src
         - controllers
         - models
     
+    tmpDir: %currentWorkingDirectory%/tests/runtime
+
     yii2:
-        config_path: config/phpstan.php
+        config_path: config/phpstan-config.php
 ```
 
 ## Creating PHPStan Configuration File
@@ -97,7 +100,7 @@ Create a dedicated configuration file for PHPStan analysis. This should be separ
 
 ### Web Application Configuration
 
-Create `config/phpstan.php`.
+Create `config/phpstan-config.php`.
 
 ```php
 <?php
@@ -138,7 +141,7 @@ return [
 
 ### Console Application Configuration
 
-For console applications, create `config/phpstan-console.php`.
+For console applications, create `config/phpstan-console-config.php`.
 
 ```php
 <?php
@@ -164,7 +167,7 @@ And update your `phpstan.neon`.
 ```neon
 parameters:
     yii2:
-        config_path: config/phpstan-console.php
+        config_path: config/phpstan-console-config.php
 ```
 
 ## Verification

@@ -73,13 +73,16 @@ includes:
 
 parameters:
     level: 5
+    
     paths:
         - src
         - controllers
         - models
+
+    tmpDir: %currentWorkingDirectory%/tests/runtime        
     
     yii2:
-        config_path: config/test.php
+        config_path: config/phpstan-config.php
 ```
 
 Create a PHPStan-specific config file (`config/test.php`).
