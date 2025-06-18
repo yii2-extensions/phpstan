@@ -781,3 +781,4 @@ Yii2 patterns and use cases, making your code more maintainable and reducing run
 
 - 📚 [Installation Guide](installation.md)
 - ⚙️ [Configuration Guide](configuration.md)
+- 🧪 [Testing Guide](testing.md)
