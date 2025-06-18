@@ -1,11 +1,11 @@
-<p style="text-align: center;">
+<p align="center">
     <a href="https://github.com/yii2-extensions/phpstan" target="_blank">
         <img src="https://www.yiiframework.com/image/yii_logo_light.svg" height="100px;" alt="Yii Framework">
     </a>
-    <h1 style="text-align: center;">Extension for PHPStan</h1>
+    <h1 align="center">Extension for PHPStan</h1>
 </p>
 
-<p style="text-align: center;">
+<p align="center">
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
         <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="PHP-Version">
     </a>
