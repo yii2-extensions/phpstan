@@ -19,6 +19,9 @@ parameters:
 
     tmpDir: %currentWorkingDirectory%/tests/runtime
 
+    yii2:
+        config_path: tests/config/phpstan-config.php
+
     # Enable strict advanced checks
     checkImplicitMixed: true
     checkBenevolentUnionTypes: true
@@ -28,6 +31,3 @@ parameters:
     reportAnyTypeWideningInVarTag: true
     reportPossiblyNonexistentConstantArrayOffset: true
     reportPossiblyNonexistentGeneralArrayOffset: true
-
-    yii2:
-        config_path: tests/config/phpstan-config.php
