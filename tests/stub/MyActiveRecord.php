@@ -15,7 +15,7 @@ use yii\db\ActiveRecord;
  * This class is used in type inference and static analysis tests to validate PHPStan's ability to correctly infer
  * return types for ActiveRecord queries, relations, and chained method calls.
  *
- * @property bool $flag Boolean property for test assertions.
+ * @property bool $flag
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.

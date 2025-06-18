@@ -29,7 +29,7 @@ use yii2\extensions\phpstan\ServiceMap;
  * - Uses {@see ServiceMap} to resolve component class names.
  *
  * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- * @see ServiceMap for component/service class resolution.
+ * @see ServiceMap for service and component map for Yii Application static analysis.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -40,7 +40,7 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      * Creates a new instance of the {@see ContainerDynamicMethodReturnTypeExtension} class.
      *
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
-     * @param ServiceMap $serviceMap Service map for resolving component classes by ID.
+     * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
@@ -80,7 +80,7 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      * Falls back to the default method signature return type for unsupported or invalid calls, ensuring compatibility
      * with PHPStan static analysis and IDE autocompletion.
      *
-     * @param MethodReflection $methodReflection Reflection for the called method.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *

@@ -8,7 +8,7 @@ use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
 /**
- * User ActiveRecord model for testing property and rule definitions.
+ * Active Record User model for testing property and rule definitions.
  *
  * Provides a minimal {@see ActiveRecord} subclass with explicit property declarations and validation rules for static
  * analysis and type inference tests.

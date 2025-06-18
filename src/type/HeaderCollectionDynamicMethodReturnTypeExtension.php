@@ -107,7 +107,7 @@ final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicM
      * method, maintaining strict compatibility and accurate type inference for header value retrieval in Yii HTTP
      * handling.
      *
-     * @param MethodReflection $methodReflection Reflection instance for the method.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *
      * @return bool `true` if the method is {@see HeaderCollection::get()}; `false` otherwise.
      */
