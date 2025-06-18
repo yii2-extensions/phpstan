@@ -14,11 +14,14 @@ includes:
 
 parameters:
     level: 5
+
     paths:
         - src
+
+    tmpDir: %currentWorkingDirectory%/tests/runtime        
     
     yii2:
-        config_path: config/phpstan.php
+        config_path: config/phpstan-config.php
 ```
 
 ### Standard Web Application
@@ -31,21 +34,24 @@ parameters:
     bootstrapFiles:
         - tests/bootstrap.php
 
+    excludePaths:
+        - config/
+        - runtime/
+        - vendor/
+        - web/assets/        
+
     level: 6
+
     paths:
         - controllers
         - models
         - widgets
         - components
 
-    excludePaths:
-        - config/
-        - runtime/
-        - vendor/
-        - web/assets/
+    tmpDir: %currentWorkingDirectory%/tests/runtime
 
     yii2:
-        config_path: config/phpstan.php
+        config_path: config/phpstan-config.php
 ```
 
 ## Application Type Configuration
@@ -54,7 +60,7 @@ parameters:
 
 ```php
 <?php
-// config/phpstan.php
+// config/phpstan-config.php
 return [
     'phpstan' => [
         'application_type' => \yii\web\Application::class,
@@ -69,7 +75,7 @@ For console applications, you **must** explicitly specify the application type.
 
 ```php
 <?php
-// config/phpstan-console.php
+// config/phpstan-console-config.php
 return [
     'phpstan' => [
         'application_type' => \yii\console\Application::class,
@@ -95,8 +101,10 @@ parameters:
         - commands
         - console
 
+    tmpDir: %currentWorkingDirectory%/tests/runtime        
+
     yii2:
-        config_path: config/phpstan-console.php
+        config_path: config/phpstan-console-config.php
 ```
 
 ## Dynamic Constants Configuration
@@ -142,7 +150,7 @@ Define your application components for proper type inference:
 
 ```php
 <?php
-// config/phpstan.php
+// config/phpstan-config.php
 return [
     'components' => [
         // Database
@@ -279,6 +287,11 @@ includes:
     - vendor/yii2-extensions/phpstan/extension.neon
 
 parameters:
+    excludePaths:
+        - src/legacy/
+        - tests/_support/
+        - vendor/
+
     level: 8
     
     paths:
@@ -288,13 +301,10 @@ parameters:
         - widgets
         - components
 
-    excludePaths:
-        - src/legacy/
-        - tests/_support/
-        - vendor/
+    tmpDir: %currentWorkingDirectory%/tests/runtime          
 
     yii2:
-        config_path: config/phpstan.php
+        config_path: config/phpstan-config.php
 
     # Strict checks
     checkImplicitMixed: true
@@ -315,20 +325,20 @@ parameters:
 ### Performance Optimization
 
 ```neon
-parameters:
-    # Memory management
-    tmpDir: var/cache/phpstan
-    
+parameters:   
+    # Bootstrap optimization
+    bootstrapFiles:
+        - vendor/autoload.php
+        - config/phpstan-bootstrap.php
+
     # Parallel processing
     parallel:
         jobSize: 20
         maximumNumberOfProcesses: 32
         minimumNumberOfJobsPerProcess: 2
-    
-    # Bootstrap optimization
-    bootstrapFiles:
-        - vendor/autoload.php
-        - config/phpstan-bootstrap.php
+
+    # Memory management
+    tmpDir: %currentWorkingDirectory%/tests/runtime
 ```
 
 Optimized bootstrap file.
@@ -379,7 +389,8 @@ includes:
 
 parameters:
     level: 6
-    tmpDir: var/cache/phpstan
+
+    tmpDir: %currentWorkingDirectory%/tests/runtime
 ```
 
 ### Web Configuration
@@ -394,9 +405,9 @@ parameters:
         - models
         - widgets
         - web
-        
+
     yii2:
-        config_path: config/phpstan-web.php
+        config_path: config/phpstan-config.php
 ```
 
 ### Console Configuration
@@ -409,9 +420,9 @@ parameters:
     paths:
         - commands
         - console
-        
+
     yii2:
-        config_path: config/phpstan-console.php
+        config_path: config/phpstan-console-config.php
 ```
 
 ### Usage

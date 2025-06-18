@@ -15,6 +15,7 @@
 - Bug #45: Improve `ServiceMap` configuration for application types (`Base`, `Console`, `Web`) (@terabytesoftw)
 - Bug #46: Update `README.md` to enhance clarity and structure of `docs/installation.md`, `docs/configuration.md` and `docs/examples.md` (@terabytesoftw)
 - Enh #47: Add `ActiveRecordGetAttributeDynamicMethodReturnTypeExtension` to provide precise type inference for `getAttribute()` method calls based on PHPDoc annotations (@terabytesoftw)
+- Bug #48: Update `PHPStan` configuration paths and create new config files for improved structure and clarity (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 

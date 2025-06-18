@@ -32,13 +32,16 @@ use yii2\extensions\phpstan\tests\stub\{BehaviorOne, BehaviorTwo, MyComponent};
 final class ServiceMapBehaviorTest extends TestCase
 {
     /**
+     * Base path for configuration files used in tests.
+     */
+    private const BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
+
+    /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
     public function testReturnBehaviorsWhenValidClassIsClassString(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         $behaviors = $serviceMap->getBehaviorsByClassName(MyComponent::class);
 
@@ -57,9 +60,7 @@ final class ServiceMapBehaviorTest extends TestCase
      */
     public function testReturnBehaviorsWhenValidClassIsString(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         $behaviors = $serviceMap->getBehaviorsByClassName('yii2\extensions\phpstan\tests\stub\MyComponent');
 
@@ -78,9 +79,7 @@ final class ServiceMapBehaviorTest extends TestCase
      */
     public function testReturnEmptyArrayWhenClassHasNotBehaviors(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         $behaviors = $serviceMap->getBehaviorsByClassName('NonExistentClass');
 
@@ -96,9 +95,7 @@ final class ServiceMapBehaviorTest extends TestCase
      */
     public function testReturnEmptyArrayWhenNotBehaviorsConfigured(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         $behaviors = $serviceMap->getBehaviorsByClassName('AnyClass');
 
@@ -114,13 +111,10 @@ final class ServiceMapBehaviorTest extends TestCase
      */
     public function testThrowExceptionWhenBehaviorDefinitionNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}behaviors-unsupported-definition-not-array.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Behavior definition for \'MyComponent\' must be an array.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'behaviors-unsupported-definition-not-array.php');
     }
 
     /**
@@ -128,13 +122,10 @@ final class ServiceMapBehaviorTest extends TestCase
      */
     public function testThrowExceptionWhenBehaviorIdNotString(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}behaviors-unsupported-id-not-string.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Behavior class\': \'ID\' must be a \'string\', got \'integer\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'behaviors-unsupported-id-not-string.php');
     }
 
     /**
@@ -142,8 +133,7 @@ final class ServiceMapBehaviorTest extends TestCase
      */
     public function testThrowExceptionWhenBehaviorsNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}behaviors-unsupported-is-not-array.php";
+        $configPath = self::BASE_PATH . 'behaviors-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'behaviors' 'array'.");

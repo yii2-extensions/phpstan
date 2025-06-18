@@ -36,6 +36,11 @@ use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
  */
 final class ServiceMapServiceTest extends TestCase
 {
+    /**
+     * Base path for configuration files used in tests.
+     */
+    private const BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
+
     public function testAllowServiceMapWhenConfigPathEmpty(): void
     {
         $this->expectNotToPerformAssertions();
@@ -57,8 +62,7 @@ final class ServiceMapServiceTest extends TestCase
     {
         $this->expectNotToPerformAssertions();
 
-        $ds = DIRECTORY_SEPARATOR;
-        new ServiceMap(__DIR__ . "{$ds}config{$ds}config-container-empty.php");
+        new ServiceMap(self::BASE_PATH . 'config-container-empty.php');
     }
 
     /**
@@ -66,9 +70,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnNullWhenServiceNonExistent(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertNull(
             $serviceMap->getServiceById('non-existent-service'),
@@ -81,9 +83,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenClosureValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             SplStack::class,
@@ -97,9 +97,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenNestedValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             SplFileInfo::class,
@@ -113,9 +111,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenServiceValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             SplObjectStorage::class,
@@ -129,9 +125,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenSingletonClassNameValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             MyActiveRecord::class,
@@ -145,9 +139,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenSingletonClosureValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             SplStack::class,
@@ -161,9 +153,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenSingletonNestedValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             SplFileInfo::class,
@@ -177,9 +167,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenSingletonServiceValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             SplObjectStorage::class,
@@ -193,9 +181,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testReturnServiceClassWhenSingletonStringValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             MyActiveRecord::class,
@@ -209,8 +195,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenConfigNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config-unsupported-is-not-array.php";
+        $configPath = self::BASE_PATH . 'config-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$configPath}' must return an array.");
@@ -231,8 +216,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenContainerDefinitionsNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}definitions-unsupported-is-not-array.php";
+        $configPath = self::BASE_PATH . 'definitions-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
@@ -247,8 +231,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenContainerNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config-container-unsupported-type-array-invalid.php";
+        $configPath = self::BASE_PATH . 'config-container-unsupported-type-array-invalid.php';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'container' 'array'.");
@@ -261,8 +244,7 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenContainerSingletonsNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}singletons-unsupported-is-not-array.php";
+        $configPath = self::BASE_PATH . 'singletons-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
@@ -277,13 +259,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenDefinitionArrayInvalid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}definitions-unsupported-type-array-invalid.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'definitions-unsupported-type-array-invalid.php');
     }
 
     /**
@@ -291,13 +270,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenDefinitionClosureMissingReturnType(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}definitions-closure-not-return-type.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'definitions-closure-not-return-type.php');
     }
 
     /**
@@ -305,13 +281,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenDefinitionEmptyArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}definitions-unsupported-empty-array.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'definitions-unsupported-empty-array.php');
     }
 
     /**
@@ -319,13 +292,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenDefinitionIdNotString(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}definitions-unsupported-id-not-string.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Definition\': \'ID\' must be a \'string\', got \'integer\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'definitions-unsupported-id-not-string.php');
     }
 
     /**
@@ -333,13 +303,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenDefinitionNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}definitions-unsupported-type-integer.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-type-integer\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'definitions-unsupported-type-integer.php');
     }
 
     /**
@@ -347,13 +314,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenSingletonArrayInvalid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}singletons-unsupported-type-array-invalid.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'singletons-unsupported-type-array-invalid.php');
     }
 
     /**
@@ -361,13 +325,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenSingletonClosureMissingReturnType(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}singletons-closure-not-return-type.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'singletons-closure-not-return-type.php');
     }
 
     /**
@@ -375,13 +336,10 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenSingletonEmptyArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}singletons-unsupported-empty-array.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'singletons-unsupported-empty-array.php');
     }
 
     /**
@@ -389,12 +347,9 @@ final class ServiceMapServiceTest extends TestCase
      */
     public function testThrowExceptionWhenSingletonIdNotString(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}singletons-unsupported-id-not-string.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Singleton\': \'ID\' must be a \'string\', got \'integer\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'singletons-unsupported-id-not-string.php');
     }
 }

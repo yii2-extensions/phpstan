@@ -33,13 +33,16 @@ use yii2\extensions\phpstan\tests\stub\User;
 final class ServiceMapComponentTest extends TestCase
 {
     /**
+     * Base path for configuration files used in tests.
+     */
+    private const BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
+
+    /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
     public function testReturnComponentClassWhenCustomComponentValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             MyActiveRecord::class,
@@ -53,9 +56,7 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testReturnComponentClassWhenCustomInitializedComponentValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             MyActiveRecord::class,
@@ -69,9 +70,7 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testReturnComponentDefinitionWhenClassNameValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             ['identityClass' => 'yii2\extensions\phpstan\tests\stub\User'],
@@ -85,9 +84,7 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testReturnComponentDefinitionWhenUserIdValid(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             ['identityClass' => User::class],
@@ -101,9 +98,7 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testReturnNullWhenComponentClassNonExistent(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertNull(
             $serviceMap->getComponentDefinitionByClassName('nonExistentComponent'),
@@ -116,9 +111,7 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testReturnNullWhenComponentIdNonExistent(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
             [],
@@ -132,9 +125,7 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testReturnNullWhenComponentIdNotClass(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
-        $serviceMap = new ServiceMap($configPath);
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertNull(
             $serviceMap->getComponentClassById('assetManager'),
@@ -147,13 +138,10 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testThrowExceptionWhenComponentIdNotString(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}components-unsupported-id-not-string.php";
-
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Component\': \'ID\' must be a \'string\', got \'integer\'.');
 
-        new ServiceMap($configPath);
+        new ServiceMap(self::BASE_PATH . 'components-unsupported-id-not-string.php');
     }
 
     /**
@@ -161,8 +149,7 @@ final class ServiceMapComponentTest extends TestCase
      */
     public function testThrowExceptionWhenComponentsNotArray(): void
     {
-        $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}components-unsupported-is-not-array.php";
+        $configPath = self::BASE_PATH . 'components-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'components' 'array'.");

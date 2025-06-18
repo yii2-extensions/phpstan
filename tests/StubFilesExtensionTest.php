@@ -29,7 +29,7 @@ final class StubFilesExtensionTest extends TestCase
     public function testGetFilesReturnsExpectedStubFilesForWebApplicationType(): void
     {
         $ds = DIRECTORY_SEPARATOR;
-        $configPath = __DIR__ . "{$ds}config{$ds}config.php";
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
 
         $serviceMap = new ServiceMap($configPath);
 
