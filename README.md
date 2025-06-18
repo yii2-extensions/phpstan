@@ -29,12 +29,6 @@
 A comprehensive PHPStan extension that provides enhanced static analysis for Yii2 applications with precise type 
 inference, dynamic method resolution, and comprehensive property reflection.
 
-## Installation
-
-```bash
-composer require --dev yii2-extensions/phpstan
-```
-
 ## Features
 
 ✅ **ActiveRecord & ActiveQuery Analysis**
@@ -62,6 +56,12 @@ composer require --dev yii2-extensions/phpstan
 - Header collection dynamic method types.
 - Stub files for different application types (web, console, base).
 - Support for Yii2 constants (`YII_DEBUG`, `YII_ENV_*`).
+
+## Installation
+
+```bash
+composer require --dev yii2-extensions/phpstan
+```
 
 ## Quick Start
 
