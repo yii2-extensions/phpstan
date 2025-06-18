@@ -254,3 +254,4 @@ Once installation is complete:
 
 - ⚙️ [Configuration Reference](configuration.md)
 - 💡 [Usage Examples](examples.md)
+- 🧪 [Testing Guide](docs/testing.md)
