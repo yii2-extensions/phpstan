@@ -55,7 +55,7 @@ final class UserPropertiesClassReflectionExtension implements PropertiesClassRef
      * @param AnnotationsPropertiesClassReflectionExtension $annotationsProperties Extension for handling
      * annotation-based properties.
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
-     * @param ServiceMap $serviceMap Service map for resolving component classes by ID.
+     * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
     public function __construct(
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,

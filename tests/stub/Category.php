@@ -13,7 +13,7 @@ use yii\db\ActiveRecord;
  * relationships for hierarchical data structures.
  *
  * This class is used in type inference and static analysis tests to validate property access, rule definitions, and
- * table mapping in Yii2 Active Record extensions.
+ * table mapping in Yii Active Record extensions.
  *
  * Key features.
  * - Explicit table name mapping for database operations.

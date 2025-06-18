@@ -36,8 +36,8 @@ use function sprintf;
  * - Exception handling for invalid or missing arguments in relation method calls.
  * - Returns a generic {@see ActiveQuery} type with the related model class as type parameter.
  *
- * @see ActiveQuery for query API details.
- * @see ActiveRecord for relation method definitions.
+ * @see ActiveQuery for Active Query API details.
+ * @see ActiveRecord for Active Record API details.
  * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -71,7 +71,7 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
      * Determines the correct return type for {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()} relation
      * methods by inspecting the first argument which should be a constant string representing the related model class.
      *
-     * @param MethodReflection $methodReflection Reflection instance for the called relation method.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *

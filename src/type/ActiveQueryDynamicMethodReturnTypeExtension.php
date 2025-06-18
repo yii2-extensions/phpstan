@@ -48,7 +48,7 @@ use function in_array;
  * - Integration with PHPStan type combinators and file type mapper for accurate analysis.
  * - Support for union, array, and generic object types in method return values.
  *
- * @see ActiveQuery for query API details.
+ * @see ActiveQuery for Active Query API details.
  * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -107,7 +107,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * - For {@see ActiveQuery::one()}: a union of the model type and null.
      * - For other methods: the result of {@see handleDefaultCase()}.
      *
-     * @param MethodReflection $methodReflection Reflection for the called method.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *
@@ -383,7 +383,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * This method is used internally by the dynamic return type extension to support accurate type inference for
      * {@see ActiveQuery::asArray()} calls during static analysis.
      *
-     * @param MethodCall $methodCall AST node for the {@see asArray()} method call.
+     * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *
      * @return Type Type of the first argument if present, or {@see ConstantBooleanType} `true` if not provided.
@@ -413,7 +413,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * This method enables precise type inference for chained {@see asArray()} calls, ensuring that the correct type is
      * propagated for subsequent method calls on the {@see ActiveQuery} instance during static analysis.
      *
-     * @param MethodCall $methodCall AST node for the {@see asArray()} method call.
+     * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
      *
@@ -450,7 +450,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * This ensures that fluent interface methods maintain correct generic type propagation for static analysis and IDE
      * support.
      *
-     * @param MethodReflection $methodReflection Reflection for the called method.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param Type $calledOnType Type on which the method is called.
      * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
      *

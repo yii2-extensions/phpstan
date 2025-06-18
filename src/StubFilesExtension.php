@@ -26,7 +26,7 @@ use yii\base\Application;
  * - Resolves stub file paths relative to the extension directory.
  * - Supports web, console, and base application contexts.
  *
- * @see ServiceMap for component/service class resolution.
+ * @see ServiceMap for service and component map for Yii Application static analysis.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
@@ -42,7 +42,7 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
     private const DEFAULT_STUB = 'ApplicationWeb.stub';
 
     /**
-     * @param ServiceMap $serviceMap Service map for determining an application type
+     * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
     public function __construct(private readonly ServiceMap $serviceMap) {}
 

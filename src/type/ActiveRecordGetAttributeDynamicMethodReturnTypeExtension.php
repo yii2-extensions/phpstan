@@ -39,7 +39,7 @@ use function count;
  * - Integration with PHPStan file type mapper for accurate PHPDoc parsing.
  * - PHPDoc property tag extraction from model classes and behaviors.
  *
- * @see ActiveRecord for ActiveRecord API details.
+ * @see ActiveRecord for Active Record API details.
  * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
  * @see ServiceMap for service and component map for Yii Application static analysis.
  *

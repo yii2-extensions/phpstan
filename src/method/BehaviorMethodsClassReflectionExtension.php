@@ -41,7 +41,7 @@ final class BehaviorMethodsClassReflectionExtension implements MethodsClassRefle
      * Creates a new instance of the {@see BehaviorMethodsClassReflectionExtension} class.
      *
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
-     * @param ServiceMap $serviceMap Service map for resolving component classes by ID.
+     * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,

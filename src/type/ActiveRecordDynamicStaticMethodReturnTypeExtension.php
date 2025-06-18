@@ -41,8 +41,8 @@ use function count;
  * - Nullability handling for methods like {@see ActiveRecord::findOne()}.
  * - Support for custom {@see ActiveQuery} subclasses and generic parameter propagation.
  *
- * @see ActiveQuery for query API details.
- * @see ActiveRecord for ActiveRecord API details.
+ * @see ActiveQuery for Active Query API details.
+ * @see ActiveRecord for Active Record API details.
  * @see DynamicStaticMethodReturnTypeExtension for PHPStan dynamic static method return type extension contract.
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -88,7 +88,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      * accurate autocompletion and static analysis for methods such as {@see ActiveRecord::findOne()},
      * {@see ActiveRecord::findAll()}, and custom query builders.
      *
-     * @param MethodReflection $methodReflection Reflection instance for the static method.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *
      * @return bool `true` if the static method is supported for dynamic return type inference; `false` otherwise.
      */
@@ -156,7 +156,7 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      * This method ensures that static analysis and IDEs reflect the actual runtime behavior of static
      * {@see ActiveRecord} methods, supporting precise type checks and developer productivity.
      *
-     * @param MethodReflection $methodReflection Reflection instance for the static method.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param StaticCall $methodCall AST node for the static method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *
