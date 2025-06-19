@@ -57,13 +57,13 @@ inference, dynamic method resolution, and comprehensive property reflection.
 - Stub files for different application types (web, console, base).
 - Support for Yii2 constants (`YII_DEBUG`, `YII_ENV_*`).
 
-## Installation
+## Quick start
+
+### Installation
 
 ```bash
 composer require --dev yii2-extensions/phpstan
 ```
-
-## Quick start
 
 Create a `phpstan.neon` file in your project root.
 
@@ -89,6 +89,9 @@ Create a PHPStan-specific config file (`config/phpstan-config.php`).
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 return [
     'components' => [
         'db' => [
@@ -110,9 +113,9 @@ Run `PHPStan`.
 vendor/bin/phpstan analyse
 ```
 
-## Type inference examples
+### Type inference examples
 
-### Active Record
+#### Active Record
 
 ```php
 // ✅ Typed as User|null
@@ -134,7 +137,7 @@ $userName = $user->getAttribute('name');
 $slug = $user->getAttribute('slug');
 ```
 
-### Application components
+#### Application components
 
 ```php
 // ✅ Typed based on your configuration
@@ -149,7 +152,7 @@ if (Yii::$app->user->isGuest === false) {
 }
 ```
 
-### Dependency injection
+#### Dependency injection
 
 ```php
 $container = new Container();

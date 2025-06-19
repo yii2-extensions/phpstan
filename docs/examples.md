@@ -10,6 +10,8 @@ analysis in real-world scenarios.
 ```php
 <?php
 
+declare(strict_types=1);
+
 use app\models\User;
 use yii\db\ActiveRecord;
 
@@ -52,6 +54,8 @@ class UserService
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 use app\models\{User, Post};
 use yii\db\ActiveQuery;
@@ -101,6 +105,8 @@ class PostRepository
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 use app\models\{User, Post, Category};
 
@@ -160,6 +166,8 @@ class PostService
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 use yii\db\ActiveQuery;
 
@@ -224,9 +232,11 @@ class PostController
 ```php
 <?php
 
+declare(strict_types=1);
+
 use Yii;
-use yii\web\Controller;
 use yii\mail\MessageInterface;
+use yii\web\Controller;
 
 class SiteController extends Controller
 {
@@ -283,8 +293,10 @@ class SiteController extends Controller
 ```php
 <?php
 
-use Yii;
+declare(strict_types=1);
+
 use app\models\User;
+use Yii;
 
 class UserService
 {
@@ -337,6 +349,8 @@ class UserService
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 // Component configuration in config/phpstan.php
 return [
@@ -399,8 +413,10 @@ class PaymentController extends Controller
 ```php
 <?php
 
-use yii\di\Container;
+declare(strict_types=1);
+
 use app\services\{PaymentService, EmailService, CacheService};
+use yii\di\Container;
 
 class ServiceManager
 {
@@ -442,8 +458,10 @@ class ServiceManager
 
 ```php
 <?php
-// config/phpstan.php - Container configuration
 
+declare(strict_types=1);
+
+// config/phpstan.php - Container configuration
 return [
     'container' => [
         'definitions' => [
@@ -510,6 +528,8 @@ class ApplicationService
 ```php
 <?php
 
+declare(strict_types=1);
+
 use yii\di\Container;
 
 class ServiceFactory
@@ -556,6 +576,8 @@ class ServiceFactory
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 use yii\behaviors\Behavior;
 use yii\db\ActiveRecord;
@@ -625,6 +647,8 @@ class CategoryService
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 // Configuration in config/phpstan.php
 return [
@@ -720,6 +744,8 @@ class PostService
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 use yii\web\HeaderCollection;
 

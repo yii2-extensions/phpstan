@@ -20,6 +20,7 @@
 - Bug #50: Add Testing Guide link to `installation` and `examples` documentation (@terabytesoftw)
 - Bug #51: Reorder Installation section in `README.md` for improved clarity (@terabytesoftw)
 - Bug #52: Standardize headings and improve clarity in documentation files (@terabytesoftw)
+- bug #53: Update documentation for consistency and clarity; change section titles and add strict types declaration (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 
