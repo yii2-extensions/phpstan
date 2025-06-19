@@ -191,8 +191,10 @@ Create a simple test file to verify type inference is working.
 
 ```php
 <?php
-// test-phpstan.php
 
+declare(strict_types=1);
+
+// test-phpstan.php
 use yii\web\Application;
 
 // This should be typed as an Application
@@ -211,11 +213,11 @@ vendor/bin/phpstan analyse test-phpstan.php --level=5
 
 ## Bootstrap configuration
 
-If your application requires custom bootstrap logic, create a bootstrap file.
+If your application requires custom bootstrap logic, create a bootstrap file (for example, `tests/bootstrap.php`).
 
 ```php
 <?php
-// tests/bootstrap.php
+
 declare(strict_types=1);
 
 error_reporting(-1);

@@ -60,6 +60,9 @@ parameters:
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 // config/phpstan-config.php
 return [
     'phpstan' => [
@@ -75,6 +78,9 @@ For console applications, you **must** explicitly specify the application type.
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 // config/phpstan-console-config.php
 return [
     'phpstan' => [
@@ -150,6 +156,9 @@ Define your application components for proper type inference:
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 // config/phpstan-config.php
 return [
     'components' => [
@@ -203,6 +212,9 @@ Configure behaviors for proper method and property reflection.
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 return [
     'behaviors' => [
         \app\models\User::class => [
@@ -223,6 +235,8 @@ For accurate type inference, behaviors should define their properties using PHPD
 
 ```php
 <?php
+
+declare(strict_types=1);
 
 use yii\base\Behavior;
 use yii\db\ActiveRecord;
@@ -245,6 +259,9 @@ Define DI container services.
 
 ```php
 <?php
+
+declare(strict_types=1);
+
 return [
     'container' => [
         'definitions' => [
@@ -345,9 +362,10 @@ Optimized bootstrap file.
 
 ```php
 <?php
-// config/phpstan-bootstrap.php
+
 declare(strict_types=1);
 
+// config/phpstan-bootstrap.php
 error_reporting(-1);
 
 // Define constants without a full application bootstrap
@@ -437,7 +455,6 @@ vendor/bin/phpstan analyse -c phpstan-console.neon
 ### File-Level suppression
 
 ```php
-<?php
 // In your PHP files
 /** @phpstan-ignore-next-line */
 $result = $someObject->unknownMethod();
@@ -464,3 +481,4 @@ vendor/bin/phpstan analyse --generate-baseline
 ## Next steps
 
 - 💡 [Usage Examples](examples.md)
+- 🧪 [Testing Guide](testing.md)
