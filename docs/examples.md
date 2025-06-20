@@ -1,6 +1,6 @@
 # Usage examples
 
-This document provides comprehensive examples of how the Yii2 PHPStan extension enhances type inference and static 
+This document provides comprehensive examples of how the Yii PHPStan extension enhances type inference and static
 analysis in real-world scenarios.
 
 ## Active Record examples
@@ -800,8 +800,8 @@ class ApiController extends \yii\web\Controller
 }
 ```
 
-This comprehensive examples guide shows how the Yii2 PHPStan extension provides precise type inference across all major
-Yii2 patterns and use cases, making your code more maintainable and reducing runtime errors through static analysis.
+This comprehensive examples guide shows how the Yii PHPStan extension provides precise type inference across all major
+Yii patterns and use cases, making your code more maintainable and reducing runtime errors through static analysis.
 
 ## Next steps
 

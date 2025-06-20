@@ -61,7 +61,8 @@ Add the plugin configuration to your `composer.json`.
 }
 ```
 
-With this setup, the extension will be automatically registered, and you only need to configure the Yii2 specific settings.
+With this setup, the extension will be automatically registered, and you only need to configure the Yii specific 
+settings.
 
 ### Manual extension registration
 
