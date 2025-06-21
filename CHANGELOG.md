@@ -22,6 +22,7 @@
 - Bug #52: Standardize headings and improve clarity in documentation files (@terabytesoftw)
 - Bug #53: Update documentation for consistency and clarity; change section titles and add strict types declaration (@terabytesoftw)
 - Bug #54: Update `PHPStan` `tmpDir` config; move `runtime` directory to `root`; update docs (@terabytesoftw)
+- Bug #55: Remove `OS` and `PHP` version specifications from workflow files for simplification (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 

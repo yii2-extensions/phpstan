@@ -23,7 +23,3 @@ jobs:
     with:
       composer-command: |
         composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
-      os: >-
-        ['ubuntu-latest']
-      php: >-
-        ['8.4']
