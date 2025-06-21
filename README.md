@@ -79,7 +79,7 @@ parameters:
         - controllers
         - models
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime        
+    tmpDir: %currentWorkingDirectory%/runtime        
     
     yii2:
         config_path: config/phpstan-config.php
