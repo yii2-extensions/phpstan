@@ -7,6 +7,10 @@ parameters:
     bootstrapFiles:
         - tests/bootstrap.php
 
+    excludePaths:
+        analyse:
+            - tests/console/
+
     ignoreErrors:
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'
         - '#Creating new PHPStan\\Reflection\\Dummy\\DummyPropertyReflection is not covered.+#'
@@ -15,9 +19,9 @@ parameters:
 
     paths:
         - src
-        - tests/web
+        - tests
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime
+    tmpDir: %currentWorkingDirectory%/runtime
 
     yii2:
         config_path: tests/config/phpstan-config.php

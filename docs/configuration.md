@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers all configuration options for the Yii2 PHPStan extension, from basic setup to advanced scenarios.
+This guide covers all configuration options for the Yii PHPStan extension, from basic setup to advanced scenarios.
 
 ## Basic configuration
 
@@ -18,7 +18,7 @@ parameters:
     paths:
         - src
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime        
+    tmpDir: %currentWorkingDirectory%/runtime        
     
     yii2:
         config_path: config/phpstan-config.php
@@ -48,7 +48,7 @@ parameters:
         - widgets
         - components
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime
+    tmpDir: %currentWorkingDirectory%/runtime
 
     yii2:
         config_path: config/phpstan-config.php
@@ -107,7 +107,7 @@ parameters:
         - commands
         - console
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime        
+    tmpDir: %currentWorkingDirectory%/runtime        
 
     yii2:
         config_path: config/phpstan-console-config.php
@@ -117,7 +117,7 @@ parameters:
 
 ### Default constants
 
-The extension automatically recognizes these Yii2 constants:
+The extension automatically recognizes these Yii constants:
 
 ```neon
 parameters:
@@ -131,7 +131,7 @@ parameters:
 
 ### Adding custom constants
 
-⚠️ **Important**: When you define `dynamicConstantNames`, it **replaces** the defaults. Include Yii2 constants explicitly.
+⚠️ **Important**: When you define `dynamicConstantNames`, it **replaces** the defaults. Include Yii constants explicitly.
 
 ```neon
 parameters:
@@ -318,7 +318,7 @@ parameters:
         - widgets
         - components
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime          
+    tmpDir: %currentWorkingDirectory%/runtime          
 
     yii2:
         config_path: config/phpstan-config.php
@@ -355,7 +355,7 @@ parameters:
         minimumNumberOfJobsPerProcess: 2
 
     # Memory management
-    tmpDir: %currentWorkingDirectory%/tests/runtime
+    tmpDir: %currentWorkingDirectory%/runtime
 ```
 
 Optimized bootstrap file.
@@ -408,7 +408,7 @@ includes:
 parameters:
     level: 6
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime
+    tmpDir: %currentWorkingDirectory%/runtime
 ```
 
 ### Web configuration

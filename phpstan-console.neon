@@ -17,7 +17,7 @@ parameters:
         - src
         - tests/console
 
-    tmpDir: %currentWorkingDirectory%/tests/runtime
+    tmpDir: %currentWorkingDirectory%/runtime
 
     yii2:
         config_path: tests/config/phpstan-console-config.php
