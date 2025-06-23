@@ -86,7 +86,7 @@ class PostRepository
     
     public function getLatestPost(): Post|null
     {
-        // ✅ PHPStan knows this returns Post|null
+        // ✅ PHPStan knows this return Post|null
         return Post::find()
             ->where(['status' => 'published'])
             ->orderBy('created_at DESC')
@@ -114,13 +114,13 @@ class UserModel extends \yii\db\ActiveRecord
 {
     public function getPosts(): \yii\db\ActiveQuery
     {
-        // ✅ PHPStan knows this returns ActiveQuery<Post>
+        // ✅ PHPStan knows this return ActiveQuery<Post>
         return $this->hasMany(Post::class, ['author_id' => 'id']);
     }
     
     public function getProfile(): \yii\db\ActiveQuery
     {
-        // ✅ PHPStan knows this returns ActiveQuery<UserProfile>
+        // ✅ PHPStan knows this return ActiveQuery<UserProfile>
         return $this->hasOne(UserProfile::class, ['user_id' => 'id']);
     }
 }
@@ -194,7 +194,7 @@ class Post extends \yii\db\ActiveRecord
 {
     public static function find(): PostQuery
     {
-        // ✅ PHPStan knows this returns PostQuery<Post>
+        // ✅ PHPStan knows this return PostQuery<Post>
         return new PostQuery(get_called_class());
     }
 }
@@ -429,7 +429,7 @@ class ServiceManager
     
     public function getPaymentService(): PaymentService
     {
-        // ✅ PHPStan knows this returns PaymentService
+        // ✅ PHPStan knows this return PaymentService
         return $this->container->get(PaymentService::class);
     }
     
@@ -450,6 +450,50 @@ class ServiceManager
         }
         
         return false;
+    }
+}
+```
+
+### Service locator in custom classes
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use yii\di\ServiceLocator;
+use app\services\{EmailService, LoggerService, CacheService};
+
+class CustomServiceManager extends ServiceLocator
+{
+    public function sendNotification(string $message): bool
+    {
+        // ✅ PHPStan knows these are the correct service types
+        $email = $this->get('emailService');   // EmailService
+        $logger = $this->get('loggerService'); // LoggerService
+        $cache = $this->get('cacheService');   // CacheService
+        
+        try {
+            $result = $email->send($message);
+            $logger->info('Notification sent successfully');
+            $cache->delete('pending_notifications');
+            
+            return $result;
+        } catch (\Exception $e) {
+            $logger->error('Failed to send notification: ' . $e->getMessage());
+            return false;
+        }
+    }
+    
+    public function getServicesByType(): array
+    {
+        // ✅ Different ways to resolve services
+        return [
+            'email_by_id' => $this->get('emailService'),           // EmailService
+            'email_by_class' => $this->get(EmailService::class),   // EmailService
+            'logger_by_id' => $this->get('loggerService'),         // LoggerService
+            'logger_by_class' => $this->get(LoggerService::class), // LoggerService
+        ];
     }
 }
 ```
