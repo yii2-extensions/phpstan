@@ -109,7 +109,7 @@ final class ActiveQueryDynamicMethodReturnType
     }
 
     /**
-     * @throws Exception
+     * @throws Exception if an unexpected error occurs during execution.
      */
     public function testReturnMyActiveRecordOrNullWhenChainedWithOne(): void
     {

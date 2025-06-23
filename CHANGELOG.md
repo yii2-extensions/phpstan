@@ -24,6 +24,7 @@
 - Bug #54: Update `PHPStan` `tmpDir` config; move `runtime` directory to `root`; update docs (@terabytesoftw)
 - Bug #55: Remove `OS` and `PHP` version specifications from workflow files for simplification (@terabytesoftw)
 - Enh #56: Add `ServiceLocatorDynamicMethodReturnTypeExtension` to provide precise type inference for `get()` method (@terabytesoftw)
+- Bug #57: Clarify exception documentation and improve type inference descriptions in test cases (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 
