@@ -48,6 +48,9 @@ services:
         class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
+        class: yii2\extensions\phpstan\type\ServiceLocatorDynamicMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
         class: yii2\extensions\phpstan\StubFilesExtension
         tags:
             - phpstan.stubFilesExtension

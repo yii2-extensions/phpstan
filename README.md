@@ -57,6 +57,13 @@ inference, dynamic method resolution, and comprehensive property reflection.
 - Stub files for different application types (web, console, base).
 - Support for Yii2 constants (`YII_DEBUG`, `YII_ENV_*`).
 
+✅ **Service Locator Component Resolution**
+- Automatic fallback to mixed type for unknown component identifiers.
+- Dynamic return type inference for `ServiceLocator::get()` calls.
+- Priority-based resolution: ServiceMap components > ServiceMap services > Real classes > Mixed type.
+- Support for all Service Locator subclasses (Application, Module, custom classes).
+- Type inference with string variables and class name constants.
+
 ## Quick start
 
 ### Installation
@@ -159,7 +166,22 @@ $container = new Container();
 
 // ✅ Type-safe service resolution
 $service = $container->get(MyService::class); // MyService
-$logger = $container->get('logger');          // LoggerInterface (if configured)
+$logger = $container->get('logger');          // LoggerInterface (if configured) or mixed
+```
+
+#### Service locator
+
+```php
+$serviceLocator = new ServiceLocator();
+
+// ✅ Get component with type inference with class
+$mailer = $serviceLocator->get(Mailer::class);  // MailerInterface
+
+// ✅ Get component with string identifier and without configuration in ServiceMap
+$mailer = $serviceLocator->get('mailer');  // MailerInterface (if configured) or mixed
+
+// ✅ User component with proper type inference in Action or Controller
+$user = $this->controller->module->get('user'); // UserInterface
 ```
 
 ## Documentation
