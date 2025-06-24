@@ -206,6 +206,170 @@ return [
 ];
 ```
 
+### Generic component configuration
+
+You can configure which property in the component definition contains the generic type information.
+
+#### Default generic components
+
+The extension comes with pre-configured generic support for common Yii components:
+
+```neon
+parameters:
+    yii2:
+        component_generics:
+            user: 'identityClass'         # Built-in: User<IdentityClass>
+```
+
+#### Adding custom generic components
+
+You can extend the generic configuration without overriding the defaults:
+
+```neon
+parameters:
+    yii2:
+        component_generics:
+            userRepository: 'modelClass'  # Add custom generic
+            postCollection: 'elementType' # Add another custom generic
+```
+
+#### Generic component examples
+
+**Service configuration:**
+```php
+<?php
+
+declare(strict_types=1);
+
+// config/phpstan-config.php
+return [
+    'components' => [
+        'user' => [
+            'class' => \yii\web\User::class,
+            'identityClass' => \app\models\User::class, // Generic type parameter
+        ],
+        'userRepository' => [
+            'class' => \app\repositories\Repository::class,
+            'modelClass' => \app\models\User::class,    // Generic type parameter
+        ],
+        'postCollection' => [
+            'class' => \app\collections\Collection::class,
+            'elementType' => \app\models\Post::class,   // Generic type parameter
+        ],
+    ],
+];
+```
+
+**Usage with proper type inference:**
+```php
+<?php
+
+declare(strict_types=1);
+
+use Yii;
+
+class UserController
+{
+    public function actionProfile(): string
+    {
+        // ✅ PHPStan knows this is User<app\models\User>
+        $user = Yii::$app->user;
+        
+        // ✅ PHPStan knows identity is app\models\User
+        $identity = $user->identity;
+        
+        // ✅ PHPStan knows this is Repository<app\models\User>
+        $repository = Yii::$app->userRepository;
+        
+        // ✅ PHPStan knows this is Collection<app\models\Post>
+        $collection = Yii::$app->postCollection;
+        
+        return $this->render('profile', ['user' => $identity]);
+    }
+}
+```
+
+#### Creating generic-aware components
+
+For your custom components to work with generics, define them using PHPDoc annotations:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace app\repositories;
+
+use yii\base\Component;
+
+/**
+ * Generic repository component.
+ * 
+ * @template T of \yii\db\ActiveRecord
+ */
+class Repository extends Component
+{
+    /** 
+     * @phpstan-var class-string<T>
+     */
+    public string $modelClass;
+    
+    /**
+     * @phpstan-return T|null
+     */
+    public function findOne(int $id): \yii\db\ActiveRecord|null
+    {
+        return $this->modelClass::findOne($id);
+    }
+    
+    /**
+     * @phpstan-return T[]
+     */
+    public function findAll(): array
+    {
+        return $this->modelClass::find()->all();
+    }
+}
+
+namespace app\collections;
+
+use yii\base\Component;
+
+/**
+ * Generic collection component.
+ * 
+ * @template T
+ */
+class Collection extends Component
+{
+    /** 
+     * @phpstan-var class-string<T>
+     */
+    public string $elementType;
+    
+    /** 
+     * @phpstan-var T[]
+     */
+    private array $items = [];
+    
+    /**
+     * @phpstan-param T $item
+     */
+    public function add($item): void
+    {
+        $this->items[] = $item;
+    }
+    
+    /**
+     * @phpstan-return T[]
+     */
+    public function getAll(): array
+    {
+        return $this->items;
+    }
+}
+```
+
 ### Behavior configuration
 
 Configure behaviors for proper method and property reflection.

@@ -345,26 +345,48 @@ class UserService
 }
 ```
 
-### Custom components
+### Custom components with generics
 
 ```php
 <?php
 
 declare(strict_types=1);
 
-// Component configuration in config/phpstan.php
+// Component configuration in config/phpstan-config.php
 return [
     'components' => [
         'paymentService' => [
             'class' => \app\services\PaymentService::class,
         ],
-        'imageProcessor' => [
-            'class' => \app\services\ImageProcessor::class,
+        'userRepository' => [
+            'class' => \app\repositories\Repository::class,
+            'modelClass' => \app\models\User::class,
+        ],
+        'postRepository' => [
+            'class' => \app\repositories\Repository::class,
+            'modelClass' => \app\models\Post::class,
         ],
     ],
 ];
+```
 
-// Usage in controllers
+Generic configuration in phpstan.neon.
+
+```neon
+parameters:
+    yii2:
+        component_generics:
+            userRepository: 'modelClass'
+            postRepository: 'modelClass'
+```            
+
+Usage in controllers and services:
+
+```php
+<?php
+
+declare(strict_types=1);
+
 use Yii;
 use yii\web\Controller;
 
@@ -372,8 +394,8 @@ class PaymentController extends Controller
 {
     public function actionProcess(): array
     {
-        // ✅ PHPStan knows this is PaymentService
-        $paymentService = Yii::$app->paymentService; // PaymentService
+        // ✅ PHPStan knows this is PaymentService (non-generic component)
+        $paymentService = Yii::$app->paymentService;
         
         $result = $paymentService->processPayment(
             [
@@ -386,22 +408,60 @@ class PaymentController extends Controller
         // ✅ PHPStan knows the return type based on method signature
         return $result; // array
     }
-    
-    public function actionProcessImage(): string
+}
+```
+
+```php
+<?php
+
+declare(strict_types=1);
+
+use Yii;
+
+class UserController extends Controller
+{
+    public function actionIndex(): array
     {
-        // ✅ PHPStan knows this is ImageProcessor
-        $imageProcessor = Yii::$app->imageProcessor; // ImageProcessor
+        // ✅ PHPStan knows this is Repository<app\models\User> (generic component)
+        $userRepository = Yii::$app->userRepository;
         
-        $uploadedFile = \yii\web\UploadedFile::getInstanceByName('image');
+        // ✅ PHPStan knows findAll() returns app\models\User[]
+        $users = $userRepository->findAll();
         
-        if ($uploadedFile !== null) {
-            // ✅ Method calls are typed
-            $processedPath = $imageProcessor->resize($uploadedFile->tempName, 800, 600);
-            
-            return $processedPath; // string
+        // ✅ PHPStan knows this is Repository<app\models\Post> (generic component)
+        $postRepository = Yii::$app->postRepository;
+        
+        // ✅ PHPStan knows findOne() returns app\models\Post|null
+        $post = $postRepository->findOne(1);
+        
+        return $this->render(
+            'index', 
+            [
+                'users' => $users,
+                'post' => $post,
+            ],
+        );
+    }
+    
+    public function actionUserProfile(int $id): string
+    {
+        // ✅ PHPStan knows this is Repository<app\models\User> (generic component)
+        $repository = Yii::$app->userRepository;
+        
+        // ✅ PHPStan knows findOne() returns app\models\User|null
+        $user = $repository->findOne($id); // app\models\User|null
+        
+        if ($user === null) {
+            throw new \yii\web\NotFoundHttpException('User not found');
         }
         
-        throw new \yii\web\BadRequestHttpException('No image uploaded');
+        // ✅ PHPStan knows $user is app\models\User (not null)
+        return $this->render(
+            'profile',
+            [
+                'user' => $user,
+            ],
+        );
     }
 }
 ```
@@ -438,7 +498,7 @@ class ServiceManager
         // ✅ Type-safe service resolution
         $paymentService = $this->container->get(PaymentService::class); // PaymentService
         $emailService = $this->container->get(EmailService::class);     // EmailService
-        $cache = $this->container->get('cache');                        // CacheService (if configured)
+        $cache = $this->container->get('cache');                        // CacheService (if configured) or mixed
         
         $paymentResult = $paymentService->charge($orderData['total']);
         

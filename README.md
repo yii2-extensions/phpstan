@@ -44,6 +44,8 @@ inference, dynamic method resolution, and comprehensive property reflection.
 ✅ **Application Component Resolution**
 - Automatic type inference for `Yii::$app->component` access.
 - Behavior property and method reflection.
+- Generic component support with configurable type parameters.
+- Non-destructive generic configuration - extend without overriding defaults.
 - Support for custom component configurations.
 - User component with `identity`, `id`, `isGuest` property types.
 
@@ -90,6 +92,9 @@ parameters:
     
     yii2:
         config_path: config/phpstan-config.php
+        component_generics:
+            user: 'identityClass'      # Built-in (already configured)
+            repository: 'modelClass'   # Custom generic component        
 ```
 
 Create a PHPStan-specific config file (`config/phpstan-config.php`).
