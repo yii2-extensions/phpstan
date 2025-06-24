@@ -93,8 +93,8 @@ parameters:
     yii2:
         config_path: config/phpstan-config.php
         component_generics:
-            user: 'identityClass'      # Built-in (already configured)
-            repository: 'modelClass'   # Custom generic component        
+            user: identityClass      # Built-in (already configured)
+            repository: modelClass   # Custom generic component        
 ```
 
 Create a PHPStan-specific config file (`config/phpstan-config.php`).

@@ -9,7 +9,7 @@ parameters:
     yii2:
         config_path: ''
         component_generics:
-            user: 'identityClass'
+            user: identityClass
 
 parametersSchema:
 	yii2: structure(

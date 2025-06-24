@@ -376,8 +376,8 @@ Generic configuration in phpstan.neon.
 parameters:
     yii2:
         component_generics:
-            userRepository: 'modelClass'
-            postRepository: 'modelClass'
+            userRepository: modelClass
+            postRepository: modelClass
 ```            
 
 Usage in controllers and services:
@@ -565,7 +565,7 @@ class CustomServiceManager extends ServiceLocator
 
 declare(strict_types=1);
 
-// config/phpstan.php - Container configuration
+// config/phpstan-config.php - Container configuration
 return [
     'container' => [
         'definitions' => [

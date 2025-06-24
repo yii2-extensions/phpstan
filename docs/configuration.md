@@ -218,7 +218,7 @@ The extension comes with pre-configured generic support for common Yii component
 parameters:
     yii2:
         component_generics:
-            user: 'identityClass'         # Built-in: User<IdentityClass>
+            user: identityClass         # Built-in: User<IdentityClass>
 ```
 
 #### Adding custom generic components
@@ -229,13 +229,14 @@ You can extend the generic configuration without overriding the defaults:
 parameters:
     yii2:
         component_generics:
-            userRepository: 'modelClass'  # Add custom generic
-            postCollection: 'elementType' # Add another custom generic
+            userRepository: modelClass  # Add custom generic
+            postCollection: elementType # Add another custom generic
 ```
 
 #### Generic component examples
 
-**Service configuration:**
+**Service configuration**
+
 ```php
 <?php
 
@@ -260,7 +261,8 @@ return [
 ];
 ```
 
-**Usage with proper type inference:**
+**Usage with proper type inference**
+
 ```php
 <?php
 
