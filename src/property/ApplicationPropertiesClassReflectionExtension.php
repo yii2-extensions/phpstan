@@ -13,11 +13,13 @@ use PHPStan\Reflection\{
 };
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
-use PHPStan\Type\{MixedType, ObjectType};
+use PHPStan\Type\Generic\GenericObjectType;
+use PHPStan\Type\{MixedType, ObjectType, Type};
 use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
 use yii2\extensions\phpstan\ServiceMap;
 
 use function in_array;
+use function is_string;
 
 /**
  * Provides property reflection for a Yii Application component in PHPStan analysis.
@@ -40,6 +42,8 @@ use function in_array;
  * - Handles base, web, and console application contexts.
  * - Integrates annotation-based and native property reflection.
  * - Supports dynamic Yii Application properties via service map lookup.
+ * - Supports generic type inference for application components, enabling precise static analysis when components are
+ *   configured with generics.
  *
  * @see \yii\base\Application for Yii Base Application class.
  * @see \yii\console\Application for Yii Console Application class.
@@ -76,11 +80,14 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * annotation-based properties.
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
+     *
+     * @phpstan-param string[] $genericComponents
      */
     public function __construct(
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
         private readonly ReflectionProvider $reflectionProvider,
         private readonly ServiceMap $serviceMap,
+        private readonly array $genericComponents = [],
     ) {}
 
     /**
@@ -110,7 +117,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
-                new ObjectType($componentClass),
+                $this->resolveType($componentClass, $propertyName),
                 $normalizedClassReflection,
             );
         }
@@ -205,5 +212,38 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         }
 
         return $classReflection;
+    }
+
+    /**
+     * Resolves the PHPStan type for a Yii Application component property, including generic type support.
+     *
+     * Determines the appropriate {@see Type} for the specified component class and property name by inspecting the
+     * generic component mapping and the component definition.
+     *
+     * If a generic type is defined and present in the component definition, returns a {@see GenericObjectType} with the
+     * resolved type parameter; otherwise, returns a standard {@see ObjectType} for the component class.
+     *
+     * This enables accurate type inference for application components that use generics in their configuration,
+     * supporting precise static analysis and autocompletion in PHPStan.
+     *
+     * @param string $componentClass Fully qualified class name of the component.
+     * @param string $propertyName Name of the property being resolved.
+     *
+     * @return Type Resolved PHPStan type for the component property, including generics if available.
+     */
+    private function resolveType(string $componentClass, string $propertyName): Type
+    {
+        $genericProperty = $this->genericComponents[$propertyName] ?? null;
+        $componentDefinition = $this->serviceMap->getComponentDefinitionById($propertyName);
+
+        if ($componentDefinition !== [] && $genericProperty !== null) {
+            $genericType = $componentDefinition[$genericProperty] ?? null;
+
+            if (is_string($genericType) && $genericType !== '') {
+                return new GenericObjectType($componentClass, [new ObjectType($genericType)]);
+            }
+        }
+
+        return new ObjectType($componentClass);
     }
 }

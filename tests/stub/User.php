@@ -35,9 +35,9 @@ final class User extends ActiveRecord implements IdentityInterface
         return \defined('YII_ENV_DEV') && YII_ENV_DEV ? new self() : null;
     }
 
-    public function getId()
+    public function getId(): int
     {
-        return YII_ENV_DEV ? 'dev-id' : 1;
+        return 1;
     }
 
     public function getAuthKey(): string|null

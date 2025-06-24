@@ -8,11 +8,14 @@ parameters:
 
     yii2:
         config_path: ''
+        component_generics:
+            user: identityClass
 
 parametersSchema:
 	yii2: structure(
         [
-		    config_path: schema(string())
+		    config_path: schema(string()),
+            component_generics: schema(arrayOf(string(), string()))
 	    ]
     )
 
@@ -23,11 +26,10 @@ services:
     -
         class: yii2\extensions\phpstan\property\ApplicationPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
+        arguments:
+            genericComponents: %yii2.component_generics%
     -
         class: yii2\extensions\phpstan\property\BehaviorPropertiesClassReflectionExtension
-        tags: [phpstan.broker.propertiesClassReflectionExtension]
-    -
-        class: yii2\extensions\phpstan\property\UserPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
     -
         class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
