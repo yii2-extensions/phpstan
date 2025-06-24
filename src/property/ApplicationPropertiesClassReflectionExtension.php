@@ -235,10 +235,13 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
     {
         $genericProperty = $this->genericComponents[$propertyName] ?? null;
         $componentDefinition = $this->serviceMap->getComponentDefinitionById($propertyName);
-        $genericType = $componentDefinition[$genericProperty] ?? null;
 
-        if (is_string($genericType) && $genericType !== '') {
-            return new GenericObjectType($componentClass, [new ObjectType($genericType)]);
+        if ($componentDefinition !== [] && $genericProperty !== null) {
+            $genericType = $componentDefinition[$genericProperty] ?? null;
+
+            if (is_string($genericType) && $genericType !== '') {
+                return new GenericObjectType($componentClass, [new ObjectType($genericType)]);
+            }
         }
 
         return new ObjectType($componentClass);
