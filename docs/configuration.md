@@ -330,6 +330,12 @@ class Repository extends Component
         return $this->modelClass::find()->all();
     }
 }
+```
+
+```php
+<?php
+
+declare(strict_types=1);
 
 namespace app\collections;
 
