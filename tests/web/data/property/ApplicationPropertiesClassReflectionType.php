@@ -18,7 +18,7 @@ use yii\web\{
     Response,
     Session,
     UrlManager,
-    User,
+
     View,
 };
 
@@ -153,7 +153,7 @@ final class ApplicationPropertiesClassReflectionType
 
     public function testReturnUserFromComponent(): void
     {
-        assertType(User::class, Yii::$app->user);
+        assertType('yii\web\User<yii2\extensions\phpstan\tests\stub\User>', Yii::$app->user);
     }
 
     public function testReturnViewFromComponent(): void
