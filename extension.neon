@@ -15,7 +15,7 @@ parametersSchema:
 	yii2: structure(
         [
 		    config_path: schema(string()),
-            component_generics: schema(arrayOf(string()))
+            component_generics: schema(arrayOf(string(), string()))
 	    ]
     )
 
@@ -24,7 +24,7 @@ services:
         class: yii2\extensions\phpstan\method\BehaviorMethodsClassReflectionExtension
         tags: [phpstan.broker.methodsClassReflectionExtension]
     -
-        class: yii2\extensions\phpstan\property\ApplicationPropertiesClassReflectionExtension()
+        class: yii2\extensions\phpstan\property\ApplicationPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
         arguments:
             genericComponents: %yii2.component_generics%

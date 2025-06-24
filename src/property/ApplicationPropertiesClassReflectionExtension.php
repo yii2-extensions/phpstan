@@ -81,7 +81,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      *
-     * @phpstan-param array<string, string> $genericComponents
+     * @phpstan-param string[] $genericComponents
      */
     public function __construct(
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
