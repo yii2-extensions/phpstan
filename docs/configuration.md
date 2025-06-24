@@ -233,9 +233,7 @@ parameters:
             postCollection: elementType # Add another custom generic
 ```
 
-#### Generic component examples
-
-**Service configuration**
+#### Service configuration
 
 ```php
 <?php
@@ -261,7 +259,7 @@ return [
 ];
 ```
 
-**Usage with proper type inference**
+#### Usage with proper type inference
 
 ```php
 <?php
