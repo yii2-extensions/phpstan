@@ -6,9 +6,6 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/yii2-extensions/phpstan/releases" target="_blank">
-        <img src="https://img.shields.io/github/v/release/yii2-extensions/phpstan?color=blue" alt="GitHub Release">
-    </a>
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
         <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="PHP Version">
     </a>
@@ -200,13 +197,15 @@ For detailed configuration options and advanced usage.
 
 ## Quality code
 
+[![Latest Stable Version](http://poser.pugx.org/yii2-extensions/phpstan/v)](https://github.com/yii2-extensions/phpstan/releases)
+[![Total Downloads](http://poser.pugx.org/yii2-extensions/phpstan/downloads)](https://packagist.org/packages/yii2-extensions/phpstan)
 [![codecov](https://codecov.io/gh/yii2-extensions/phpstan/graph/badge.svg?token=DRcXAg3WGL)](https://codecov.io/gh/yii2-extensions/phpstan)
 [![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![style-ci](https://github.styleci.io/repos/701347895/shield?branch=main)](https://github.styleci.io/repos/701347895?branch=main)
 
 ## Our social networks
 
-[![Twitter](https://img.shields.io/badge/twitter-follow-1DA1F2?logo=twitter&logoColor=1DA1F2&labelColor=555555?style=flat)](https://twitter.com/Terabytesoftw)
+[![X](https://img.shields.io/badge/follow-@terabytesoftw-1DA1F2?logo=x&logoColor=1DA1F2&labelColor=555555?style=flat)](https://x.com/Terabytesoftw)
 
 ## License
 
