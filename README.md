@@ -24,9 +24,6 @@
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">        
         <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="Static Analysis">
     </a>          
-    <a href="https://codecov.io/gh/yii2-extensions/phpstan" target="_blank">
-        <img src="https://codecov.io/gh/yii2-extensions/phpstan/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
-    </a>  
 </p>
 
 A comprehensive PHPStan extension that provides enhanced static analysis for Yii2 applications with precise type 
@@ -203,6 +200,7 @@ For detailed configuration options and advanced usage.
 
 ## Quality code
 
+[![codecov](https://codecov.io/gh/yii2-extensions/phpstan/graph/badge.svg?token=DRcXAg3WGL)](https://codecov.io/gh/yii2-extensions/phpstan)
 [![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![style-ci](https://github.styleci.io/repos/701347895/shield?branch=main)](https://github.styleci.io/repos/701347895?branch=main)
 
