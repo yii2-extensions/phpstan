@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.3.1 Under development
+
 ## 0.3.0 June 27, 2025
 
 - Enh #35: Move config fixtures into `config` subdirectory (@terabytesoftw)
