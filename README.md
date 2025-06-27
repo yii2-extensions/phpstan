@@ -6,20 +6,23 @@
 </p>
 
 <p align="center">
-    <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
-        <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="PHP-Version">
+    <a href="https://github.com/yii2-extensions/phpstan" target="_blank">
+        <img src="https://img.shields.io/github/v/release/yii2-extensions/phpstan?color=blue" alt="GitHub Release">
     </a>
-    <a href="https://github.com/yiisoft/yii2/tree/2.0.52" target="_blank">
-        <img src="https://img.shields.io/badge/Yii2%20-2.0.52-blue" alt="Yii-22.0.52">
+    <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
+        <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="PHP Version">
+    </a>
+    <a href="https://github.com/yiisoft/yii2/tree/2.0.53" target="_blank">
+        <img src="https://img.shields.io/badge/Yii2%20-2.0.53-blue" alt="Yii2 22.0.53">
     </a>
     <a href="https://github.com/yiisoft/yii2/tree/22.0" target="_blank">
-        <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2-22">
+        <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2 22.0">
     </a>    
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
         <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
     </a>
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">        
-        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="Static-Analysis">
+        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="Static Analysis">
     </a>          
     <a href="https://codecov.io/gh/yii2-extensions/phpstan" target="_blank">
         <img src="https://codecov.io/gh/yii2-extensions/phpstan/branch/main/graph/badge.svg?token=MF0XUGVLYC" alt="Codecov">
