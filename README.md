@@ -197,8 +197,8 @@ For detailed configuration options and advanced usage.
 
 ## Quality code
 
-[![Latest Stable Version](http://poser.pugx.org/yii2-extensions/phpstan/v)](https://github.com/yii2-extensions/phpstan/releases)
-[![Total Downloads](http://poser.pugx.org/yii2-extensions/phpstan/downloads)](https://packagist.org/packages/yii2-extensions/phpstan)
+[![Latest Stable Version](https://poser.pugx.org/yii2-extensions/phpstan/v)](https://github.com/yii2-extensions/phpstan/releases)
+[![Total Downloads](https://poser.pugx.org/yii2-extensions/phpstan/downloads)](https://packagist.org/packages/yii2-extensions/phpstan)
 [![codecov](https://codecov.io/gh/yii2-extensions/phpstan/graph/badge.svg?token=DRcXAg3WGL)](https://codecov.io/gh/yii2-extensions/phpstan)
 [![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![style-ci](https://github.styleci.io/repos/701347895/shield?branch=main)](https://github.styleci.io/repos/701347895?branch=main)
@@ -209,7 +209,7 @@ For detailed configuration options and advanced usage.
 
 ## License
 
-BSD-3-Clause license. Please see [License File](LICENSE.md) for more information.
+[![License](https://poser.pugx.org/yii2-extensions/phpstan/license)](LICENSE.md)
 
 ## Fork 
 
