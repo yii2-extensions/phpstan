@@ -38,6 +38,7 @@ class Category extends ActiveRecord
             [['parent_id'], 'default', 'value' => null],
         ];
     }
+
     public static function tableName(): string
     {
         return 'categories';
