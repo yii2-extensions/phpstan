@@ -52,9 +52,9 @@ final class ApplicationPropertiesClassReflectionType
         assertType('yii\rbac\ManagerInterface|null', Yii::$app->authManager);
     }
 
-    public function testReturnStringFromBasePathProperty(): void
+    public function testReturnBoolFromEnableCoreCommandsProperty(): void
     {
-        assertType('string', Yii::$app->basePath);
+        assertType('bool', Yii::$app->enableCoreCommands);
     }
 
     public function testReturnCacheFromComponent(): void
@@ -62,34 +62,14 @@ final class ApplicationPropertiesClassReflectionType
         assertType('yii\caching\CacheInterface|null', Yii::$app->cache);
     }
 
-    public function testReturnStringFromCharsetProperty(): void
-    {
-        assertType('string', Yii::$app->charset);
-    }
-
     public function testReturnControllerFromProperty(): void
     {
         assertType(Controller::class, Yii::$app->controller);
     }
 
-    public function testReturnStringFromControllerNamespaceProperty(): void
-    {
-        assertType('string', Yii::$app->controllerNamespace);
-    }
-
     public function testReturnDbFromComponent(): void
     {
         assertType(Connection::class, Yii::$app->db);
-    }
-
-    public function testReturnStringFromDefaultRouteProperty(): void
-    {
-        assertType('string', Yii::$app->defaultRoute);
-    }
-
-    public function testReturnBoolFromEnableCoreCommandsProperty(): void
-    {
-        assertType('bool', Yii::$app->enableCoreCommands);
     }
 
     public function testReturnErrorHandlerFromComponent(): void
@@ -107,11 +87,6 @@ final class ApplicationPropertiesClassReflectionType
         assertType(I18N::class, Yii::$app->i18n);
     }
 
-    public function testReturnStringFromLanguageProperty(): void
-    {
-        assertType('string', Yii::$app->language);
-    }
-
     public function testReturnLogFromComponent(): void
     {
         assertType(Dispatcher::class, Yii::$app->log);
@@ -120,11 +95,6 @@ final class ApplicationPropertiesClassReflectionType
     public function testReturnMailerFromComponent(): void
     {
         assertType(MailerInterface::class, Yii::$app->mailer);
-    }
-
-    public function testReturnStringFromNameProperty(): void
-    {
-        assertType('string', Yii::$app->name);
     }
 
     public function testReturnRequestFromComponent(): void
@@ -137,14 +107,44 @@ final class ApplicationPropertiesClassReflectionType
         assertType(Response::class, Yii::$app->response);
     }
 
-    public function testReturnStringFromRuntimePathProperty(): void
-    {
-        assertType('string', Yii::$app->runtimePath);
-    }
-
     public function testReturnSecurityFromComponent(): void
     {
         assertType(Security::class, Yii::$app->security);
+    }
+
+    public function testReturnStringFromBasePathProperty(): void
+    {
+        assertType('string', Yii::$app->basePath);
+    }
+
+    public function testReturnStringFromCharsetProperty(): void
+    {
+        assertType('string', Yii::$app->charset);
+    }
+
+    public function testReturnStringFromControllerNamespaceProperty(): void
+    {
+        assertType('string', Yii::$app->controllerNamespace);
+    }
+
+    public function testReturnStringFromDefaultRouteProperty(): void
+    {
+        assertType('string', Yii::$app->defaultRoute);
+    }
+
+    public function testReturnStringFromLanguageProperty(): void
+    {
+        assertType('string', Yii::$app->language);
+    }
+
+    public function testReturnStringFromNameProperty(): void
+    {
+        assertType('string', Yii::$app->name);
+    }
+
+    public function testReturnStringFromRuntimePathProperty(): void
+    {
+        assertType('string', Yii::$app->runtimePath);
     }
 
     public function testReturnStringFromSourceLanguageProperty(): void
@@ -162,14 +162,14 @@ final class ApplicationPropertiesClassReflectionType
         assertType('string', Yii::$app->uniqueId);
     }
 
-    public function testReturnUrlManagerFromComponent(): void
-    {
-        assertType(UrlManager::class, Yii::$app->urlManager);
-    }
-
     public function testReturnStringFromVendorPathProperty(): void
     {
         assertType('string', Yii::$app->vendorPath);
+    }
+
+    public function testReturnUrlManagerFromComponent(): void
+    {
+        assertType(UrlManager::class, Yii::$app->urlManager);
     }
 
     public function testReturnViewFromComponent(): void

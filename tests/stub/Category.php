@@ -30,11 +30,6 @@ use yii\db\ActiveRecord;
  */
 class Category extends ActiveRecord
 {
-    public static function tableName(): string
-    {
-        return 'categories';
-    }
-
     public function rules(): array
     {
         return [
@@ -42,5 +37,9 @@ class Category extends ActiveRecord
             [['name'], 'string'],
             [['parent_id'], 'default', 'value' => null],
         ];
+    }
+    public static function tableName(): string
+    {
+        return 'categories';
     }
 }

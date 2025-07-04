@@ -35,24 +35,14 @@ final class User extends ActiveRecord implements IdentityInterface
         return \defined('YII_ENV_DEV') && YII_ENV_DEV ? new self() : null;
     }
 
-    public function getId(): int
-    {
-        return 1;
-    }
-
     public function getAuthKey(): string|null
     {
         return YII_ENV_DEV ? 'dev-auth' : null;
     }
 
-    public function validateAuthKey($authKey): bool|null
+    public function getId(): int
     {
-        return YII_ENV_DEV ? true : null;
-    }
-
-    public static function tableName(): string
-    {
-        return 'users';
+        return 1;
     }
 
     public function rules(): array
@@ -62,5 +52,15 @@ final class User extends ActiveRecord implements IdentityInterface
             [['name', 'email'], 'string'],
             [['email'], 'email'],
         ];
+    }
+
+    public static function tableName(): string
+    {
+        return 'users';
+    }
+
+    public function validateAuthKey($authKey): bool|null
+    {
+        return YII_ENV_DEV ? true : null;
     }
 }

@@ -31,9 +31,12 @@ final class BehaviorOne extends Behavior
         return 'behavior one';
     }
 
-    public function sharedMethod(): string
+    /**
+     * @phpstan-return string
+     */
+    public function methodWithoutReturnType()
     {
-        return 'from behavior one';
+        return 'test string';
     }
 
     public function methodWithParameters(string $param1, int $param2): string
@@ -46,11 +49,8 @@ final class BehaviorOne extends Behavior
         return 42;
     }
 
-    /**
-     * @phpstan-return string
-     */
-    public function methodWithoutReturnType()
+    public function sharedMethod(): string
     {
-        return 'test string';
+        return 'from behavior one';
     }
 }
