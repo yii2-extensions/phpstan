@@ -76,74 +76,6 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
     }
 
     /**
-     * Determines whether the specified static method is supported for dynamic return type inference.
-     *
-     * Inspects the method's return type and class context to decide if the static method should be handled by this
-     * extension for dynamic return type analysis.
-     *
-     * This includes methods returning `$this`, union types containing {@see ActiveRecord} subclasses, or types related
-     * to {@see ActiveQuery}.
-     *
-     * This method enables PHPStan to apply custom type inference for static {@see ActiveRecord} query methods ensuring
-     * accurate autocompletion and static analysis for methods such as {@see ActiveRecord::findOne()},
-     * {@see ActiveRecord::findAll()}, and custom query builders.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     *
-     * @return bool `true` if the static method is supported for dynamic return type inference; `false` otherwise.
-     */
-    public function isStaticMethodSupported(MethodReflection $methodReflection): bool
-    {
-        $variants = $methodReflection->getVariants();
-
-        if (count($variants) === 0) {
-            return false;
-        }
-
-        $returnType = $variants[0]->getReturnType();
-
-        if ($returnType::class === ThisType::class) {
-            return true;
-        }
-
-        if ($returnType::class === UnionType::class) {
-            foreach ($returnType->getTypes() as $type) {
-                $classNames = $type->getObjectClassNames();
-
-                if (count($classNames) > 0) {
-                    $className = $classNames[0];
-
-                    if ($this->reflectionProvider->hasClass($className)) {
-                        $classReflection = $this->reflectionProvider->getClass($className);
-
-                        return $classReflection->isSubclassOfClass(
-                            $this->reflectionProvider->getClass($this->getClass()),
-                        );
-                    }
-                }
-            }
-        }
-
-        $classNames = $returnType->getObjectClassNames();
-
-        if (count($classNames) > 0) {
-            $className = $classNames[0];
-
-            if ($className === ActiveQuery::class) {
-                return true;
-            }
-
-            if ($this->reflectionProvider->hasClass($className)) {
-                $classReflection = $this->reflectionProvider->getClass($className);
-
-                return $classReflection->isSubclassOfClass($this->reflectionProvider->getClass(ActiveQuery::class));
-            }
-        }
-
-        return $returnType::class === GenericObjectType::class && $returnType->getClassName() === ActiveQuery::class;
-    }
-
-    /**
      * Infers the return type for a static method call on an {@see ActiveRecord} class based on method signature and
      * context.
      *
@@ -225,30 +157,71 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
     }
 
     /**
-     * Determines whether the specified class is {@see ActiveRecord} or a subclass.
+     * Determines whether the specified static method is supported for dynamic return type inference.
      *
-     * Checks if the given class name corresponds to the {@see ActiveRecord} base class or any of its subclasses by
-     * leveraging the reflection provider.
+     * Inspects the method's return type and class context to decide if the static method should be handled by this
+     * extension for dynamic return type analysis.
      *
-     * This is used to ensure type compatibility and accurate type inference for static {@see ActiveRecord} methods
-     * during PHPStan analysis.
+     * This includes methods returning `$this`, union types containing {@see ActiveRecord} subclasses, or types related
+     * to {@see ActiveQuery}.
      *
-     * This method is essential for supporting dynamic return type inference in scenarios where union types or generic
-     * {@see ActiveRecord} subclasses are involved, enabling precise type checks and autocompletion.
+     * This method enables PHPStan to apply custom type inference for static {@see ActiveRecord} query methods ensuring
+     * accurate autocompletion and static analysis for methods such as {@see ActiveRecord::findOne()},
+     * {@see ActiveRecord::findAll()}, and custom query builders.
      *
-     * @param string $className Fully qualified class name to check.
+     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *
-     * @return bool `true` if the class is {@see ActiveRecord} or a subclass; `false` otherwise.
+     * @return bool `true` if the static method is supported for dynamic return type inference; `false` otherwise.
      */
-    private function isActiveRecordClass(string $className): bool
+    public function isStaticMethodSupported(MethodReflection $methodReflection): bool
     {
-        if ($this->reflectionProvider->hasClass($className) === false) {
+        $variants = $methodReflection->getVariants();
+
+        if (count($variants) === 0) {
             return false;
         }
 
-        return $this->reflectionProvider->getClass($className)->isSubclassOfClass(
-            $this->reflectionProvider->getClass(ActiveRecord::class),
-        );
+        $returnType = $variants[0]->getReturnType();
+
+        if ($returnType::class === ThisType::class) {
+            return true;
+        }
+
+        if ($returnType::class === UnionType::class) {
+            foreach ($returnType->getTypes() as $type) {
+                $classNames = $type->getObjectClassNames();
+
+                if (count($classNames) > 0) {
+                    $className = $classNames[0];
+
+                    if ($this->reflectionProvider->hasClass($className)) {
+                        $classReflection = $this->reflectionProvider->getClass($className);
+
+                        return $classReflection->isSubclassOfClass(
+                            $this->reflectionProvider->getClass($this->getClass()),
+                        );
+                    }
+                }
+            }
+        }
+
+        $classNames = $returnType->getObjectClassNames();
+
+        if (count($classNames) > 0) {
+            $className = $classNames[0];
+
+            if ($className === ActiveQuery::class) {
+                return true;
+            }
+
+            if ($this->reflectionProvider->hasClass($className)) {
+                $classReflection = $this->reflectionProvider->getClass($className);
+
+                return $classReflection->isSubclassOfClass($this->reflectionProvider->getClass(ActiveQuery::class));
+            }
+        }
+
+        return $returnType::class === GenericObjectType::class && $returnType->getClassName() === ActiveQuery::class;
     }
 
     /**
@@ -275,6 +248,33 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
 
         return $this->reflectionProvider->getClass($className)->isSubclassOfClass(
             $this->reflectionProvider->getClass(ActiveQuery::class),
+        );
+    }
+
+    /**
+     * Determines whether the specified class is {@see ActiveRecord} or a subclass.
+     *
+     * Checks if the given class name corresponds to the {@see ActiveRecord} base class or any of its subclasses by
+     * leveraging the reflection provider.
+     *
+     * This is used to ensure type compatibility and accurate type inference for static {@see ActiveRecord} methods
+     * during PHPStan analysis.
+     *
+     * This method is essential for supporting dynamic return type inference in scenarios where union types or generic
+     * {@see ActiveRecord} subclasses are involved, enabling precise type checks and autocompletion.
+     *
+     * @param string $className Fully qualified class name to check.
+     *
+     * @return bool `true` if the class is {@see ActiveRecord} or a subclass; `false` otherwise.
+     */
+    private function isActiveRecordClass(string $className): bool
+    {
+        if ($this->reflectionProvider->hasClass($className) === false) {
+            return false;
+        }
+
+        return $this->reflectionProvider->getClass($className)->isSubclassOfClass(
+            $this->reflectionProvider->getClass(ActiveRecord::class),
         );
     }
 }

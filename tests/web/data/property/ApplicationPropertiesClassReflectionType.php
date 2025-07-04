@@ -61,11 +61,6 @@ final class ApplicationPropertiesClassReflectionType
         assertType('yii\caching\CacheInterface|null', Yii::$app->cache);
     }
 
-    public function testReturnStringFromCharsetProperty(): void
-    {
-        assertType('string', Yii::$app->charset);
-    }
-
     public function testReturnControllerFromProperty(): void
     {
         assertType(Controller::class, Yii::$app->controller);
@@ -74,11 +69,6 @@ final class ApplicationPropertiesClassReflectionType
     public function testReturnDbFromComponent(): void
     {
         assertType(Connection::class, Yii::$app->db);
-    }
-
-    public function testReturnStringFromDefaultRouteProperty(): void
-    {
-        assertType('string', Yii::$app->defaultRoute);
     }
 
     public function testReturnErrorHandlerFromComponent(): void
@@ -91,19 +81,9 @@ final class ApplicationPropertiesClassReflectionType
         assertType(Formatter::class, Yii::$app->formatter);
     }
 
-    public function testReturnStringFromHomeUrlProperty(): void
-    {
-        assertType('string', Yii::$app->homeUrl);
-    }
-
     public function testReturnI18nFromComponent(): void
     {
         assertType(I18N::class, Yii::$app->i18n);
-    }
-
-    public function testReturnStringFromLanguageProperty(): void
-    {
-        assertType('string', Yii::$app->language);
     }
 
     public function testReturnLogFromComponent(): void
@@ -129,6 +109,26 @@ final class ApplicationPropertiesClassReflectionType
     public function testReturnSessionFromComponent(): void
     {
         assertType(Session::class, Yii::$app->session);
+    }
+
+    public function testReturnStringFromCharsetProperty(): void
+    {
+        assertType('string', Yii::$app->charset);
+    }
+
+    public function testReturnStringFromDefaultRouteProperty(): void
+    {
+        assertType('string', Yii::$app->defaultRoute);
+    }
+
+    public function testReturnStringFromHomeUrlProperty(): void
+    {
+        assertType('string', Yii::$app->homeUrl);
+    }
+
+    public function testReturnStringFromLanguageProperty(): void
+    {
+        assertType('string', Yii::$app->language);
     }
 
     public function testReturnStringFromSourceLanguageProperty(): void

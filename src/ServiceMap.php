@@ -78,18 +78,18 @@ final class ServiceMap
     private array $behaviors = [];
 
     /**
-     * Component definitions map for Yii Application analysis.
-     *
-     * @phpstan-var string[]
-     */
-    private array $components = [];
-
-    /**
      * Reverse index mapping class names to component IDs for optimized lookups.
      *
      * @phpstan-var array<string, string>
      */
     private array $componentClassToIdMap = [];
+
+    /**
+     * Component definitions map for Yii Application analysis.
+     *
+     * @phpstan-var string[]
+     */
+    private array $components = [];
 
     /**
      * Component definitions for Yii Application analysis.
@@ -190,29 +190,6 @@ final class ServiceMap
     }
 
     /**
-     * Retrieves the component definition array by its identifier.
-     *
-     * Looks up the component definition registered under the specified component ID in the internal component
-     * definitions map.
-     *
-     * This method provides access to the raw component configuration array, enabling static analysis tools and IDEs to
-     * inspect component properties, dependencies, and configuration options for accurate type inference and reflection
-     * analysis.
-     *
-     * @param string $id Component identifier to look up in the component definitions map.
-     *
-     * @return array Component definition array with configuration options, or empty array if not found.
-     *
-     * @phpstan-return array<array-key, mixed>
-     */
-    public function getComponentDefinitionById(string $id): array
-    {
-        $definition = $this->componentsDefinitions[$id] ?? null;
-
-        return is_array($definition) ? $definition : [];
-    }
-
-    /**
      * Retrieves the component definition array for a given class name.
      *
      * Searches the internal component map for a component whose class name matches the provided fully qualified class
@@ -236,6 +213,29 @@ final class ServiceMap
         }
 
         return $this->getComponentDefinitionById($id);
+    }
+
+    /**
+     * Retrieves the component definition array by its identifier.
+     *
+     * Looks up the component definition registered under the specified component ID in the internal component
+     * definitions map.
+     *
+     * This method provides access to the raw component configuration array, enabling static analysis tools and IDEs to
+     * inspect component properties, dependencies, and configuration options for accurate type inference and reflection
+     * analysis.
+     *
+     * @param string $id Component identifier to look up in the component definitions map.
+     *
+     * @return array Component definition array with configuration options, or empty array if not found.
+     *
+     * @phpstan-return array<array-key, mixed>
+     */
+    public function getComponentDefinitionById(string $id): array
+    {
+        $definition = $this->componentsDefinitions[$id] ?? null;
+
+        return is_array($definition) ? $definition : [];
     }
 
     /**

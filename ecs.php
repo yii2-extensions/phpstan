@@ -19,6 +19,28 @@ return ECSConfig::configure()
         ],
     )
     ->withConfiguredRule(
+        OrderedClassElementsFixer::class,
+        [
+            'order' => [
+                'use_trait',
+                'constant_public',
+                'constant_protected',
+                'constant_private',
+                'property_public',
+                'property_protected',
+                'property_private',
+                'construct',
+                'destruct',
+                'magic',
+                'phpunit',
+                'method_public',
+                'method_protected',
+                'method_private',
+            ],
+            'sort_algorithm' => 'alpha',
+        ],
+    )
+    ->withConfiguredRule(
         OrderedImportsFixer::class,
         [
             'imports_order' => ['class', 'function', 'const'],
@@ -49,7 +71,6 @@ return ECSConfig::configure()
     ->withRules(
         [
             NoUnusedImportsFixer::class,
-            OrderedClassElementsFixer::class,
             OrderedTraitsFixer::class,
             SingleQuoteFixer::class,
         ]

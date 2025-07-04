@@ -159,6 +159,47 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
     }
 
     /**
+     * Searches for property types in attached behaviors' PHPDoc annotations.
+     *
+     * Iterates through all behaviors registered for the specified model class via the {@see ServiceMap} and examines
+     * their PHPDoc property annotations to locate the requested attribute type.
+     *
+     * This method provides comprehensive type resolution by extending the search beyond the model class itself to
+     * include properties defined in attached behaviors, enabling accurate type inference for dynamic attributes that
+     * are provided by behaviors rather than the model directly.
+     *
+     * The search process validates each behavior class existence, creates reflection instances, and delegates to
+     * {@see getPropertyTypeFromPhpDoc()} for actual property type extraction from behavior PHPDoc blocks.
+     *
+     * This method is essential for complete type coverage in {@see ActiveRecord::getAttribute()} calls when
+     * attributes are defined in behaviors attached to the model class.
+     *
+     * @param string $className Fully qualified class name to check.
+     * @param string $attributeName The attribute name to search for.
+     *
+     * @return Type|null Property type if found in any behavior, `null` if not found or behavior classes are
+     * unavailable.
+     */
+    private function getPropertyTypeFromBehaviors(string $className, string $attributeName): Type|null
+    {
+        $behaviors = $this->serviceMap->getBehaviorsByClassName($className);
+
+        foreach ($behaviors as $behaviorClass) {
+            if ($this->reflectionProvider->hasClass($behaviorClass)) {
+                $behaviorReflection = $this->reflectionProvider->getClass($behaviorClass);
+
+                $propertyType = $this->getPropertyTypeFromPhpDoc($behaviorReflection, $attributeName);
+
+                if ($propertyType !== null) {
+                    return $propertyType;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Extracts the type of a specific property from PHPDoc annotations.
      *
      * Parses the PHPDoc comment of the provided {@see ClassReflection} to retrieve property tags and their associated
@@ -212,46 +253,5 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
         } catch (Throwable) {
             return null;
         }
-    }
-
-    /**
-     * Searches for property types in attached behaviors' PHPDoc annotations.
-     *
-     * Iterates through all behaviors registered for the specified model class via the {@see ServiceMap} and examines
-     * their PHPDoc property annotations to locate the requested attribute type.
-     *
-     * This method provides comprehensive type resolution by extending the search beyond the model class itself to
-     * include properties defined in attached behaviors, enabling accurate type inference for dynamic attributes that
-     * are provided by behaviors rather than the model directly.
-     *
-     * The search process validates each behavior class existence, creates reflection instances, and delegates to
-     * {@see getPropertyTypeFromPhpDoc()} for actual property type extraction from behavior PHPDoc blocks.
-     *
-     * This method is essential for complete type coverage in {@see ActiveRecord::getAttribute()} calls when
-     * attributes are defined in behaviors attached to the model class.
-     *
-     * @param string $className Fully qualified class name to check.
-     * @param string $attributeName The attribute name to search for.
-     *
-     * @return Type|null Property type if found in any behavior, `null` if not found or behavior classes are
-     * unavailable.
-     */
-    private function getPropertyTypeFromBehaviors(string $className, string $attributeName): Type|null
-    {
-        $behaviors = $this->serviceMap->getBehaviorsByClassName($className);
-
-        foreach ($behaviors as $behaviorClass) {
-            if ($this->reflectionProvider->hasClass($behaviorClass)) {
-                $behaviorReflection = $this->reflectionProvider->getClass($behaviorClass);
-
-                $propertyType = $this->getPropertyTypeFromPhpDoc($behaviorReflection, $attributeName);
-
-                if ($propertyType !== null) {
-                    return $propertyType;
-                }
-            }
-        }
-
-        return null;
     }
 }

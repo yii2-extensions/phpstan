@@ -2,6 +2,8 @@
 
 ## 0.3.1 Under development
 
+- Bug #62: Order class elements in methods and properties (@terabytesoftw)
+
 ## 0.3.0 June 27, 2025
 
 - Enh #35: Move config fixtures into `config` subdirectory (@terabytesoftw)
