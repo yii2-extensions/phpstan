@@ -25,13 +25,9 @@ jobs:
   phpstan:
     uses: php-forge/actions/.github/workflows/phpstan.yml@main
     with:
-      composer-command: |
-        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       concurrency-group: phpstan-${{ github.workflow }}-${{ github.ref }}
   phpstan-console:
     uses: php-forge/actions/.github/workflows/phpstan.yml@main
     with:
       configuration: 'phpstan-console.neon'
-      composer-command: |
-        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       concurrency-group: phpstan-console-${{ github.workflow }}-${{ github.ref }}
