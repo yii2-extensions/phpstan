@@ -3,6 +3,10 @@
 ## 0.3.1 Under development
 
 - Bug #62: Order class elements in methods and properties (@terabytesoftw)
+- Bug #63: Add case to the ordered class elements in `ECS` configuration (@terabytesoftw)
+- Bug #64: Correct badge URL formatting in `README.md` (@terabytesoftw)
+- Bug #65: Add missing `Composer` requirement in installation guide (@terabytesoftw)
+- Bug #66: Update license badge in `README.md` for correct display and add missing header in `LICENSE.md` (@terabytesoftw)
 
 ## 0.3.0 June 27, 2025
 

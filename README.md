@@ -209,7 +209,7 @@ For detailed configuration options and advanced usage.
 
 ## License
 
-[![License](https://poser.pugx.org/yii2-extensions/phpstan/license)](LICENSE.md)
+[![License](https://img.shields.io/github/license/yii2-extensions/phpstan)](LICENSE.md)
 
 ## Fork 
 
