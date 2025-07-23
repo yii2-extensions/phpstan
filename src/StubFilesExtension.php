@@ -39,7 +39,7 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
         \yii\web\Application::class => 'BaseYiiWeb.stub',
     ];
 
-    private const DEFAULT_STUB = 'ApplicationWeb.stub';
+    private const DEFAULT_STUB = 'BaseYiiWeb.stub';
 
     /**
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
