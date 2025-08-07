@@ -171,6 +171,23 @@ $service = $container->get(MyService::class); // MyService
 $logger = $container->get('logger');          // LoggerInterface (if configured) or mixed
 ```
 
+#### Header collection
+
+```php
+$headers = new HeaderCollection();
+
+// ✅ Typed as string|null
+$host = $headers->get('Host');
+
+// ✅ Typed as array<int, string>
+$forwardedFor = $headers->get('X-Forwarded-For', ['127.0.0.1'], false);
+
+// ✅ Dynamic return type inference with mixed default
+$default = 'default-value';
+$requestId = $headers->get('X-Request-ID', $default, true); // string|null
+$allRequestIds = $headers->get('X-Request-ID', $default, false); // array<int, string>|null
+```
+
 #### Service locator
 
 ```php
