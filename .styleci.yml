@@ -18,8 +18,6 @@ enabled:
   - declare_strict_types
   - dir_constant
   - empty_loop_body_braces
-  - fully_qualified_strict_types
-  - function_to_constant
   - hash_to_slash_comment
   - integer_literal_case
   - is_null
@@ -83,5 +81,6 @@ enabled:
 
 disabled:
   - function_declaration
+  - new_with_parentheses
   - psr12_braces
   - psr12_class_definition
