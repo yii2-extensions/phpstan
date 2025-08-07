@@ -39,6 +39,7 @@ final class HeaderCollectionDynamicMethodReturnType
         assertType('array<int, string>', $headers->get('Accept', [], false));
         assertType('array<int, string>', $headers->get('Accept', 'default', false));
     }
+
     public function testReturnStringWhenFirstIsTrue(): void
     {
         $headers = new HeaderCollection();
