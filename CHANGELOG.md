@@ -1,6 +1,6 @@
 # Change Log
 
-## 0.3.1 Under development
+## 0.3.1 August 16, 2025
 
 - Bug #62: Order class elements in methods and properties (@terabytesoftw)
 - Bug #63: Add case to the ordered class elements in `ECS` configuration (@terabytesoftw)
