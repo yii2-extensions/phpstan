@@ -1,5 +1,7 @@
 # Change Log
 
+## 0.3.2 Under development
+
 ## 0.3.1 August 16, 2025
 
 - Bug #62: Order class elements in methods and properties (@terabytesoftw)
