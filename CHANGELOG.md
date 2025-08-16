@@ -7,6 +7,8 @@
 - Bug #64: Correct badge URL formatting in `README.md` (@terabytesoftw)
 - Bug #65: Add missing `Composer` requirement in installation guide (@terabytesoftw)
 - Bug #66: Update license badge in `README.md` for correct display and add missing header in `LICENSE.md` (@terabytesoftw)
+- Bug #67: Correct default stub file name in `StubFilesExtension.php` for accurate PHPStan analysis (@terabytesoftw)
+- Bug #68: Refactor dynamic return type inference for `HeaderCollection::get()` method in PHPStan analysis, and add tests suite for type inference (@terabytesoftw)
 
 ## 0.3.0 June 27, 2025
 
