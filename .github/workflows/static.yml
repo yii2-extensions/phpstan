@@ -23,11 +23,11 @@ name: static analysis
 
 jobs:
   phpstan:
-    uses: php-forge/actions/.github/workflows/phpstan.yml@main
+    uses: php-forge/actions/.github/workflows/phpstan.yml@v1
     with:
       concurrency-group: phpstan-${{ github.workflow }}-${{ github.ref }}
   phpstan-console:
-    uses: php-forge/actions/.github/workflows/phpstan.yml@main
+    uses: php-forge/actions/.github/workflows/phpstan.yml@v1
     with:
       configuration: 'phpstan-console.neon'
       concurrency-group: phpstan-console-${{ github.workflow }}-${{ github.ref }}
