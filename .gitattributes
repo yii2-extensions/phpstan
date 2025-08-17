@@ -36,6 +36,7 @@
 /docs                           export-ignore
 /ecs.php                        export-ignore
 /infection.json5                export-ignore
+/phpstan-console.neon           export-ignore
 /phpstan.neon                   export-ignore
 /phpunit.xml.dist               export-ignore
 /psalm.xml                      export-ignore
