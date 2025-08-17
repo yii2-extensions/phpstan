@@ -2,6 +2,8 @@
 
 ## 0.3.2 Under development
 
+- Bug #71: Update `.gitattributes` to exclude additional files from the package (@terabytesoftw)
+
 ## 0.3.1 August 16, 2025
 
 - Bug #62: Order class elements in methods and properties (@terabytesoftw)
