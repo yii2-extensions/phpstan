@@ -47,7 +47,7 @@ inference, dynamic method resolution, and comprehensive property reflection.
 - User component with `identity`, `id`, `isGuest` property types.
 
 ✅ **Behavior Integration**
-- Behavior configuration via ServiceMap (see Behaviors below).
+- Behavior configuration via ServiceMap (see the Behaviors section below).
 - Hierarchical type resolution: model properties take precedence over behavior properties.
 - Property and method resolution from attached behaviors.
 
@@ -188,7 +188,7 @@ class SoftDeleteBehavior extends \yii\base\Behavior
 }
 
 // ✅ Typed based on your configuration
-// Behaviors attached via phpstan-config.php 'behaviors' map
+// Behaviors are attached via the phpstan-config.php behaviors map (PHPStan only)
 
 $user = new User();
 
