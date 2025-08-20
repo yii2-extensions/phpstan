@@ -46,6 +46,11 @@ inference, dynamic method resolution, and comprehensive property reflection.
 - Support for custom component configurations.
 - User component with `identity`, `id`, `isGuest` property types.
 
+✅ **Behavior Integration**
+- Hierarchical type resolution: model properties override behavior properties.
+- Property and method resolution from attached behaviors.
+- Support for behavior configuration through ServiceMap.
+
 ✅ **Dependency Injection Container**
 - Service map integration for custom services.
 - Support for closures, singletons, and nested definitions.
@@ -102,6 +107,12 @@ Create a PHPStan-specific config file (`config/phpstan-config.php`).
 declare(strict_types=1);
 
 return [
+    'behaviors' => [
+        app\models\User::class => [
+            app\behaviors\SoftDeleteBehavior::class,
+            yii\behaviors\TimestampBehavior::class,
+        ],
+    ],    
     'components' => [
         'db' => [
             'class' => yii\db\Connection::class,
@@ -159,6 +170,28 @@ if (Yii::$app->user->isGuest === false) {
     $userId = Yii::$app->user->id;           // int|string|null
     $identity = Yii::$app->user->identity;   // YourUserClass
 }
+```
+
+#### Behaviors
+
+```php
+/**
+ * @property string $slug
+ * @property-read int $created_at
+ */
+class SoftDeleteBehavior extends Behavior
+{
+    public function softDelete(): bool { /* ... */ }
+}
+
+$user = new User();
+
+// ✅ PHPStan knows about behavior properties
+$slug = $user->getAttribute('slug');            // string
+$createdAt = $user->getAttribute('created_at'); // int
+
+// ✅ PHPStan knows about behavior methods  
+$result = $user->softDelete();                  // bool
 ```
 
 #### Dependency injection
