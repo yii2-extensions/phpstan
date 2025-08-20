@@ -47,9 +47,9 @@ inference, dynamic method resolution, and comprehensive property reflection.
 - User component with `identity`, `id`, `isGuest` property types.
 
 ✅ **Behavior Integration**
+- Behavior configuration via ServiceMap (see Behaviors below).
 - Hierarchical type resolution: model properties override behavior properties.
 - Property and method resolution from attached behaviors.
-- Support for behavior configuration through ServiceMap.
 
 ✅ **Dependency Injection Container**
 - Service map integration for custom services.
@@ -107,6 +107,7 @@ Create a PHPStan-specific config file (`config/phpstan-config.php`).
 declare(strict_types=1);
 
 return [
+    // PHPStan-only used by this extension for behavior property/method type inference
     'behaviors' => [
         app\models\User::class => [
             app\behaviors\SoftDeleteBehavior::class,
@@ -184,14 +185,17 @@ class SoftDeleteBehavior extends Behavior
     public function softDelete(): bool { /* ... */ }
 }
 
+// ✅ Typed based on your configuration
 $user = new User();
 
-// ✅ PHPStan knows about behavior properties
-$slug = $user->getAttribute('slug');            // string
-$createdAt = $user->getAttribute('created_at'); // int
+// ✅ Typed as string (inferred from behavior property)
+$slug = $user->getAttribute('slug');
 
-// ✅ PHPStan knows about behavior methods  
-$result = $user->softDelete();                  // bool
+// ✅ Typed as int (inferred from behavior property)
+$createdAt = $user->getAttribute('created_at');
+
+// ✅ Typed as bool (method defined in attached behavior)
+$result = $user->softDelete();
 ```
 
 #### Dependency injection
