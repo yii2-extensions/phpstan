@@ -189,10 +189,14 @@ class SoftDeleteBehavior extends \yii\base\Behavior
 
 // ✅ Typed based on your configuration
 // Behaviors attached via phpstan-config.php 'behaviors' map
+
 $user = new User();
 
 // ✅ Typed as string (inferred from behavior property)
 $slug = $user->getAttribute('slug');
+
+// ✅ Direct property access is also inferred (behavior property)
+$slug2 = $user->slug;
 
 // ✅ Typed as int (inferred from behavior property)
 $createdAt = $user->getAttribute('created_at');
