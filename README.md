@@ -46,6 +46,11 @@ inference, dynamic method resolution, and comprehensive property reflection.
 - Support for custom component configurations.
 - User component with `identity`, `id`, `isGuest` property types.
 
+✅ **Behavior Integration**
+- Behavior configuration via ServiceMap (see the Behaviors section below).
+- Hierarchical type resolution: model properties take precedence over behavior properties.
+- Property and method resolution from attached behaviors.
+
 ✅ **Dependency Injection Container**
 - Service map integration for custom services.
 - Support for closures, singletons, and nested definitions.
@@ -102,6 +107,13 @@ Create a PHPStan-specific config file (`config/phpstan-config.php`).
 declare(strict_types=1);
 
 return [
+    // PHPStan only: used by this extension for behavior property/method type inference
+    'behaviors' => [
+        app\models\User::class => [
+            app\behaviors\SoftDeleteBehavior::class,
+            yii\behaviors\TimestampBehavior::class,
+        ],
+    ],    
     'components' => [
         'db' => [
             'class' => yii\db\Connection::class,
@@ -159,6 +171,38 @@ if (Yii::$app->user->isGuest === false) {
     $userId = Yii::$app->user->id;           // int|string|null
     $identity = Yii::$app->user->identity;   // YourUserClass
 }
+```
+
+#### Behaviors
+
+```php
+// Behaviors are attached via the `phpstan-config.php` behaviors map (PHPStan only)
+
+/**
+ * @property string $slug
+ * @property-read int $created_at
+ * 
+ * Note: `created_at` is provided by `TimestampBehavior`.
+ */
+class SoftDeleteBehavior extends \yii\base\Behavior
+{
+    public function softDelete(): bool { /* ... */ }
+}
+
+// ✅ Typed based on your configuration
+$user = new User();
+
+// ✅ Typed as string (inferred from behavior property)
+$slug = $user->getAttribute('slug');
+
+// ✅ Direct property access is also inferred (behavior property)
+$slug2 = $user->slug;
+
+// ✅ Typed as int (inferred from behavior property)
+$createdAt = $user->getAttribute('created_at');
+
+// ✅ Typed as bool (method defined in attached behavior)
+$result = $user->softDelete();
 ```
 
 #### Dependency injection

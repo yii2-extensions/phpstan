@@ -5,6 +5,7 @@
 - Bug #71: Update `.gitattributes` to exclude additional files from the package (@terabytesoftw)
 - Bug #72: Exclude `phpstan-console.neon` from the package in `.gitattributes` (@terabytesoftw)
 - Bug #73: Update workflow actions to use `v1` stable version instead of `main`, update `LICENSE.md` (@terabytesoftw)
+- Bug #74: Update `README.md` to include `Behavior` integration section and example usage (@terabytesoftw)
 
 ## 0.3.1 August 16, 2025
 
