@@ -48,7 +48,7 @@ inference, dynamic method resolution, and comprehensive property reflection.
 
 ✅ **Behavior Integration**
 - Behavior configuration via ServiceMap (see Behaviors below).
-- Hierarchical type resolution: model properties override behavior properties.
+- Hierarchical type resolution: model properties take precedence over behavior properties.
 - Property and method resolution from attached behaviors.
 
 ✅ **Dependency Injection Container**
@@ -107,7 +107,7 @@ Create a PHPStan-specific config file (`config/phpstan-config.php`).
 declare(strict_types=1);
 
 return [
-    // PHPStan-only used by this extension for behavior property/method type inference
+    // PHPStan only: used by this extension for behavior property/method type inference
     'behaviors' => [
         app\models\User::class => [
             app\behaviors\SoftDeleteBehavior::class,
@@ -179,13 +179,16 @@ if (Yii::$app->user->isGuest === false) {
 /**
  * @property string $slug
  * @property-read int $created_at
+ * 
+ * Note: `created_at` is provided by `TimestampBehavior`.
  */
-class SoftDeleteBehavior extends Behavior
+class SoftDeleteBehavior extends \yii\base\Behavior
 {
     public function softDelete(): bool { /* ... */ }
 }
 
 // ✅ Typed based on your configuration
+// Behaviors attached via phpstan-config.php 'behaviors' map
 $user = new User();
 
 // ✅ Typed as string (inferred from behavior property)
