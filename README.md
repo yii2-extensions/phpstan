@@ -176,6 +176,8 @@ if (Yii::$app->user->isGuest === false) {
 #### Behaviors
 
 ```php
+// Behaviors are attached via the phpstan-config.php behaviors map (PHPStan only)
+
 /**
  * @property string $slug
  * @property-read int $created_at
@@ -188,8 +190,6 @@ class SoftDeleteBehavior extends \yii\base\Behavior
 }
 
 // ✅ Typed based on your configuration
-// Behaviors are attached via the phpstan-config.php behaviors map (PHPStan only)
-
 $user = new User();
 
 // ✅ Typed as string (inferred from behavior property)
