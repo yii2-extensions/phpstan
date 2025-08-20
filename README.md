@@ -176,7 +176,7 @@ if (Yii::$app->user->isGuest === false) {
 #### Behaviors
 
 ```php
-// Behaviors are attached via the phpstan-config.php behaviors map (PHPStan only)
+// Behaviors are attached via the `phpstan-config.php` behaviors map (PHPStan only)
 
 /**
  * @property string $slug
