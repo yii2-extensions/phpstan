@@ -74,7 +74,7 @@ inference, dynamic method resolution, and comprehensive property reflection.
 ### Installation
 
 ```bash
-composer require --dev yii2-extensions/phpstan
+composer require --dev yii2-extensions/phpstan:^0.3
 ```
 
 ### Quick start
