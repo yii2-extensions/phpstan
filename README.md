@@ -6,21 +6,24 @@
 </p>
 
 <p align="center">
+    <a href="https://packagist.org/packages/yii2-extensions/phpstan" target="_blank">
+        <img src="https://img.shields.io/packagist/v/yii2-extensions/phpstan.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable" alt="Latest Stable Version">
+    </a>
     <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
-        <img src="https://img.shields.io/badge/PHP-%3E%3D8.1-787CB5" alt="PHP Version">
+        <img src="https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white" alt="PHP version">
     </a>
     <a href="https://github.com/yiisoft/yii2/tree/2.0.53" target="_blank">
-        <img src="https://img.shields.io/badge/Yii2%20-2.0.53-blue" alt="Yii2 22.0.53">
+        <img src="https://img.shields.io/badge/2.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white" alt="Yii 2.0.x">
     </a>
     <a href="https://github.com/yiisoft/yii2/tree/22.0" target="_blank">
-        <img src="https://img.shields.io/badge/Yii2%20-22-blue" alt="Yii2 22.0">
-    </a>    
-    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
-        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml/badge.svg" alt="PHPUnit">
+        <img src="https://img.shields.io/badge/22.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white" alt="Yii 22.0.x">
     </a>
-    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">        
-        <img src="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml/badge.svg" alt="Static Analysis">
-    </a>          
+    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
+        <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/road-runner/build.yml?style=for-the-badge&label=PHPUnit" alt="PHPUnit">
+    </a>
+    <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
+        <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/road-runner/static.yml?style=for-the-badge&label=PHPStan" alt="PHPStan">
+    </a>           
 </p>
 
 A comprehensive PHPStan extension that provides enhanced static analysis for Yii2 applications with precise type 
@@ -68,13 +71,13 @@ inference, dynamic method resolution, and comprehensive property reflection.
 - Support for all Service Locator subclasses (Application, Module, custom classes).
 - Type inference with string variables and class name constants.
 
-## Quick start
-
 ### Installation
 
 ```bash
 composer require --dev yii2-extensions/phpstan
 ```
+
+### Quick start
 
 Create a `phpstan.neon` file in your project root.
 
@@ -258,20 +261,15 @@ For detailed configuration options and advanced usage.
 
 ## Quality code
 
-[![Latest Stable Version](https://poser.pugx.org/yii2-extensions/phpstan/v)](https://github.com/yii2-extensions/phpstan/releases)
-[![Total Downloads](https://poser.pugx.org/yii2-extensions/phpstan/downloads)](https://packagist.org/packages/yii2-extensions/phpstan)
-[![codecov](https://codecov.io/gh/yii2-extensions/phpstan/graph/badge.svg?token=DRcXAg3WGL)](https://codecov.io/gh/yii2-extensions/phpstan)
-[![phpstan-level](https://img.shields.io/badge/PHPStan%20level-max-blue)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
-[![style-ci](https://github.styleci.io/repos/701347895/shield?branch=main)](https://github.styleci.io/repos/701347895?branch=main)
+[![Total Downloads](https://img.shields.io/packagist/dt/yii2-extensions/phpstan.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Downloads)](https://packagist.org/packages/yii2-extensions/phpstan)
+[![Codecov](https://img.shields.io/codecov/c/github/yii2-extensions/phpstan.svg?branch=main&style=for-the-badge&logo=codecov&logoColor=white&label=Coverage)](https://codecov.io/github/yii2-extensions/phpstan)
+[![PHPStan Level Max](https://img.shields.io/badge/PHPStan-Level%20Max-4F5D95.svg?style=for-the-badge&logo=php&logoColor=white)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
+[![StyleCI](https://img.shields.io/badge/StyleCI-Passed-44CC11.svg?style=for-the-badge&logo=styleci&logoColor=white)](https://github.styleci.io/repos/701347895?branch=main)
 
 ## Our social networks
 
-[![X](https://img.shields.io/badge/follow-@terabytesoftw-1DA1F2?logo=x&logoColor=1DA1F2&labelColor=555555&style=flat)](https://x.com/Terabytesoftw)
+[![Follow on X](https://img.shields.io/badge/-Follow%20on%20X-1DA1F2.svg?style=for-the-badge&logo=x&logoColor=white&labelColor=000000)](https://x.com/Terabytesoftw)
 
 ## License
 
-[![License](https://img.shields.io/github/license/yii2-extensions/phpstan)](LICENSE.md)
-
-## Fork 
-
-This package is a fork of [proget-hq/phpstan-yii2](https://github.com/proget-hq/phpstan-yii2) with some corrections.
+[![License](https://img.shields.io/github/license/yii2-extensions/app-basic?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=333333)](LICENSE.md)
