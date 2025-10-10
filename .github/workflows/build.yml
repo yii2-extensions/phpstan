@@ -14,16 +14,19 @@ name: build
 
 permissions:
   contents: read
-  
+
 jobs:
   phpunit:
     uses: yii2-framework/actions/.github/workflows/phpunit.yml@v1
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      composer-command: |
+      composer-command: require
+      composer-flags: |
         composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
       concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
+      hook: |
+
   phpunit-compatibility:
     uses: yii2-framework/actions/.github/workflows/phpunit.yml@v1
     secrets:
