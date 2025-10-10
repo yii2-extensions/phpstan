@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\stub;
+namespace yii2\extensions\phpstan\tests\support\stub;
 
 use yii\base\Behavior;
 use yii\db\ActiveRecord;

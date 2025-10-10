@@ -1,72 +1,35 @@
+<!-- markdownlint-disable MD041 -->
 <p align="center">
-    <a href="https://github.com/yii2-extensions/phpstan" target="_blank">
-        <img src="https://www.yiiframework.com/image/yii_logo_light.svg" alt="Yii Framework">
-    </a>
-    <h1 align="center">Extension for PHPStan</h1>
+    <picture>
+        <source media="(prefers-color-scheme: dark)" srcset="https://www.yiiframework.com/image/design/logo/yii3_full_for_dark.svg">
+        <source media="(prefers-color-scheme: light)" srcset="https://www.yiiframework.com/image/design/logo/yii3_full_for_light.svg">
+        <img src="https://www.yiiframework.com/image/design/logo/yii3_full_for_dark.svg" alt="Yii Framework" width="80%">
+    </picture>
+    <h1 align="center">PHPStan</h1>
+    <br>
 </p>
+<!-- markdownlint-enable MD041 -->
 
 <p align="center">
-    <a href="https://www.php.net/releases/8.1/en.php" target="_blank">
-        <img src="https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white" alt="PHP version">
-    </a>
-    <a href="https://github.com/yiisoft/yii2/tree/2.0.53" target="_blank">
-        <img src="https://img.shields.io/badge/2.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white" alt="Yii 2.0.x">
-    </a>
-    <a href="https://github.com/yiisoft/yii2/tree/22.0" target="_blank">
-        <img src="https://img.shields.io/badge/22.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white" alt="Yii 22.0.x">
-    </a>
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/build.yml" target="_blank">
-        <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/phpstan/build.yml?style=for-the-badge&label=PHPUnit" alt="PHPUnit">
+        <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/phpstan/build.yml?style=for-the-badge&logo=github&label=PHPUnit" alt="PHPUnit">
     </a>
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
-        <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/phpstan/static.yml?style=for-the-badge&label=PHPStan" alt="PHPStan">
+        <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/phpstan/static.yml?style=for-the-badge&logo=github&label=PHPStan" alt="PHPStan">
     </a>           
 </p>
 
-A comprehensive PHPStan extension that provides enhanced static analysis for Yii2 applications with precise type 
-inference, dynamic method resolution, and comprehensive property reflection.
+<p align="center">
+    <strong>Enhanced static analysis for Yii2 applications with PHPStan</strong><br>
+    <em>Precise type inference, dynamic method resolution, and comprehensive property reflection</em>
+</p>
 
 ## Features
 
-✅ **ActiveRecord & ActiveQuery Analysis**
-- Array/object result type inference based on `asArray()` usage.
-- Dynamic return type inference for `find()`, `findOne()`, `findAll()` methods.
-- Generic type support for `ActiveQuery<Model>` with proper chaining.
-- Hierarchical type resolution: model properties take precedence over behavior properties.
-- Precise type inference for `getAttribute()` method calls based on PHPDoc annotations.
-- Property type resolution from both model classes and attached behaviors.
-- Relation methods (`hasOne()`, `hasMany()`) with accurate return types.
-- Support for behavior property definitions through ServiceMap integration.
-
-✅ **Application Component Resolution**
-- Automatic type inference for `Yii::$app->component` access.
-- Behavior property and method reflection.
-- Generic component support with configurable type parameters.
-- Non-destructive generic configuration - extend without overriding defaults.
-- Support for custom component configurations.
-- User component with `identity`, `id`, `isGuest` property types.
-
-✅ **Behavior Integration**
-- Behavior configuration via ServiceMap (see the Behaviors section below).
-- Hierarchical type resolution: model properties take precedence over behavior properties.
-- Property and method resolution from attached behaviors.
-
-✅ **Dependency Injection Container**
-- Service map integration for custom services.
-- Support for closures, singletons, and nested definitions.
-- Type-safe `Container::get()` method resolution.
-
-✅ **Framework Integration**
-- Header collection dynamic method types.
-- Stub files for different application types (web, console, base).
-- Support for Yii2 constants (`YII_DEBUG`, `YII_ENV_*`).
-
-✅ **Service Locator Component Resolution**
-- Automatic fallback to mixed type for unknown component identifiers.
-- Dynamic return type inference for `ServiceLocator::get()` calls.
-- Priority-based resolution: ServiceMap components > ServiceMap services > Real classes > Mixed type.
-- Support for all Service Locator subclasses (Application, Module, custom classes).
-- Type inference with string variables and class name constants.
+<picture>
+    <source media="(min-width: 768px)" srcset="./docs/svgs/features.svg">
+    <img src="./docs/svgs/features-mobile.svg" alt="Feature Overview" style="width: 100%;">
+</picture>
 
 ### Installation
 
@@ -258,13 +221,17 @@ For detailed configuration options and advanced usage.
 
 ## Package information
 
+[![PHP](https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/releases/8.1/en.php)
+[![Yii 2.0.x](https://img.shields.io/badge/2.0.53-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/2.0.53)
+[![Yii 22.0.x](https://img.shields.io/badge/22.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/22.0)
 [![Latest Stable Version](https://img.shields.io/packagist/v/yii2-extensions/phpstan.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable)](https://packagist.org/packages/yii2-extensions/phpstan)
-[![Total Downloads](https://img.shields.io/packagist/dt/yii2-extensions/phpstan.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Downloads)](https://packagist.org/packages/yii2-extensions/phpstan)
+[![Total Downloads](https://img.shields.io/packagist/dt/yii2-extensions/phpstan.svg?style=for-the-badge&logo=composer&logoColor=white&label=Downloads)](https://packagist.org/packages/yii2-extensions/phpstan)
 
 ## Quality code
 
 [![Codecov](https://img.shields.io/codecov/c/github/yii2-extensions/phpstan.svg?branch=main&style=for-the-badge&logo=codecov&logoColor=white&label=Coverage)](https://codecov.io/github/yii2-extensions/phpstan)
 [![PHPStan Level Max](https://img.shields.io/badge/PHPStan-Level%20Max-4F5D95.svg?style=for-the-badge&logo=php&logoColor=white)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
+[![Super-Linter](https://img.shields.io/github/actions/workflow/status/yii2-extensions/phpstan/linter.yml?style=for-the-badge&label=Super-Linter&logo=github)](https://github.com/yii2-extensions/phpstan/actions/workflows/linter.yml)
 [![StyleCI](https://img.shields.io/badge/StyleCI-Passed-44CC11.svg?style=for-the-badge&logo=styleci&logoColor=white)](https://github.styleci.io/repos/701347895?branch=main)
 
 ## Our social networks
@@ -273,4 +240,4 @@ For detailed configuration options and advanced usage.
 
 ## License
 
-[![License](https://img.shields.io/github/license/yii2-extensions/phpstan?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=333333)](LICENSE.md)
+[![License](https://img.shields.io/badge/License-BSD--3--Clause-brightgreen.svg?style=for-the-badge&logo=opensourceinitiative&logoColor=white&labelColor=555555)](LICENSE)

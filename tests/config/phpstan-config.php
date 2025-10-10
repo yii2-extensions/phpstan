@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 use yii\web\View;
-use yii2\extensions\phpstan\tests\stub\{
+use yii2\extensions\phpstan\tests\support\stub\{
     BehaviorOne,
     BehaviorTwo,
     ModelWithConflictingProperty,

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\data\method;
 
-use yii2\extensions\phpstan\tests\stub\MyComponent;
+use yii2\extensions\phpstan\tests\support\stub\MyComponent;
 
 use function PHPStan\Testing\assertType;
 

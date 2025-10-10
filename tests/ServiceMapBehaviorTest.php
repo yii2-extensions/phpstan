@@ -8,7 +8,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use RuntimeException;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\stub\{BehaviorOne, BehaviorTwo, MyComponent};
+use yii2\extensions\phpstan\tests\support\stub\{BehaviorOne, BehaviorTwo, MyComponent};
 
 /**
  * Test suite for {@see ServiceMap} behavior resolution and validation logic.
@@ -62,12 +62,12 @@ final class ServiceMapBehaviorTest extends TestCase
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
-        $behaviors = $serviceMap->getBehaviorsByClassName('yii2\extensions\phpstan\tests\stub\MyComponent');
+        $behaviors = $serviceMap->getBehaviorsByClassName('yii2\extensions\phpstan\tests\support\stub\MyComponent');
 
         self::assertSame(
             [
-                'yii2\extensions\phpstan\tests\stub\BehaviorOne',
-                'yii2\extensions\phpstan\tests\stub\BehaviorTwo',
+                'yii2\extensions\phpstan\tests\support\stub\BehaviorOne',
+                'yii2\extensions\phpstan\tests\support\stub\BehaviorTwo',
             ],
             $behaviors,
             'ServiceMap should return behaviors for MyComponent class.',

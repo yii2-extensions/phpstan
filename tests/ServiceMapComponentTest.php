@@ -8,8 +8,7 @@ use PHPUnit\Framework\TestCase;
 use ReflectionException;
 use RuntimeException;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
-use yii2\extensions\phpstan\tests\stub\User;
+use yii2\extensions\phpstan\tests\support\stub\{MyActiveRecord, User};
 
 /**
  * Test suite for {@see ServiceMap} component resolution and definition behavior.
@@ -73,7 +72,7 @@ final class ServiceMapComponentTest extends TestCase
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertSame(
-            ['identityClass' => 'yii2\extensions\phpstan\tests\stub\User'],
+            ['identityClass' => 'yii2\extensions\phpstan\tests\support\stub\User'],
             $serviceMap->getComponentDefinitionByClassName('yii\web\User'),
             'ServiceMap should return the component definition for \'yii\web\User\'.',
         );

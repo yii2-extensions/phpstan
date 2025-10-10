@@ -5,7 +5,7 @@ includes:
 
 parameters:
     bootstrapFiles:
-        - tests/bootstrap.php
+        - tests/support/bootstrap.php
 
     ignoreErrors:
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'

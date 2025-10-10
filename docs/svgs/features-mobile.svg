@@ -1,0 +1,75 @@
+<!-- Versión móvil - Una sola columna -->
+<svg fill="none" viewBox="0 0 600 580" width="100%" height="580" xmlns="http://www.w3.org/2000/svg">
+    <foreignObject width="100%" height="100%">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+            <style>
+                .container {
+                    display: grid;
+                    grid-template-columns: 1fr;
+                    gap: 16px;
+                    padding: 16px;
+                }
+                .alert-box {
+                    border-left: 4px solid #1f883d;
+                    padding: 12px;
+                    margin-bottom: 12px;
+                    border-radius: 6px;
+                    background: rgba(31, 136, 61, 0.1);
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                    width: 100%;
+                    box-sizing: border-box;
+                }
+                .alert-title {
+                    margin: 0 0 8px 0;
+                    font-weight: 600;
+                    font-size: 14px;
+                }
+                .alert-content {
+                    margin: 0;
+                    line-height: 1.4;
+                    font-size: 12px;
+                }
+
+                /* Light mode */
+                @media (prefers-color-scheme: light) {
+                    .alert-title { color: #000000; }
+                    .alert-content { color: #333333; }
+                    .alert-box { background: rgba(31, 136, 61, 0.1); }
+                }
+
+                /* Dark mode */
+                @media (prefers-color-scheme: dark) {
+                    .alert-title { color: #ffffff; }
+                    .alert-content { color: #ffffff; }
+                    .alert-box { background: rgba(31, 136, 61, 0.2); }
+                }
+            </style>
+            <div class="container">
+                <div class="alert-box">
+                    <p class="alert-title"><strong>ActiveRecord &amp; ActiveQuery Analysis</strong></p>
+                    <p class="alert-content">Type inference • Generic support • Property resolution • Relation methods</p>
+                </div>
+                <div class="alert-box">
+                    <p class="alert-title"><strong>Application Component Resolution</strong></p>
+                    <p class="alert-content">Auto type inference • Behavior reflection • Custom configurations • User component</p>
+                </div>
+                <div class="alert-box">
+                    <p class="alert-title"><strong>Behavior Integration</strong></p>
+                    <p class="alert-content">ServiceMap configuration • Hierarchical resolution • Property &amp; method types</p>
+                </div>
+                <div class="alert-box">
+                    <p class="alert-title"><strong>Dependency Injection Container</strong></p>
+                    <p class="alert-content">Service map integration • Type-safe resolution • Closures &amp; singletons</p>
+                </div>
+                <div class="alert-box">
+                    <p class="alert-title"><strong>Framework Integration</strong></p>
+                    <p class="alert-content">Header collection types • Stub files • Yii2 constants support</p>
+                </div>
+                <div class="alert-box">
+                    <p class="alert-title"><strong>Service Locator Resolution</strong></p>
+                    <p class="alert-content">Dynamic type inference • Priority-based resolution • Fallback support</p>
+                </div>
+            </div>
+        </div>
+    </foreignObject>
+</svg>

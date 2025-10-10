@@ -40,7 +40,7 @@ final class UserPropertiesClassReflectionType
 
     public function testReturnIdentityFromIdentityProperty(): void
     {
-        assertType('yii2\extensions\phpstan\tests\stub\User|null', Yii::$app->user->identity);
+        assertType('yii2\extensions\phpstan\tests\support\stub\User|null', Yii::$app->user->identity);
     }
 
     public function testReturnStringFromEmailProperty(): void
