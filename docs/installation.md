@@ -182,7 +182,7 @@ vendor/bin/phpstan analyse
 
 You should see output similar to.
 
-```
+```bash
 PHPStan - PHP Static Analysis Tool
     [OK] No errors
 ```
