@@ -7,7 +7,7 @@ namespace yii2\extensions\phpstan\tests\data\type;
 use Exception;
 use yii\base\InvalidConfigException;
 use yii\di\{Container, NotInstantiableException};
-use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
+use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
 
 use function PHPStan\Testing\assertType;
 use function random_int;
@@ -45,8 +45,14 @@ final class ContainerDynamicMethodReturnType
 
         $activeRecord = $container->get(MyActiveRecord::class);
 
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $activeRecord);
-        assertType('bool', $activeRecord->flag);
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
+            $activeRecord,
+        );
+        assertType(
+            'bool',
+            $activeRecord->flag,
+        );
     }
 
     /**
@@ -56,9 +62,12 @@ final class ContainerDynamicMethodReturnType
     public function testReturnClassWhenGetByClassNameString(): void
     {
         $container = new Container();
-        $className = 'yii2\extensions\phpstan\tests\stub\MyActiveRecord';
+        $className = 'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord';
 
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $container->get($className));
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
+            $container->get($className),
+        );
     }
 
     /**
@@ -69,7 +78,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('mixed', $container->get('unknown-service'));
+        assertType(
+            'mixed',
+            $container->get('unknown-service'),
+        );
     }
 
     /**
@@ -80,7 +92,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('SplStack', $container->get('closure'));
+        assertType(
+            'SplStack',
+            $container->get('closure'),
+        );
     }
 
     /**
@@ -91,7 +106,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('SplObjectStorage', $container->get('service'));
+        assertType(
+            'SplObjectStorage',
+            $container->get('service'),
+        );
     }
 
     /**
@@ -102,7 +120,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('SplFileInfo', $container->get('nested-service-class'));
+        assertType(
+            'SplFileInfo',
+            $container->get('nested-service-class'),
+        );
     }
 
     /**
@@ -113,7 +134,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('SplFileInfo', $container->get('singleton-nested-service-class'));
+        assertType(
+            'SplFileInfo',
+            $container->get('singleton-nested-service-class'),
+        );
     }
 
     /**
@@ -124,7 +148,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('Exception', $container->get(Exception::class));
+        assertType(
+            'Exception',
+            $container->get(Exception::class),
+        );
     }
 
     /**
@@ -136,8 +163,8 @@ final class ContainerDynamicMethodReturnType
         $container = new Container();
 
         assertType(
-            'yii2\extensions\phpstan\tests\stub\MyActiveRecord',
-            $container->get('yii2\extensions\phpstan\tests\stub\MyActiveRecord'),
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
+            $container->get('yii2\extensions\phpstan\tests\support\stub\MyActiveRecord'),
         );
     }
 
@@ -149,7 +176,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('SplStack', $container->get('singleton-closure'));
+        assertType(
+            'SplStack',
+            $container->get('singleton-closure'),
+        );
     }
 
     /**
@@ -160,7 +190,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('SplObjectStorage', $container->get('singleton-service'));
+        assertType(
+            'SplObjectStorage',
+            $container->get('singleton-service'),
+        );
     }
 
     /**
@@ -171,7 +204,10 @@ final class ContainerDynamicMethodReturnType
     {
         $container = new Container();
 
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $container->get('singleton-string'));
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
+            $container->get('singleton-string'),
+        );
     }
 
     /**
@@ -185,7 +221,10 @@ final class ContainerDynamicMethodReturnType
         $useService = (bool) random_int(0, 1);
         $result = $useService ? $container->get('singleton-service') : $container->get('closure');
 
-        assertType('SplObjectStorage|SplStack', $result);
+        assertType(
+            'SplObjectStorage|SplStack',
+            $result,
+        );
     }
 
     /**
@@ -199,7 +238,7 @@ final class ContainerDynamicMethodReturnType
         $params = ['flag' => true];
 
         assertType(
-            'yii2\extensions\phpstan\tests\stub\MyActiveRecord',
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
             $container->get(MyActiveRecord::class, $params),
         );
     }

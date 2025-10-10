@@ -12,7 +12,7 @@ use SplObjectStorage;
 use SplStack;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
+use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
 
 /**
  * Test suite for {@see ServiceMap} service resolution and container definition behavior.

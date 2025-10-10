@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\data\type;
 
 use yii\db\ActiveRecord;
-use yii2\extensions\phpstan\tests\stub\{
+use yii2\extensions\phpstan\tests\support\stub\{
     ModelWithConflictingProperty,
     ModelWithMultipleBehaviors,
     NestedSetsModel,

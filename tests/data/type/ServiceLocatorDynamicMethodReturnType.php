@@ -8,7 +8,7 @@ use yii\base\InvalidConfigException;
 use yii\base\Module;
 use yii\di\ServiceLocator;
 use yii\web\{Application, Request, Response, Session, User};
-use yii2\extensions\phpstan\tests\stub\MyActiveRecord;
+use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
 
 use function PHPStan\Testing\assertType;
 
@@ -41,7 +41,7 @@ final class ServiceLocatorDynamicMethodReturnType
     {
         $locator = new ServiceLocator();
 
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', $locator->get(MyActiveRecord::class));
+        assertType('yii2\extensions\phpstan\tests\support\stub\MyActiveRecord', $locator->get(MyActiveRecord::class));
     }
 
     /**
@@ -51,7 +51,7 @@ final class ServiceLocatorDynamicMethodReturnType
     {
         $locator = new ServiceLocator();
 
-        $className = 'yii2\extensions\phpstan\tests\stub\MyActiveRecord';
+        $className = 'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord';
 
         assertType(MyActiveRecord::class, $locator->get($className));
     }

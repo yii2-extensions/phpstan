@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\data\type;
 
 use yii\db\{ActiveQuery, ActiveRecord};
-use yii2\extensions\phpstan\tests\stub\{Category, MyActiveRecord, User};
+use yii2\extensions\phpstan\tests\support\stub\{Category, MyActiveRecord, User};
 
 use function PHPStan\Testing\assertType;
 
@@ -43,41 +43,56 @@ final class ActiveRecordDynamicStaticMethodReturnType
 
     public function testReturnCategoryQueryWhenFindOnCategory(): void
     {
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>', Category::find());
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\Category>',
+            Category::find(),
+        );
     }
 
     public function testReturnMyActiveRecordArrayQueryWhenFindAsArray(): void
     {
-        assertType('yii\db\ActiveQuery<array{flag: bool}>', MyActiveRecord::find()->asArray());
+        assertType(
+            'yii\db\ActiveQuery<array{flag: bool}>',
+            MyActiveRecord::find()->asArray(),
+        );
     }
 
     public function testReturnMyActiveRecordArrayWhenFindAllWithIds(): void
     {
-        assertType('array<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', MyActiveRecord::findAll([1, 2, 3]));
+        assertType(
+            'array<yii2\extensions\phpstan\tests\support\stub\MyActiveRecord>',
+            MyActiveRecord::findAll([1, 2, 3]),
+        );
     }
 
     public function testReturnMyActiveRecordOrNullWhenFindOneAfterChaining(): void
     {
         assertType(
-            'yii2\extensions\phpstan\tests\stub\MyActiveRecord|null',
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord|null',
             MyActiveRecord::find()->where(['status' => 'published'])->one(),
         );
     }
 
     public function testReturnMyActiveRecordOrNullWhenFindOneById(): void
     {
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord|null', MyActiveRecord::findOne(1));
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord|null',
+            MyActiveRecord::findOne(1),
+        );
     }
 
     public function testReturnMyActiveRecordQueryWhenFind(): void
     {
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>', MyActiveRecord::find());
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\MyActiveRecord>',
+            MyActiveRecord::find(),
+        );
     }
 
     public function testReturnMyActiveRecordQueryWhenFindBySqlWithParameters(): void
     {
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\MyActiveRecord>',
             MyActiveRecord::findBySql('SELECT * FROM my_table WHERE id = :id', [':id' => 1]),
         );
     }
@@ -85,43 +100,55 @@ final class ActiveRecordDynamicStaticMethodReturnType
     public function testReturnMyActiveRecordQueryWhenFindWithChaining(): void
     {
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\MyActiveRecord>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\MyActiveRecord>',
             MyActiveRecord::find()->where(['status' => 'active'])->orderBy('created_at DESC'),
         );
     }
 
     public function testReturnMyActiveRecordWhenInstantiating(): void
     {
-        assertType('yii2\extensions\phpstan\tests\stub\MyActiveRecord', new MyActiveRecord());
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
+            new MyActiveRecord(),
+        );
     }
 
     public function testReturnUserArrayQueryWhenFindAsArray(): void
     {
-        assertType('yii\db\ActiveQuery<array{id: int, name: string, email: string}>', User::find()->asArray());
+        assertType(
+            'yii\db\ActiveQuery<array{id: int, name: string, email: string}>',
+            User::find()->asArray(),
+        );
     }
 
     public function testReturnUserArrayWhenFindAllAfterChaining(): void
     {
         assertType(
-            'array<int, yii2\extensions\phpstan\tests\stub\User>',
+            'array<int, yii2\extensions\phpstan\tests\support\stub\User>',
             User::find()->where(['active' => 1])->orderBy('name ASC')->all(),
         );
     }
 
     public function testReturnUserArrayWhenFindAllWithCondition(): void
     {
-        assertType('array<yii2\extensions\phpstan\tests\stub\User>', User::findAll(['status' => 'active']));
+        assertType(
+            'array<yii2\extensions\phpstan\tests\support\stub\User>',
+            User::findAll(['status' => 'active']),
+        );
     }
 
     public function testReturnUserOrNullWhenFindOneByCondition(): void
     {
-        assertType('yii2\extensions\phpstan\tests\stub\User|null', User::findOne(['id' => 1]));
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\User|null',
+            User::findOne(['id' => 1]),
+        );
     }
 
     public function testReturnUserQueryWhenFindBySql(): void
     {
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
             User::findBySql('SELECT * FROM users'),
         );
     }
@@ -129,18 +156,24 @@ final class ActiveRecordDynamicStaticMethodReturnType
     public function testReturnUserQueryWhenFindBySqlWithChaining(): void
     {
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
             User::findBySql('SELECT * FROM users')->andWhere(['active' => 1])->limit(10),
         );
     }
 
     public function testReturnUserQueryWhenFindOnUser(): void
     {
-        assertType('yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>', User::find());
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
+            User::find(),
+        );
     }
 
     public function testReturnUserWhenInstantiating(): void
     {
-        assertType('yii2\extensions\phpstan\tests\stub\User', new User());
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\User',
+            new User(),
+        );
     }
 }

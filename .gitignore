@@ -1,24 +1,29 @@
 #code coverage
-/code_coverage
+code_coverage
 
-# composer vendor dir
-/vendor
-/composer.lock
+# composer
+composer.lock
+
+# gitHub copilot config (if present)
+.copilot/
+.github/copilot/**
 
 #node_modules
-/node_modules
+node_modules
 
 # phpstorm project files
 .idea
 
 # phpunit
-phpunit.phar
-.phpunit.result.cache
 .phpunit.cache
-phpunit.xlm
+.phpunit.result.cache
+phpunit.xml*
 
-#yii3 config packages
-/config/packages
+# vendor directory
+vendor
+
+# vscode
+.vscode
 
 # windows thumbnail cache
 Thumbs.db

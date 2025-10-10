@@ -1,4 +1,4 @@
-# Change Log
+# Changelog
 
 ## 0.3.2 Under development
 
@@ -7,6 +7,7 @@
 - Bug #73: Update workflow actions to use `v1` stable version instead of `main`, update `LICENSE.md` (@terabytesoftw)
 - Bug #74: Update `README.md` to include `Behavior` integration section and example usage (@terabytesoftw)
 - Bug #75: Update `README.md` to enhance badge visibility and improve installation instructions (@terabytesoftw)
+- Bug #76: Update workflows and documentation for improved CI/CD processes and feature clarity (@terabytesoftw)
 
 ## 0.3.1 August 16, 2025
 
@@ -15,7 +16,7 @@
 - Bug #64: Correct badge URL formatting in `README.md` (@terabytesoftw)
 - Bug #65: Add missing `Composer` requirement in installation guide (@terabytesoftw)
 - Bug #66: Update license badge in `README.md` for correct display and add missing header in `LICENSE.md` (@terabytesoftw)
-- Bug #67: Correct default stub file name in `StubFilesExtension.php` for accurate PHPStan analysis (@terabytesoftw)
+- Bug #67: Correct default stub filename in `StubFilesExtension.php` for accurate PHPStan analysis (@terabytesoftw)
 - Bug #68: Refactor dynamic return type inference for `HeaderCollection::get()` method in PHPStan analysis, and add tests suite for type inference (@terabytesoftw)
 
 ## 0.3.0 June 27, 2025
@@ -73,7 +74,7 @@
 - Enh #14: Consolidate `PHPUnit` workflows and update `README.md` with `Yii2` version badges (@terabytesoftw)
 - Bug #15: Correct badge label formatting for `Yii2` version in `README.md` (@terabytesoftw)
 - Bug #16: Remove duplicate concurrency settings from phpunit-compatibility job in `build.yml` (@terabytesoftw)
-- Bug #17: Update changelog for version `0.2.0` with recent enhancements and bug fixes (@terabytesoftw)
+- Bug #17: Update changelog for version `0.2.0` with recent enhancements and bugfixes (@terabytesoftw)
 - Bug #18: Add usage instructions and configuration details for `phpstan.neon` in `README.md` (@terabytesoftw)
 
 ## 0.1.0 February 27, 2024

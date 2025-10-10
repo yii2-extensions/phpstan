@@ -42,7 +42,7 @@ final class ApplicationPropertiesClassReflectionExtensionTest extends TypeInfere
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [dirname(__DIR__, 2) . '/extension-test.neon'];
+        return [dirname(__DIR__, 2) . '/support/extension-test.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

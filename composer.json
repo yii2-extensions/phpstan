@@ -34,11 +34,11 @@
         "branch-alias": {
             "dev-main": "0.4.x-dev"
         },
-		"phpstan": {
-			"includes": [
-				"extension.neon"
-			]
-		}
+        "phpstan": {
+            "includes": [
+                "extension.neon"
+            ]
+        }
     },
     "config": {
         "sort-packages": true,

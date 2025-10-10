@@ -62,7 +62,7 @@ Add the plugin configuration to your `composer.json`.
 }
 ```
 
-With this setup, the extension will be automatically registered, and you only need to configure the Yii specific 
+With this setup, the extension will be automatically registered, and you only need to configure the Yii specific
 settings.
 
 ### Manual extension registration
@@ -89,7 +89,7 @@ parameters:
         - src
         - controllers
         - models
-    
+
     tmpDir: %currentWorkingDirectory%/runtime
 
     yii2:
@@ -182,9 +182,9 @@ vendor/bin/phpstan analyse
 
 You should see output similar to.
 
-```
+```bash
 PHPStan - PHP Static Analysis Tool
- [OK] No errors
+    [OK] No errors
 ```
 
 ### Test type inference

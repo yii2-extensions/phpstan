@@ -44,7 +44,7 @@ final class ServiceLocatorDynamicMethodReturnTypeExtensionTest extends TypeInfer
 
     public static function getAdditionalConfigFiles(): array
     {
-        return [dirname(__DIR__) . '/extension-test.neon'];
+        return [dirname(__DIR__) . '/support/extension-test.neon'];
     }
 
     #[DataProvider('dataFileAsserts')]

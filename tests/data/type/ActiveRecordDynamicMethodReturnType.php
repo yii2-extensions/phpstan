@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\data\type;
 
 use yii\db\{ActiveQuery, ActiveRecord};
-use yii2\extensions\phpstan\tests\stub\{Category, MyActiveRecord, User};
+use yii2\extensions\phpstan\tests\support\stub\{Category, MyActiveRecord, User};
 
 use function PHPStan\Testing\assertType;
 
@@ -58,7 +58,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'array<int, yii2\extensions\phpstan\tests\stub\Category>',
+            'array<int, yii2\extensions\phpstan\tests\support\stub\Category>',
             $model->hasMany(Category::class, ['parent_id' => 'id'])->all(),
         );
     }
@@ -68,7 +68,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\Category>',
             $model->hasMany(Category::class, ['parent_id' => 'id'])->orderBy('name ASC')->limit(10),
         );
     }
@@ -78,7 +78,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\Category>',
             $model->hasMany(Category::class, ['parent_id' => 'id']),
         );
     }
@@ -88,8 +88,8 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new User();
 
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\Category>',
-            $model->hasMany('yii2\extensions\phpstan\tests\stub\Category', ['user_id' => 'id']),
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\Category>',
+            $model->hasMany('yii2\extensions\phpstan\tests\support\stub\Category', ['user_id' => 'id']),
         );
     }
 
@@ -118,7 +118,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'yii2\extensions\phpstan\tests\stub\User|null',
+            'yii2\extensions\phpstan\tests\support\stub\User|null',
             $model->hasOne(User::class, ['id' => 'user_id'])->one(),
         );
     }
@@ -128,7 +128,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
             $model
                 ->hasOne(User::class, ['id' => 'user_id'])
                 ->where(['active' => 1])
@@ -141,8 +141,8 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new Category();
 
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
-            $model->hasOne('yii2\extensions\phpstan\tests\stub\User', ['id' => 'user_id']),
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
+            $model->hasOne('yii2\extensions\phpstan\tests\support\stub\User', ['id' => 'user_id']),
         );
     }
 
@@ -151,7 +151,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\stub\User>',
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
             $model->hasOne(User::class, ['id' => 'user_id']),
         );
     }
