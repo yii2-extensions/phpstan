@@ -4,8 +4,9 @@ code_coverage
 # composer
 composer.lock
 
-#copilot
-copilot
+# gitHub copilot config (if present)
+.copilot/
+.github/copilot/**
 
 #node_modules
 node_modules
@@ -14,8 +15,9 @@ node_modules
 .idea
 
 # phpunit
-.phpunit.*
-phpunit.*
+.phpunit.cache
+.phpunit.result.cache
+phpunit.xml*
 
 # vendor directory
 vendor
