@@ -24,5 +24,6 @@ jobs:
   phpstan-console:
     uses: yii2-framework/actions/.github/workflows/phpstan.yml@v1
     with:
-      configuration: 'phpstan-console.neon'
-      concurrency-group: phpstan-console-${{ github.workflow }}-${{ github.ref }}
+      configuration: "phpstan-console.neon"
+      concurrency-group: |
+        phpstan-console-${{ github.workflow }}-${{ github.ref }}

@@ -16,7 +16,7 @@
     </a>
     <a href="https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml" target="_blank">
         <img src="https://img.shields.io/github/actions/workflow/status/yii2-extensions/phpstan/static.yml?style=for-the-badge&logo=github&label=PHPStan" alt="PHPStan">
-    </a>           
+    </a>
 </p>
 
 <p align="center">
@@ -47,19 +47,19 @@ includes:
 
 parameters:
     level: 5
-    
+
     paths:
         - src
         - controllers
         - models
 
-    tmpDir: %currentWorkingDirectory%/runtime        
-    
+    tmpDir: %currentWorkingDirectory%/runtime
+
     yii2:
         config_path: config/phpstan-config.php
         component_generics:
             user: identityClass      # Built-in (already configured)
-            repository: modelClass   # Custom generic component        
+            repository: modelClass   # Custom generic component
 ```
 
 Create a PHPStan-specific config file (`config/phpstan-config.php`).
@@ -76,7 +76,7 @@ return [
             app\behaviors\SoftDeleteBehavior::class,
             yii\behaviors\TimestampBehavior::class,
         ],
-    ],    
+    ],
     'components' => [
         'db' => [
             'class' => yii\db\Connection::class,
@@ -144,7 +144,7 @@ if (Yii::$app->user->isGuest === false) {
 /**
  * @property string $slug
  * @property-read int $created_at
- * 
+ *
  * Note: `created_at` is provided by `TimestampBehavior`.
  */
 class SoftDeleteBehavior extends \yii\base\Behavior
