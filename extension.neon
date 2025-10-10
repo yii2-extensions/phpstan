@@ -14,7 +14,7 @@ parameters:
 parametersSchema:
     yii2: structure(
         [
-		    config_path: schema(string()),
+            config_path: schema(string()),
             component_generics: schema(arrayOf(string(), string()))
         ]
     )
