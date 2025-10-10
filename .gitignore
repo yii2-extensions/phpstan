@@ -15,10 +15,10 @@ copilot
 .idea
 
 # phpunit
-phpunit.phar
-.phpunit.result.cache
 .phpunit.cache
-phpunit.xlm
+.phpunit.result.cache
+phpunit.phar
+phpunit.xml.*
 
 # vscode
 .vscode
