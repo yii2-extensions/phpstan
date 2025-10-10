@@ -21,9 +21,7 @@ jobs:
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     with:
-      composer-command: require
-      composer-flags: |
-        composer require yiisoft/yii2:22.0.x-dev --prefer-dist --no-progress --no-interaction --no-scripts --ansi
+      composer-command: require yiisoft/yii2:22.0.x-dev
       concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
       hook: |
 
