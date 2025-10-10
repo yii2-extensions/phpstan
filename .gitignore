@@ -1,6 +1,9 @@
 #code coverage
 /code_coverage
 
+#copilot
+copilot
+
 # composer vendor dir
 /vendor
 /composer.lock
@@ -16,6 +19,9 @@ phpunit.phar
 .phpunit.result.cache
 .phpunit.cache
 phpunit.xlm
+
+# vscode
+.vscode
 
 #yii3 config packages
 /config/packages
