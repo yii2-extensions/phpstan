@@ -18,8 +18,8 @@ parameters:
     paths:
         - src
 
-    tmpDir: %currentWorkingDirectory%/runtime        
-    
+    tmpDir: %currentWorkingDirectory%/runtime
+
     yii2:
         config_path: config/phpstan-config.php
 ```
@@ -38,7 +38,7 @@ parameters:
         - config/
         - runtime/
         - vendor/
-        - web/assets/        
+        - web/assets/
 
     level: 6
 
@@ -107,7 +107,7 @@ parameters:
         - commands
         - console
 
-    tmpDir: %currentWorkingDirectory%/runtime        
+    tmpDir: %currentWorkingDirectory%/runtime
 
     yii2:
         config_path: config/phpstan-console-config.php
@@ -167,14 +167,14 @@ return [
             'class' => \yii\db\Connection::class,
             'dsn' => 'mysql:host=localhost;dbname=test',
         ],
-        
+
         // User component with identity class
         'user' => [
             'class' => \yii\web\User::class,
             'identityClass' => \app\models\User::class,
             'loginUrl' => ['/site/login'],
         ],
-        
+
         // Mailer
         'mailer' => [
             'class' => \yii\symfonymailer\Mailer::class,
@@ -183,19 +183,19 @@ return [
                 'host' => 'localhost',
             ],
         ],
-        
+
         // Cache
         'cache' => [
             'class' => \yii\caching\FileCache::class,
             'cachePath' => '@runtime/cache',
         ],
-        
+
         // Custom components
         'paymentService' => [
             'class' => \app\services\PaymentService::class,
             'apiKey' => 'test-key',
         ],
-        
+
         // URL Manager
         'urlManager' => [
             'class' => \yii\web\UrlManager::class,
@@ -274,16 +274,16 @@ class UserController
     {
         // ✅ PHPStan knows this is User<app\models\User>
         $user = Yii::$app->user;
-        
+
         // ✅ PHPStan knows identity is app\models\User
         $identity = $user->identity;
-        
+
         // ✅ PHPStan knows this is Repository<app\models\User>
         $repository = Yii::$app->userRepository;
-        
+
         // ✅ PHPStan knows this is Collection<app\models\Post>
         $collection = Yii::$app->postCollection;
-        
+
         return $this->render('profile', ['user' => $identity]);
     }
 }
@@ -304,16 +304,16 @@ use yii\base\Component;
 
 /**
  * Generic repository component.
- * 
+ *
  * @template T of \yii\db\ActiveRecord
  */
 class Repository extends Component
 {
-    /** 
+    /**
      * @phpstan-var class-string<T>
      */
     public string $modelClass;
-    
+
     /**
      * @phpstan-return T|null
      */
@@ -321,7 +321,7 @@ class Repository extends Component
     {
         return $this->modelClass::findOne($id);
     }
-    
+
     /**
      * @phpstan-return T[]
      */
@@ -343,21 +343,21 @@ use yii\base\Component;
 
 /**
  * Generic collection component.
- * 
+ *
  * @template T
  */
 class Collection extends Component
 {
-    /** 
+    /**
      * @phpstan-var class-string<T>
      */
     public string $elementType;
-    
-    /** 
+
+    /**
      * @phpstan-var T[]
      */
     private array $items = [];
-    
+
     /**
      * @phpstan-param T $item
      */
@@ -365,7 +365,7 @@ class Collection extends Component
     {
         $this->items[] = $item;
     }
-    
+
     /**
      * @phpstan-return T[]
      */
@@ -438,19 +438,19 @@ return [
             // Interface to implementation mapping
             \Psr\Log\LoggerInterface::class => \Monolog\Logger::class,
             \app\contracts\PaymentInterface::class => \app\services\StripePayment::class,
-            
+
             // Service definitions
             'logger' => [
                 'class' => \Monolog\Logger::class,
                 ['name' => 'app'],
             ],
-            
+
             // Closure definitions
             'eventDispatcher' => function() {
                 return new \app\services\EventDispatcher();
             },
         ],
-        
+
         'singletons' => [
             // Singleton services
             \app\services\CacheManager::class => \app\services\CacheManager::class,
@@ -480,7 +480,7 @@ parameters:
         - vendor/
 
     level: 8
-    
+
     paths:
         - src
         - controllers
@@ -488,7 +488,7 @@ parameters:
         - widgets
         - components
 
-    tmpDir: %currentWorkingDirectory%/runtime          
+    tmpDir: %currentWorkingDirectory%/runtime
 
     yii2:
         config_path: config/phpstan-config.php
@@ -502,7 +502,7 @@ parameters:
     reportAnyTypeWideningInVarTag: true
     reportPossiblyNonexistentConstantArrayOffset: true
     reportPossiblyNonexistentGeneralArrayOffset: true
-    
+
     ignoreErrors:
         # Ignore specific errors
         - '#Call to an undefined method.*#'
@@ -512,7 +512,7 @@ parameters:
 ### Performance optimization
 
 ```neon
-parameters:   
+parameters:
     # Bootstrap optimization
     bootstrapFiles:
         - vendor/autoload.php
@@ -563,6 +563,7 @@ This will work with basic type inference but won't have custom component types.
 For projects with both web and console applications:
 
 ### Project structure
+
 ```text
 phpstan-web.neon      # Web-specific configuration
 phpstan-console.neon  # Console-specific configuration
@@ -570,6 +571,7 @@ phpstan.neon          # Base configuration
 ```
 
 ### Base configuration
+
 ```neon
 # phpstan.neon
 includes:
@@ -582,6 +584,7 @@ parameters:
 ```
 
 ### Web configuration
+
 ```neon
 # phpstan-web.neon
 includes:
@@ -599,6 +602,7 @@ parameters:
 ```
 
 ### Console configuration
+
 ```neon
 # phpstan-console.neon
 includes:
@@ -614,11 +618,12 @@ parameters:
 ```
 
 ### Usage
+
 ```bash
 # Analyze web application
 vendor/bin/phpstan analyse -c phpstan-web.neon
 
-# Analyze console application  
+# Analyze console application
 vendor/bin/phpstan analyse -c phpstan-console.neon
 ```
 
