@@ -1,5 +1,8 @@
-#code coverage
+# codecoverage (if present)
 code_coverage
+
+# codeception (if present)
+c3.php
 
 # composer
 composer.lock
@@ -8,22 +11,37 @@ composer.lock
 .copilot/
 .github/copilot/**
 
-#node_modules
-node_modules
+# mac ds_store (if present)
+.DS_Store
 
-# phpstorm project files
+# netbeans project (if present)
+nbproject
+
+# node_modules (if present)
+node_modules
+package-lock.json
+
+# phpstorm project (if present)
 .idea
 
-# phpunit
+# phpunit (if present)
 .phpunit.cache
 .phpunit.result.cache
 phpunit.xml*
 
-# vendor directory
+# vagrant (if present)
+.vagrant
+
+# vendor
 vendor
 
-# vscode
+# vscode project (if present)
 .vscode
 
-# windows thumbnail cache
+# windows thumbnail cache (if present)
 Thumbs.db
+
+# zend studio for eclipse project (if present)
+.buildpath
+.project
+.settings
