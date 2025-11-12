@@ -10,6 +10,7 @@
 - Bug #76: bump `php-forge/actions` from `1` to `2` (@dependabot)
 - Bug #77: Update workflows and documentation for improved CI/CD processes and feature clarity (@terabytesoftw)
 - Bug #78: Improve `.gitignore` formatting and add missing entries for better clarity (@terabytesoftw)
+- Dep #79: Update `symplify/easy-coding-standard requirement` from `^12.5` to `^13.0` (@dependabot)
 
 ## 0.3.1 August 16, 2025
 
