@@ -37,7 +37,7 @@ final class HeaderCollectionDynamicMethodReturnType
 
         assertType('array<int, string>|null', $headers->get('Accept', null, false));
         assertType('array<int, string>', $headers->get('Accept', [], false));
-        assertType('array<int, string>', $headers->get('Accept', 'default', false));
+        assertType('array<int, string>', $headers->get('Accept', ['default'], false));
     }
 
     public function testReturnStringWhenFirstIsTrue(): void
@@ -66,7 +66,7 @@ final class HeaderCollectionDynamicMethodReturnType
         $headers = new HeaderCollection();
 
         // when default is array but first is `true`, still returns `string`
-        assertType('string', $headers->get('X-Forwarded-For', ['127.0.0.1'], true));
+        assertType('string', $headers->get('X-Forwarded-For', '127.0.0.1', true));
         assertType('array<int, string>', $headers->get('X-Forwarded-For', ['127.0.0.1'], false));
     }
 
@@ -125,7 +125,6 @@ final class HeaderCollectionDynamicMethodReturnType
         $headers = new HeaderCollection();
 
         assertType('string|null', $headers->get('X-Request-ID', $default, true));
-        assertType('array<int, string>|null', $headers->get('X-Request-ID', $default, false));
     }
 
     public function testReturnWithNonNullDefault(): void
@@ -145,7 +144,6 @@ final class HeaderCollectionDynamicMethodReturnType
 
         assertType('string|null', $headers->get('X-Custom-Header', $default));
         assertType('string|null', $headers->get('X-Custom-Header', $default, true));
-        assertType('array<int, string>|null', $headers->get('X-Custom-Header', $default, false));
     }
 
     public function testReturnWithVariableDefault(): void
@@ -156,6 +154,6 @@ final class HeaderCollectionDynamicMethodReturnType
 
         assertType('string', $headers->get('Cache-Control', $defaultValue));
         assertType('string', $headers->get('Cache-Control', $defaultValue, true));
-        assertType('array<int, string>', $headers->get('Cache-Control', $defaultValue, false));
+        assertType('array<int, string>', $headers->get('Cache-Control', [$defaultValue], false));
     }
 }

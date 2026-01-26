@@ -12,7 +12,6 @@ use yii\mail\MailerInterface;
 use yii\web\{
     Application,
     AssetManager,
-    Controller,
     ErrorHandler,
     Request,
     Response,
@@ -62,7 +61,7 @@ final class ApplicationPropertiesClassReflectionType
 
     public function testReturnControllerFromProperty(): void
     {
-        assertType(Controller::class, Yii::$app->controller);
+        assertType('yii\web\Controller<yii\base\Module>|null', Yii::$app->controller);
     }
 
     public function testReturnDbFromComponent(): void

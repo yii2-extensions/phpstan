@@ -6,7 +6,7 @@ namespace yii2\extensions\phpstan\reflection;
 
 use PHPStan\Reflection\{ClassReflection, PropertyReflection};
 use PHPStan\TrinaryLogic;
-use PHPStan\Type\Type;
+use PHPStan\Type\{Type, VerbosityLevel};
 
 use function sprintf;
 
@@ -110,7 +110,7 @@ final class ComponentPropertyReflection implements PropertyReflection
      */
     public function getDocComment(): string
     {
-        $componentTypeName = $this->type->describe(\PHPStan\Type\VerbosityLevel::typeOnly());
+        $componentTypeName = $this->type->describe(VerbosityLevel::typeOnly());
 
         return sprintf("/**\n * @var %s\n */", $componentTypeName);
     }

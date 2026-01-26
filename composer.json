@@ -11,14 +11,14 @@
         "php": ">=8.1",
         "nikic/php-parser": "^4.1|^5.4.0",
         "phpstan/phpstan": "^2.1",
-        "yiisoft/yii2": "^2.0.53|^22"
+        "yiisoft/yii2": "^2.0.54|^22"
     },
     "require-dev": {
         "maglnet/composer-require-checker": "^4.7",
+        "php-forge/coding-standard": "^0.1",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0.3",
-        "phpunit/phpunit": "^10.2",
-        "symplify/easy-coding-standard": "^13.0"
+        "phpunit/phpunit": "^10.2"
     },
     "autoload": {
         "psr-4": {
@@ -51,7 +51,15 @@
         "check-dependencies": "./vendor/bin/composer-require-checker check",
         "ecs": "./vendor/bin/ecs --fix",
         "rector": "./vendor/bin/rector process src",
-        "static": "./vendor/bin/phpstan analyse src --memory-limit=512M",
+        "static": "./vendor/bin/phpstan --memory-limit=-1",
+        "sync-metadata": [
+            "curl -fsSL -o .editorconfig https://raw.githubusercontent.com/yii2-extensions/template/main/.editorconfig",
+            "curl -fsSL -o .gitattributes https://raw.githubusercontent.com/yii2-extensions/template/main/.gitattributes",
+            "curl -fsSL -o .gitignore https://raw.githubusercontent.com/yii2-extensions/template/main/.gitignore",
+            "curl -fsSL -o .styleci.yml https://raw.githubusercontent.com/yii2-extensions/template/main/.styleci.yml",
+            "curl -fsSL -o phpstan.neon https://raw.githubusercontent.com/yii2-extensions/template/main/phpstan.neon",
+            "curl -fsSL -o phpunit.xml.dist https://raw.githubusercontent.com/yii2-extensions/template/main/phpunit.xml.dist"
+        ],
         "tests": "./vendor/bin/phpunit"
     },
     "repositories": [

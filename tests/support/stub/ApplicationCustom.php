@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\support\stub;
 
-use yii\web\Application;
+use yii\web\{Application, IdentityInterface};
 
 /**
  * Custom application class with a virtual property for testing purposes.
@@ -17,5 +17,7 @@ use yii\web\Application;
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ *
+ * @extends Application<IdentityInterface>
  */
 final class ApplicationCustom extends Application {}

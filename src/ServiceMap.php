@@ -15,7 +15,6 @@ use yii\web\Application;
 use function define;
 use function defined;
 use function file_exists;
-use function get_class;
 use function gettype;
 use function is_array;
 use function is_object;
@@ -290,8 +289,8 @@ final class ServiceMap
             }
 
             if (
-                isset($config['phpstan']['application_type']) &&
-                is_string($config['phpstan']['application_type']) === false
+                isset($config['phpstan']['application_type'])
+                && is_string($config['phpstan']['application_type']) === false
             ) {
                 $applicationType = gettype($config['phpstan']['application_type']);
 
@@ -431,7 +430,7 @@ final class ServiceMap
                     );
                 }
 
-                $this->behaviors[$id] = array_values(array_filter($definition, 'is_string'));
+                $this->behaviors[$id] = array_values(array_filter($definition, is_string(...)));
             }
         }
     }
@@ -464,7 +463,7 @@ final class ServiceMap
                 }
 
                 if (is_object($definition)) {
-                    $className = get_class($definition);
+                    $className = $definition::class;
 
                     $this->components[$id] = $className;
                     $this->componentClassToIdMap[$className] = $id;

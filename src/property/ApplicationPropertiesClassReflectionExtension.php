@@ -15,6 +15,7 @@ use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\{MixedType, ObjectType, Type};
+use yii\base\Application;
 use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
 use yii2\extensions\phpstan\ServiceMap;
 
@@ -68,7 +69,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * @phpstan-var array<int, class-string|string>
      */
     private const SUPPORTED_APPLICATION_CLASSES = [
-        \yii\base\Application::class,
+        Application::class,
         \yii\console\Application::class,
         \yii\web\Application::class,
     ];
@@ -181,9 +182,9 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             return true;
         }
 
-        if ($this->reflectionProvider->hasClass(\yii\base\Application::class)) {
+        if ($this->reflectionProvider->hasClass(Application::class)) {
             return $classReflection->isSubclassOfClass(
-                $this->reflectionProvider->getClass(\yii\base\Application::class),
+                $this->reflectionProvider->getClass(Application::class),
             );
         }
 
