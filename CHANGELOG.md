@@ -22,7 +22,7 @@
 - Bug #66: Update license badge in `README.md` for correct display and add missing header in `LICENSE.md` (@terabytesoftw)
 - Bug #67: Correct default stub filename in `StubFilesExtension.php` for accurate PHPStan analysis (@terabytesoftw)
 - Bug #68: Refactor dynamic return type inference for `HeaderCollection::get()` method in PHPStan analysis, and add tests suite for type inference (@terabytesoftw)
-- Bug #69: Update `CHANGELOG.md` to include recent bug fixes and enhancements for version `0.3.1` (@terabytesoftw)
+- Bug #69: Update `CHANGELOG.md` to include recent bugfixes and enhancements for version `0.3.1` (@terabytesoftw)
 - Bug #70: Update branch alias version in `composer.json` from `0.3.x-dev` to `0.4.x-dev` (@terabytesoftw)
 
 ## 0.3.0 June 27, 2025
