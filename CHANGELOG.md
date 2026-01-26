@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.2 Under development
+## 0.4.0 January 26, 2026
 
 - Bug #71: Update `.gitattributes` to exclude additional files from the package (@terabytesoftw)
 - Bug #72: Exclude `phpstan-console.neon` from the package in `.gitattributes` (@terabytesoftw)
