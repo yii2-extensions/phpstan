@@ -102,8 +102,8 @@ final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMetho
         if (count($constantStrings) === 0) {
             throw new ShouldNotHappenException(
                 sprintf(
-                    'Invalid argument provided to method %s' . PHP_EOL .
-                    'Hint: You should use ::class instead of ::className()',
+                    'Invalid argument provided to method %s' . PHP_EOL
+                    . 'Hint: You should use ::class instead of ::className()',
                     $methodReflection->getName(),
                 ),
             );

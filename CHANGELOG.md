@@ -7,10 +7,11 @@
 - Bug #73: Update workflow actions to use `v1` stable version instead of `main`, update `LICENSE.md` (@terabytesoftw)
 - Bug #74: Update `README.md` to include `Behavior` integration section and example usage (@terabytesoftw)
 - Bug #75: Update `README.md` to enhance badge visibility and improve installation instructions (@terabytesoftw)
-- Bug #76: bump `php-forge/actions` from `1` to `2` (@dependabot)
+- Dep #76: Bump `php-forge/actions` from `1` to `2` (@dependabot)
 - Bug #77: Update workflows and documentation for improved CI/CD processes and feature clarity (@terabytesoftw)
 - Bug #78: Improve `.gitignore` formatting and add missing entries for better clarity (@terabytesoftw)
-- Dep #79: Update `symplify/easy-coding-standard requirement` from `^12.5` to `^13.0` (@dependabot)
+- Dep #79: Update `symplify/easy-coding-standard` requirement from `^12.1` to `^13.0` (@dependabot)
+- Enh #80: Add `php-forge/coding-standard` to development dependencies for code quality checks and add support `PHP 8.5` (@terabytesoftw)
 
 ## 0.3.1 August 16, 2025
 
@@ -21,6 +22,8 @@
 - Bug #66: Update license badge in `README.md` for correct display and add missing header in `LICENSE.md` (@terabytesoftw)
 - Bug #67: Correct default stub filename in `StubFilesExtension.php` for accurate PHPStan analysis (@terabytesoftw)
 - Bug #68: Refactor dynamic return type inference for `HeaderCollection::get()` method in PHPStan analysis, and add tests suite for type inference (@terabytesoftw)
+- Bug #69: Update `CHANGELOG.md` to include recent bug fixes and enhancements for version `0.3.1` (@terabytesoftw)
+- Bug #70: Update branch alias version in `composer.json` from `0.3.x-dev` to `0.4.x-dev` (@terabytesoftw)
 
 ## 0.3.0 June 27, 2025
 
@@ -47,7 +50,10 @@
 - Bug #55: Remove `OS` and `PHP` version specifications from workflow files for simplification (@terabytesoftw)
 - Enh #56: Add `ServiceLocatorDynamicMethodReturnTypeExtension` to provide precise type inference for `get()` method (@terabytesoftw)
 - Bug #57: Clarify exception documentation and improve type inference descriptions in test cases (@terabytesoftw)
-- Bug #58: Handle generic type components in `ApplicationPropertiesClassReflectionExtension`.
+- Bug #58: Handle generic type components in `ApplicationPropertiesClassReflectionExtension` (@terabytesoftw)
+- Bug #59: Handle generic type components in `ApplicationPropertiesClassReflectionExtension` (@terabytesoftw)
+- Bug #60: Update `CHANGELOG.md` for version `0.3.0` release date and adjust `composer.json` for stability settings (@terabytesoftw)
+- Bug #61: Update `README.md` with new `GitHub` release badge and correct `Yii2` version badge (@terabytesoftw)
 
 ## 0.2.3 June 09, 2025
 

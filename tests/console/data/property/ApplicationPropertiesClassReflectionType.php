@@ -6,7 +6,7 @@ namespace yii2\extensions\phpstan\tests\console\data\property;
 
 use Yii;
 use yii\base\{Security, View};
-use yii\console\{Application, Controller, ErrorHandler, Request, Response};
+use yii\console\{Application, ErrorHandler, Request, Response};
 use yii\db\Connection;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
@@ -64,7 +64,7 @@ final class ApplicationPropertiesClassReflectionType
 
     public function testReturnControllerFromProperty(): void
     {
-        assertType(Controller::class, Yii::$app->controller);
+        assertType('yii\console\Controller<yii\base\Module>|null', Yii::$app->controller);
     }
 
     public function testReturnDbFromComponent(): void

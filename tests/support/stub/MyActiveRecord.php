@@ -27,7 +27,7 @@ final class MyActiveRecord extends ActiveRecord
      */
     public function getMaster(): self|null
     {
-        return $this->hasOne(self::class, ['link'])->one();
+        return $this->hasOne(self::class, ['id' => 'id'])->one();
     }
 
     /**
@@ -35,7 +35,7 @@ final class MyActiveRecord extends ActiveRecord
      */
     public function getSiblings(): array
     {
-        return $this->hasMany(self::class, ['link'])->where(['condition'])->all();
+        return $this->hasMany(self::class, ['id' => 'id'])->where(['condition'])->all();
     }
 
     /**

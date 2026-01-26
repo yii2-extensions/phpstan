@@ -192,7 +192,7 @@ $forwardedFor = $headers->get('X-Forwarded-For', ['127.0.0.1'], false);
 // ✅ Dynamic return type inference with mixed default
 $default = 'default-value';
 $requestId = $headers->get('X-Request-ID', $default, true); // string|null
-$allRequestIds = $headers->get('X-Request-ID', $default, false); // array<int, string>|null
+$allRequestIds = $headers->get('X-Request-ID', [$default], false); // array<int, string>|null
 ```
 
 #### Service locator
@@ -218,6 +218,7 @@ For detailed configuration options and advanced usage.
 - ⚙️ [Configuration Reference](docs/configuration.md)
 - 💡 [Usage Examples](docs/examples.md)
 - 🧪 [Testing Guide](docs/testing.md)
+- 🛠️ [Development Guide](docs/development.md)
 
 ## Package information
 
