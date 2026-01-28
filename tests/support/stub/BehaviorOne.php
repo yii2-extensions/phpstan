@@ -34,7 +34,7 @@ final class BehaviorOne extends Behavior
     /**
      * @phpstan-return string
      */
-    public function methodWithoutReturnType()
+    public function methodWithoutReturnType(): string
     {
         return 'test string';
     }
