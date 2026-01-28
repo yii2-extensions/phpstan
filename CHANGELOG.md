@@ -2,6 +2,8 @@
 
 ## 0.4.1 Under development
 
+- Bug #81: Update Rector command in `composer.json` to remove unnecessary 'src' argument (@terabytesoftw)
+
 ## 0.4.0 January 26, 2026
 
 - Bug #71: Update `.gitattributes` to exclude additional files from the package (@terabytesoftw)

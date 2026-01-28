@@ -50,7 +50,7 @@
     "scripts": {
         "check-dependencies": "./vendor/bin/composer-require-checker check",
         "ecs": "./vendor/bin/ecs --fix",
-        "rector": "./vendor/bin/rector process src",
+        "rector": "./vendor/bin/rector process",
         "static": "./vendor/bin/phpstan --memory-limit=-1",
         "sync-metadata": [
             "curl -fsSL -o .editorconfig https://raw.githubusercontent.com/yii2-extensions/template/main/.editorconfig",

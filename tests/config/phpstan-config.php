@@ -54,9 +54,7 @@ return [
     ],
     'container' => [
         'definitions' => [
-            'closure' => static function (): SplStack {
-                return new SplStack();
-            },
+            'closure' => static fn(): SplStack => new SplStack(),
             MyActiveRecord::class => [
                 'flag' => 'foo',
             ],
@@ -70,9 +68,7 @@ return [
             ],
         ],
         'singletons' => [
-            'singleton-closure' => static function (): SplStack {
-                return new SplStack();
-            },
+            'singleton-closure' => static fn(): SplStack => new SplStack(),
             'singleton-nested-service-class' => [
                 [
                     'class' => SplFileInfo::class,
