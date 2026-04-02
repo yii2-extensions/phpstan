@@ -39,4 +39,9 @@ final class ApplicationPropertiesClassReflectionType
     {
         assertType('string', Yii::$app->language);
     }
+
+    public function testReturnStringFromVirtualProperty(): void
+    {
+        assertType('string', Yii::$app->virtualProperty);
+    }
 }
