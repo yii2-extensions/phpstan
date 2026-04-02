@@ -8,38 +8,153 @@ use PHPUnit\Framework\TestCase;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\StubFilesExtension;
 
+use function file_get_contents;
+
 /**
- * Test suite for {@see StubFilesExtension} stub file resolution logic.
+ * Unit tests for {@see StubFilesExtension} dynamic stub file generation.
  *
- * Verifies that the stub files returned by the extension match the expected configuration for a web application type.
- *
- * This test ensures that the stub file path is correctly resolved based on the provided service map configuration,
- * maintaining compatibility with PHPStan analysis for Yii-based projects.
- *
- * Key features.
- * - Asserts that the returned stub files array matches the expected result.
- * - Ensures correct integration with {@see ServiceMap}.
- * - Validates stub file path resolution for web application configuration.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * @author Wilmer Arambula <terabytesoftw@gmail.com>
+ * @since 0.4.1
  */
 final class StubFilesExtensionTest extends TestCase
 {
-    public function testGetFilesReturnsExpectedStubFilesForWebApplicationType(): void
+    public function testGeneratedStubIsCached(): void
+    {
+        $stubFilesExtension = new StubFilesExtension(new ServiceMap());
+
+        $firstCall = $stubFilesExtension->getFiles();
+        $secondCall = $stubFilesExtension->getFiles();
+
+        self::assertSame(
+            $firstCall,
+            $secondCall,
+            'Should return the same cached stub file path.',
+        );
+    }
+
+    public function testGetFilesReturnsStubForConsoleApplicationType(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-console-config.php";
+
+        $stubFilesExtension = new StubFilesExtension(new ServiceMap($configPath));
+
+        $files = $stubFilesExtension->getFiles();
+
+        self::assertCount(
+            1,
+            $files,
+            'Should return exactly one stub file.',
+        );
+
+        $stubPath = $files[0] ?? null;
+
+        self::assertNotNull(
+            $stubPath,
+            "Stub file path should not be 'null'.",
+        );
+        self::assertFileExists(
+            $stubPath,
+            'Generated stub file should exist on disk.',
+        );
+        self::assertStringContainsString(
+            '@var \yii\console\Application',
+            (string) file_get_contents($stubPath),
+            "Stub should declare 'Yii::\$app' as '\yii\console\Application' for console configuration.",
+        );
+    }
+
+    public function testGetFilesReturnsStubForCustomApplicationType(): void
+    {
+        $ds = DIRECTORY_SEPARATOR;
+        $configPath = __DIR__ . "{$ds}config{$ds}phpstan-custom-app-config.php";
+
+        $stubFilesExtension = new StubFilesExtension(new ServiceMap($configPath));
+
+        $files = $stubFilesExtension->getFiles();
+
+        self::assertCount(
+            1,
+            $files,
+            'Should return exactly one stub file.',
+        );
+
+        $stubPath = $files[0] ?? null;
+
+        self::assertNotNull(
+            $stubPath,
+            "Stub file path should not be 'null'.",
+        );
+        self::assertFileExists(
+            $stubPath,
+            'Generated stub file should exist on disk.',
+        );
+        self::assertStringContainsString(
+            '@var \yii2\extensions\phpstan\tests\support\stub\ApplicationCustom',
+            (string) file_get_contents($stubPath),
+            "Stub should declare 'Yii::\$app' as '\yii2\extensions\phpstan\tests\support\stub\ApplicationCustom'"
+            . ' for custom configuration.',
+        );
+    }
+
+    public function testGetFilesReturnsStubForDefaultApplicationType(): void
+    {
+        $stubFilesExtension = new StubFilesExtension(new ServiceMap());
+
+        $files = $stubFilesExtension->getFiles();
+
+        self::assertCount(
+            1,
+            $files,
+            'Should return exactly one stub file.',
+        );
+
+        $stubPath = $files[0] ?? null;
+
+        self::assertNotNull(
+            $stubPath,
+            "Stub file path should not be 'null'.",
+        );
+        self::assertFileExists(
+            $stubPath,
+            'Generated stub file should exist on disk.',
+        );
+        self::assertStringContainsString(
+            '@var \yii\web\Application',
+            (string) file_get_contents($stubPath),
+            "Stub should default to '\yii\web\Application' when no configuration is provided.",
+        );
+    }
+
+    public function testGetFilesReturnsStubForWebApplicationType(): void
     {
         $ds = DIRECTORY_SEPARATOR;
         $configPath = __DIR__ . "{$ds}config{$ds}phpstan-config.php";
 
-        $serviceMap = new ServiceMap($configPath);
+        $stubFilesExtension = new StubFilesExtension(new ServiceMap($configPath));
 
-        $stubFilesExtension = new StubFilesExtension($serviceMap);
-        $stubFiles = dirname(__DIR__) . "{$ds}stub{$ds}BaseYiiWeb.stub";
+        $files = $stubFilesExtension->getFiles();
 
-        self::assertSame(
-            [$stubFiles],
-            $stubFilesExtension->getFiles(),
-            'Expected stub files to match the web application type configuration.',
+        self::assertCount(
+            1,
+            $files,
+            'Should return exactly one stub file.',
+        );
+
+        $stubPath = $files[0] ?? null;
+
+        self::assertNotNull(
+            $stubPath,
+            "Stub file path should not be 'null'.",
+        );
+        self::assertFileExists(
+            $stubPath,
+            'Generated stub file should exist on disk.',
+        );
+        self::assertStringContainsString(
+            '@var \yii\web\Application',
+            (string) file_get_contents($stubPath),
+            "Stub should declare 'Yii::\$app' as '\yii\web\Application' for web configuration.",
         );
     }
 }
