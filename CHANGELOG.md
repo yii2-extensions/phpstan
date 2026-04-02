@@ -3,6 +3,7 @@
 ## 0.4.1 Under development
 
 - Bug #81: Update Rector command in `composer.json` to remove unnecessary 'src' argument (@terabytesoftw)
+- Enh: Replace static stub files with dynamic stub generation for `Yii::$app` type inference, adding support for custom application types (@terabytesoftw)
 
 ## 0.4.0 January 26, 2026
 

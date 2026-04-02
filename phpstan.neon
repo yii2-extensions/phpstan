@@ -10,6 +10,7 @@ parameters:
     excludePaths:
         analyse:
             - tests/console/
+            - tests/custom/
 
     ignoreErrors:
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'
