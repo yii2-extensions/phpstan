@@ -218,7 +218,6 @@ For detailed configuration options and advanced usage.
 - ⚙️ [Configuration Reference](docs/configuration.md)
 - 💡 [Usage Examples](docs/examples.md)
 - 🧪 [Testing Guide](docs/testing.md)
-- 🛠️ [Development Guide](docs/development.md)
 
 ## Package information
 
