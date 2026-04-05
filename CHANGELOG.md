@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.4.1 Under development
+## 0.4.1 April 05, 2026
 
 - fix: update Rector command in `composer.json` to remove unnecessary 'src' argument.
 - feat: replace static stub files with dynamic stub generation for `Yii::$app` type inference, adding support for custom application types.

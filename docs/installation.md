@@ -14,7 +14,7 @@
 Install the extension as a development dependency.
 
 ```bash
-composer require --dev yii2-extensions/phpstan
+composer require --dev yii2-extensions/phpstan:^0.4
 ```
 
 ### Method 2: Manual installation
@@ -24,7 +24,7 @@ Add to your `composer.json`.
 ```json
 {
     "require-dev": {
-        "yii2-extensions/phpstan": "^0.2"
+        "yii2-extensions/phpstan": "^0.4"
     }
 }
 ```
