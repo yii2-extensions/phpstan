@@ -7,11 +7,19 @@ namespace yii2\extensions\phpstan;
 use RuntimeException;
 use yii\base\Application;
 
+use function array_keys;
 use function file_exists;
 use function file_put_contents;
 use function getmypid;
+use function implode;
+use function is_array;
+use function is_bool;
+use function is_float;
+use function is_int;
+use function is_string;
 use function ltrim;
 use function md5;
+use function preg_match;
 use function rename;
 use function sprintf;
 use function strrpos;
@@ -76,8 +84,14 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
      */
     private function buildApplicationTypeDeclaration(string $applicationType): string
     {
+        $paramsProperty = $this->buildParamsPropertyDeclaration();
+
         $baseDeclaration = <<<PHP
         namespace yii\base {
+            class Module
+            {{$paramsProperty}
+            }
+
             abstract class Application {}
         }
         PHP;
@@ -105,6 +119,33 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
                 class {$className} extends \yii\base\Application {}
             }
             PHP;
+    }
+
+    /**
+     * Builds the `$params` property declaration for the stub file.
+     *
+     * Generates a PHPDoc `@var` annotation with an array shape type inferred from the configured application params.
+     * Returns an empty string if no params are configured, allowing the native `array` type to remain unchanged.
+     *
+     * @return string PHP property declaration block with array shape annotation, or empty string if no params.
+     */
+    private function buildParamsPropertyDeclaration(): string
+    {
+        $params = $this->serviceMap->getParams();
+
+        if ($params === []) {
+            return '';
+        }
+
+        $typeString = $this->inferTypeString($params);
+
+        return <<<PHP
+
+                /**
+                 * @var {$typeString}
+                 */
+                public \$params;
+        PHP;
     }
 
     /**
@@ -178,9 +219,11 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
             );
         }
 
-        // @codeCoverageIgnoreStart
-        // atomic publish: rename within the same filesystem is atomic on POSIX. This fallback handles Windows (where
-        // rename fails if target exists) and other non-POSIX edge cases during concurrent PHPStan runs.
+        /**
+         * @codeCoverageIgnoreStart
+         * atomic publish: rename within the same filesystem is atomic on POSIX. This fallback handles Windows (where
+         * rename fails if target exists) and other non-POSIX edge cases during concurrent PHPStan runs.
+         */
         if (!@rename($temporaryPath, $stubPath)) {
             @unlink($temporaryPath);
 
@@ -192,8 +235,81 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
                 sprintf("Failed to write stub file to '%s'. Ensure the temporary directory is writable.", $stubPath),
             );
         }
-        // @codeCoverageIgnoreEnd
+        /** @codeCoverageIgnoreEnd */
 
         return $stubPath;
+    }
+
+    /**
+     * Infers a PHPStan type string from a PHP value.
+     *
+     * Converts PHP scalar values and arrays to their corresponding PHPStan type annotation strings. Supports `string`,
+     * `int`, `float`, `bool`, `null`, associative arrays (array shapes), and list arrays.
+     *
+     * @param mixed $value PHP value to infer a type string from.
+     *
+     * @return string PHPStan type annotation string.
+     */
+    private function inferTypeString(mixed $value): string
+    {
+        if ($value === null) {
+            return 'null';
+        }
+
+        if (is_string($value)) {
+            return 'string';
+        }
+
+        if (is_int($value)) {
+            return 'int';
+        }
+
+        if (is_float($value)) {
+            return 'float';
+        }
+
+        if (is_bool($value)) {
+            return 'bool';
+        }
+
+        if (is_array($value)) {
+            if ($value === []) {
+                return 'array<mixed, mixed>';
+            }
+
+            $allStringKeys = true;
+
+            foreach (array_keys($value) as $k) {
+                if (is_string($k) === false) {
+                    $allStringKeys = false;
+
+                    break;
+                }
+            }
+
+            if ($allStringKeys) {
+                $entries = [];
+
+                foreach ($value as $k => $v) {
+                    /** @phpstan-var string $k */
+                    $formattedKey = preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $k) === 1
+                        ? $k
+                        : "'$k'";
+                    $entries[] = $formattedKey . ': ' . $this->inferTypeString($v);
+                }
+
+                return 'array{' . implode(', ', $entries) . '}';
+            }
+
+            $entries = [];
+
+            foreach ($value as $v) {
+                $entries[] = $this->inferTypeString($v);
+            }
+
+            return 'array{' . implode(', ', $entries) . '}';
+        }
+
+        return 'mixed';
     }
 }
