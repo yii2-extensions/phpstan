@@ -12,6 +12,7 @@ use RuntimeException;
 use yii\base\{BaseObject, InvalidArgumentException};
 use yii\web\Application;
 
+use function array_key_exists;
 use function define;
 use function defined;
 use function file_exists;
@@ -54,7 +55,8 @@ use function sprintf;
  *   container?: array{
  *     definitions?: array<array-key, DefinitionType>,
  *     singletons?: array<array-key, DefinitionType>,
- *   }
+ *   },
+ *   params?: array<string, mixed>,
  * }
  *
  * @copyright Copyright (C) 2023 Terabytesoftw.
@@ -98,6 +100,13 @@ final class ServiceMap
     private array $componentsDefinitions = [];
 
     /**
+     * Application params for PHPStan type inference.
+     *
+     * @phpstan-var array<string, mixed>
+     */
+    private array $params = [];
+
+    /**
      * Service definitions map for Yii Application analysis.
      *
      * @phpstan-var class-string[]|string[]
@@ -133,6 +142,7 @@ final class ServiceMap
         $this->processBehaviors($config);
         $this->processComponents($config);
         $this->processDefinition($config);
+        $this->processParams($config);
         $this->processSingletons($config);
     }
 
@@ -238,6 +248,19 @@ final class ServiceMap
     }
 
     /**
+     * Retrieves the application params map for PHPStan type inference.
+     *
+     * Returns the `params` key-value pairs extracted from the Yii Application configuration file, enabling static
+     * analysis tools to infer precise array shape types for `Yii::$app->params` access.
+     *
+     * @return array<string, mixed> Params key-value pairs from configuration.
+     */
+    public function getParams(): array
+    {
+        return $this->params;
+    }
+
+    /**
      * Retrieves the fully qualified class name of a Yii Service by its identifier.
      *
      * Looks up the service class name registered under the specified service ID in the internal service map.
@@ -304,6 +327,10 @@ final class ServiceMap
 
         if (isset($config['components']) && is_array($config['components']) === false) {
             $this->throwErrorWhenConfigFileIsNotArray($configPath, 'components');
+        }
+
+        if (array_key_exists('params', $config) && is_array($config['params']) === false) {
+            $this->throwErrorWhenConfigFileIsNotArray($configPath, 'params');
         }
 
         if (isset($config['container'])) {
@@ -518,6 +545,23 @@ final class ServiceMap
     }
 
     /**
+     * Processes application params from the Yii Application configuration array.
+     *
+     * Extracts the `params` section and stores it for type inference of `Yii::$app->params` array access.
+     *
+     * @param array $config Yii Application configuration array containing params definitions.
+     *
+     * @phpstan-import-type ServiceType from ServiceMap
+     * @phpstan-param ServiceType $config
+     */
+    private function processParams(array $config): void
+    {
+        if ($config !== []) {
+            $this->params = $config['params'] ?? [];
+        }
+    }
+
+    /**
      * Processes singleton service definitions from the Yii Application configuration array.
      *
      * Iterates over the container.singletons section of the provided configuration array, normalizing and registering
@@ -584,7 +628,9 @@ final class ServiceMap
      */
     private function throwErrorWhenIsNotString(string ...$args): never
     {
-        throw new RuntimeException(sprintf("'%s': '%s' must be a 'string', got '%s'.", ...$args));
+        throw new RuntimeException(
+            sprintf("'%s': '%s' must be a 'string', got '%s'.", ...$args),
+        );
     }
 
     /**
@@ -602,6 +648,8 @@ final class ServiceMap
      */
     private function throwErrorWhenUnsupportedDefinition(string $id): never
     {
-        throw new RuntimeException(sprintf("Unsupported definition for '%s'.", $id));
+        throw new RuntimeException(
+            sprintf("Unsupported definition for '%s'.", $id),
+        );
     }
 }

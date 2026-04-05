@@ -273,6 +273,35 @@ final class StubFilesExtensionTest extends TestCase
         $this->generatedStubs[] = $stubPath;
     }
 
+    public function testGetFilesReturnsStubWithEmptyArrayParamType(): void
+    {
+        $this->cleanGeneratedStubs();
+
+        $ds = DIRECTORY_SEPARATOR;
+        $configPath = __DIR__ . "{$ds}config{$ds}params-empty-array-config.php";
+
+        $stubFilesExtension = new StubFilesExtension(new ServiceMap($configPath));
+
+        $files = $stubFilesExtension->getFiles();
+
+        $stubPath = $files[0] ?? null;
+
+        self::assertNotNull(
+            $stubPath,
+            "Stub file path should not be 'null'.",
+        );
+
+        $stubContent = (string) file_get_contents($stubPath);
+
+        self::assertStringContainsString(
+            "array{emptyList: array<mixed, mixed>, siteName: string, sparse: array{2: string, 5: string}, 'O\\'Reilly': string, 'C:\\\\path': string, resource: mixed}",
+            $stubContent,
+            "Stub should infer empty array as 'array<mixed, mixed>', sparse array with explicit keys, escape special characters in quoted keys, and fallback to 'mixed' for unsupported types.",
+        );
+
+        $this->generatedStubs[] = $stubPath;
+    }
+
     public function testThrowExceptionWhenStubFileCannotBeWritten(): void
     {
         $ds = DIRECTORY_SEPARATOR;
@@ -281,7 +310,9 @@ final class StubFilesExtensionTest extends TestCase
         $stubFilesExtension = new StubFilesExtension(new ServiceMap(), $nonWritableDir);
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Ensure the temporary directory is writable.');
+        $this->expectExceptionMessage(
+            'Ensure the temporary directory is writable.',
+        );
 
         $stubFilesExtension->getFiles();
     }

@@ -70,6 +70,12 @@ Create a PHPStan-specific config file (`config/phpstan-config.php`).
 declare(strict_types=1);
 
 return [
+    // Application params: enables precise type inference for Yii::$app->params
+    'params' => [
+        'turnstile.siteKey' => '',
+        'adminEmail' => 'admin@example.com',
+        'maxItems' => 100,
+    ],
     // PHPStan only: used by this extension for behavior property/method type inference
     'behaviors' => [
         app\models\User::class => [
@@ -134,6 +140,25 @@ if (Yii::$app->user->isGuest === false) {
     $userId = Yii::$app->user->id;           // int|string|null
     $identity = Yii::$app->user->identity;   // YourUserClass
 }
+```
+
+#### Application params
+
+```php
+// Types are inferred from the values in your phpstan-config.php 'params' key
+
+// ✅ Typed as array{'turnstile.siteKey': string, adminEmail: string, maxItems: int}
+$params = Yii::$app->params;
+
+// ✅ Typed as string
+$email = Yii::$app->params['adminEmail'];
+
+// ✅ Typed as int
+$maxItems = Yii::$app->params['maxItems'];
+
+// ✅ Nested arrays are also supported
+// 'nested' => ['db' => ['host' => 'localhost', 'port' => 3306]]
+$host = Yii::$app->params['nested']['db']['host']; // string
 ```
 
 #### Behaviors

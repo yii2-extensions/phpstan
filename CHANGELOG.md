@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: update Rector command in `composer.json` to remove unnecessary 'src' argument.
 - feat: replace static stub files with dynamic stub generation for `Yii::$app` type inference, adding support for custom application types.
 - chore: remove `sync-metadata` script and `docs/development.md`, update documentation links.
+- feat: add `Yii::$app->params` type inference from configuration for precise array shape typing.
 
 ## 0.4.0 January 26, 2026
 
