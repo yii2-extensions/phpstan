@@ -9,5 +9,6 @@ return [
         'sparse' => [2 => 'a', 5 => 'b'],
         "O'Reilly" => 'publisher',
         'C:\\path' => 'windows',
+        'resource' => fopen('php://memory', 'r'),
     ],
 ];

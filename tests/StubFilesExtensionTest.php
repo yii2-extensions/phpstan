@@ -294,9 +294,9 @@ final class StubFilesExtensionTest extends TestCase
         $stubContent = (string) file_get_contents($stubPath);
 
         self::assertStringContainsString(
-            "array{emptyList: array<mixed, mixed>, siteName: string, sparse: array{2: string, 5: string}, 'O\\'Reilly': string, 'C:\\\\path': string}",
+            "array{emptyList: array<mixed, mixed>, siteName: string, sparse: array{2: string, 5: string}, 'O\\'Reilly': string, 'C:\\\\path': string, resource: mixed}",
             $stubContent,
-            "Stub should infer empty array as 'array<mixed, mixed>', sparse array with explicit keys, and escape special characters in quoted keys.",
+            "Stub should infer empty array as 'array<mixed, mixed>', sparse array with explicit keys, escape special characters in quoted keys, and fallback to 'mixed' for unsupported types.",
         );
 
         $this->generatedStubs[] = $stubPath;
