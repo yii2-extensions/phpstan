@@ -7,6 +7,7 @@ namespace yii2\extensions\phpstan;
 use RuntimeException;
 use yii\base\Application;
 
+use function array_is_list;
 use function array_keys;
 use function file_exists;
 use function file_put_contents;
@@ -22,6 +23,7 @@ use function md5;
 use function preg_match;
 use function rename;
 use function sprintf;
+use function str_replace;
 use function strrpos;
 use function substr;
 use function sys_get_temp_dir;
@@ -184,6 +186,26 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
     }
 
     /**
+     * Formats an array key for use in a PHPStan array shape type annotation.
+     *
+     * Wraps keys containing non-identifier characters in single quotes to satisfy PHPStan type syntax.
+     *
+     * @param string $key Array key to format.
+     *
+     * @return string Formatted key, quoted if it contains special characters.
+     */
+    private function formatArrayKey(string $key): string
+    {
+        if (preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $key) === 1) {
+            return $key;
+        }
+
+        $escaped = str_replace(['\\', "'"], ['\\\\', "\\'"], $key);
+
+        return "'{$escaped}'";
+    }
+
+    /**
      * Generates a stub file for the specified application type.
      *
      * Creates a PHP stub that overrides the `BaseYii::$app` property type annotation to match the configured
@@ -241,16 +263,73 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
     }
 
     /**
-     * Infers a PHPStan type string from a PHP value.
+     * Infers a PHPStan array type string from a PHP array value.
      *
-     * Converts PHP scalar values and arrays to their corresponding PHPStan type annotation strings. Supports `string`,
-     * `int`, `float`, `bool`, `null`, associative arrays (array shapes), and list arrays.
+     * Builds an array shape type for associative arrays (recursive) and list arrays. Returns `array<mixed, mixed>` for
+     * empty arrays.
      *
-     * @param mixed $value PHP value to infer a type string from.
+     * @param array<array-key, mixed> $value PHP array to infer a type string from.
      *
-     * @return string PHPStan type annotation string.
+     * @return string PHPStan array type annotation string.
      */
-    private function inferTypeString(mixed $value): string
+    private function inferArrayType(array $value): string
+    {
+        if ($value === []) {
+            return 'array<mixed, mixed>';
+        }
+
+        $allStringKeys = true;
+
+        foreach (array_keys($value) as $k) {
+            if (is_string($k) === false) {
+                $allStringKeys = false;
+
+                break;
+            }
+        }
+
+        if ($allStringKeys) {
+            $entries = [];
+
+            foreach ($value as $k => $v) {
+                /** @phpstan-var string $k */
+                $entries[] = $this->formatArrayKey($k) . ': ' . $this->inferTypeString($v);
+            }
+
+            return 'array{' . implode(', ', $entries) . '}';
+        }
+
+        if (array_is_list($value)) {
+            $entries = [];
+
+            foreach ($value as $v) {
+                $entries[] = $this->inferTypeString($v);
+            }
+
+            return 'array{' . implode(', ', $entries) . '}';
+        }
+
+        $entries = [];
+
+        foreach ($value as $k => $v) {
+            $key = is_int($k) ? (string) $k : $this->formatArrayKey($k);
+            $entries[] = $key . ': ' . $this->inferTypeString($v);
+        }
+
+        return 'array{' . implode(', ', $entries) . '}';
+    }
+
+    /**
+     * Infers a PHPStan scalar type string from a PHP value.
+     *
+     * Returns the type name for `null`, `string`, `int`, `float`, and `bool` values, or `null` if the value is not a
+     * scalar type.
+     *
+     * @param mixed $value PHP value to check.
+     *
+     * @return string|null PHPStan type name, or `null` if not a recognized scalar.
+     */
+    private function inferScalarType(mixed $value): string|null
     {
         if ($value === null) {
             return 'null';
@@ -272,42 +351,29 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
             return 'bool';
         }
 
+        return null;
+    }
+
+    /**
+     * Infers a PHPStan type string from a PHP value.
+     *
+     * Delegates to {@see inferScalarType()} for scalar values and {@see inferArrayType()} for arrays. Falls back to
+     * `mixed` for unsupported value types.
+     *
+     * @param mixed $value PHP value to infer a type string from.
+     *
+     * @return string PHPStan type annotation string.
+     */
+    private function inferTypeString(mixed $value): string
+    {
+        $scalarType = $this->inferScalarType($value);
+
+        if ($scalarType !== null) {
+            return $scalarType;
+        }
+
         if (is_array($value)) {
-            if ($value === []) {
-                return 'array<mixed, mixed>';
-            }
-
-            $allStringKeys = true;
-
-            foreach (array_keys($value) as $k) {
-                if (is_string($k) === false) {
-                    $allStringKeys = false;
-
-                    break;
-                }
-            }
-
-            if ($allStringKeys) {
-                $entries = [];
-
-                foreach ($value as $k => $v) {
-                    /** @phpstan-var string $k */
-                    $formattedKey = preg_match('/^[a-zA-Z_\x80-\xff][a-zA-Z0-9_\x80-\xff]*$/', $k) === 1
-                        ? $k
-                        : "'$k'";
-                    $entries[] = $formattedKey . ': ' . $this->inferTypeString($v);
-                }
-
-                return 'array{' . implode(', ', $entries) . '}';
-            }
-
-            $entries = [];
-
-            foreach ($value as $v) {
-                $entries[] = $this->inferTypeString($v);
-            }
-
-            return 'array{' . implode(', ', $entries) . '}';
+            return $this->inferArrayType($value);
         }
 
         return 'mixed';

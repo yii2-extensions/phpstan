@@ -52,6 +52,11 @@ final class ApplicationParamsType
         assertType('null', Yii::$app->params['nullableParam']);
     }
 
+    public function testReturnStringFromDottedParamsKey(): void
+    {
+        assertType('string', Yii::$app->params['turnstile.siteKey']);
+    }
+
     public function testReturnStringFromParamsKey(): void
     {
         assertType('string', Yii::$app->params['adminEmail']);

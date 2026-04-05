@@ -12,6 +12,7 @@ use RuntimeException;
 use yii\base\{BaseObject, InvalidArgumentException};
 use yii\web\Application;
 
+use function array_key_exists;
 use function define;
 use function defined;
 use function file_exists;
@@ -328,7 +329,7 @@ final class ServiceMap
             $this->throwErrorWhenConfigFileIsNotArray($configPath, 'components');
         }
 
-        if (isset($config['params']) && is_array($config['params']) === false) {
+        if (array_key_exists('params', $config) && is_array($config['params']) === false) {
             $this->throwErrorWhenConfigFileIsNotArray($configPath, 'params');
         }
 

@@ -147,7 +147,7 @@ if (Yii::$app->user->isGuest === false) {
 ```php
 // Types are inferred from the values in your phpstan-config.php 'params' key
 
-// ✅ Typed as array{turnstile.siteKey: string, adminEmail: string, maxItems: int}
+// ✅ Typed as array{'turnstile.siteKey': string, adminEmail: string, maxItems: int}
 $params = Yii::$app->params;
 
 // ✅ Typed as string

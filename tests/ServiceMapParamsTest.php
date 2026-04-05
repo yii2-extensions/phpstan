@@ -67,6 +67,21 @@ final class ServiceMapParamsTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
+    public function testThrowExceptionWhenParamsIsNull(): void
+    {
+        $configPath = self::BASE_PATH . 'params-unsupported-is-null.php';
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Configuration file '{$configPath}' must contain a valid 'params' 'array'.",
+        );
+
+        new ServiceMap($configPath);
+    }
+
+    /**
+     * @throws ReflectionException if the component definition is invalid or can't be resolved.
+     */
     public function testThrowExceptionWhenParamsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'params-unsupported-is-not-array.php';
