@@ -242,10 +242,10 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
         }
 
         /**
-         * @codeCoverageIgnoreStart
-         * atomic publish: rename within the same filesystem is atomic on POSIX. This fallback handles Windows (where
+         * Atomic publish: rename within the same filesystem is atomic on POSIX. This fallback handles Windows (where
          * rename fails if target exists) and other non-POSIX edge cases during concurrent PHPStan runs.
          */
+        //@codeCoverageIgnoreStart
         if (!@rename($temporaryPath, $stubPath)) {
             @unlink($temporaryPath);
 
@@ -257,7 +257,7 @@ final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
                 sprintf("Failed to write stub file to '%s'. Ensure the temporary directory is writable.", $stubPath),
             );
         }
-        /** @codeCoverageIgnoreEnd */
+        //@codeCoverageIgnoreEnd
 
         return $stubPath;
     }
