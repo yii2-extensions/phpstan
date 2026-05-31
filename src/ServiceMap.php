@@ -25,6 +25,7 @@ use function is_string;
 use function is_subclass_of;
 use function pathinfo;
 use function sprintf;
+
 use const PATHINFO_EXTENSION;
 
 /**
