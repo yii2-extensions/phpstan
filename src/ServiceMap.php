@@ -16,13 +16,16 @@ use function array_key_exists;
 use function define;
 use function defined;
 use function file_exists;
+use function is_file;
 use function gettype;
 use function is_array;
 use function is_object;
 use function is_readable;
 use function is_string;
 use function is_subclass_of;
+use function pathinfo;
 use function sprintf;
+use const PATHINFO_EXTENSION;
 
 /**
  * Service and component map for Yii Application static analysis.
@@ -125,9 +128,17 @@ final class ServiceMap
      */
     public function __construct(string $configPath = '')
     {
-        if ($configPath !== '' && (file_exists($configPath) === false || is_readable($configPath) === false)) {
+        if (
+            $configPath !== ''
+            && (
+                file_exists($configPath) === false
+                || is_file($configPath) === false
+                || is_readable($configPath) === false
+                || pathinfo($configPath, PATHINFO_EXTENSION) !== 'php'
+            )
+        ) {
             throw new InvalidArgumentException(
-                sprintf('Provided config path \'%s\' must be a readable file.', $configPath),
+                sprintf('Provided config path \'%s\' must be a readable PHP file.', $configPath),
             );
         }
 
