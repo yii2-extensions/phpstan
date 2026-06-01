@@ -42,6 +42,25 @@ final class ServiceMapParamsTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
+    public function testReturnNumericKeyedParamsFromConfig(): void
+    {
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'params-numeric-keys-config.php');
+
+        self::assertSame(
+            [
+                0 => 'first',
+                1 => 'second',
+                10 => 'tenth',
+                'adminEmail' => 'admin@example.com',
+            ],
+            $serviceMap->getParams(),
+            'Numeric and list keys must be preserved.',
+        );
+    }
+
+    /**
+     * @throws ReflectionException if the component definition is invalid or can't be resolved.
+     */
     public function testReturnParamsFromConfig(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'params-config.php');

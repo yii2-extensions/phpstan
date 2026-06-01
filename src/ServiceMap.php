@@ -88,7 +88,7 @@ final class ServiceMap
     /**
      * Application params for PHPStan type inference.
      *
-     * @phpstan-var array<string, mixed>
+     * @phpstan-var array<array-key, mixed>
      */
     private array $params = [];
 
@@ -239,7 +239,7 @@ final class ServiceMap
      * Returns the `params` key-value pairs extracted from the Yii Application configuration file, enabling static
      * analysis tools to infer precise array shape types for `Yii::$app->params` access.
      *
-     * @return array<string, mixed> Params key-value pairs from configuration.
+     * @return array<array-key, mixed> Params key-value pairs from configuration.
      */
     public function getParams(): array
     {
@@ -552,14 +552,7 @@ final class ServiceMap
     {
         if ($config !== []) {
             $params = $config['params'] ?? [];
-
-            if (is_array($params)) {
-                foreach ($params as $key => $value) {
-                    if (is_string($key)) {
-                        $this->params[$key] = $value;
-                    }
-                }
-            }
+            $this->params = is_array($params) ? $params : [];
         }
     }
 
