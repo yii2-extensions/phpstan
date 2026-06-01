@@ -14,25 +14,14 @@ use yii\di\Container;
 use yii2\extensions\phpstan\ServiceMap;
 
 /**
- * Provides dynamic return type extension for Yii DI container service resolution in PHPStan analysis.
+ * Infers return types for {@see Container::get()} calls based on service ID and the {@see ServiceMap} in PHPStan
+ * analysis.
  *
- * Integrates the Yii DI container service {@see Container} with PHPStan dynamic method return type extension system,
- * enabling precise type inference for {@see Container::get()} calls based on service ID and the {@see ServiceMap}.
+ * Analyzes the first argument of {@see Container::get()} to return an {@see ObjectType} for known service classes, or a
+ * {@see MixedType} for unknown or dynamic IDs.
  *
- * This extension analyzes the first argument of {@see Container::get()} to determine the most accurate return type,
- * returning an {@see ObjectType} for known service classes or a {@see MixedType} for unknown or dynamic IDs.
- *
- * Key features.
- * - Accurate return type inference for {@see Container::get()} based on service ID string.
- * - Compatible with PHPStan strict static analysis and autocompletion.
- * - Falls back to method signature return type for unsupported or invalid calls.
- * - Uses {@see ServiceMap} to resolve component class names.
- *
- * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- * @see ServiceMap for service and component map for Yii Application static analysis.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
+ * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
 final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
@@ -52,9 +41,6 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      *
      * Specifies the fully qualified class name of the Yii DI container service {@see Container} that this extension
      * targets for dynamic return type inference in PHPStan analysis.
-     *
-     * This method enables PHPStan to associate the extension with the {@see Container} class, ensuring that dynamic
-     * return type logic is applied to service resolution calls.
      *
      * @return string Fully qualified class name of the supported container class.
      *

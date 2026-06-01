@@ -4,32 +4,17 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\data\type;
 
-use yii\db\{ActiveQuery, ActiveRecord};
+use yii\db\{ActiveRecord};
 use yii2\extensions\phpstan\tests\support\stub\{Category, MyActiveRecord, User};
 
 use function PHPStan\Testing\assertType;
 
 /**
- * Test suite for dynamic method return types of {@see ActiveRecord} relations in Yii Active Record scenarios.
+ * Type assertion fixture for {@see ActiveRecord} relation method return types in PHPStan analysis.
  *
- * Validates type inference and return types for instance relation methods such as {@see MyActiveRecord::hasMany()} and
- * {@see MyActiveRecord::hasOne()} in custom {@see ActiveRecord} implementations, including chained query calls and
- * array/object result scenarios.
- *
- * These tests ensure that PHPStan correctly infers the result types for relation methods returning query objects,
- * arrays, and related models, and that type safety is preserved across chained query calls and various result
- * scenarios.
- *
- * Key features.
- * - Chained query method return types ({@see ActiveQuery::asArray()}, {@see ActiveQuery::orderBy()},
- *   {@see ActiveQuery::limit()}, {@see ActiveQuery::where()}, {@see ActiveQuery::andWhere()}).
- * - Result types for {@see ActiveQuery::all()}, {@see ActiveQuery::one()} on relation queries.
- * - Type assertions for array and object results from relation queries.
- * - Type assertions for relation methods: {@see hasMany()}, {@see hasOne()}.
- * - Type inference for relations with both class-string and string class names.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference for {@see MyActiveRecord::hasMany()} and {@see MyActiveRecord::hasOne()} on custom
+ * {@see ActiveRecord} implementations, covering chained calls, array versus object results, and both class-string and
+ * string class names.
  */
 final class ActiveRecordDynamicMethodReturnType
 {

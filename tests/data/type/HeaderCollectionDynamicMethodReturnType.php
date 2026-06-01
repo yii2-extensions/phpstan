@@ -10,24 +10,10 @@ use yii\web\HeaderCollection;
 use function PHPStan\Testing\assertType;
 
 /**
- * Test suite for dynamic return types of {@see HeaderCollection::get()} method in Yii HTTP header scenarios.
+ * Type assertion fixture for {@see HeaderCollection::get()} return types in PHPStan analysis.
  *
- * Validates type inference and return types for the header collection {@see HeaderCollection::get()} method, covering
- * scenarios with different argument combinations, default values, first parameter variations, and various header
- * retrieval patterns.
- *
- * These tests ensure that PHPStan correctly infers the result types for HeaderCollection lookups, including string
- * returns, array returns, nullable returns, and union types based on method arguments.
- *
- * Key features:
- * - Array return type when first parameter is `false`.
- * - Dynamic return type inference based on the third argument (first parameter).
- * - Nullable return handling based on default value argument.
- * - String return type when first parameter is `true`.
- * - Union types when first parameter is indeterminate.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference across argument combinations, returning `string` when the `$first` parameter is `true`, an
+ * array when it is `false`, and a union when it is indeterminate, with nullability driven by the default value.
  */
 final class HeaderCollectionDynamicMethodReturnType
 {

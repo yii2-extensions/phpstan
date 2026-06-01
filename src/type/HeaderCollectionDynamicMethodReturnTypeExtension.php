@@ -14,30 +14,12 @@ use yii\web\HeaderCollection;
 use function count;
 
 /**
- * Provides dynamic return type extension for Yii {@see HeaderCollection::get()} method in PHPStan analysis.
+ * Infers return types for {@see HeaderCollection::get()} calls in PHPStan analysis.
  *
- * Integrates Yii {@see HeaderCollection} dynamic return types with PHPStan static analysis, enabling accurate type
- * inference for the {@see HeaderCollection::get()} method based on the runtime context and method arguments.
+ * Inspects the method arguments to return `string`, `array<int, string>`, or a union, adding `null` when the default
+ * value can be `null` or is omitted.
  *
- * This extension allows PHPStan to infer the correct return type for the {@see HeaderCollection::get()} method,
- * supporting both string and array return types depending on the third argument, and handling the dynamic behavior of
- * header value retrieval in Yii HTTP handling.
- *
- * The implementation inspects the method arguments to determine the appropriate return type, ensuring that static
- * analysis and IDE autocompletion reflect the actual runtime behavior of {@see HeaderCollection::get()} method.
- *
- * Key features.
- * - Correctly handles nullable returns when default is null or not provided.
- * - Dynamic return type inference for the {@see HeaderCollection::get()} method based on the third argument.
- * - Ensures compatibility with PHPStan strict analysis and autocompletion.
- * - Handles runtime context and method argument inspection.
- * - Provides accurate type information for IDE and static analysis tools.
- * - Supports both string and array result types for header retrieval.
- *
- * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  */
 final class HeaderCollectionDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {

@@ -23,35 +23,21 @@ use yii\db\{ActiveQuery, ActiveRecord};
 use function count;
 
 /**
- * Provides dynamic return type extension for Yii Active Record static methods in PHPStan analysis.
+ * Infers return types for static {@see ActiveRecord} methods such as {@see ActiveRecord::find()},
+ * {@see ActiveRecord::findOne()}, and custom static query methods in PHPStan analysis.
  *
- * Integrates Yii Active Record with PHPStan dynamic static method return type extension system, enabling precise type
- * inference for static {@see ActiveRecord} methods such as {@see ActiveRecord::find()}, {@see ActiveRecord::findOne()},
- * and custom static query methods.
+ * Analyzes the static method's declared return type and the called class context to preserve the model type for generic
+ * {@see ActiveQuery} results, apply nullability for single-record fetches, and propagate generics through custom
+ * {@see ActiveQuery} subclasses.
  *
- * This extension analyzes the static method's return type and the called class context to determine the most accurate
- * return type, including model type preservation for generic queries, nullability for single-record fetches, and
- * generic {@see ActiveQuery} wrapping.
- *
- * The implementation supports:
- * - Accurate return type inference for static ActiveRecord methods returning {@see ThisType}, {@see UnionType},
- *   {@see ActiveQuery}, or custom {@see ActiveQuery} subclasses.
- * - Compatibility with PHPStan strict static analysis and autocompletion.
- * - Model type preservation for generic {@see ActiveQuery} results.
- * - Nullability handling for methods like {@see ActiveRecord::findOne()}.
- * - Support for custom {@see ActiveQuery} subclasses and generic parameter propagation.
- *
- * @see ActiveQuery for Active Query API details.
- * @see ActiveRecord for Active Record API details.
- * @see DynamicStaticMethodReturnTypeExtension for PHPStan dynamic static method return type extension contract.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ActiveQuery} for Active Query API details.
+ * {@see ActiveRecord} for Active Record API details.
+ * {@see DynamicStaticMethodReturnTypeExtension} for PHPStan dynamic static method return type extension contract.
  */
 final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements DynamicStaticMethodReturnTypeExtension
 {
     /**
-     * Creates a new instance of the {@see ActiveQueryObjectType} class.
+     * Creates a new instance of the {@see ActiveRecordDynamicStaticMethodReturnTypeExtension} class.
      *
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      */
@@ -62,9 +48,6 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      *
      * Specifies the fully qualified class name of the supported class, enabling PHPStan to associate this extension
      * with static method calls on the {@see ActiveRecord} base class and its subclasses.
-     *
-     * This method is essential for registering the extension with PHPStan type system, ensuring that static method
-     * return type inference is applied to the correct class hierarchy during static analysis and IDE autocompletion.
      *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.
      *
@@ -84,9 +67,6 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      *
      * This enables PHPStan to provide accurate type inference and autocompletion for methods such as
      * {@see ActiveRecord::findOne()}, {@see ActiveRecord::findAll()}, and custom query builders.
-     *
-     * This method ensures that static analysis and IDEs reflect the actual runtime behavior of static
-     * {@see ActiveRecord} methods, supporting precise type checks and developer productivity.
      *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param StaticCall $methodCall AST node for the static method call expression.
@@ -165,10 +145,6 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      * This includes methods returning `$this`, union types containing {@see ActiveRecord} subclasses, or types related
      * to {@see ActiveQuery}.
      *
-     * This method enables PHPStan to apply custom type inference for static {@see ActiveRecord} query methods ensuring
-     * accurate autocompletion and static analysis for methods such as {@see ActiveRecord::findOne()},
-     * {@see ActiveRecord::findAll()}, and custom query builders.
-     *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      *
      * @return bool `true` if the static method is supported for dynamic return type inference; `false` otherwise.
@@ -233,9 +209,6 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      * This is used to ensure type compatibility and accurate type inference for static {@see ActiveRecord} methods that
      * return query objects during PHPStan analysis.
      *
-     * This method is essential for supporting dynamic return type inference in scenarios where union types or generic
-     * {@see ActiveQuery} subclasses are involved, enabling precise type checks and autocompletion for query methods.
-     *
      * @param string $className Fully qualified class name to check.
      *
      * @return bool `true` if the class is {@see ActiveQuery} or a subclass; `false` otherwise.
@@ -259,9 +232,6 @@ final class ActiveRecordDynamicStaticMethodReturnTypeExtension implements Dynami
      *
      * This is used to ensure type compatibility and accurate type inference for static {@see ActiveRecord} methods
      * during PHPStan analysis.
-     *
-     * This method is essential for supporting dynamic return type inference in scenarios where union types or generic
-     * {@see ActiveRecord} subclasses are involved, enabling precise type checks and autocompletion.
      *
      * @param string $className Fully qualified class name to check.
      *

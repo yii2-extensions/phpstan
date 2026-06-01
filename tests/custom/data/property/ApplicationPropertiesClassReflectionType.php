@@ -10,13 +10,10 @@ use yii2\extensions\phpstan\tests\support\stub\ApplicationCustom;
 use function PHPStan\Testing\assertType;
 
 /**
- * Data provider for property reflection of a custom Yii Application in PHPStan analysis.
+ * Type assertion fixture for {@see ApplicationCustom} property reflection via `Yii::$app` in PHPStan analysis.
  *
- * Validates that `Yii::$app` resolves to the configured custom application type when a user-defined application class
- * is specified in the PHPStan configuration.
- *
- * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 0.4.1
+ * Verifies that `Yii::$app` resolves to the configured custom application type when a user-defined application class is
+ * specified in the PHPStan configuration, including virtual properties.
  */
 final class ApplicationPropertiesClassReflectionType
 {

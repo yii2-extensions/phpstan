@@ -8,13 +8,8 @@ use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
- * Unit tests for type inference of property reflection in a custom Yii Application for PHPStan analysis.
- *
- * Validates that PHPStan correctly infers the custom application type for `Yii::$app` when a user-defined application
- * class is configured.
- *
- * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 0.4.1
+ * Unit tests for {@see ApplicationPropertiesClassReflectionExtension} property type inference (custom application
+ * context).
  */
 final class ApplicationPropertiesClassReflectionExtensionTest extends TypeInferenceTestCase
 {

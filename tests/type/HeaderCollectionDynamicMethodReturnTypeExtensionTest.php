@@ -16,18 +16,8 @@ use yii\web\HeaderCollection;
  * return type inference.
  *
  * The test class loads type assertions from a fixture file and delegates checks to the parent
- * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see HeaderCollection} dynamic method return types is
- * robust and consistent with expected behavior.
- *
- * Key features:
- * - Ensures compatibility with PHPStan extension configuration.
- * - Loads and executes type assertions from a dedicated fixture file.
- * - Uses PHPUnit DataProvider for parameterized test execution.
- * - Validates type inference for header retrieval methods and result types.
- * - Tests different return type scenarios based on method arguments.
- *
- * @copyright Copyright (C) 2025 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see HeaderCollection} dynamic method return types
+ * is robust and consistent with expected behavior.
  */
 final class HeaderCollectionDynamicMethodReturnTypeExtensionTest extends TypeInferenceTestCase
 {

@@ -15,29 +15,10 @@ use yii2\extensions\phpstan\tests\support\stub\{
 use function PHPStan\Testing\assertType;
 
 /**
- * Test suite for dynamic return types of {@see ActiveRecord::getAttribute} method in Yii Active Record scenarios.
+ * Type assertion fixture for {@see ActiveRecord::getAttribute()} return types in PHPStan analysis.
  *
- * Validates type inference and return types for {@see ActiveRecord::getAttribute} method when used with custom
- * {@see ActiveRecord} implementations that include behaviors with property definitions and PHPDoc annotations, ensuring
- * proper type resolution for model properties and behavior-defined attributes.
- *
- * These tests ensure that PHPStan correctly infers the result types for {@see ActiveRecord::getAttribute} calls based
- * on model property annotations, behavior property definitions, and precedence rules when both model and behavior
- * define the same property name.
- *
- * The test suite validates the type system's ability to distinguish between model-defined properties and behavior-added
- * properties, ensuring that model property types take precedence over behavior property types when conflicts occur.
- *
- * Test coverage.
- * - Behavior property type inference for multiple behaviors with different property types.
- * - Model property type inference from PHPDoc annotations.
- * - Multiple behavior property handling with different return types.
- * - Precedence rules for conflicting property names between models and behaviors.
- * - Type inference for unknown attributes (fallback to mixed type).
- * - Type safety validation for {@see ActiveRecord::getAttribute} with known and unknown properties.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference from model PHPDoc and behavior property definitions, including precedence of model properties
+ * over behavior properties on conflict and the `mixed` fallback for unknown attributes.
  */
 final class ActiveRecordGetAttributeDynamicMethodReturnType
 {

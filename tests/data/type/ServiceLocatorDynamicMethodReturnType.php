@@ -13,24 +13,10 @@ use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
 use function PHPStan\Testing\assertType;
 
 /**
- * Test suite for dynamic return types of {@see ServiceLocator::get()} in Yii component scenarios.
+ * Type assertion fixture for {@see ServiceLocator::get()} return types in PHPStan analysis.
  *
- * Validates type inference and return types for the service locator {@see ServiceLocator::get()} method, covering
- * scenarios with component IDs, class names, module components, application components, and various service resolution
- * patterns.
- *
- * These tests ensure that PHPStan correctly infers the result types for ServiceLocator lookups, including
- * component-based resolution, service aliases, known Yii components, and unknown component identifiers.
- *
- * Key features:
- * - Component resolution from ServiceMap configuration.
- * - Mixed type handling for unknown or dynamic component IDs.
- * - Module and Application component access patterns.
- * - Priority testing: ServiceMap components > ServiceMap services > Real classes > Unknown.
- * - Type assertions for various Yii2 built-in components.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference for component resolution by ID and class name across {@see ServiceLocator}, {@see Module},
+ * and {@see Application}, including built-in Yii components and the `mixed` fallback for unknown identifiers.
  */
 final class ServiceLocatorDynamicMethodReturnType
 {

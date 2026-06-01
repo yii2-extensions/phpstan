@@ -18,16 +18,6 @@ use yii2\extensions\phpstan\tests\support\stub\{MyActiveRecord, User};
  *
  * The tests cover scenarios including valid and invalid component IDs, class resolution, definition extraction, and
  * exception handling for misconfigured or malformed component arrays.
- *
- * Key features.
- * - Ensures compatibility with the provided configuration files.
- * - Resolves component class by ID for valid and initialized components.
- * - Retrieves component definitions by ID and class name.
- * - Returns `null` for non-existent or non-class component IDs.
- * - Throws exceptions for invalid component ID types and non-array component definitions.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ServiceMapComponentTest extends TestCase
 {
@@ -135,7 +125,7 @@ final class ServiceMapComponentTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenComponentIdNotString(): void
+    public function testThrowRuntimeExceptionWhenComponentIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Component\': \'ID\' must be a \'string\', got \'integer\'.');
@@ -146,7 +136,7 @@ final class ServiceMapComponentTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenComponentsNotArray(): void
+    public function testThrowRuntimeExceptionWhenComponentsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'components-unsupported-is-not-array.php';
 

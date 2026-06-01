@@ -18,16 +18,6 @@ use yii2\extensions\phpstan\tests\support\stub\{BehaviorOne, BehaviorTwo, MyComp
  *
  * The tests cover scenarios including valid and invalid class names, behavior extraction, and exception handling for
  * misconfigured or malformed behavior arrays.
- *
- * Key features.
- * - Ensures compatibility with the provided configuration files.
- * - Resolves behaviors by class name (as string or class-string).
- * - Returns an empty array for classes with no behaviors or when not configured.
- * - Throws exceptions for invalid behavior definitions, non-array structures, and non-string IDs.
- * - Validates error handling for unsupported or malformed configuration files.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ServiceMapBehaviorTest extends TestCase
 {
@@ -109,7 +99,7 @@ final class ServiceMapBehaviorTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenBehaviorDefinitionNotArray(): void
+    public function testThrowRuntimeExceptionWhenBehaviorDefinitionNotArray(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Behavior definition for \'MyComponent\' must be an array.');
@@ -120,7 +110,7 @@ final class ServiceMapBehaviorTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenBehaviorIdNotString(): void
+    public function testThrowRuntimeExceptionWhenBehaviorIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Behavior class\': \'ID\' must be a \'string\', got \'integer\'.');
@@ -131,7 +121,7 @@ final class ServiceMapBehaviorTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenBehaviorsNotArray(): void
+    public function testThrowRuntimeExceptionWhenBehaviorsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'behaviors-unsupported-is-not-array.php';
 

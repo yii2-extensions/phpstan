@@ -20,16 +20,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * This validates the ability of the PHPStan extension to resolve property types from PHPDoc annotations in both model
  * classes and their attached behaviors, with proper precedence handling when property names conflict.
- *
- * Key features.
- * - Ensures compatibility with PHPStan extension configuration.
- * - Loads and executes type assertions from a dedicated fixture file.
- * - Uses PHPUnit DataProvider for parameterized test execution.
- * - Validates type inference for {@see ActiveRecord::getAttribute()} method calls.
- * - Verifies behavior property type resolution and model property precedence.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtensionTest extends TypeInferenceTestCase
 {

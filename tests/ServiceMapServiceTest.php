@@ -22,17 +22,6 @@ use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
  *
  * The tests cover scenarios including valid and invalid service IDs, class resolution, definition extraction, and
  * exception handling for misconfigured or malformed service arrays.
- *
- * Key features.
- * - Ensures compatibility with the provided configuration files.
- * - Resolves service class by ID for valid and initialized services.
- * - Retrieves service definitions by ID and class name.
- * - Returns `null` for non-existent or non-class service IDs.
- * - Throws exceptions for invalid service ID types and non-array service definitions.
- * - Validates error handling for unsupported or malformed configuration files.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ServiceMapServiceTest extends TestCase
 {
@@ -190,20 +179,7 @@ final class ServiceMapServiceTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowExceptionWhenConfigNotArray(): void
-    {
-        $configPath = self::BASE_PATH . 'config-unsupported-is-not-array.php';
-
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$configPath}' must return an array.");
-
-        new ServiceMap($configPath);
-    }
-
-    public function testThrowExceptionWhenConfigPathInvalid(): void
+    public function testThrowInvalidArgumentExceptionWhenConfigPathInvalid(): void
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Provided config path \'invalid-path\' must be a readable file.');
@@ -214,7 +190,20 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenContainerDefinitionsNotArray(): void
+    public function testThrowRuntimeExceptionWhenConfigNotArray(): void
+    {
+        $configPath = self::BASE_PATH . 'config-unsupported-is-not-array.php';
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage("Configuration file '{$configPath}' must return an array.");
+
+        new ServiceMap($configPath);
+    }
+
+    /**
+     * @throws ReflectionException if the service definition is invalid or can't be resolved.
+     */
+    public function testThrowRuntimeExceptionWhenContainerDefinitionsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'definitions-unsupported-is-not-array.php';
 
@@ -229,7 +218,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenContainerNotArray(): void
+    public function testThrowRuntimeExceptionWhenContainerNotArray(): void
     {
         $configPath = self::BASE_PATH . 'config-container-unsupported-type-array-invalid.php';
 
@@ -242,7 +231,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenContainerSingletonsNotArray(): void
+    public function testThrowRuntimeExceptionWhenContainerSingletonsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'singletons-unsupported-is-not-array.php';
 
@@ -257,7 +246,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenDefinitionArrayInvalid(): void
+    public function testThrowRuntimeExceptionWhenDefinitionArrayInvalid(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
@@ -268,7 +257,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenDefinitionClosureMissingReturnType(): void
+    public function testThrowRuntimeExceptionWhenDefinitionClosureMissingReturnType(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
@@ -279,7 +268,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenDefinitionEmptyArray(): void
+    public function testThrowRuntimeExceptionWhenDefinitionEmptyArray(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
@@ -290,7 +279,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenDefinitionIdNotString(): void
+    public function testThrowRuntimeExceptionWhenDefinitionIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Definition\': \'ID\' must be a \'string\', got \'integer\'.');
@@ -301,7 +290,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenDefinitionNotArray(): void
+    public function testThrowRuntimeExceptionWhenDefinitionNotArray(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-type-integer\'.');
@@ -312,7 +301,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenSingletonArrayInvalid(): void
+    public function testThrowRuntimeExceptionWhenSingletonArrayInvalid(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
@@ -323,7 +312,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenSingletonClosureMissingReturnType(): void
+    public function testThrowRuntimeExceptionWhenSingletonClosureMissingReturnType(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
@@ -334,7 +323,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenSingletonEmptyArray(): void
+    public function testThrowRuntimeExceptionWhenSingletonEmptyArray(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
@@ -345,7 +334,7 @@ final class ServiceMapServiceTest extends TestCase
     /**
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenSingletonIdNotString(): void
+    public function testThrowRuntimeExceptionWhenSingletonIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('\'Singleton\': \'ID\' must be a \'string\', got \'integer\'.');

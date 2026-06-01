@@ -18,15 +18,6 @@ use yii\di\Container;
  * The test class loads type assertions from a fixture file and delegates checks to the parent
  * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see Container} dynamic method return types is
  * robust and consistent with expected behavior.
- *
- * Key features.
- * - Ensures compatibility with PHPStan extension configuration.
- * - Loads and executes type assertions from a dedicated fixture file.
- * - Uses PHPUnit DataProvider for parameterized test execution.
- * - Validates type inference for chained query methods and result types.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class ContainerDynamicMethodReturnTypeExtensionTest extends TypeInferenceTestCase
 {
