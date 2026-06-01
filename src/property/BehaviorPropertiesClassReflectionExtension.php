@@ -17,25 +17,13 @@ use yii\base\Component;
 use yii2\extensions\phpstan\ServiceMap;
 
 /**
- * Provides property reflection for Yii Behavior in PHPStan analysis.
+ * Resolves properties provided by behaviors attached to {@see Component} subclasses for PHPStan analysis.
  *
- * Integrates Yii Behavior with PHPStan property reflection extension, enabling detection and resolution of properties
- * provided by attached behaviors on {@see Component} subclasses during static analysis.
+ * Inspects the behaviors attached to a given class via the {@see ServiceMap} and determines whether any provide the
+ * requested property, allowing PHPStan to recognize behavior properties as if they were natively declared.
  *
- * This extension inspects the behaviors attached to a given class and determines if any of them provide the requested
- * property, allowing PHPStan to recognize available properties as if they were natively declared.
- *
- * Key features.
- * - Delegates to the native property if not found in behaviors.
- * - Detects properties provided by behaviors attached to {@see Component} subclasses.
- * - Ensures compatibility with PHPStan strict static analysis and autocompletion.
- * - Integrates with {@see ServiceMap} for efficient behavior lookup by class name.
- *
- * @see Component for Yii Component class.
- * @see PropertiesClassReflectionExtension for custom properties class reflection extension contract.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see Component} for Yii Component class.
+ * {@see PropertiesClassReflectionExtension} for custom properties class reflection extension contract.
  */
 final class BehaviorPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {

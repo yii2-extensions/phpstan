@@ -8,20 +8,11 @@ use yii\db\ActiveRecord;
 use yii\web\IdentityInterface;
 
 /**
- * Active Record User model for testing property and rule definitions.
- *
- * Provides a minimal {@see ActiveRecord} subclass with explicit property declarations and validation rules for static
- * analysis and type inference tests.
- *
- * This class is used in PHPStan and static analysis scenarios to validate correct type inference for property access
- * and rule configuration in Yii Active Record models.
+ * Stub ActiveRecord model implementing {@see IdentityInterface} for property and rule inference tests.
  *
  * @property int $id
  * @property string $name
  * @property string $email
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class User extends ActiveRecord implements IdentityInterface
 {

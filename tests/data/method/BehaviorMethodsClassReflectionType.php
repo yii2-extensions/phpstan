@@ -9,23 +9,10 @@ use yii2\extensions\phpstan\tests\support\stub\MyComponent;
 use function PHPStan\Testing\assertType;
 
 /**
- * Data provider for method reflection of Yii Behaviors in PHPStan analysis.
+ * Type assertion fixture for behavior method reflection on {@see MyComponent} in PHPStan analysis.
  *
- * Validates type inference and return types for methods provided by attached behaviors on {@see MyComponent}, ensuring
- * that PHPStan correctly recognizes and infers types for available methods as if they were natively declared on the
- * component class.
- *
- * These tests cover scenarios including direct method calls, behavior-provided methods, parameterized methods, and
- * shared method resolution, verifying that type assertions match the expected return types for each case.
- *
- * Key features.
- * - Coverage for parameterized and shared methods.
- * - Ensures compatibility with PHPStan method reflection for Yii behaviors.
- * - Type assertion for native and behavior-provided methods.
- * - Validates correct type inference for all supported method signatures.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference for methods provided by attached behaviors, including parameterized, shared, and native
+ * methods, as if they were declared on the component class.
  */
 final class BehaviorMethodsClassReflectionType
 {

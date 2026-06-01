@@ -4,32 +4,17 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\data\type;
 
-use yii\db\{ActiveQuery, ActiveRecord};
+use yii\db\ActiveRecord;
 use yii2\extensions\phpstan\tests\support\stub\{Category, MyActiveRecord, User};
 
 use function PHPStan\Testing\assertType;
 
 /**
- * Test suite for dynamic static method return types of {@see ActiveRecord} in Yii Active Record scenarios.
+ * Type assertion fixture for {@see ActiveRecord} static method return types in PHPStan analysis.
  *
- * Validates type inference and return types for static {@see ActiveRecord} methods such as {@see ActiveRecord::find()},
- * {@see ActiveRecord::findOne()}, {@see ActiveRecord::findAll()}, and {@see ActiveRecord::findBySql()} in custom
- * {@see ActiveRecord} implementations, including chained query calls and array/object result scenarios.
- *
- * These tests ensure that PHPStan correctly infers the result types for static query methods returning objects, arrays,
- * and query objects, and that type safety is preserved across chained query calls and various result scenarios.
- *
- * Test coverage.
- * - Array and object result validation for static query methods.
- * - Chained query method return types ({@see ActiveQuery::where()}, {@see ActiveQuery::orderBy()},
- *   {@see ActiveQuery::limit()}, {@see ActiveQuery::asArray()}).
- * - Result types for {@see ActiveQuery::all()}, {@see ActiveQuery::one()} methods on static queries.
- * - Type assertions for property and array access on static query results.
- * - Type inference for {@see ActiveRecord::find()}, {@see ActiveRecord::findOne()}, {@see ActiveRecord::findAll()}, and
- *   {@see ActiveRecord::findBySql()} with and without chaining.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference for {@see ActiveRecord::find()}, {@see ActiveRecord::findOne()},
+ * {@see ActiveRecord::findAll()}, and {@see ActiveRecord::findBySql()} on custom {@see ActiveRecord} implementations,
+ * covering chained calls and array versus object result scenarios.
  */
 final class ActiveRecordDynamicStaticMethodReturnType
 {

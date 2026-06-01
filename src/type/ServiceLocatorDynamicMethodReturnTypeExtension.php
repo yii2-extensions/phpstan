@@ -13,27 +13,15 @@ use yii\di\ServiceLocator;
 use yii2\extensions\phpstan\ServiceMap;
 
 /**
- * Provides dynamic return type extension for Yii Service Locator component resolution in PHPStan analysis.
+ * Infers return types for {@see ServiceLocator::get()} calls based on component ID and the {@see ServiceMap} in PHPStan
+ * analysis.
  *
- * Integrates the Yii Service Locator service {@see ServiceLocator} with PHPStan dynamic method return type extension
- * system, enabling precise type inference for {@see ServiceLocator::get()} calls based on component ID and the
- * {@see ServiceMap}.
+ * Analyzes the first argument of {@see ServiceLocator::get()} to return an {@see ObjectType} for known component
+ * classes, or a {@see MixedType} for unknown or dynamic IDs. Applies to {@see ServiceLocator} and its subclasses, such
+ * as modules and applications.
  *
- * This extension analyzes the first argument of {@see ServiceLocator::get()} to determine the most accurate return
- * type, returning an {@see ObjectType} for known component classes or a {@see MixedType} for unknown or dynamic ID.
- *
- * Key features:
- * - Accurate return type inference for {@see ServiceLocator::get()} based on component ID string.
- * - Compatible with PHPStan strict static analysis and autocompletion.
- * - Falls back to method signature return type for unsupported or invalid calls.
- * - Supports Yii modules, applications, and any class extending {@see ServiceLocator}.
- * - Uses {@see ServiceMap} to resolve component class names.
- *
- * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- * @see ServiceMap for service and component map for Yii Application static analysis.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
+ * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
 final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
@@ -53,10 +41,6 @@ final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMet
      *
      * Specifies the fully qualified class name of the Yii ServiceLocator {@see ServiceLocator} that this extension
      * target for dynamic return type inference in PHPStan analysis.
-     *
-     * This method enables PHPStan to associate the extension with the {@see ServiceLocator} class and all its
-     * subclasses (like Module and Application), ensuring that dynamic return type logic is applied to component
-     * resolution calls.
      *
      * @return string Fully qualified class name of the supported ServiceLocator class.
      *

@@ -7,18 +7,9 @@ namespace yii2\extensions\phpstan\tests\support\stub;
 use yii\db\ActiveRecord;
 
 /**
- * Custom ActiveRecord implementation for testing dynamic return types and relations.
- *
- * Provides a minimal ActiveRecord subclass with a boolean property and methods for testing Yii Active Record dynamic
- * return types, including single and multiple relation retrieval and query result scenarios.
- *
- * This class is used in type inference and static analysis tests to validate PHPStan's ability to correctly infer
- * return types for ActiveRecord queries, relations, and chained method calls.
+ * Stub ActiveRecord model with relation and query methods for dynamic return type inference tests.
  *
  * @property bool $flag
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
 final class MyActiveRecord extends ActiveRecord
 {

@@ -16,35 +16,15 @@ use yii2\extensions\phpstan\ServiceMap;
 use function count;
 
 /**
- * Provides dynamic return type extension for Yii Active Record {@see ActiveRecord::getAttribute()} method in PHPStan
- * analysis.
+ * Infers return types for {@see ActiveRecord::getAttribute()} calls in PHPStan analysis.
  *
- * Enables PHPStan to infer precise return types for {@see ActiveRecord::getAttribute()} method calls by analyzing the
- * attribute name and extracting type information from PHPDoc property annotations in the model class and its attached
- * behaviors.
+ * Examines the constant string argument passed to {@see ActiveRecord::getAttribute()} and resolves the corresponding
+ * property type from the model's PHPDoc `@property` tags, falling back to behaviors registered through the
+ * {@see ServiceMap}, and finally to {@see MixedType} for unknown or non-constant attribute names.
  *
- * This extension examines the constant string argument passed to {@see ActiveRecord::getAttribute()} and resolves the
- * corresponding property type from the model's PHPDoc `@property` tags or from behaviors registered through the
- * {@see ServiceMap}.
- *
- * The type resolution follows a hierarchical approach, first checking the model class's own PHPDoc annotations, then
- * searching through attached behaviors' property definitions to provide comprehensive type coverage for dynamic
- * attribute access.
- *
- * Key features.
- * - Attribute name validation from constant string arguments in method calls.
- * - Behavior integration through {@see ServiceMap} for comprehensive property type resolution.
- * - Dynamic type inference for {@see ActiveRecord::getAttribute()} method calls.
- * - Fallback to {@see MixedType} for unknown or non-constant attribute names.
- * - Integration with PHPStan file type mapper for accurate PHPDoc parsing.
- * - PHPDoc property tag extraction from model classes and behaviors.
- *
- * @see ActiveRecord for Active Record API details.
- * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- * @see ServiceMap for service and component map for Yii Application static analysis.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ActiveRecord} for Active Record API details.
+ * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
+ * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
 final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
@@ -67,9 +47,6 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
      * Specifies the fully qualified class name of the supported class, enabling PHPStan to associate this extension
      * with method calls on the {@see ActiveRecord} base class and its subclasses.
      *
-     * This method is essential for registering the extension with PHPStan type system, ensuring that dynamic method
-     * return type inference is applied to the correct class hierarchy during static analysis and IDE autocompletion.
-     *
      * @return string Fully qualified class name of the supported {@see ActiveRecord} class.
      *
      * @phpstan-return class-string
@@ -87,10 +64,6 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
      *
      * This enables precise type inference for static analysis and IDE autocompletion when accessing ActiveRecord
      * attributes dynamically.
-     *
-     * The method validates that the first argument is a constant string representing the attribute name, then searches
-     * for the corresponding property type in the model's PHPDoc `@property` tags. If not found in the model class, it
-     * searches through attached behaviors' property definitions via the {@see ServiceMap}.
      *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param MethodCall $methodCall AST node for the method call expression.
@@ -171,9 +144,6 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
      * The search process validates each behavior class existence, creates reflection instances, and delegates to
      * {@see getPropertyTypeFromPhpDoc()} for actual property type extraction from behavior PHPDoc blocks.
      *
-     * This method is essential for complete type coverage in {@see ActiveRecord::getAttribute()} calls when
-     * attributes are defined in behaviors attached to the model class.
-     *
      * @param string $className Fully qualified class name to check.
      * @param string $attributeName The attribute name to search for.
      *
@@ -207,9 +177,6 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
      *
      * This enables precise type inference for model properties in static analysis by examining the `@property` tags
      * documented in the class's PHPDoc block and resolving their types using the file type mapper.
-     *
-     * The method handles file name validation, doc comment extraction, and PHPDoc parsing with error handling to ensure
-     * robust type resolution for dynamic attribute access in {@see ActiveRecord::getAttribute()} calls.
      *
      * Only properties explicitly documented in the PHPDoc block with `@property` tags are considered for type
      * extraction.

@@ -13,9 +13,6 @@ use function PHPStan\Testing\assertType;
  *
  * Validates that PHPStan correctly infers array shape types for application params when configured via the extension
  * configuration file.
- *
- * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 0.4.1
  */
 final class ApplicationParamsType
 {

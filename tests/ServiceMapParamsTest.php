@@ -14,9 +14,6 @@ use yii2\extensions\phpstan\ServiceMap;
  *
  * Validates correct extraction and retrieval of application params from configuration files, ensuring robust error
  * handling for invalid params structures.
- *
- * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 0.4.1
  */
 final class ServiceMapParamsTest extends TestCase
 {
@@ -86,7 +83,7 @@ final class ServiceMapParamsTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenParamsIsNull(): void
+    public function testThrowRuntimeExceptionWhenParamsIsNull(): void
     {
         $configPath = self::BASE_PATH . 'params-unsupported-is-null.php';
 
@@ -101,7 +98,7 @@ final class ServiceMapParamsTest extends TestCase
     /**
      * @throws ReflectionException if the component definition is invalid or can't be resolved.
      */
-    public function testThrowExceptionWhenParamsNotArray(): void
+    public function testThrowRuntimeExceptionWhenParamsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'params-unsupported-is-not-array.php';
 

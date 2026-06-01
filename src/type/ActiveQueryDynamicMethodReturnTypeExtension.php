@@ -29,30 +29,15 @@ use function count;
 use function in_array;
 
 /**
- * Provides dynamic return type extension for Yii Active Query methods in PHPStan analysis.
+ * Infers precise return types for {@see ActiveQuery} methods such as {@see ActiveQuery::one()},
+ * {@see ActiveQuery::all()}, and {@see ActiveQuery::asArray()} in PHPStan analysis.
  *
- * Enables PHPStan to infer precise return types for {@see ActiveQuery} methods such as {@see ActiveQuery::one()},
- * {@see ActiveQuery::all()}, and {@see ActiveQuery::asArray()} based on the model type and method arguments.
+ * Extracts the model type from the generic {@see ActiveQuery} parameter and inspects method arguments to resolve array
+ * or object return types, preserving the generic type for fluent interface methods. Supports array shape inference from
+ * PHPDoc `@property` tags on model classes.
  *
- * This extension analyzes the generic type parameter of {@see ActiveQuery} to determine the model type and inspects
- * method arguments to resolve array or object return types for {@see ActiveQuery::asArray()}.
- *
- * It supports union and array types for {@see ActiveQuery::one()} and {@see ActiveQuery::all()} respectively, and
- * preserves the generic type for fluent interface methods.
- *
- * Key features.
- * - Array shape inference from PHPDoc property tags for model classes.
- * - Dynamic return type inference for {@see ActiveQuery::one()}, {@see ActiveQuery::all()}, and
- *   {@see ActiveQuery::asArray()} methods.
- * - Extraction of model type from generic {@see ActiveQuery} instances.
- * - Integration with PHPStan type combinators and file type mapper for accurate analysis.
- * - Support for union, array, and generic object types in method return values.
- *
- * @see ActiveQuery for Active Query API details.
- * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ActiveQuery} for Active Query API details.
+ * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  */
 final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
@@ -80,9 +65,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * Specifies the fully qualified class name of the supported class, enabling PHPStan to associate this extension
      * with method calls on the {@see ActiveQuery} base class and its subclasses.
      *
-     * This method is essential for registering the extension with PHPStan type system, ensuring that static method
-     * return type inference is applied to the correct class hierarchy during static analysis and IDE autocompletion.
-     *
      * @return string Fully qualified class name of the supported {@see ActiveQuery} class.
      *
      * @phpstan-return class-string
@@ -95,8 +77,8 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     /**
      * Infers the return type for a method call on an {@see ActiveQuery} instance.
      *
-     * Resolves the return type for {@see ActiveQuery::all()}, {@see ActiveQuery::one()}, and
-     * {@see ActiveQuery::asArray()} methods by analyzing the model type and method context.
+     * Resolves the return type for {@see ActiveQuery::all()}, {@see ActiveQuery::one()}, and {@see ActiveQuery::asArray()}
+     * methods by analyzing the model type and method context.
      *
      * This enables precise type inference for static analysis and IDE autocompletion.
      *
@@ -311,9 +293,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * If the given type is a {@see GenericObjectType}, returns its class name; otherwise, returns the base
      * {@see ActiveQuery} class name.
      *
-     * This method is used to determine the correct query class for type analysis and ensures compatibility with
-     * subclasses of {@see ActiveQuery} during static analysis.
-     *
      * @param Type $calledOnType Type on which the method is called.
      *
      * @return string Fully qualified class name of the query object.
@@ -334,10 +313,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      *
      * If the model type is not a single class is unknown, or property extraction fails, a generic associative array
      * type is returned.
-     *
-     * This method is used to provide accurate array shape types for associative arrays returned by {@see ActiveQuery}
-     * methods such as {@see ActiveQuery::asArray()} in static analysis, enabling precise type checking and
-     * autocompletion for model properties.
      *
      * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
      *
@@ -380,9 +355,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * {@see ConstantBooleanType} representing `true`, which is the default behavior for {@see ActiveQuery::asArray()}
      * in Yii Active Query.
      *
-     * This method is used internally by the dynamic return type extension to support accurate type inference for
-     * {@see ActiveQuery::asArray()} calls during static analysis.
-     *
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
      *
@@ -409,9 +381,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      *   type.
      * - If the argument is dynamic or unknown, returns a {@see GenericObjectType} for the query class with a union of
      *   the model type and the array shape type.
-     *
-     * This method enables precise type inference for chained {@see asArray()} calls, ensuring that the correct type is
-     * propagated for subsequent method calls on the {@see ActiveQuery} instance during static analysis.
      *
      * @param MethodCall $methodCall AST node for the method call expression.
      * @param Scope $scope PHPStan analysis scope for type resolution.
@@ -481,9 +450,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * If the called-on type is not a {@see GenericObjectType} but the model type is not {@see MixedType}, constructs a
      * new {@see GenericObjectType} for {@see ActiveQuery} with the provided model type; otherwise, returns the original
      * type.
-     *
-     * This method is used internally to support fluent interface patterns and generic type propagation in dynamic
-     * return type extension logic.
      *
      * @param Type $calledOnType The type on which the method is called.
      * @param Type $modelType The extracted model type from the generic {@see ActiveQuery} instance.

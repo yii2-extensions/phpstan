@@ -9,22 +9,11 @@ use Yii;
 use function PHPStan\Testing\assertType;
 
 /**
- * Data provider for property reflection of a Yii User component in PHPStan analysis.
+ * Type assertion fixture for {@see \yii\web\User} component property reflection via `Yii::$app->user` in PHPStan
+ * analysis.
  *
- * Validates type inference and return types for properties provided by the Yii User component, ensuring that PHPStan
- * correctly recognizes and infers types for available properties as if they were natively declared on the user object.
- *
- * These tests cover scenarios including direct property access, identity and guest checks, parameterized properties,
- * and shared property resolution, verifying that type assertions match the expected return types for each case.
- *
- * Key features.
- * - Coverage for identity, guest, and parameterized properties.
- * - Ensures compatibility with PHPStan property reflection for a Yii user component.
- * - Type assertion for native and user-provided properties.
- * - Validates correct type inference for all supported property types.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference for user component properties, including identity, guest, and nullable identity members
+ * accessed through the null-safe operator.
  */
 final class UserPropertiesClassReflectionType
 {

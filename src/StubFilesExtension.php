@@ -42,10 +42,7 @@ use const LOCK_EX;
  * The generated stub is written atomically to a deterministic temporary file path, cached across PHPStan runs for the
  * same content.
  *
- * @see ServiceMap for service and component map for Yii Application static analysis.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
 final class StubFilesExtension implements \PHPStan\PhpDoc\StubFilesExtension
 {

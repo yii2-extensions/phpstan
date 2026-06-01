@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore: update dependencies and configuration files.
 - chore: adopt scaffold tooling and ensure compatibility with `PHPStan` 2.2 and `Yii2` generic types.
 - docs: update badge links and remove quality code section from `README.md`.
+- docs: normalize PHPDoc headers across `src` and `tests`, and move authorship metadata to `composer.json`.
 
 ## 0.4.1 April 05, 2026
 

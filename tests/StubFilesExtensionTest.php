@@ -16,9 +16,6 @@ use function unlink;
 
 /**
  * Unit tests for {@see StubFilesExtension} dynamic stub file generation.
- *
- * @author Wilmer Arambula <terabytesoftw@gmail.com>
- * @since 0.4.1
  */
 final class StubFilesExtensionTest extends TestCase
 {
@@ -296,13 +293,13 @@ final class StubFilesExtensionTest extends TestCase
         self::assertStringContainsString(
             "array{emptyList: array<mixed, mixed>, siteName: string, sparse: array{2: string, 5: string}, 'O\\'Reilly': string, 'C:\\\\path': string, resource: mixed}",
             $stubContent,
-            "Stub should infer empty array as 'array<mixed, mixed>', sparse array with explicit keys, escape special characters in quoted keys, and fallback to 'mixed' for unsupported types.",
+            "Param type must infer empty array, sparse keys, escaped quoted keys, and 'mixed' fallback.",
         );
 
         $this->generatedStubs[] = $stubPath;
     }
 
-    public function testThrowExceptionWhenStubFileCannotBeWritten(): void
+    public function testThrowRuntimeExceptionWhenStubFileCannotBeWritten(): void
     {
         $ds = DIRECTORY_SEPARATOR;
         $nonWritableDir = $ds . 'nonexistent' . $ds . 'directory' . $ds . 'path';

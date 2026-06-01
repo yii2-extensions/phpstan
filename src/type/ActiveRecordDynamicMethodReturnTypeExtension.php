@@ -18,30 +18,14 @@ use function in_array;
 use function sprintf;
 
 /**
- * Provides dynamic return type extension for Yii Active Record relation methods in PHPStan analysis.
+ * Infers return types for Yii Active Record relation methods {@see ActiveRecord::hasOne()} and
+ * {@see ActiveRecord::hasMany()} in PHPStan analysis.
  *
- * Integrates Yii Active Record relation methods with PHPStan dynamic return type extension system, enabling precise
- * type inference for relation methods such as {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()}.
+ * Analyzes the method arguments to return a generic {@see ActiveQuery} type parameterized with the related model class.
  *
- * This extension analyzes the method arguments to determine the most accurate return type for relation definitions,
- * returning a generic {@see ActiveQuery} type parameterized with the related model class.
- *
- * It ensures that static analysis and IDE autocompletion provide correct type information for Yii Active Record
- * relation calls.
- *
- * Key features.
- * - Accurate return type inference for {@see ActiveRecord::hasOne()} and {@see ActiveRecord::hasMany()} relation
- *   methods.
- * - Compatibility with PHPStan strict static analysis and autocompletion.
- * - Exception handling for invalid or missing arguments in relation method calls.
- * - Returns a generic {@see ActiveQuery} type with the related model class as type parameter.
- *
- * @see ActiveQuery for Active Query API details.
- * @see ActiveRecord for Active Record API details.
- * @see DynamicMethodReturnTypeExtension for PHPStan dynamic return type extension contract.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see ActiveQuery} for Active Query API details.
+ * {@see ActiveRecord} for Active Record API details.
+ * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  */
 final class ActiveRecordDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {

@@ -13,25 +13,10 @@ use function PHPStan\Testing\assertType;
 use function random_int;
 
 /**
- * Test suite for dynamic return types of {@see Container::get()} in Yii DI scenarios.
+ * Type assertion fixture for {@see Container::get()} return types in PHPStan analysis.
  *
- * Validates type inference and return types for the dependency injection container {@see Container::get()} method,
- * covering scenarios with class-string, string identifiers, service definitions, closures, and parameterized
- * instantiation.
- *
- * These tests ensure that PHPStan correctly infers the result types for container lookups, including class-based
- * resolution, service aliases, singleton and non-singleton services, closures, and unknown service identifiers.
- *
- * Key features.
- * - Conditional service resolution and union type assertions.
- * - Coverage for singleton, closure, and nested service definitions.
- * - Mixed type handling for unknown or dynamic service IDs.
- * - Parameterized instantiation and property assertions.
- * - Priority testing: ServiceMap > Real classes > Unknown.
- * - Type assertions for class-string and string service identifiers.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * Verifies type inference for container lookups, covering class-string and string identifiers, service definitions,
+ * closures, singletons, nested services, parameterized instantiation, and the `mixed` fallback for unknown identifiers.
  */
 final class ContainerDynamicMethodReturnType
 {

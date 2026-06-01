@@ -23,36 +23,16 @@ use function in_array;
 use function is_string;
 
 /**
- * Provides property reflection for a Yii Application component in PHPStan analysis.
+ * Resolves dynamic component properties on the Yii Application instance for PHPStan analysis.
  *
- * Integrates Yii DI container service resolution and service map with PHPStan property reflection system, enabling
- * accurate type inference and autocompletion for dynamic application components and services.
+ * Recognizes properties defined via configuration, dependency injection, or service mapping on base, web, and console
+ * application contexts, even when not declared natively. Delegates to annotation-based and native property reflection,
+ * and resolves component types (including generics) through the {@see ServiceMap}.
  *
- * This extension allows PHPStan to recognize properties on the Yii Application instance that are defined via
- * configuration, dependency injection, or service mapping, even if they aren't declared as native properties.
- *
- * The implementation delegates to annotation-based property extensions, native property reflection, and a custom
- * service map for component resolution.
- *
- * This ensures that all valid application properties whether declared, annotated, or registered as components are
- * available for static analysis and IDE support.
- *
- * Key features.
- * - Enables accurate type inference for injected services and components.
- * - Ensures compatibility with PHPStan strict analysis and autocompletion.
- * - Handles base, web, and console application contexts.
- * - Integrates annotation-based and native property reflection.
- * - Supports dynamic Yii Application properties via service map lookup.
- * - Supports generic type inference for application components, enabling precise static analysis when components are
- *   configured with generics.
- *
- * @see \yii\base\Application for Yii Base Application class.
- * @see \yii\console\Application for Yii Console Application class.
- * @see \yii\web\Application for Yii Web Application class.
- * @see PropertiesClassReflectionExtension for custom properties class reflection extension contract.
- *
- * @copyright Copyright (C) 2023 Terabytesoftw.
- * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
+ * {@see \yii\base\Application} for Yii Base Application class.
+ * {@see \yii\console\Application} for Yii Console Application class.
+ * {@see \yii\web\Application} for Yii Web Application class.
+ * {@see PropertiesClassReflectionExtension} for custom properties class reflection extension contract.
  */
 final class ApplicationPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
@@ -66,7 +46,6 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * reflection and IDE autocompletion.
      *
      * @var array<int, class-string|string>
-     * @phpstan-var array<int, class-string|string>
      */
     private const SUPPORTED_APPLICATION_CLASSES = [
         Application::class,
@@ -81,8 +60,8 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * annotation-based properties.
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
-     *
-     * @phpstan-param string[] $genericComponents
+     * @param string[] $genericComponents Optional mapping of component property names to their generic type parameter
+     * keys in the component definition.
      */
     public function __construct(
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
@@ -96,9 +75,6 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      *
      * Resolves the property reflection for the specified property name by checking for dynamic components, native
      * properties, and annotation-based properties on the Yii Application instance.
-     *
-     * This method ensures that properties defined via configuration, dependency injection, or service mapping are
-     * accessible for static analysis and IDE support.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
@@ -140,9 +116,6 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * Checks for the existence of a property on the Yii Application instance by considering native properties,
      * annotation-based properties, and dynamic components registered via the service map.
      *
-     * This method ensures compatibility with base, web, and console application contexts, enabling accurate property
-     * reflection for static analysis and IDE autocompletion.
-     *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
      *
@@ -163,9 +136,6 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
 
     /**
      * Determines if the provided class reflection corresponds to a Yii Application class or its subclass.
-     *
-     * This method checks whether the given {@see ClassReflection} instance represents the base Yii Application, the
-     * console or web application, or any subclass.
      *
      * This check is essential for restricting property reflection logic to valid Yii Application contexts, ensuring
      * that dynamic property resolution is only applied where appropriate.
@@ -193,9 +163,6 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
 
     /**
      * Normalizes the class reflection for Yii Application subclasses to ensure consistent property resolution.
-     *
-     * This method uses the configured application type from the service map to provide a consistent application
-     * class reflection, resolving the union type issue in PHPStan analysis.
      *
      * The normalization process ensures that dynamic property resolution and component lookup use the explicitly
      * configured application type rather than attempting to infer it from context.
