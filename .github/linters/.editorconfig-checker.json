@@ -1,0 +1,11 @@
+{
+    "Exclude": [
+        "phpstan-baseline\\.neon$",
+        "^tests/runtime/",
+        "\\.min\\.css$",
+        "\\.min\\.js$",
+        "^vendor/",
+        "^runtime/",
+        "scaffold-lock\\.json$"
+    ]
+}

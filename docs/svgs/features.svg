@@ -1,72 +1,56 @@
-<svg fill="none" viewBox="0 0 1200 390" width="100%" height="340" xmlns="http://www.w3.org/2000/svg">
-    <foreignObject width="100%" height="100%">
-        <div xmlns="http://www.w3.org/1999/xhtml">
-            <style>
-                .container {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 20px;
-                    padding: 20px;
-                }
-                .alert-box {
-                    border-left: 4px solid #1f883d;
-                    padding: 12px;
-                    margin-bottom: 16px;
-                    border-radius: 6px;
-                    background: rgba(31, 136, 61, 0.1);
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                .alert-title {
-                    margin: 0 0 8px 0;
-                    font-weight: 600;
-                }
-                .alert-content {
-                    margin: 0;
-                    line-height: 1.5;
-                }
+<svg viewBox="0 0 1200 380" width="100%" height="340" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .box-bg { fill: #e6f4ea; stroke: #a7cdb3; stroke-width: 1; }
+        .title { font-weight: 700; font-size: 16px; fill: #1a202c; }
+        .content { font-size: 13px; fill: #4a5568; }
+    </style>
 
-                /* Light mode */
-                    @media (prefers-color-scheme: light) {
-                    .alert-title { color: #000000; }
-                    .alert-content { color: #333333; }
-                    .alert-box { background: rgba(31, 136, 61, 0.1); }
-                }
+    <g>
+        <rect class="box-bg" x="20" y="20" width="570" height="100" rx="6"/>
+        <rect x="20" y="20" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="40" y="50">ActiveRecord &amp; ActiveQuery Analysis</text>
+        <text class="content" x="40" y="78">Type inference &#8226; generic support</text>
+        <text class="content" x="40" y="98">Property resolution &#8226; relation methods</text>
+    </g>
 
-                /* Dark mode */
-                @media (prefers-color-scheme: dark) {
-                    .alert-title { color: #ffffff; }
-                    .alert-content { color: #ffffff; }
-                    .alert-box { background: rgba(31, 136, 61, 0.2); }
-                }
-            </style>
-            <div class="container">
-                <div class="alert-box">
-                    <p class="alert-title"><strong>ActiveRecord &amp; ActiveQuery Analysis</strong></p>
-                    <p class="alert-content">Type inference • Generic support • Property resolution • Relation methods</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Application Component Resolution</strong></p>
-                    <p class="alert-content">Auto type inference • Behavior reflection • Custom configurations • User component</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Behavior Integration</strong></p>
-                    <p class="alert-content">ServiceMap configuration • Hierarchical resolution • Property &amp; method types</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Dependency Injection Container</strong></p>
-                    <p class="alert-content">Service map integration • Type-safe resolution • Closures &amp; singletons</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Framework Integration</strong></p>
-                    <p class="alert-content">Header collection types • Stub files • Yii2 constants support</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Service Locator Resolution</strong></p>
-                    <p class="alert-content">Dynamic type inference • Priority-based resolution • Fallback support</p>
-                </div>
-            </div>
-        </div>
-    </foreignObject>
+    <g>
+        <rect class="box-bg" x="610" y="20" width="570" height="100" rx="6"/>
+        <rect x="610" y="20" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="630" y="50">Application Component Resolution</text>
+        <text class="content" x="630" y="78">Auto type inference &#8226; behavior reflection</text>
+        <text class="content" x="630" y="98">Custom configurations &#8226; user component</text>
+    </g>
+
+    <g>
+        <rect class="box-bg" x="20" y="140" width="570" height="100" rx="6"/>
+        <rect x="20" y="140" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="40" y="170">Behavior Integration</text>
+        <text class="content" x="40" y="198">ServiceMap configuration &#8226; hierarchical resolution</text>
+        <text class="content" x="40" y="218">Property &amp; method types</text>
+    </g>
+
+    <g>
+        <rect class="box-bg" x="610" y="140" width="570" height="100" rx="6"/>
+        <rect x="610" y="140" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="630" y="170">Dependency Injection Container</text>
+        <text class="content" x="630" y="198">Service map integration &#8226; type-safe resolution</text>
+        <text class="content" x="630" y="218">Closures &amp; singletons</text>
+    </g>
+
+    <g>
+        <rect class="box-bg" x="20" y="260" width="570" height="100" rx="6"/>
+        <rect x="20" y="260" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="40" y="290">Framework Integration</text>
+        <text class="content" x="40" y="318">Header collection types &#8226; stub files</text>
+        <text class="content" x="40" y="338">Yii2 constants support</text>
+    </g>
+
+    <g>
+        <rect class="box-bg" x="610" y="260" width="570" height="100" rx="6"/>
+        <rect x="610" y="260" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="630" y="290">Service Locator Resolution</text>
+        <text class="content" x="630" y="318">Dynamic type inference &#8226; priority-based resolution</text>
+        <text class="content" x="630" y="338">Fallback support</text>
+    </g>
 </svg>
