@@ -1,0 +1,2 @@
+[codespell]
+skip = */tests/*,tests/**,*/composer.lock,*/composer.json,*/package-lock.json,*/dist/*,*/node_modules/*

@@ -1,75 +1,52 @@
-<!-- Versión móvil - Una sola columna -->
-<svg fill="none" viewBox="0 0 600 580" width="100%" height="580" xmlns="http://www.w3.org/2000/svg">
-    <foreignObject width="100%" height="100%">
-        <div xmlns="http://www.w3.org/1999/xhtml">
-            <style>
-                .container {
-                    display: grid;
-                    grid-template-columns: 1fr;
-                    gap: 16px;
-                    padding: 16px;
-                }
-                .alert-box {
-                    border-left: 4px solid #1f883d;
-                    padding: 12px;
-                    margin-bottom: 12px;
-                    border-radius: 6px;
-                    background: rgba(31, 136, 61, 0.1);
-                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                    width: 100%;
-                    box-sizing: border-box;
-                }
-                .alert-title {
-                    margin: 0 0 8px 0;
-                    font-weight: 600;
-                    font-size: 14px;
-                }
-                .alert-content {
-                    margin: 0;
-                    line-height: 1.4;
-                    font-size: 12px;
-                }
+<!-- Mobile version - Single column -->
+<svg viewBox="0 0 620 620" width="100%" height="580" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        .box-bg { fill: #e6f4ea; stroke: #a7cdb3; stroke-width: 1; }
+        .title { font-weight: 700; font-size: 14px; fill: #1a202c; }
+        .content { font-size: 11px; fill: #4a5568; }
+    </style>
 
-                /* Light mode */
-                @media (prefers-color-scheme: light) {
-                    .alert-title { color: #000000; }
-                    .alert-content { color: #333333; }
-                    .alert-box { background: rgba(31, 136, 61, 0.1); }
-                }
-
-                /* Dark mode */
-                @media (prefers-color-scheme: dark) {
-                    .alert-title { color: #ffffff; }
-                    .alert-content { color: #ffffff; }
-                    .alert-box { background: rgba(31, 136, 61, 0.2); }
-                }
-            </style>
-            <div class="container">
-                <div class="alert-box">
-                    <p class="alert-title"><strong>ActiveRecord &amp; ActiveQuery Analysis</strong></p>
-                    <p class="alert-content">Type inference • Generic support • Property resolution • Relation methods</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Application Component Resolution</strong></p>
-                    <p class="alert-content">Auto type inference • Behavior reflection • Custom configurations • User component</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Behavior Integration</strong></p>
-                    <p class="alert-content">ServiceMap configuration • Hierarchical resolution • Property &amp; method types</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Dependency Injection Container</strong></p>
-                    <p class="alert-content">Service map integration • Type-safe resolution • Closures &amp; singletons</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Framework Integration</strong></p>
-                    <p class="alert-content">Header collection types • Stub files • Yii2 constants support</p>
-                </div>
-                <div class="alert-box">
-                    <p class="alert-title"><strong>Service Locator Resolution</strong></p>
-                    <p class="alert-content">Dynamic type inference • Priority-based resolution • Fallback support</p>
-                </div>
-            </div>
-        </div>
-    </foreignObject>
+    <g>
+        <rect class="box-bg" x="16" y="16" width="588" height="84" rx="6"/>
+        <rect x="16" y="16" width="4" height="84" fill="#1f883d"/>
+        <text class="title" x="32" y="42">ActiveRecord &amp; ActiveQuery Analysis</text>
+        <text class="content" x="32" y="66">Type inference &#8226; generic support &#8226; property resolution</text>
+        <text class="content" x="32" y="84">Relation methods</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="16" y="116" width="588" height="84" rx="6"/>
+        <rect x="16" y="116" width="4" height="84" fill="#1f883d"/>
+        <text class="title" x="32" y="142">Application Component Resolution</text>
+        <text class="content" x="32" y="166">Auto type inference &#8226; behavior reflection</text>
+        <text class="content" x="32" y="184">Custom configurations &#8226; user component</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="16" y="216" width="588" height="84" rx="6"/>
+        <rect x="16" y="216" width="4" height="84" fill="#1f883d"/>
+        <text class="title" x="32" y="242">Behavior Integration</text>
+        <text class="content" x="32" y="266">ServiceMap configuration &#8226; hierarchical resolution</text>
+        <text class="content" x="32" y="284">Property &amp; method types</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="16" y="316" width="588" height="84" rx="6"/>
+        <rect x="16" y="316" width="4" height="84" fill="#1f883d"/>
+        <text class="title" x="32" y="342">Dependency Injection Container</text>
+        <text class="content" x="32" y="366">Service map integration &#8226; type-safe resolution</text>
+        <text class="content" x="32" y="384">Closures &amp; singletons</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="16" y="416" width="588" height="84" rx="6"/>
+        <rect x="16" y="416" width="4" height="84" fill="#1f883d"/>
+        <text class="title" x="32" y="442">Framework Integration</text>
+        <text class="content" x="32" y="466">Header collection types &#8226; stub files</text>
+        <text class="content" x="32" y="484">Yii2 constants support</text>
+    </g>
+    <g>
+        <rect class="box-bg" x="16" y="516" width="588" height="84" rx="6"/>
+        <rect x="16" y="516" width="4" height="84" fill="#1f883d"/>
+        <text class="title" x="32" y="542">Service Locator Resolution</text>
+        <text class="content" x="32" y="566">Dynamic type inference &#8226; priority-based resolution</text>
+        <text class="content" x="32" y="584">Fallback support</text>
+    </g>
 </svg>

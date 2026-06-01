@@ -34,5 +34,18 @@
         "PHPStan\\Type\\TypeCombinator",
         "PHPStan\\Type\\UnionType",
         "PHPStan\\Type\\VerbosityLevel"
-    ]
+    ],
+    "php-core-extensions": [
+        "Core",
+        "date",
+        "json",
+        "hash",
+        "pcre",
+        "Phar",
+        "Reflection",
+        "SPL",
+        "random",
+        "standard"
+    ],
+    "scan-files": []
 }

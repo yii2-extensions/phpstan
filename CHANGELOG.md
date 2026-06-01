@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.4.2 Under development
 
+- chore: update dependencies and configuration files.
+- chore: adopt scaffold tooling and ensure compatibility with `PHPStan` 2.2 and `Yii2` generic types.
+
 ## 0.4.1 April 05, 2026
 
 - fix: update Rector command in `composer.json` to remove unnecessary 'src' argument.

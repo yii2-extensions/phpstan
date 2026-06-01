@@ -9,16 +9,16 @@
     "license": "BSD-3-Clause",
     "require": {
         "php": ">=8.1",
-        "nikic/php-parser": "^4.1|^5.4.0",
-        "phpstan/phpstan": "^2.1",
-        "yiisoft/yii2": "^2.0.54|^22"
+        "nikic/php-parser": "^4.1|^5.4",
+        "phpstan/phpstan": "^2.2",
+        "yiisoft/yii2": "2.0.*@dev || ^22.0@dev"
     },
     "require-dev": {
         "maglnet/composer-require-checker": "^4.7",
-        "php-forge/coding-standard": "^0.1",
+        "php-forge/coding-standard": "^0.3",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpstan/phpstan-strict-rules": "^2.0.3",
-        "phpunit/phpunit": "^10.2"
+        "phpunit/phpunit": "^10.5"
     },
     "autoload": {
         "psr-4": {
@@ -38,12 +38,19 @@
             "includes": [
                 "extension.neon"
             ]
+        },
+        "scaffold": {
+            "allowed-packages": [
+                "php-forge/baseline",
+                "php-forge/coding-standard"
+            ]
         }
     },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
             "ondrejmirtes/composer-attribute-collector": true,
+            "yii2-extensions/scaffold": true,
             "yiisoft/yii2-composer": true
         }
     },

@@ -64,7 +64,7 @@ final class ApplicationPropertiesClassReflectionType
 
     public function testReturnControllerFromProperty(): void
     {
-        assertType('yii\console\Controller<yii\base\Module>|null', Yii::$app->controller);
+        assertType('yii\console\Controller|null', Yii::$app->controller);
     }
 
     public function testReturnDbFromComponent(): void

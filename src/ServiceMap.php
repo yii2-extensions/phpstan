@@ -45,20 +45,6 @@ use function sprintf;
  * - Provides lookup methods for component class names and configuration arrays by ID or class name.
  * - Throws descriptive exceptions for invalid or unsupported definitions.
  *
- * @phpstan-type DefinitionType = array{class?: mixed}|array{array{class?: mixed}}|object|string
- * @phpstan-type ServiceType = array{
- *   phpstan?: array{
- *     application_type?: class-string|string,
- *   },
- *   behaviors?: array<array-key, mixed>,
- *   components?: array<array-key, array<array-key, mixed>|object>,
- *   container?: array{
- *     definitions?: array<array-key, DefinitionType>,
- *     singletons?: array<array-key, DefinitionType>,
- *   },
- *   params?: array<string, mixed>,
- * }
- *
  * @copyright Copyright (C) 2023 Terabytesoftw.
  * @license https://opensource.org/license/bsd-3-clause BSD 3-Clause License.
  */
@@ -292,7 +278,7 @@ final class ServiceMap
      *
      * @return array Normalized configuration array for further processing, or an empty array if no config is provided.
      *
-     * @phpstan-return array{}|ServiceType
+     * @phpstan-return array<array-key, mixed>
      */
     private function loadConfig(string $configPath): array
     {
@@ -360,19 +346,16 @@ final class ServiceMap
      * IDEs by extracting the class name from the provided service definition.
      *
      * @param string $id Identifier of the service being normalized.
-     * @param array|int|object|string $definition Service definition to normalize (class name, closure, array, or
-     * object).
+     * @param mixed $definition Service definition to normalize (class name, closure, array, or object).
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
      * @return string Fully qualified class name resolved from the definition.
      *
-     * @phpstan-import-type DefinitionType from ServiceMap
-     * @phpstan-param DefinitionType $definition
      * @phpstan-return class-string|string
      */
-    private function normalizeDefinition(string $id, array|int|object|string $definition): string
+    private function normalizeDefinition(string $id, mixed $definition): string
     {
         if (is_string($definition)) {
             return $definition;
@@ -389,7 +372,8 @@ final class ServiceMap
         }
 
         if (is_array($definition)) {
-            $class = $definition['class'] ?? ($definition[0]['class'] ?? null);
+            $nested = $definition[0] ?? null;
+            $class = $definition['class'] ?? (is_array($nested) ? ($nested['class'] ?? null) : null);
 
             if (is_string($class) && $class !== '') {
                 return $class;
@@ -415,12 +399,16 @@ final class ServiceMap
      *
      * @param array $config Yii Application configuration array containing PHPStan settings.
      *
-     * @phpstan-import-type ServiceType from ServiceMap
-     * @phpstan-param ServiceType $config
+     * @phpstan-param array<array-key, mixed> $config
      */
     private function processApplicationType(array $config): void
     {
-        $this->applicationType = $config['phpstan']['application_type'] ?? Application::class;
+        $phpstan = $config['phpstan'] ?? null;
+        $applicationType = is_array($phpstan) ? ($phpstan['application_type'] ?? null) : null;
+
+        $this->applicationType = is_string($applicationType) && $applicationType !== ''
+            ? $applicationType
+            : Application::class;
     }
 
     /**
@@ -438,13 +426,16 @@ final class ServiceMap
      *
      * @throws RuntimeException if a behavior ID is not a string, or if a behavior definition is not an array.
      *
-     * @phpstan-import-type ServiceType from ServiceMap
-     * @phpstan-param ServiceType $config
+     * @phpstan-param array<array-key, mixed> $config
      */
     private function processBehaviors(array $config): void
     {
         if ($config !== []) {
             $behaviors = $config['behaviors'] ?? [];
+
+            if (is_array($behaviors) === false) {
+                return;
+            }
 
             foreach ($behaviors as $id => $definition) {
                 if (is_string($id) === false) {
@@ -476,13 +467,16 @@ final class ServiceMap
      *
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
-     * @phpstan-import-type ServiceType from ServiceMap
-     * @phpstan-param ServiceType $config
+     * @phpstan-param array<array-key, mixed> $config
      */
     private function processComponents(array $config): void
     {
         if ($config !== []) {
             $components = $config['components'] ?? [];
+
+            if (is_array($components) === false) {
+                return;
+            }
 
             foreach ($components as $id => $definition) {
                 if (is_string($id) === false) {
@@ -495,6 +489,10 @@ final class ServiceMap
                     $this->components[$id] = $className;
                     $this->componentClassToIdMap[$className] = $id;
 
+                    continue;
+                }
+
+                if (is_array($definition) === false) {
                     continue;
                 }
 
@@ -526,13 +524,17 @@ final class ServiceMap
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
-     * @phpstan-import-type ServiceType from ServiceMap
-     * @phpstan-param ServiceType $config
+     * @phpstan-param array<array-key, mixed> $config
      */
     private function processDefinition(array $config): void
     {
         if ($config !== []) {
-            $definitions = $config['container']['definitions'] ?? [];
+            $container = $config['container'] ?? null;
+            $definitions = is_array($container) ? ($container['definitions'] ?? []) : [];
+
+            if (is_array($definitions) === false) {
+                return;
+            }
 
             foreach ($definitions as $id => $service) {
                 if (is_string($id) === false) {
@@ -551,13 +553,20 @@ final class ServiceMap
      *
      * @param array $config Yii Application configuration array containing params definitions.
      *
-     * @phpstan-import-type ServiceType from ServiceMap
-     * @phpstan-param ServiceType $config
+     * @phpstan-param array<array-key, mixed> $config
      */
     private function processParams(array $config): void
     {
         if ($config !== []) {
-            $this->params = $config['params'] ?? [];
+            $params = $config['params'] ?? [];
+
+            if (is_array($params)) {
+                foreach ($params as $key => $value) {
+                    if (is_string($key)) {
+                        $this->params[$key] = $value;
+                    }
+                }
+            }
         }
     }
 
@@ -575,13 +584,17 @@ final class ServiceMap
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
-     * @phpstan-import-type ServiceType from ServiceMap
-     * @phpstan-param ServiceType $config
+     * @phpstan-param array<array-key, mixed> $config
      */
     private function processSingletons(array $config): void
     {
         if ($config !== []) {
-            $singletons = $config['container']['singletons'] ?? [];
+            $container = $config['container'] ?? null;
+            $singletons = is_array($container) ? ($container['singletons'] ?? []) : [];
+
+            if (is_array($singletons) === false) {
+                return;
+            }
 
             foreach ($singletons as $id => $service) {
                 if (is_string($id) === false) {
