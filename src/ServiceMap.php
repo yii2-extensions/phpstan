@@ -432,10 +432,7 @@ final class ServiceMap
     {
         if ($config !== []) {
             $behaviors = $config['behaviors'] ?? [];
-
-            if (is_array($behaviors) === false) {
-                return;
-            }
+            $behaviors = is_array($behaviors) ? $behaviors : [];
 
             foreach ($behaviors as $id => $definition) {
                 if (is_string($id) === false) {
@@ -473,10 +470,7 @@ final class ServiceMap
     {
         if ($config !== []) {
             $components = $config['components'] ?? [];
-
-            if (is_array($components) === false) {
-                return;
-            }
+            $components = is_array($components) ? $components : [];
 
             foreach ($components as $id => $definition) {
                 if (is_string($id) === false) {
@@ -492,11 +486,12 @@ final class ServiceMap
                     continue;
                 }
 
-                if (is_array($definition) === false) {
-                    continue;
-                }
-
-                if (isset($definition['class']) && is_string($definition['class']) && $definition['class'] !== '') {
+                if (
+                    is_array($definition)
+                    && isset($definition['class'])
+                    && is_string($definition['class'])
+                    && $definition['class'] !== ''
+                ) {
                     $className = $definition['class'];
 
                     $this->components[$id] = $className;
@@ -530,11 +525,9 @@ final class ServiceMap
     {
         if ($config !== []) {
             $container = $config['container'] ?? null;
-            $definitions = is_array($container) ? ($container['definitions'] ?? []) : [];
-
-            if (is_array($definitions) === false) {
-                return;
-            }
+            $container = is_array($container) ? $container : [];
+            $definitions = $container['definitions'] ?? [];
+            $definitions = is_array($definitions) ? $definitions : [];
 
             foreach ($definitions as $id => $service) {
                 if (is_string($id) === false) {
@@ -590,11 +583,9 @@ final class ServiceMap
     {
         if ($config !== []) {
             $container = $config['container'] ?? null;
-            $singletons = is_array($container) ? ($container['singletons'] ?? []) : [];
-
-            if (is_array($singletons) === false) {
-                return;
-            }
+            $container = is_array($container) ? $container : [];
+            $singletons = $container['singletons'] ?? [];
+            $singletons = is_array($singletons) ? $singletons : [];
 
             foreach ($singletons as $id => $service) {
                 if (is_string($id) === false) {
