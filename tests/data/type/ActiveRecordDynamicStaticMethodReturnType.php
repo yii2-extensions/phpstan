@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\data\type;
 
-use yii\db\{ActiveRecord};
+use yii\db\ActiveRecord;
 use yii2\extensions\phpstan\tests\support\stub\{Category, MyActiveRecord, User};
 
 use function PHPStan\Testing\assertType;
