@@ -13,8 +13,7 @@ use yii\base\{BaseObject, InvalidArgumentException};
 use yii\web\Application;
 
 use function array_key_exists;
-use function define;
-use function defined;
+use function dirname;
 use function gettype;
 use function is_array;
 use function is_file;
@@ -114,19 +113,16 @@ final class ServiceMap
             $configPath = $resolvedPath;
         }
 
-        defined('YII_DEBUG') || define('YII_DEBUG', true);
-        defined('YII_ENV_DEV') || define('YII_ENV_DEV', false);
-        defined('YII_ENV_PROD') || define('YII_ENV_PROD', false);
-        defined('YII_ENV_TEST') || define('YII_ENV_TEST', true);
+        require_once dirname(__DIR__) . '/bootstrap.php';
 
         $config = $this->loadConfig($configPath);
 
         $this->processApplicationType($config);
         $this->processBehaviors($config);
         $this->processComponents($config);
-        $this->processDefinition($config);
         $this->processParams($config);
-        $this->processSingletons($config);
+        $this->processServices($config, 'definitions', 'Definition');
+        $this->processServices($config, 'singletons', 'Singleton');
     }
 
     /**
@@ -241,6 +237,31 @@ final class ServiceMap
     public function getServiceById(string $id): string|null
     {
         return $this->services[$id] ?? null;
+    }
+
+    /**
+     * Extracts a nested configuration section as an array.
+     *
+     * Traverses the provided keys in order, returning the value at that path when it is an array, or an empty array
+     * when any segment is missing or not an array.
+     *
+     * @param array $config Yii Application configuration array to traverse.
+     * @param string ...$keys Ordered keys identifying the nested section (for example, `'container'`, `'definitions'`).
+     *
+     * @return array Configuration section, or an empty array when the path is absent or not an array.
+     *
+     * @phpstan-param array<array-key, mixed> $config
+     * @phpstan-return array<array-key, mixed>
+     */
+    private function arraySection(array $config, string ...$keys): array
+    {
+        $value = $config;
+
+        foreach ($keys as $key) {
+            $value = is_array($value) ? ($value[$key] ?? null) : null;
+        }
+
+        return is_array($value) ? $value : [];
     }
 
     /**
@@ -402,23 +423,18 @@ final class ServiceMap
      */
     private function processBehaviors(array $config): void
     {
-        if ($config !== []) {
-            $behaviors = $config['behaviors'] ?? [];
-            $behaviors = is_array($behaviors) ? $behaviors : [];
-
-            foreach ($behaviors as $id => $definition) {
-                if (is_string($id) === false) {
-                    $this->throwErrorWhenIsNotString('Behavior class', 'ID', gettype($id));
-                }
-
-                if (is_array($definition) === false) {
-                    throw new RuntimeException(
-                        sprintf("Behavior definition for '%s' must be an array.", $id),
-                    );
-                }
-
-                $this->behaviors[$id] = array_values(array_filter($definition, is_string(...)));
+        foreach ($this->arraySection($config, 'behaviors') as $id => $definition) {
+            if (is_string($id) === false) {
+                $this->throwErrorWhenIsNotString('Behavior class', 'ID', gettype($id));
             }
+
+            if (is_array($definition) === false) {
+                throw new RuntimeException(
+                    sprintf("Behavior definition for '%s' must be an array.", $id),
+                );
+            }
+
+            $this->behaviors[$id] = array_values(array_filter($definition, is_string(...)));
         }
     }
 
@@ -436,70 +452,34 @@ final class ServiceMap
      */
     private function processComponents(array $config): void
     {
-        if ($config !== []) {
-            $components = $config['components'] ?? [];
-            $components = is_array($components) ? $components : [];
-
-            foreach ($components as $id => $definition) {
-                if (is_string($id) === false) {
-                    $this->throwErrorWhenIsNotString('Component', 'ID', gettype($id));
-                }
-
-                if (is_object($definition)) {
-                    $className = $definition::class;
-
-                    $this->components[$id] = $className;
-                    $this->componentClassToIdMap[$className] = $id;
-
-                    continue;
-                }
-
-                if (
-                    is_array($definition)
-                    && isset($definition['class'])
-                    && is_string($definition['class'])
-                    && $definition['class'] !== ''
-                ) {
-                    $className = $definition['class'];
-
-                    $this->components[$id] = $className;
-                    $this->componentClassToIdMap[$className] = $id;
-
-                    unset($definition['class']);
-
-                    $this->componentsDefinitions[$id] = $definition;
-                }
+        foreach ($this->arraySection($config, 'components') as $id => $definition) {
+            if (is_string($id) === false) {
+                $this->throwErrorWhenIsNotString('Component', 'ID', gettype($id));
             }
-        }
-    }
 
-    /**
-     * Processes service definitions from the Yii Application configuration array.
-     *
-     * Iterates over the container.definitions section of the provided configuration array, normalizing and registering
-     * each service definition by its identifier.
-     *
-     * @param array $config Yii Application configuration array containing service definitions.
-     *
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
-     *
-     * @phpstan-param array<array-key, mixed> $config
-     */
-    private function processDefinition(array $config): void
-    {
-        if ($config !== []) {
-            $container = $config['container'] ?? null;
-            $container = is_array($container) ? $container : [];
-            $definitions = $container['definitions'] ?? [];
-            $definitions = is_array($definitions) ? $definitions : [];
+            if (is_object($definition)) {
+                $className = $definition::class;
 
-            foreach ($definitions as $id => $service) {
-                if (is_string($id) === false) {
-                    $this->throwErrorWhenIsNotString('Definition', 'ID', gettype($id));
-                }
+                $this->components[$id] = $className;
+                $this->componentClassToIdMap[$className] = $id;
 
-                $this->services[$id] = $this->normalizeDefinition($id, $service);
+                continue;
+            }
+
+            if (
+                is_array($definition)
+                && isset($definition['class'])
+                && is_string($definition['class'])
+                && $definition['class'] !== ''
+            ) {
+                $className = $definition['class'];
+
+                $this->components[$id] = $className;
+                $this->componentClassToIdMap[$className] = $id;
+
+                unset($definition['class']);
+
+                $this->componentsDefinitions[$id] = $definition;
             }
         }
     }
@@ -515,40 +495,32 @@ final class ServiceMap
      */
     private function processParams(array $config): void
     {
-        if ($config !== []) {
-            $params = $config['params'] ?? [];
-            $this->params = is_array($params) ? $params : [];
-        }
+        $this->params = $this->arraySection($config, 'params');
     }
 
     /**
-     * Processes singleton service definitions from the Yii Application configuration array.
+     * Processes container service definitions from the Yii Application configuration array.
      *
-     * Iterates over the container.singletons section of the provided configuration array, normalizing and registering
-     * each singleton service definition by its identifier.
+     * Iterates over the specified `container` subsection, normalizing and registering each service definition by its
+     * identifier.
      *
-     * @param array $config Yii Application configuration array containing singleton definitions.
+     * @param array $config Yii Application configuration array containing container definitions.
+     * @param string $section Container subsection to process (`'definitions'` or `'singletons'`).
+     * @param string $label Label used in error messages to identify the subsection (`'Definition'` or `'Singleton'`).
      *
      * @throws ReflectionException if the service definition is invalid or can't be resolved.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      *
      * @phpstan-param array<array-key, mixed> $config
      */
-    private function processSingletons(array $config): void
+    private function processServices(array $config, string $section, string $label): void
     {
-        if ($config !== []) {
-            $container = $config['container'] ?? null;
-            $container = is_array($container) ? $container : [];
-            $singletons = $container['singletons'] ?? [];
-            $singletons = is_array($singletons) ? $singletons : [];
-
-            foreach ($singletons as $id => $service) {
-                if (is_string($id) === false) {
-                    $this->throwErrorWhenIsNotString('Singleton', 'ID', gettype($id));
-                }
-
-                $this->services[$id] = $this->normalizeDefinition($id, $service);
+        foreach ($this->arraySection($config, 'container', $section) as $id => $service) {
+            if (is_string($id) === false) {
+                $this->throwErrorWhenIsNotString($label, 'ID', gettype($id));
             }
+
+            $this->services[$id] = $this->normalizeDefinition($id, $service);
         }
     }
 
