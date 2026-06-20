@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: harden `ServiceMap::class` config path validation (regular readable `.php` file, resolve symlinks before `require`) to prevent local file disclosure.
 - refactor: clean up `ServiceMap::class` by moving Yii environment constants to a shipped `bootstrap.php` (loaded before requiring the configuration file) and simplifying config-section processing.
 - ci: migrate GitHub workflows and project status badges to pinned `yii2-framework/actions` reusable workflows with repository-specific quality and security exceptions, renaming the linter workflow to quality.
+- fix: update StyleCI badge link in `README.md` to reflect the correct repository.
 
 ## 0.4.1 April 05, 2026
 
