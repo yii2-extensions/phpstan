@@ -14,6 +14,12 @@ use yii\base\InvalidArgumentException;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
 
+use function file_put_contents;
+use function symlink;
+use function sys_get_temp_dir;
+use function tempnam;
+use function unlink;
+
 /**
  * Test suite for {@see ServiceMap} service resolution and container definition behavior.
  *
@@ -185,6 +191,33 @@ final class ServiceMapServiceTest extends TestCase
         $this->expectExceptionMessage("Provided config path 'invalid-path' must be a readable PHP file.");
 
         new ServiceMap('invalid-path');
+    }
+
+    public function testThrowInvalidArgumentExceptionWhenConfigPathIsSymlinkToNonPhpFile(): void
+    {
+        $target = tempnam(sys_get_temp_dir(), 'phpstan-config-');
+
+        self::assertNotFalse($target, 'Temporary target file must be created.');
+
+        file_put_contents($target, "secret-credentials\n");
+
+        $symlink = $target . '.php';
+
+        if (@symlink($target, $symlink) === false) {
+            unlink($target);
+
+            self::markTestSkipped('Symlinks are not supported in this environment.');
+        }
+
+        try {
+            $this->expectException(InvalidArgumentException::class);
+            $this->expectExceptionMessage("Provided config path '{$symlink}' must be a readable PHP file.");
+
+            new ServiceMap($symlink);
+        } finally {
+            unlink($symlink);
+            unlink($target);
+        }
     }
 
     /**
