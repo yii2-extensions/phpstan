@@ -215,7 +215,7 @@ vendor/bin/phpstan analyse test-phpstan.php --level=5
 
 ## Bootstrap configuration
 
-The extension ships a `bootstrap.php` (loaded automatically through `extension.neon`) that defines `YII_DEBUG`,
+The extension ships a `bootstrap.php` that it loads before reading your configuration file, defining `YII_DEBUG`,
 `YII_ENV_DEV`, `YII_ENV_PROD`, and `YII_ENV_TEST` with safe analysis defaults, so most projects don't need to define
 them manually. Existing definitions are preserved.
 

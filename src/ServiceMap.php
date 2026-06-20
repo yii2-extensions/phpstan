@@ -13,6 +13,7 @@ use yii\base\{BaseObject, InvalidArgumentException};
 use yii\web\Application;
 
 use function array_key_exists;
+use function dirname;
 use function gettype;
 use function is_array;
 use function is_file;
@@ -111,6 +112,8 @@ final class ServiceMap
 
             $configPath = $resolvedPath;
         }
+
+        require_once dirname(__DIR__) . '/bootstrap.php';
 
         $config = $this->loadConfig($configPath);
 
