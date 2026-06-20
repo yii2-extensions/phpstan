@@ -129,6 +129,11 @@ parameters:
         - YII_ENV_TEST
 ```
 
+> `dynamicConstantNames` controls how PHPStan *treats* these constants during analysis (as non-constant values). It is
+> independent of *defining* them: the extension's shipped `bootstrap.php` defines `YII_DEBUG`, `YII_ENV_DEV`,
+> `YII_ENV_PROD`, and `YII_ENV_TEST` with safe defaults at startup, so configuration files that reference them load
+> without a manual bootstrap.
+
 ### Adding custom constants
 
 ⚠️ **Important**: When you define `dynamicConstantNames`, it **replaces** the defaults. Include Yii constants explicitly.

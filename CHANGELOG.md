@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs: update badge links and remove quality code section from `README.md`.
 - docs: normalize PHPDoc headers across `src` and `tests`, and move authorship metadata to `composer.json`.
 - fix: harden `ServiceMap::class` config path validation (regular readable `.php` file, resolve symlinks before `require`) to prevent local file disclosure.
+- refactor: clean up `ServiceMap::class` by moving Yii environment constants to a shipped `bootstrap.php` (loaded via `extension.neon` `bootstrapFiles`) and simplifying config-section processing.
 
 ## 0.4.1 April 05, 2026
 
