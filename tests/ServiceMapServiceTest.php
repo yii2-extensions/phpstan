@@ -182,7 +182,7 @@ final class ServiceMapServiceTest extends TestCase
     public function testThrowInvalidArgumentExceptionWhenConfigPathInvalid(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Provided config path \'invalid-path\' must be a readable file.');
+        $this->expectExceptionMessage("Provided config path 'invalid-path' must be a readable PHP file.");
 
         new ServiceMap('invalid-path');
     }
