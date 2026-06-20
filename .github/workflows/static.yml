@@ -14,15 +14,14 @@ name: static analysis
 
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   phpstan:
-    uses: yii2-framework/actions/.github/workflows/phpstan.yml@v1
+    uses: yii2-framework/actions/.github/workflows/phpstan.yml@ea13c0f091d2e888be095dd0265544ff8276dc9f # v2.0.1
     with:
       concurrency-group: phpstan-${{ github.workflow }}-${{ github.ref }}
   phpstan-console:
-    uses: yii2-framework/actions/.github/workflows/phpstan.yml@v1
+    uses: yii2-framework/actions/.github/workflows/phpstan.yml@ea13c0f091d2e888be095dd0265544ff8276dc9f # v2.0.1
     with:
       configuration: "phpstan-console.neon"
       concurrency-group: |

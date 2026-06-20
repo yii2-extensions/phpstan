@@ -6,7 +6,9 @@
     "printWidth": 80,
     "overrides": [
         {
-            "files": ["**/*.{js,jsx,ts,tsx,vue,css,scss,html,yml,yaml}"],
+            "files": [
+                "**/*.{yml,yaml}"
+            ],
             "options": {
                 "tabWidth": 2
             }
@@ -15,12 +17,6 @@
             "files": "**/*.md",
             "options": {
                 "embeddedLanguageFormatting": "off",
-                "tabWidth": 2
-            }
-        },
-        {
-            "files": ["**/package.json", "**/package-lock.json"],
-            "options": {
                 "tabWidth": 2
             }
         }
