@@ -260,7 +260,7 @@ For detailed configuration options and advanced usage.
 [![Codecov](https://img.shields.io/codecov/c/github/yii2-extensions/phpstan.svg?style=for-the-badge&logo=codecov&logoColor=white&label=Coverage)](https://codecov.io/github/yii2-extensions/phpstan)
 [![PHPStan Level Max](https://img.shields.io/badge/PHPStan-Level%20Max-4F5D95.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.com/yii2-extensions/phpstan/actions/workflows/static.yml)
 [![Quality](https://img.shields.io/github/actions/workflow/status/yii2-extensions/phpstan/quality.yml?style=for-the-badge&label=Quality&logo=github)](https://github.com/yii2-extensions/phpstan/actions/workflows/quality.yml)
-[![StyleCI](https://img.shields.io/badge/StyleCI-Passed-44CC11.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.styleci.io/repos/970596285?branch=main)
+[![StyleCI](https://img.shields.io/badge/StyleCI-Passed-44CC11.svg?style=for-the-badge&logo=github&logoColor=white)](https://github.styleci.io/repos/701347895?branch=main)
 
 ## Our social networks
 
