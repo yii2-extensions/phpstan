@@ -110,6 +110,8 @@ final class ServiceMap
                     sprintf('Provided config path \'%s\' must be a readable PHP file.', $configPath),
                 );
             }
+
+            $configPath = $resolvedPath;
         }
 
         defined('YII_DEBUG') || define('YII_DEBUG', true);

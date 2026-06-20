@@ -203,11 +203,16 @@ final class ServiceMapServiceTest extends TestCase
 
         $symlink = $target . '.php';
 
-        if (@symlink($target, $symlink) === false) {
+        if (DIRECTORY_SEPARATOR === '\\') {
             unlink($target);
 
-            self::markTestSkipped('Symlinks are not supported in this environment.');
+            self::markTestSkipped('Symlinks are not reliably supported on Windows.');
         }
+
+        self::assertTrue(
+            symlink($target, $symlink),
+            'Symlink to the non-PHP target must be created.',
+        );
 
         try {
             $this->expectException(InvalidArgumentException::class);
