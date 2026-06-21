@@ -58,7 +58,6 @@
         "sort-packages": true,
         "allow-plugins": {
             "ondrejmirtes/composer-attribute-collector": true,
-            "yii2-extensions/scaffold": true,
             "yiisoft/yii2-composer": true
         }
     },
