@@ -7,7 +7,7 @@ use Rector\Config\RectorConfig;
 return static function (RectorConfig $rectorConfig): void {
     $rectorConfig->import(__DIR__ . '/vendor/php-forge/coding-standard/src/rector-83.php');
 
-    $rectorConfig->importNames(importNames: true, importDocBlockNames: false);
+    $rectorConfig->importNames(true, false);
 
     $rectorConfig->paths(
         [
