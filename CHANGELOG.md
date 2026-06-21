@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - refactor: clean up `ServiceMap::class` by moving Yii environment constants to a shipped `bootstrap.php` (loaded before requiring the configuration file) and simplifying config-section processing.
 - ci: migrate GitHub workflows and project status badges to pinned `yii2-framework/actions` reusable workflows with repository-specific quality and security exceptions, renaming the linter workflow to quality.
 - fix: update StyleCI badge link in `README.md` to reflect the correct repository.
-- refactor: add return type declarations for closures in test configuration files and update `composer.json` to remove unused plugin.
+- chore: update `composer.json` to remove unused plugin.
 
 ## 0.4.1 April 05, 2026
 
