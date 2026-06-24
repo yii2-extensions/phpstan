@@ -1,7 +1,10 @@
 # yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
 # Repo-specific config for yii2-extensions/phpstan
 language: en-US
-tone_instructions: "Be concise and direct. Lead with the issue and the fix. Skip praise and filler; focus on bugs, PHPStan type-inference precision, reflection correctness, public extension contracts, and backward compatibility."
+tone_instructions: |
+  Be concise and direct. Lead with the issue and the fix. Focus on bugs, PHPStan
+  type-inference precision, reflection correctness, public extension contracts, and
+  backward compatibility.
 early_access: true
 enable_free_tier: true
 inheritance: false
