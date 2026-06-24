@@ -1,0 +1,301 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+# Repo-specific config for yii2-extensions/phpstan
+language: en-US
+tone_instructions: |
+  Be concise and direct. Lead with the issue and the fix. Focus on bugs, PHPStan
+  type-inference precision, reflection correctness, public extension contracts, and
+  backward compatibility.
+early_access: true
+enable_free_tier: true
+inheritance: false
+reviews:
+  profile: assertive
+  request_changes_workflow: true
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  high_level_summary_in_walkthrough: true
+  auto_title_placeholder: "@coderabbitai"
+  review_status: true
+  review_details: true
+  commit_status: true
+  fail_commit_status: false
+  collapse_walkthrough: true
+  changed_files_summary: true
+  sequence_diagrams: true
+  estimate_code_review_effort: true
+  assess_linked_issues: true
+  related_issues: true
+  related_prs: true
+  suggested_labels: true
+  labeling_instructions:
+    - label: "bug"
+      instructions: "Apply when the PR fixes incorrect behavior, an exception, or a regression."
+    - label: "enhancement"
+      instructions: "Apply when the PR adds a new feature, capability, or public API."
+    - label: "documentation"
+      instructions: "Apply when the PR only changes docs/, README, or PHPDoc."
+    - label: "dependencies"
+      instructions: "Apply when composer.json or composer.lock changes."
+    - label: "github_actions"
+      instructions: "Apply when files under .github/workflows/ change."
+    - label: "php"
+      instructions: "Apply when the PR changes PHP source files (src/, tests/, or any *.php)."
+  auto_apply_labels: true
+  suggested_reviewers: true
+  auto_assign_reviewers: false
+  in_progress_fortune: true
+  poem: true
+  enable_prompt_for_ai_agents: true
+  path_filters:
+    - "!vendor/**"
+    - "!.phpunit.cache/**"
+    - "!build/**"
+    - "!coverage/**"
+    - "!runtime/**"
+  path_instructions:
+    - path: "src/**/*.php"
+      instructions: |
+        PHPStan extension for Yii2 (namespace yii2\extensions\phpstan\, PSR-4 -> src/).
+        Target PHP >= 8.1. Enforce declare(strict_types=1) and full type declarations.
+        Respect the repo's existing toolchain: php-forge/coding-standard (ECS, built on
+        phpcs) and phpstan strict-rules. Do NOT suggest changes that conflict with
+        phpstan.neon, ecs.php, or rector.php.
+        This extends PHPStan itself (phpstan/phpstan ^2.2) and is wired through
+        extension.neon. Services implement PHPStan broker contracts
+        (DynamicMethodReturnTypeExtension, DynamicStaticMethodReturnTypeExtension,
+        MethodsClassReflectionExtension, PropertiesClassReflectionExtension,
+        StubFilesExtension). Flag changes to these contracts, to ServiceMap, or to the
+        extension.neon service wiring, and call out backward-incompatible changes
+        explicitly (pre-1.0, so they land in minor releases, but must be intentional and
+        documented).
+        Build and combine types through PHPStan's Type API (TypeCombinator,
+        GenericObjectType, ObjectType, etc.); never hand-assemble type strings.
+    - path: "src/type/**/*.php"
+      instructions: |
+        Dynamic return-type extensions for Yii2 ActiveRecord, ActiveQuery, Container,
+        ServiceLocator, and HeaderCollection. getTypeFromMethodCall()/
+        getTypeFromStaticMethodCall() must return a precise PHPStan Type and fall back to
+        the declared return type (never ErrorType or a widened mixed) when the call does
+        not match. Resolve generics correctly (e.g. ActiveQuery<Model>, the user
+        component's identityClass via component_generics) and keep isMethodSupported()/
+        isStaticMethodSupported() narrowly scoped to the methods actually handled.
+    - path: "src/{property,method}/**/*.php"
+      instructions: |
+        ClassReflection extensions exposing Yii2 magic members to PHPStan: Behavior
+        methods, and Behavior/Application/Component properties resolved through the
+        component_generics map. hasProperty()/getProperty() and hasMethod()/getMethod()
+        must stay in agreement, and must return reflections backed by the
+        ReflectionProvider (e.g. ComponentPropertyReflection), never fabricated members.
+    - path: "src/reflection/**/*.php"
+      instructions: |
+        PHPStan reflection value objects (ComponentPropertyReflection). Keep them
+        consistent with the PropertyReflection contract; type, readability, and writability
+        must reflect the underlying Yii2 component property.
+    - path: "tests/**/*.php"
+      instructions: |
+        PHPUnit 10.5 tests that assert inferred types and reflection results against
+        fixtures under tests/data and stubs under tests/support/stub. Note that
+        tests/console and tests/custom are excluded from analysis (see phpstan.neon).
+        Cover new type-inference and reflection behavior plus failure/fallback paths; no
+        empty test bodies, and keep assertions meaningful.
+    - path: "composer.json"
+      instructions: |
+        Library manifest. Keep require/require-dev accurate (the repo runs
+        composer-require-checker; intentional PHPStan-internal symbols are listed in
+        composer-require-checker.json). Respect the supported ranges php >=8.1,
+        yiisoft/yii2 2.0.*@dev || ^22.0@dev, phpstan/phpstan ^2.2, and
+        nikic/php-parser ^4.1|^5.4.
+    - path: "docs/**/*.md"
+      instructions: |
+        Documentation (installation, configuration, examples, testing). Ensure code
+        samples and extension.neon snippets match the current public API.
+  abort_on_close: true
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 5
+  finishing_touches:
+    docstrings:
+      enabled: true
+    unit_tests:
+      enabled: true
+  pre_merge_checks:
+    docstrings:
+      mode: warning
+      threshold: 80
+    title:
+      mode: warning
+    description:
+      mode: warning
+    issue_assessment:
+      mode: warning
+  tools:
+    # --- Core for this PHP library ---
+    ast-grep:
+      essential_rules: true
+    phpstan:
+      enabled: true
+    phpcs:
+      enabled: true
+    # --- CI / docs / security (relevant to this repo) ---
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
+    github-checks:
+      enabled: true
+      timeout_ms: 90000
+    languagetool:
+      enabled: true
+    yamllint:
+      enabled: true
+    actionlint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    trufflehog:
+      enabled: true
+    osvScanner:
+      enabled: true
+    semgrep:
+      enabled: true
+    opengrep:
+      enabled: true
+    # --- Disabled: redundant with this repo's toolchain (ECS/phpcs + phpstan strict) ---
+    phpmd:
+      enabled: false
+    # --- Disabled: no Docker / JS / CSS / other languages in this repo ---
+    hadolint:
+      enabled: false
+    biome:
+      enabled: false
+    eslint:
+      enabled: false
+    oxc:
+      enabled: false
+    stylelint:
+      enabled: false
+    htmlhint:
+      enabled: false
+    flake8:
+      enabled: false
+    ruff:
+      enabled: false
+    pylint:
+      enabled: false
+    swiftlint:
+      enabled: false
+    golangci-lint:
+      enabled: false
+    detekt:
+      enabled: false
+    fortitudeLint:
+      enabled: false
+    rubocop:
+      enabled: false
+    brakeman:
+      enabled: false
+    buf:
+      enabled: false
+    regal:
+      enabled: false
+    pmd:
+      enabled: false
+    clang:
+      enabled: false
+    cppcheck:
+      enabled: false
+    clippy:
+      enabled: false
+    sqlfluff:
+      enabled: false
+    prismaLint:
+      enabled: false
+    shopifyThemeCheck:
+      enabled: false
+    luacheck:
+      enabled: false
+    psscriptanalyzer:
+      enabled: false
+    blinter:
+      enabled: false
+    checkmake:
+      enabled: false
+    dotenvLint:
+      enabled: false
+    circleci:
+      enabled: false
+    checkov:
+      enabled: false
+    tflint:
+      enabled: false
+    trivy:
+      enabled: false
+chat:
+  art: true
+  auto_reply: true
+  integrations:
+    jira:
+      usage: auto
+    linear:
+      usage: auto
+knowledge_base:
+  web_search:
+    enabled: true
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - "**/CONTRIBUTING.md"
+      - "**/.github/CONTRIBUTING.md"
+      - "**/ecs.php"
+      - "**/phpstan.neon*"
+      - "**/extension.neon"
+      - "**/rector.php"
+      - "**/docs/testing.md"
+  learnings:
+    scope: auto
+  issues:
+    scope: auto
+  jira:
+    usage: auto
+  linear:
+    usage: auto
+  pull_requests:
+    scope: auto
+  mcp:
+    usage: auto
+code_generation:
+  docstrings:
+    language: en-US
+    path_instructions:
+      - path: "src/**/*.php"
+        instructions: |
+          Write PHPDoc in English. Document @param/@return/@throws with concrete types
+          matching the PHP type hints. Use precise phpstan collection/shape syntax for arrays
+          (e.g. array<string, mixed> for maps, array{foo: string, bar?: int} for shapes).
+  unit_tests:
+    path_instructions:
+      - path: "tests/**/*.php"
+        instructions: |
+          Generate PHPUnit 10.5 tests using the project's existing base TestCase and
+          conventions. Cover happy path plus edge/fallback cases. Assert inferred types
+          and reflection results against fixtures/stubs. No real network or DB; use the
+          existing fixtures under tests/data and stubs under tests/support/stub.
+issue_enrichment:
+  auto_enrich:
+    enabled: true
+  planning:
+    enabled: true
+    auto_planning:
+      enabled: true
+  labeling:
+    labeling_instructions:
+      - label: "bug"
+        instructions: "Apply when the issue reports incorrect behavior, an error, or a regression."
+      - label: "enhancement"
+        instructions: "Apply when the issue requests a new feature or capability."
+      - label: "documentation"
+        instructions: "Apply when the issue is about docs, README, or guides."
+      - label: "question"
+        instructions: "Apply when the issue is a usage question or asks for clarification rather than reporting a defect."
+    auto_apply_labels: true
