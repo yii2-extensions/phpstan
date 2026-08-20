@@ -223,6 +223,28 @@ $requestId = $headers->get('X-Request-ID', $default, true); // string|null
 $allRequestIds = $headers->get('X-Request-ID', [$default], false); // array<int, string>|null
 ```
 
+#### Logger messages
+
+The logger and target message buffers are inferred directly without requiring stubs or local PHPDoc overrides.
+
+```php
+use yii\log\Logger;
+
+$logger = new Logger();
+
+foreach ($logger->messages as $message) {
+    $payload = $message[0];   // string|array<mixed>|Throwable|PsrMessage on Yii 22.0
+    $level = $message[1];     // int
+    $category = $message[2];  // string
+    $timestamp = $message[3]; // float
+    $trace = $message[4];     // list<array{file: string, line: int, ...}>
+    $memory = $message[5] ?? null; // int|null
+}
+```
+
+The same tuple is inferred for `yii\log\Target::$messages`. `Target::filterMessages()` preserves the input key and
+tuple types while correctly allowing an empty filtered result.
+
 #### Service locator
 
 ```php
