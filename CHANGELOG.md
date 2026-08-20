@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - ci: migrate GitHub workflows and project status badges to pinned `yii2-framework/actions` reusable workflows with repository-specific quality and security exceptions, renaming the linter workflow to quality.
 - fix: update StyleCI badge link in `README.md` to reflect the correct repository.
 - chore: update `composer.json` to remove unused plugin.
+- feat: infer Yii logger message array shapes and preserve them through target filtering without stubs.
 
 ## 0.4.1 April 05, 2026
 

@@ -50,8 +50,14 @@ services:
         class: yii2\extensions\phpstan\type\HeaderCollectionDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
+        class: yii2\extensions\phpstan\type\LoggerMessagesExpressionTypeResolverExtension
+        tags: [phpstan.broker.expressionTypeResolverExtension]
+    -
         class: yii2\extensions\phpstan\type\ServiceLocatorDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
+        class: yii2\extensions\phpstan\type\TargetFilterMessagesDynamicStaticMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
     -
         class: yii2\extensions\phpstan\StubFilesExtension
         tags:
