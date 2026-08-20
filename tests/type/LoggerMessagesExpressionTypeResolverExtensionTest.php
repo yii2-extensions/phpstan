@@ -7,6 +7,8 @@ namespace yii2\extensions\phpstan\tests\type;
 use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 
+use function is_string;
+
 /**
  * Tests direct PHPStan expression inference for Yii logger and target message arrays.
  */
@@ -35,6 +37,14 @@ final class LoggerMessagesExpressionTypeResolverExtensionTest extends TypeInfere
     #[DataProvider('dataFileAsserts')]
     public function testFileAsserts(string $assertType, string $file, mixed ...$args): void
     {
+        if (
+            $assertType === 'type'
+            && !class_exists('yii\\log\\PsrMessage')
+            && is_string($args[0] ?? null)
+        ) {
+            $args[0] = str_replace('|yii\\log\\PsrMessage', '', $args[0]);
+        }
+
         $this->assertFileAsserts($assertType, $file, ...$args);
     }
 }

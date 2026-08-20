@@ -233,11 +233,11 @@ use yii\log\Logger;
 $logger = new Logger();
 
 foreach ($logger->messages as $message) {
-    $payload = $message[0];   // string|array<mixed>|Throwable|PsrMessage on Yii 22.0
-    $level = $message[1];     // int
-    $category = $message[2];  // string
-    $timestamp = $message[3]; // float
-    $trace = $message[4];     // list<array{file: string, line: int, ...}>
+    $payload = $message[0];        // string|array<mixed>|Throwable|PsrMessage on Yii 22.0
+    $level = $message[1];          // int
+    $category = $message[2];       // string
+    $timestamp = $message[3];      // float
+    $trace = $message[4];          // list<array{file: string, line: int, ...}>
     $memory = $message[5] ?? null; // int|null
 }
 ```
