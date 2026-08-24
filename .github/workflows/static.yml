@@ -17,11 +17,11 @@ permissions:
 
 jobs:
   phpstan:
-    uses: yii2-framework/actions/.github/workflows/phpstan.yml@670b6444a11798dc2b38f2563dbbcef063dfc0ab # v2.0.1
+    uses: yii2-framework/actions/.github/workflows/phpstan.yml@a28eb7d4ab03abd53ccd7c79014b3b27d09932ff # v2.0.1
     with:
       concurrency-group: phpstan-${{ github.workflow }}-${{ github.ref }}
   phpstan-console:
-    uses: yii2-framework/actions/.github/workflows/phpstan.yml@670b6444a11798dc2b38f2563dbbcef063dfc0ab # v2.0.1
+    uses: yii2-framework/actions/.github/workflows/phpstan.yml@a28eb7d4ab03abd53ccd7c79014b3b27d09932ff # v2.0.1
     with:
       configuration: "phpstan-console.neon"
       concurrency-group: |
