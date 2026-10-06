@@ -30,13 +30,13 @@ class Invoice extends \yii\db\ActiveRecord
      */
     public static function find()
     {
-        return new InvoiceQuery(get_called_class());
+        return new InvoiceQuery(static::class);
     }
 
     /**
      * Gets query for [[Comments]].
      *
-     * @return \yii\db\ActiveQuery|CommentQuery
+     * @return CommentQuery|\yii\db\ActiveQuery
      */
     public function getComments()
     {

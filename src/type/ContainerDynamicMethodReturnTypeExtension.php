@@ -44,7 +44,7 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
      *
      * @param MethodReflection $methodReflection Reflection of the called method.
      * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
-     * @param Scope&DependencyTracker $scope Current PHPStan analysis scope.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
      * @return Type|null Configured service class, or `null` to defer to the return type declared by Yii.
      */

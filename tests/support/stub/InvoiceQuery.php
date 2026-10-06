@@ -15,7 +15,7 @@ namespace yii2\extensions\phpstan\tests\support\stub;
 class InvoiceQuery extends \yii\db\ActiveQuery
 {
     /**
-     * @return Invoice[]|array
+     * @return array|Invoice[]
      */
     public function all($db = null)
     {
@@ -23,7 +23,7 @@ class InvoiceQuery extends \yii\db\ActiveQuery
     }
 
     /**
-     * @return Invoice|array|null
+     * @return array|Invoice|null
      */
     public function one($db = null)
     {

@@ -20,7 +20,7 @@ final class DerivedModelSplitQuery extends ActiveQuery
     }
 
     /**
-     * @return Invoice|array|null
+     * @return array|Invoice|null
      */
     public function one($db = null)
     {

@@ -49,7 +49,7 @@ final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMet
      *
      * @param MethodReflection $methodReflection Reflection of the called method.
      * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
-     * @param Scope&DependencyTracker $scope Current PHPStan analysis scope.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
      * @return Type|null Resolved component class, or `null` to defer to the return type declared by Yii.
      */
@@ -109,7 +109,7 @@ final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMet
      * Resolves an ID to a component class, a service class, or an existing class with the same name.
      *
      * @param string $id Component ID, service ID, or class name passed to {@see ServiceLocator::get()}.
-     * @param Scope&DependencyTracker $scope Scope recording a dependency on the class named by the ID, when the ID is
+     * @param DependencyTracker&Scope $scope Scope recording a dependency on the class named by the ID, when the ID is
      * used as a class.
      *
      * @return string|null Resolved class name, or `null` when the ID is unknown.

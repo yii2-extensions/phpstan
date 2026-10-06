@@ -17,7 +17,7 @@ final class ActiveRecordQueryInvoiceRecord extends Invoice
     {
         assertType(
             'yii2\extensions\phpstan\tests\support\stub\Invoice|null',
-            static::find()->paid()->one(),
+            self::find()->paid()->one(),
         );
         assertType(
             'array<yii2\extensions\phpstan\tests\support\stub\Invoice>',
@@ -37,7 +37,7 @@ final class ActiveRecordQueryInvoiceRecord extends Invoice
         );
         assertType(
             'array<static(yii2\extensions\phpstan\tests\data\type\ActiveRecordQueryInvoiceRecord)>',
-            static::find()->where(['id' => 1])->all(),
+            self::find()->where(['id' => 1])->all(),
         );
         assertType(
             'static(yii2\extensions\phpstan\tests\data\type\ActiveRecordQueryInvoiceRecord)|null',
@@ -49,13 +49,14 @@ final class ActiveRecordQueryInvoiceRecord extends Invoice
         );
         assertType(
             'array{id: int, number: string, comments?: array<array<string, mixed>>}|null',
-            static::find()->asArray()->one(),
+            self::find()->asArray()->one(),
         );
 
         foreach (parent::find()->each() as $invoice) {
             assertType('static(yii2\extensions\phpstan\tests\data\type\ActiveRecordQueryInvoiceRecord)', $invoice);
         }
     }
+
     public static function testReturnStaticModelWhenFindCalledInStaticMethod(): void
     {
         assertType(
@@ -64,7 +65,7 @@ final class ActiveRecordQueryInvoiceRecord extends Invoice
         );
         assertType(
             'static(yii2\extensions\phpstan\tests\data\type\ActiveRecordQueryInvoiceRecord)|null',
-            static::find()->one(),
+            self::find()->one(),
         );
     }
 }
