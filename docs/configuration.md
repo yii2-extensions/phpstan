@@ -495,6 +495,10 @@ that class can be determined from the configuration file:
   or one that names an ID whose class can't be determined, is itself treated as a definition whose class can't be
   determined, so `get()` returns `object` for it.
 
+When an ID appears in both `container.definitions` and `container.singletons`, the entry Yii applies last wins, as in
+`Yii::$container`: the subsection listed later under `container` replaces the earlier one, even when its class can't be
+determined.
+
 A definition whose class can't be determined doesn't stop the analysis. This includes a closure without a return type or
 with a union, nullable, or builtin return type, a `yii\di\Instance` reference, an array callable, and an array without a
 class key. `get('id')` then has the type Yii declares, `object`, and for a component `Yii::$app->id` is `object` too,

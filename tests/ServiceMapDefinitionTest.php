@@ -22,6 +22,12 @@ final class ServiceMapDefinitionTest extends TestCase
     private const CONFIG_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR
         . 'definition-forms-config.php';
 
+    /**
+     * Configuration file listing `container.singletons` before `container.definitions` with overlapping IDs.
+     */
+    private const SINGLETONS_FIRST_CONFIG_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR
+        . 'container-singletons-first-config.php';
+
     #[DataProviderExternal(ServiceMapDefinitionProvider::class, 'componentProvider')]
     public function testFlagComponentDefinedWithUnknownClass(string $id, string|null $expectedClass): void
     {
@@ -65,6 +71,18 @@ final class ServiceMapDefinitionTest extends TestCase
             $expectedClass,
             $serviceMap->getServiceById($id),
             'Service class must match.',
+        );
+    }
+
+    #[DataProviderExternal(ServiceMapDefinitionProvider::class, 'configOrderServiceProvider')]
+    public function testResolveServiceClassFromSubsectionListedLast(string $id, string|null $expectedClass): void
+    {
+        $serviceMap = new ServiceMap(self::SINGLETONS_FIRST_CONFIG_PATH);
+
+        self::assertSame(
+            $expectedClass,
+            $serviceMap->getServiceById($id),
+            'Later `definitions` entry must replace the singleton.',
         );
     }
 

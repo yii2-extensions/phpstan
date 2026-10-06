@@ -35,6 +35,7 @@ parameters:
             - tests/web/data/type/ParamsAwkwardKeysType.php
 
     ignoreErrors:
+        - '#Accessing PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:class is not covered.+#'
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'
         - '#Creating new PHPStan\\Reflection\\Dummy\\DummyPropertyReflection is not covered.+#'
 

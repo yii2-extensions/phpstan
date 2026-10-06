@@ -15,6 +15,7 @@ use yii\web\Application;
 use function array_filter;
 use function array_is_list;
 use function array_key_exists;
+use function array_keys;
 use function array_values;
 use function count;
 use function dirname;
@@ -52,6 +53,11 @@ final class ServiceMap
      * Pattern matching a syntactically valid class name without a leading backslash.
      */
     private const CLASS_NAME_PATTERN = '/^[a-zA-Z_\x80-\xff][\w\x80-\xff]*(?:\\\\[a-zA-Z_\x80-\xff][\w\x80-\xff]*)*$/';
+
+    /**
+     * Error message labels of the `container` subsections, indexed by subsection key.
+     */
+    private const CONTAINER_SECTIONS = ['definitions' => 'Definition', 'singletons' => 'Singleton'];
 
     /**
      * Return types that refer to the scope of the callable instead of naming a class.
@@ -165,8 +171,10 @@ final class ServiceMap
 
         $this->processBehaviors($config['behaviors']);
         $this->processComponents($config['components']);
-        $this->processServices($config['definitions'], 'Definition');
-        $this->processServices($config['singletons'], 'Singleton');
+
+        foreach ($config['containerSections'] as [$label, $services]) {
+            $this->processServices($services, $label);
+        }
 
         $this->resolveContainerAliases();
     }
@@ -314,7 +322,9 @@ final class ServiceMap
      * Ensures the configuration file returns an array, that `phpstan.application_type` is a string, and that the
      * `phpstan`, `behaviors`, `components`, `params`, `container`, `container.definitions`, and `container.singletons`
      * sections are arrays when present. Absent or `null` sections resolve to empty arrays, except `params`, which must
-     * be an array when its key is present.
+     * be an array when its key is present. The `container` subsections keep the order the configuration lists them in,
+     * since {@see \Yii::configure()} applies them in that order and a later entry replaces an earlier one with the same
+     * ID.
      *
      * @param string $configPath Path to the Yii Application configuration file. If empty, every section is empty.
      *
@@ -326,9 +336,8 @@ final class ServiceMap
      *     applicationType: string,
      *     behaviors: array<array-key, mixed>,
      *     components: array<array-key, mixed>,
-     *     definitions: array<array-key, mixed>,
+     *     containerSections: list<array{string, array<array-key, mixed>}>,
      *     params: array<array-key, mixed>,
-     *     singletons: array<array-key, mixed>,
      * }
      */
     private function loadConfig(string $configPath): array
@@ -357,14 +366,23 @@ final class ServiceMap
         }
 
         $container = $this->section($config, 'container', $configPath, 'container');
+        $containerSections = [];
+
+        foreach (array_keys($container) as $key) {
+            if (isset(self::CONTAINER_SECTIONS[$key])) {
+                $containerSections[] = [
+                    self::CONTAINER_SECTIONS[$key],
+                    $this->section($container, $key, $configPath, 'container.' . $key),
+                ];
+            }
+        }
 
         return [
             'applicationType' => $applicationType !== '' ? $applicationType : Application::class,
             'behaviors' => $behaviors,
             'components' => $components,
-            'definitions' => $this->section($container, 'definitions', $configPath, 'container.definitions'),
+            'containerSections' => $containerSections,
             'params' => $params,
-            'singletons' => $this->section($container, 'singletons', $configPath, 'container.singletons'),
         ];
     }
 
@@ -457,9 +475,11 @@ final class ServiceMap
     /**
      * Registers the class name resolved for each service in a `container` configuration subsection.
      *
-     * Services whose class can't be determined are skipped, and recorded as unresolved unless the definition is empty,
-     * since Yii then uses the ID itself as the class. Services defined by an object are recorded as such, since Yii
-     * returns the object, or calls it, instead of resolving a class through the container.
+     * Each entry replaces whatever an earlier entry recorded for its ID, as {@see \yii\di\Container::set()} and
+     * {@see \yii\di\Container::setSingleton()} replace the definition. Services whose class can't be determined are
+     * skipped, and recorded as unresolved unless the definition is empty, since Yii then uses the ID itself as the
+     * class. Services defined by an object are recorded as such, since Yii returns the object, or calls it, instead of
+     * resolving a class through the container.
      *
      * @param array $services Service definitions indexed by service ID.
      * @param string $label Label used in error messages to identify the subsection (`'Definition'` or `'Singleton'`).
@@ -478,15 +498,15 @@ final class ServiceMap
             $definition = $this->unwrapServiceDefinition($definition);
             $className = $this->resolveServiceClass($id, $definition);
 
+            unset($this->services[$id], $this->objectDefinedServices[$id], $this->unresolvedServices[$id]);
+
             if ($className !== null) {
                 $this->services[$id] = $className;
-
-                unset($this->objectDefinedServices[$id], $this->unresolvedServices[$id]);
 
                 if (is_object($definition)) {
                     $this->objectDefinedServices[$id] = true;
                 }
-            } elseif ($definition !== null && $definition !== [] && isset($this->services[$id]) === false) {
+            } elseif ($definition !== null && $definition !== []) {
                 $this->unresolvedServices[$id] = true;
             }
         }

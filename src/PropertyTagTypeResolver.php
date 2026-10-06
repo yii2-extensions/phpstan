@@ -171,16 +171,11 @@ final class PropertyTagTypeResolver
         ClassReflection $declaringClass,
         Type|null $readableType,
     ): Type|null {
-        if ($readableType === null) {
-            return null;
+        // the declaring class holds the tag itself, so PHPStan resolves this exact tag against its template type map
+        if ($readableType === null || $this->annotationsProperties->hasProperty($declaringClass, $propertyName) === false) {
+            return $readableType;
         }
 
-        // the declaring class holds the tag itself, so PHPStan resolves this exact tag against its template type map
-        return $this->annotationsProperties
-        ->hasProperty($declaringClass, $propertyName)
-            ? $this->annotationsProperties
-                ->getProperty($declaringClass, $propertyName)
-                ->getReadableType()
-            : $readableType;
+        return $this->annotationsProperties->getProperty($declaringClass, $propertyName)->getReadableType();
     }
 }

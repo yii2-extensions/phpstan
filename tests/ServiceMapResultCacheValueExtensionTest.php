@@ -126,6 +126,25 @@ final class ServiceMapResultCacheValueExtensionTest extends PHPStanTestCase
         );
     }
 
+    public function testKeyBuildersPrefixIdWithKind(): void
+    {
+        self::assertSame(
+            'behaviors:app\models\Post',
+            ServiceMapResultCacheValueExtension::behaviorsKey('app\models\Post'),
+            'Prefix must be `behaviors`.',
+        );
+        self::assertSame(
+            'component:user',
+            ServiceMapResultCacheValueExtension::componentKey('user'),
+            'Prefix must be `component`.',
+        );
+        self::assertSame(
+            'service:mailer',
+            ServiceMapResultCacheValueExtension::serviceKey('mailer'),
+            'Prefix must be `service`.',
+        );
+    }
+
     public function testKeyRoundTripsThroughResultCache(): void
     {
         $extension = self::createExtension('base');

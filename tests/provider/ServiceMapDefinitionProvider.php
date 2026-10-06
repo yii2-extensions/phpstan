@@ -52,6 +52,16 @@ final class ServiceMapDefinitionProvider
     /**
      * @return iterable<string, array{string, string|null}>
      */
+    public static function configOrderServiceProvider(): iterable
+    {
+        yield 'definition class overriding singleton' => ['definitionClassOverride', ArrayCache::class];
+        yield 'definition class overriding unresolvable singleton' => ['definitionResolvedOverride', FileCache::class];
+        yield 'definition closure without return type overriding singleton' => ['definitionClosureOverride', null];
+    }
+
+    /**
+     * @return iterable<string, array{string, string|null}>
+     */
     public static function serviceProvider(): iterable
     {
         yield 'array callable' => [
@@ -158,6 +168,10 @@ final class ServiceMapDefinitionProvider
             'emptyDefinitionAlias',
             'SplObjectStorage',
         ];
+        yield 'container ID string naming ID overridden by unresolvable singleton' => [
+            'singletonClosureOverride.alias',
+            null,
+        ];
         yield 'container ID string naming unresolvable ID' => [
             'unresolvable.alias',
             null,
@@ -198,6 +212,10 @@ final class ServiceMapDefinitionProvider
             'singletonClosureClass',
             SplStack::class,
         ];
+        yield 'singleton closure without return type overriding definition' => [
+            'singletonClosureOverride',
+            null,
+        ];
         yield 'singleton closure without return type' => [
             'singletonClosureUntyped',
             null,
@@ -206,12 +224,24 @@ final class ServiceMapDefinitionProvider
             'singletonAlias',
             View::class,
         ];
+        yield 'singleton empty array overriding definition under non-class ID' => [
+            'singletonEmptyOverride',
+            null,
+        ];
+        yield 'singleton Instance reference overriding definition' => [
+            'singletonInstanceOverride',
+            null,
+        ];
         yield 'singleton Instance reference' => [
             'singletonInstance',
             null,
         ];
         yield 'singleton string overriding object definition' => [
             'singletonOverride',
+            FileCache::class,
+        ];
+        yield 'singleton string overriding unresolvable definition' => [
+            'singletonResolvedOverride',
             FileCache::class,
         ];
         yield 'singleton string with leading backslash' => [
