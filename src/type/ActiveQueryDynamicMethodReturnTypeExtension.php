@@ -66,6 +66,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * @var array<string, string|null>
      */
     private array $derivedModelClassNames = [];
+
     /**
      * @param ReflectionProvider $reflectionProvider Reflection provider for query and model class lookups.
      * @param PropertyTagTypeResolver $propertyTagTypeResolver Resolver of the model's declared and inherited
@@ -101,7 +102,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * @param MethodReflection $methodReflection Reflection of the called `asArray()`, `one()`, `all()`, `batch()`, or
      * `each()` method.
      * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
-     * @param Scope&DependencyTracker $scope Current PHPStan analysis scope, recording a dependency on a derived model.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope, recording a dependency on a derived model.
      *
      * @return Type|null Inferred query, row, or batch query result type, or `null` to defer to PHPStan's answer when an
      * `asArray()` argument is unpacked, no model is derived for `one()` and `all()`, or `batch()` and `each()` already
@@ -451,7 +452,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * the receiver names the model only in the query class PHPDoc.
      *
      * @param Type $calledOnType Receiver type without `null`.
-     * @param Scope&DependencyTracker $scope Scope recording a dependency on the derived model class.
+     * @param DependencyTracker&Scope $scope Scope recording a dependency on the derived model class.
      *
      * @return ObjectType|null Derived model type, or `null` when no model is derived.
      */

@@ -12,7 +12,7 @@ use yii\db\ActiveQuery;
 final class DerivedModelTwoModelQuery extends ActiveQuery
 {
     /**
-     * @return Invoice|Shipment|array|null
+     * @return array|Invoice|Shipment|null
      */
     public function one($db = null)
     {

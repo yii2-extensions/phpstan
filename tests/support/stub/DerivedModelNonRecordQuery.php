@@ -13,7 +13,7 @@ use yii\db\ActiveQuery;
 final class DerivedModelNonRecordQuery extends ActiveQuery
 {
     /**
-     * @return Model|array|null
+     * @return array|Model|null
      */
     public function one($db = null)
     {

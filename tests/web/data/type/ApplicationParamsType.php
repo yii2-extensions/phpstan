@@ -11,7 +11,6 @@ use yii\console\Application as ConsoleApplication;
 use yii\web\Application as WebApplication;
 use yii2\extensions\phpstan\tests\support\stub\ApplicationParamsOwner;
 
-use function array_push;
 use function is_int;
 use function is_string;
 use function PHPStan\Testing\assertType;
@@ -130,7 +129,7 @@ final class ApplicationParamsType
 
     public function testPushedListParam(): void
     {
-        array_push(Yii::$app->params['tags'], 'z');
+        Yii::$app->params['tags'][] = 'z';
 
         assertType("array{string, string, 'z'}", Yii::$app->params['tags']);
     }

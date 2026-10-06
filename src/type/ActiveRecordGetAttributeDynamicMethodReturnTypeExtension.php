@@ -68,7 +68,7 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
      *
      * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
      * @param MethodCall $methodCall AST node for the method call expression.
-     * @param Scope&DependencyTracker $scope PHPStan analysis scope for type resolution.
+     * @param DependencyTracker&Scope $scope PHPStan analysis scope for type resolution.
      *
      * @return Type Inferred return type for the {@see ActiveRecord::getAttribute()} call, or {@see MixedType} if the
      * attribute type can't be determined.
@@ -161,7 +161,7 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
      *
      * @param string $className Fully qualified class name to check.
      * @param string $attributeName The attribute name to search for.
-     * @param Scope&DependencyTracker $scope Scope recording a dependency on each behavior class consulted.
+     * @param DependencyTracker&Scope $scope Scope recording a dependency on each behavior class consulted.
      *
      * @return Type|null Property type if found in any behavior, `null` if not found or behavior classes are
      * unavailable.
