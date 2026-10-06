@@ -400,9 +400,10 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     /**
      * Returns the object class names that a `one()` or `all()` return type names.
      *
-     * The return type of `one()` may only hold objects, arrays, and `null`, and the return type of `all()` only arrays,
-     * as {@see ActiveQuery} returns. Any other branch, such as `false`, a collection object, or `null` from `all()`,
-     * makes the declaration unsupported.
+     * The return type of `one()` may only hold objects, arrays, and `null`, and the return type of `all()` only arrays
+     * whose values hold objects and arrays, as {@see ActiveQuery} returns. Any other branch, such as `false`, a
+     * collection object, `null` returned by `all()` or among its values, or values of unknown type, makes the
+     * declaration unsupported.
      *
      * @param string $methodName Name of the declared method, `one` or `all`.
      * @param Type $returnType Declared return type of the method.
@@ -413,9 +414,7 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     private function getReturnedClassNames(string $methodName, Type $returnType): array|null
     {
         if ($methodName === 'one') {
-            $rowObjectType = $this->removeArraysAndNull($returnType);
-
-            return $rowObjectType->isObject()->yes() ? $rowObjectType->getObjectClassNames() : null;
+            return $this->getRowClassNames(TypeCombinator::removeNull($returnType));
         }
 
         if ($returnType->isArray()->yes() === false) {
@@ -425,12 +424,33 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
         $classNames = [];
 
         foreach ($returnType->getArrays() as $arrayType) {
-            foreach ($this->removeArraysAndNull($arrayType->getIterableValueType())->getObjectClassNames() as $className) {
+            $rowClassNames = $this->getRowClassNames($arrayType->getIterableValueType());
+
+            if ($rowClassNames === null) {
+                return null;
+            }
+
+            foreach ($rowClassNames as $className) {
                 $classNames[] = $className;
             }
         }
 
         return $classNames;
+    }
+
+    /**
+     * Returns the object class names of a row type, whose arrays are the rows of a query in array mode.
+     *
+     * @param Type $rowType Row type declared by `one()` without `null`, or array value type declared by `all()`.
+     *
+     * @return list<string>|null Object class names, or `null` when the row type without arrays is not certainly an
+     * object.
+     */
+    private function getRowClassNames(Type $rowType): array|null
+    {
+        $objectType = TypeCombinator::remove($rowType, new ArrayType(new MixedType(), new MixedType()));
+
+        return $objectType->isObject()->yes() ? $objectType->getObjectClassNames() : null;
     }
 
     /**
@@ -444,19 +464,6 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     private function isActiveRecordType(Type $type): bool
     {
         return $type->isObject()->yes() && (new ObjectType(ActiveRecordInterface::class))->isSuperTypeOf($type)->yes();
-    }
-
-    /**
-     * Returns what remains of a row type once arrays and `null` are removed.
-     *
-     * @param Type $rowType Row type declared by `one()`, or array value type declared by `all()`.
-     */
-    private function removeArraysAndNull(Type $rowType): Type
-    {
-        return TypeCombinator::remove(
-            TypeCombinator::removeNull($rowType),
-            new ArrayType(new MixedType(), new MixedType()),
-        );
     }
 
     /**

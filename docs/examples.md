@@ -325,8 +325,9 @@ result of a scope typed `: self`, takes its model from the `one()` and `all()` o
 parent query class. When those overrides name exactly one Active Record class, as the
 `@return Invoice|array|null` and `@return Invoice[]|array` that Gii generates do, `one()` is `Invoice|null`, `all()` is
 `array<Invoice>`, `batch()` and `each()` yield `Invoice`, and `asArray()` gives the `Invoice` row shape. An override that
-also declares something `yii\db\ActiveQuery` never returns, such as `@return Invoice[]|false` or a nullable `all()`,
-names no model, so the query class keeps the types it declares.
+also declares something `yii\db\ActiveQuery` never returns, such as `@return Invoice[]|false`, a nullable `all()`,
+`@return array<Invoice|null>`, or a plain `@return array` for `all()`, names no model, so the query class keeps the
+types it declares.
 
 ```php
 <?php
