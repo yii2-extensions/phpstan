@@ -21,7 +21,7 @@ final class DerivedModelFalseOneQuery extends ActiveQuery
     }
 
     /**
-     * @return array|Invoice|false|null
+     * @return array|false|Invoice|null
      */
     public function one($db = null)
     {
