@@ -10,8 +10,11 @@ use yii2\extensions\phpstan\tests\support\stub\{
     CreditInvoiceQuery,
     DerivedModelBaseRecordQuery,
     DerivedModelDocQuery,
+    DerivedModelFalseAllQuery,
+    DerivedModelFalseOneQuery,
     DerivedModelNativeQuery,
     DerivedModelNonRecordQuery,
+    DerivedModelNullableAllQuery,
     DerivedModelSplitQuery,
     DerivedModelTwoModelQuery,
     InvoiceQuery,
@@ -27,6 +30,41 @@ use function PHPStan\Testing\assertType;
  */
 final class ActiveQueryDerivedModelEdgeType
 {
+    public function testKeepNativeTypeWhenOverridesDeclareBranchesActiveQueryCannotReturn(
+        DerivedModelFalseAllQuery $falseAllQuery,
+        DerivedModelFalseOneQuery $falseOneQuery,
+        DerivedModelNullableAllQuery $nullableAllQuery,
+    ): void {
+        assertType(
+            'array<yii2\extensions\phpstan\tests\support\stub\Invoice>|false',
+            $falseAllQuery->all(),
+        );
+        assertType(
+            'array|yii2\extensions\phpstan\tests\support\stub\Invoice|null',
+            $falseAllQuery->one(),
+        );
+        assertType(
+            'yii\db\ActiveQuery<array<string, mixed>>',
+            $falseAllQuery->asArray(),
+        );
+        assertType(
+            'array|yii2\extensions\phpstan\tests\support\stub\Invoice|false|null',
+            $falseOneQuery->one(),
+        );
+        assertType(
+            'array<yii2\extensions\phpstan\tests\support\stub\Invoice>',
+            $falseOneQuery->all(),
+        );
+        assertType(
+            'yii\db\ActiveQuery<array<string, mixed>>',
+            $falseOneQuery->asArray(),
+        );
+        assertType(
+            'array<yii2\extensions\phpstan\tests\support\stub\Invoice>|null',
+            $nullableAllQuery->all(),
+        );
+    }
+
     public function testKeepNativeTypeWhenOverridesNameNoSingleModel(
         DerivedModelTwoModelQuery $twoModelQuery,
         DerivedModelSplitQuery $splitQuery,

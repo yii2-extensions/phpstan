@@ -332,13 +332,14 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * Declarations inherited from {@see ActiveQuery} or its parents are skipped. The return type of `one()` names its
      * object classes, ignoring arrays and `null`; the return type of `all()` names the object classes of its array
      * values. A named Active Record subclass is a candidate, {@see ActiveRecord} and its parents are ignored as the
-     * types that Yii's unbound `T` yields, and any other class prevents the derivation.
+     * types that Yii's unbound `T` yields, and any other class prevents the derivation. So does a declaration with a
+     * branch that `ActiveQuery<Model>` never returns, since its answer would hide that branch.
      *
      * @param string $queryClassName Name of the query class to read the declarations from.
      *
      * @return string|null Name of the single candidate model class, or `null` when the query class is unknown,
      * generic, or not an {@see ActiveQuery} subclass, or when its declarations name no candidate, several candidates,
-     * or another class.
+     * another class, or another branch.
      */
     private function deriveModelClassName(string $queryClassName): string|null
     {
@@ -368,7 +369,13 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
             }
 
             foreach ($methodReflection->getVariants() as $variant) {
-                foreach ($this->getReturnedClassNames($methodName, $variant->getReturnType()) as $className) {
+                $classNames = $this->getReturnedClassNames($methodName, $variant->getReturnType());
+
+                if ($classNames === null) {
+                    return null;
+                }
+
+                foreach ($classNames as $className) {
                     if ($this->reflectionProvider->hasClass($className) === false) {
                         return null;
                     }
@@ -393,41 +400,37 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     /**
      * Returns the object class names that a `one()` or `all()` return type names.
      *
+     * The return type of `one()` may only hold objects, arrays, and `null`, and the return type of `all()` only arrays,
+     * as {@see ActiveQuery} returns. Any other branch, such as `false`, a collection object, or `null` from `all()`,
+     * makes the declaration unsupported.
+     *
      * @param string $methodName Name of the declared method, `one` or `all`.
      * @param Type $returnType Declared return type of the method.
      *
-     * @return list<string> Object class names of the row type for `one()`, or of the array value types for `all()`.
+     * @return list<string>|null Object class names of the row type for `one()`, or of the array value types for
+     * `all()`, or `null` when the return type holds another branch.
      */
-    private function getReturnedClassNames(string $methodName, Type $returnType): array
+    private function getReturnedClassNames(string $methodName, Type $returnType): array|null
     {
         if ($methodName === 'one') {
-            return $this->getRowClassNames($returnType);
+            $rowObjectType = $this->removeArraysAndNull($returnType);
+
+            return $rowObjectType->isObject()->yes() ? $rowObjectType->getObjectClassNames() : null;
+        }
+
+        if ($returnType->isArray()->yes() === false) {
+            return null;
         }
 
         $classNames = [];
 
-        foreach (TypeCombinator::removeNull($returnType)->getArrays() as $arrayType) {
-            foreach ($this->getRowClassNames($arrayType->getIterableValueType()) as $className) {
+        foreach ($returnType->getArrays() as $arrayType) {
+            foreach ($this->removeArraysAndNull($arrayType->getIterableValueType())->getObjectClassNames() as $className) {
                 $classNames[] = $className;
             }
         }
 
         return $classNames;
-    }
-
-    /**
-     * Returns the object class names that a row type names once arrays and `null` are removed.
-     *
-     * @param Type $rowType Row type declared by `one()`, or array value type declared by `all()`.
-     *
-     * @return list<string> Object class names, or an empty list when the remaining type is not certainly an object.
-     */
-    private function getRowClassNames(Type $rowType): array
-    {
-        return TypeCombinator::remove(
-            TypeCombinator::removeNull($rowType),
-            new ArrayType(new MixedType(), new MixedType()),
-        )->getObjectClassNames();
     }
 
     /**
@@ -441,6 +444,19 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     private function isActiveRecordType(Type $type): bool
     {
         return $type->isObject()->yes() && (new ObjectType(ActiveRecordInterface::class))->isSuperTypeOf($type)->yes();
+    }
+
+    /**
+     * Returns what remains of a row type once arrays and `null` are removed.
+     *
+     * @param Type $rowType Row type declared by `one()`, or array value type declared by `all()`.
+     */
+    private function removeArraysAndNull(Type $rowType): Type
+    {
+        return TypeCombinator::remove(
+            TypeCombinator::removeNull($rowType),
+            new ArrayType(new MixedType(), new MixedType()),
+        );
     }
 
     /**

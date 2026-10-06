@@ -20,8 +20,11 @@ parameters:
             - tests/data/type/ServiceMapDefinitionType.php
             - tests/support/stub/DerivedModelBaseRecordQuery.php
             - tests/support/stub/DerivedModelDocQuery.php
+            - tests/support/stub/DerivedModelFalseAllQuery.php
+            - tests/support/stub/DerivedModelFalseOneQuery.php
             - tests/support/stub/DerivedModelNativeQuery.php
             - tests/support/stub/DerivedModelNonRecordQuery.php
+            - tests/support/stub/DerivedModelNullableAllQuery.php
             - tests/support/stub/DerivedModelSplitQuery.php
             - tests/support/stub/DerivedModelTwoModelQuery.php
             - tests/support/stub/Invoice.php
