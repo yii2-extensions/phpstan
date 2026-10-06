@@ -13,7 +13,7 @@ use yii\db\ActiveQuery;
 final class DerivedModelFalseElementQuery extends ActiveQuery
 {
     /**
-     * @return array<Invoice|false>
+     * @return array<false|Invoice>
      */
     public function all($db = null)
     {
