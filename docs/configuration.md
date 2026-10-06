@@ -56,6 +56,12 @@ parameters:
 
 ## Application type configuration
 
+`Yii::$app`, also when read through `\yii\BaseYii::$app`, is typed as the class set in `phpstan.application_type`, or as
+`yii\web\Application` when the key is omitted. The extension ships a static stub, `stubs/yii.stub`, registered through
+`stubFiles` in `extension.neon`, that declares `yii\BaseYii::$app` and `yii\base\Module::$params` with placeholder PHPDoc
+types; a PHPDoc type resolver of the extension (`ApplicationTypeNodeResolverExtension`) turns them into this class and
+the array shape of the configured `params`, so nothing is generated at runtime.
+
 ### Web application (default)
 
 ```php
@@ -157,7 +163,8 @@ parameters:
 
 ### Component configuration
 
-Define your application components for proper type inference:
+Define your application components for proper type inference. See [Definition forms](#definition-forms) for every
+supported definition.
 
 ```php
 <?php
@@ -450,8 +457,8 @@ return [
                 ['name' => 'app'],
             ],
 
-            // Closure definitions
-            'eventDispatcher' => function() {
+            // Closure definitions, typed from their class return type
+            'eventDispatcher' => function(): \app\services\EventDispatcher {
                 return new \app\services\EventDispatcher();
             },
         ],
@@ -467,6 +474,68 @@ return [
     ],
 ];
 ```
+
+### Definition forms
+
+Components and container services accept every definition form Yii accepts, and each one is typed as its class when
+that class can be determined from the configuration file:
+
+- A class name string, with or without a leading backslash.
+- An array with a `class` or `__class` key.
+- A closure with a single class return type, such as `static fn(): View => new View()`. For container services, an
+  object with an `__invoke()` method is resolved from that method's return type in the same way.
+- Any other object except a `yii\di\Instance` reference, typed as its own class.
+- For container services, a `[definition, params]` list, resolved from its first element, and an empty definition, or
+  an array without a class key, under an ID that names a `yii\base\BaseObject` subclass, resolved to that ID.
+- A class name that is another container ID, as a string definition or as the `class` or `__class` of an array
+  definition, resolved through that ID's definition, following chains, as `Yii::$container->get()` does.
+  `container.definitions` and `container.singletons` share one ID space, so either can name an ID from the other, and a
+  component definition can name a container ID too. The return type of a closure and the class of any other object
+  are final and aren't resolved through the container, since Yii returns those values as they are. An ID on a cycle,
+  or one that names an ID whose class can't be determined, is itself treated as a definition whose class can't be
+  determined, so `get()` returns `object` for it.
+
+A definition whose class can't be determined doesn't stop the analysis. This includes a closure without a return type or
+with a union, nullable, or builtin return type, a `yii\di\Instance` reference, an array callable, and an array without a
+class key. `get('id')` then has the type Yii declares, `object`, and for a component `Yii::$app->id` is `object` too,
+unless the application class declares that property, as `yii\web\Application` does for `request`. Add a class return
+type to the closure to get the precise type.
+
+```php
+<?php
+
+declare(strict_types=1);
+
+// config/phpstan-config.php
+return [
+    'components' => [
+        'stringView' => \yii\web\View::class,
+        'closureView' => static fn(): \yii\web\View => new \yii\web\View(),
+        'untypedClosure' => static fn() => new \yii\web\View(),
+        'request' => [
+            'cookieValidationKey' => 'secret',
+        ],
+    ],
+    'container' => [
+        'definitions' => [
+            'mailer.real' => ['class' => \yii\web\View::class],
+            'mailer.alias' => 'mailer.real',
+        ],
+    ],
+];
+
+// Usage
+$stringView = Yii::$app->stringView;             // yii\web\View
+$closureView = Yii::$app->get('closureView');    // yii\web\View
+$untyped = Yii::$app->untypedClosure;            // object
+$request = Yii::$app->request;                   // yii\web\Request
+$requestById = Yii::$app->get('request');        // object
+$aliased = Yii::$container->get('mailer.alias'); // yii\web\View
+```
+
+A definition that is an integer, float, or boolean still stops the analysis with `Unsupported definition for '<id>'.`,
+and so do a non-string ID and a section that isn't an array. The exception
+`Please provide return type for '<id>' service closure.` was removed in 0.5.0.
 
 ## Advanced configuration
 
@@ -516,6 +585,18 @@ parameters:
 
 ### Performance optimization
 
+PHPStan 2.3 ships its native Turbo engine inside the `phpstan/phpstan` package; it activates automatically on PHP 8.3 or
+higher and needs no configuration from this extension. Run `vendor/bin/phpstan diagnose` to check its status.
+
+You don't need to clear the result cache in `tmpDir` (`--clear-result-cache`) when the Yii configuration changes. The
+extension declares through PHPStan's dependency tracking the configuration values that inferred types depend on, so
+editing the configuration file, or a file it pulls in with `require` such as a params file, re-analyzes only the files
+that depend on a changed value. A component or container service by id and the behaviors of a class are tracked for the
+files that read them. The application class and the params type are tracked on `yii\BaseYii` and `yii\base\Module`,
+which declare `Yii::$app` and `Module::$params`, so a change to either re-analyzes every file that depends on those
+classes or on a subclass, including files that only override or inherit the properties. A change that leaves those
+values as they were, such as a param value of the same type, re-analyzes nothing.
+
 ```neon
 parameters:
     # Bootstrap optimization
@@ -561,7 +642,8 @@ parameters:
         config_path: ''  # Disable config file
 ```
 
-This will work with basic type inference but won't have custom component types.
+This will work with basic type inference but won't have custom component types. `Yii::$app` is typed as
+`yii\web\Application`, and `Module::$params` as `array`.
 
 ## Multiple application types
 

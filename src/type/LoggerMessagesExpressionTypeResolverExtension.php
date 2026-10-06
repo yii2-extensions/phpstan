@@ -13,6 +13,7 @@ use PHPStan\Type\{
     ArrayType,
     ClassStringType,
     ExpressionTypeResolverExtension,
+    FloatType,
     IntegerType,
     MixedType,
     ObjectType,
@@ -21,7 +22,7 @@ use PHPStan\Type\{
     TypeCombinator,
 };
 use PHPStan\Type\Accessory\AccessoryArrayListType;
-use PHPStan\Type\Constant\{ConstantArrayType, ConstantIntegerType, ConstantStringType};
+use PHPStan\Type\Constant\{ConstantArrayType, ConstantArrayTypeBuilder, ConstantIntegerType, ConstantStringType};
 use Throwable;
 use yii\log\{Logger, PsrMessage, Target};
 
@@ -89,9 +90,9 @@ final class LoggerMessagesExpressionTypeResolverExtension implements ExpressionT
     }
 
     /**
-     * Creates the tuple type emitted by Yii's logger.
+     * Creates the tuple type emitted by Yii's logger, a list whose sixth element (memory usage) is optional.
      */
-    private function createMessageType(): ConstantArrayType
+    private function createMessageType(): Type
     {
         $payloadTypes = [
             new StringType(),
@@ -103,26 +104,22 @@ final class LoggerMessagesExpressionTypeResolverExtension implements ExpressionT
             $payloadTypes[] = new ObjectType(PsrMessage::class);
         }
 
-        return new ConstantArrayType(
-            [
-                new ConstantIntegerType(0),
-                new ConstantIntegerType(1),
-                new ConstantIntegerType(2),
-                new ConstantIntegerType(3),
-                new ConstantIntegerType(4),
-                new ConstantIntegerType(5),
-            ],
-            [
-                TypeCombinator::union(...$payloadTypes),
-                new IntegerType(),
-                new StringType(),
-                new \PHPStan\Type\FloatType(),
-                $this->createListType($this->createTraceFrameType()),
-                new IntegerType(),
-            ],
-            [6],
-            [5],
-        );
+        $elementTypes = [
+            TypeCombinator::union(...$payloadTypes),
+            new IntegerType(),
+            new StringType(),
+            new FloatType(),
+            $this->createListType($this->createTraceFrameType()),
+            new IntegerType(),
+        ];
+
+        $messageTypeBuilder = ConstantArrayTypeBuilder::createEmpty();
+
+        foreach ($elementTypes as $index => $elementType) {
+            $messageTypeBuilder->setOffsetValueType(new ConstantIntegerType($index), $elementType, $index === 5);
+        }
+
+        return $messageTypeBuilder->getArray();
     }
 
     /**

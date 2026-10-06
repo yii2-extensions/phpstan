@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.4.2 Under development
+## 0.5.0 Under development
 
 - chore: update dependencies and configuration files.
 - chore: adopt scaffold tooling and ensure compatibility with `PHPStan` 2.2 and `Yii2` generic types.
@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: update StyleCI badge link in `README.md` to reflect the correct repository.
 - chore: update `composer.json` to remove unused plugin.
 - feat: infer Yii logger message array shapes and preserve them through target filtering without stubs.
+- feat!: port to `PHPStan` 2.3 (now required), remove inference already provided by `Yii2` generics, and track result cache dependencies.
 
 ## 0.4.1 April 05, 2026
 

@@ -4,23 +4,19 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\property;
 
-use PHPStan\Reflection\{
-    ClassReflection,
-    MissingPropertyFromReflectionException,
-    PropertiesClassReflectionExtension,
-    PropertyReflection,
-    ReflectionProvider,
-};
+use PHPStan\Analyser\DeclarationDependencyTracker;
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
+use PHPStan\Reflection\{ClassReflection, PropertiesClassReflectionExtension, PropertyReflection, ReflectionProvider};
 use PHPStan\Reflection\Dummy\DummyPropertyReflection;
+use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\Generic\GenericObjectType;
-use PHPStan\Type\{MixedType, ObjectType, Type};
+use PHPStan\Type\{ObjectType, ObjectWithoutClassType, Type};
 use yii\base\Application;
 use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
-use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
-use function in_array;
 use function is_string;
+use function sprintf;
 
 /**
  * Resolves dynamic component properties on the Yii Application instance for PHPStan analysis.
@@ -37,29 +33,14 @@ use function is_string;
 final class ApplicationPropertiesClassReflectionExtension implements PropertiesClassReflectionExtension
 {
     /**
-     * List of supported Yii Application classes for property reflection.
-     *
-     * This array contains the fully qualified class names of the Yii Application base, console, and web application
-     * classes that this extension supports for dynamic property resolution.
-     *
-     * It ensures that the extension only applies to valid Yii Application contexts, enabling accurate property
-     * reflection and IDE autocompletion.
-     *
-     * @var array<int, class-string|string>
-     */
-    private const SUPPORTED_APPLICATION_CLASSES = [
-        Application::class,
-        \yii\console\Application::class,
-        \yii\web\Application::class,
-    ];
-
-    /**
      * Creates a new instance of the {@see ApplicationPropertiesClassReflectionExtension} class.
      *
      * @param AnnotationsPropertiesClassReflectionExtension $annotationsProperties Extension for handling
      * annotation-based properties.
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
+     * @param DeclarationDependencyTracker $dependencyTracker Records the configuration values each class declaration
+     * depends on.
      * @param string[] $genericComponents Optional mapping of component property names to their generic type parameter
      * keys in the component definition.
      */
@@ -67,19 +48,21 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
         private readonly ReflectionProvider $reflectionProvider,
         private readonly ServiceMap $serviceMap,
+        private readonly DeclarationDependencyTracker $dependencyTracker,
         private readonly array $genericComponents = [],
     ) {}
 
     /**
      * Retrieves the property reflection for a given property on the Yii Application class or its components.
      *
-     * Resolves the property reflection for the specified property name by checking for dynamic components, native
-     * properties, and annotation-based properties on the Yii Application instance.
+     * Resolves, in order, a native property of the configured application type, a configured component, an
+     * annotation-based property, and a configured component whose class can't be determined, typed as `object`.
+     * PHPStan calls this method only after {@see hasProperty()} returned `true` for the same class and property name.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
      *
-     * @throws MissingPropertyFromReflectionException if the property doesn't exist or can't be resolved.
+     * @throws ShouldNotHappenException if the property is neither native, a configured component, nor annotation-based.
      *
      * @return PropertyReflection Property reflection instance for the specified property.
      */
@@ -103,62 +86,65 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             return $this->annotationsProperties->getProperty($normalizedClassReflection, $propertyName);
         }
 
-        return new ComponentPropertyReflection(
-            new DummyPropertyReflection($propertyName),
-            new MixedType(),
-            $normalizedClassReflection,
+        if ($this->serviceMap->isUnresolvedComponent($propertyName)) {
+            return new ComponentPropertyReflection(
+                new DummyPropertyReflection($propertyName),
+                new ObjectWithoutClassType(),
+                $normalizedClassReflection,
+            );
+        }
+
+        throw new ShouldNotHappenException(
+            sprintf(
+                'Property %s::$%s is neither native, a component, nor annotation-based.',
+                $normalizedClassReflection->getName(),
+                $propertyName,
+            ),
         );
     }
 
     /**
      * Determines whether the specified property exists on the Yii Application class or its components.
      *
-     * Checks for the existence of a property on the Yii Application instance by considering native properties,
-     * annotation-based properties, and dynamic components registered via the service map.
+     * Applies only to {@see Application} and its subclasses, and checks native properties, dynamic components
+     * registered via the service map, annotation-based properties, and components configured with an unknown class,
+     * in the same order as {@see getProperty()}.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
      *
-     * @return bool `true` if the property exists as a native, annotated, or component property; `false` otherwise.
+     * @return bool `true` if the property exists as a native, component, or annotated property; `false` otherwise.
      */
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
     {
-        if ($this->isApplicationClass($classReflection) === false) {
+        if ($classReflection->is(Application::class) === false) {
             return false;
+        }
+
+        $this->dependencyTracker->trackValueDependency(
+            $classReflection,
+            ServiceMapResultCacheValueExtension::class,
+            ServiceMapResultCacheValueExtension::APPLICATION_KEY,
+        );
+        $this->dependencyTracker->trackValueDependency(
+            $classReflection,
+            ServiceMapResultCacheValueExtension::class,
+            ServiceMapResultCacheValueExtension::componentKey($propertyName),
+        );
+
+        $configuredApplicationType = $this->serviceMap->getApplicationType();
+
+        if ($configuredApplicationType !== '' && $configuredApplicationType !== $classReflection->getName()) {
+            // the answer comes from the configured application class, declared in another file
+            $this->dependencyTracker->trackClassDependency($classReflection, $configuredApplicationType);
         }
 
         $normalizedClassReflection = $this->normalizeClassReflection($classReflection);
 
         return $normalizedClassReflection->hasNativeProperty($propertyName)
+            || $this->serviceMap->getComponentClassById($propertyName) !== null
             || $this->annotationsProperties->hasProperty($normalizedClassReflection, $propertyName)
-            || $this->serviceMap->getComponentClassById($propertyName) !== null;
-    }
-
-    /**
-     * Determines if the provided class reflection corresponds to a Yii Application class or its subclass.
-     *
-     * This check is essential for restricting property reflection logic to valid Yii Application contexts, ensuring
-     * that dynamic property resolution is only applied where appropriate.
-     *
-     * @param ClassReflection $classReflection Reflection of the class being analyzed.
-     *
-     * @return bool `true` if the class is a Yii Application or subclass; `false` otherwise.
-     */
-    private function isApplicationClass(ClassReflection $classReflection): bool
-    {
-        $className = $classReflection->getName();
-
-        if (in_array($className, self::SUPPORTED_APPLICATION_CLASSES, true)) {
-            return true;
-        }
-
-        if ($this->reflectionProvider->hasClass(Application::class)) {
-            return $classReflection->isSubclassOfClass(
-                $this->reflectionProvider->getClass(Application::class),
-            );
-        }
-
-        return false;
+            || $this->serviceMap->isUnresolvedComponent($propertyName);
     }
 
     /**
@@ -202,6 +188,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
     private function resolveType(string $componentClass, string $propertyName): Type
     {
         $genericProperty = $this->genericComponents[$propertyName] ?? null;
+
         $componentDefinition = $this->serviceMap->getComponentDefinitionById($propertyName);
 
         if ($componentDefinition !== [] && $genericProperty !== null) {

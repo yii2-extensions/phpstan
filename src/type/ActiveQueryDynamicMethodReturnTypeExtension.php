@@ -4,68 +4,80 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\type;
 
-use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
-use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\{ClassReflection, MethodReflection, ReflectionProvider};
+use PHPStan\Analyser\{DependencyTracker, Scope};
+use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector, ReflectionProvider};
 use PHPStan\Type\{
     ArrayType,
-    IntegerType,
+    DynamicMethodReturnTypeExtension,
     MixedType,
-    NullType,
+    NeverType,
+    ObjectType,
     StringType,
-    ThisType,
     Type,
-    TypeCombinator
+    TypeCombinator,
 };
-use PHPStan\Type\Constant\{ConstantArrayType, ConstantBooleanType, ConstantStringType};
-use PHPStan\Type\DynamicMethodReturnTypeExtension;
-use PHPStan\Type\FileTypeMapper;
+use PHPStan\Type\Constant\{ConstantArrayTypeBuilder, ConstantBooleanType, ConstantStringType};
 use PHPStan\Type\Generic\GenericObjectType;
-use Throwable;
-use yii\db\ActiveQuery;
+use yii\db\{ActiveQuery, ActiveRecord, ActiveRecordInterface};
+use yii2\extensions\phpstan\PropertyTagTypeResolver;
 
+use function array_key_exists;
+use function array_key_first;
 use function count;
 use function in_array;
+use function strtolower;
 
 /**
- * Infers precise return types for {@see ActiveQuery} methods such as {@see ActiveQuery::one()},
- * {@see ActiveQuery::all()}, and {@see ActiveQuery::asArray()} in PHPStan analysis.
+ * Infers the row array shape of {@see ActiveQuery::asArray()} queries from the model's class-level `@property` tags.
  *
- * Extracts the model type from the generic {@see ActiveQuery} parameter and inspects method arguments to resolve array
- * or object return types, preserving the generic type for fluent interface methods. Supports array shape inference from
- * PHPDoc `@property` tags on model classes.
+ * Yii's generic PHPDoc types an `asArray()` query as returning `array<string, mixed>` rows. This extension replaces
+ * the query's `T` with an array shape built from the `@property` tags that the queried model declares or inherits, so
+ * that subsequent `one()` and `all()` calls return typed rows. A custom query class keeps its own type when it is
+ * generic over the model; otherwise, array rows fall back to {@see ActiveQuery} because a non-generic class cannot
+ * carry the row shape.
+ *
+ * A tag whose type, ignoring `null`, is an {@see ActiveRecordInterface} or an iterable of them describes a relation,
+ * which a row holds only when it is eager-loaded with `with()`: its key is optional and holds a related row
+ * (`array<string, mixed>|null`) or an array of related rows (`array<array<string, mixed>>`). Any other tag keeps its
+ * type, as a required key when it is writable and as an optional key when it is read-only. Write-only tags yield no
+ * key.
+ *
+ * `batch()` and `each()` are resolved on `ActiveQuery<T>` when PHPStan's own answer is `never`, as it is for the
+ * intersection that {@see ActiveRecordQueryDynamicStaticMethodReturnTypeExtension} infers for a custom query class.
+ *
+ * A receiver that is a single non-generic {@see ActiveQuery} subclass whose `T` names no model, such as a Gii query
+ * class reached through a typed parameter, a typed property, a returned value, or a scope returning `self`, has its
+ * model derived from the nearest `one()` and `all()` declarations below {@see ActiveQuery}. When their return types
+ * name exactly one Active Record subclass, ignoring arrays, `null`, and the Active Record base classes that Yii's
+ * unbound `T` yields, `one()`, `all()`, `batch()`, and `each()` are resolved on `ActiveQuery<Model>`, and `asArray()`
+ * builds the model's row shape. Otherwise, PHPStan's own answer is kept.
  *
  * {@see ActiveQuery} for Active Query API details.
+ * {@see PropertyTagTypeResolver} for the collection of declared and inherited `@property` tags.
  * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  */
 final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     /**
-     * Supported methods for dynamic return type resolution.
+     * Model class names derived from the `one()` and `all()` declarations, indexed by lowercase query class name, with
+     * `null` for a query class from which no model is derived.
      *
-     * @phpstan-var string[]
+     * @var array<string, string|null>
      */
-    private const SUPPORTED_METHODS = ['one', 'all', 'asArray'];
-
+    private array $derivedModelClassNames = [];
     /**
-     * Creates a new instance of the {@see ActiveQueryDynamicMethodReturnTypeExtension} class.
-     *
-     * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
-     * @param FileTypeMapper $fileTypeMapper File type mapper for resolving PHPDoc types.
+     * @param ReflectionProvider $reflectionProvider Reflection provider for query and model class lookups.
+     * @param PropertyTagTypeResolver $propertyTagTypeResolver Resolver of the model's declared and inherited
+     * `@property` tags.
      */
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
-        private readonly FileTypeMapper $fileTypeMapper,
+        private readonly PropertyTagTypeResolver $propertyTagTypeResolver,
     ) {}
 
     /**
-     * Returns the class name for which this dynamic method return type extension applies.
-     *
-     * Specifies the fully qualified class name of the supported class, enabling PHPStan to associate this extension
-     * with method calls on the {@see ActiveQuery} base class and its subclasses.
-     *
-     * @return string Fully qualified class name of the supported {@see ActiveQuery} class.
+     * Returns the Yii Active Query class supported by this extension.
      *
      * @phpstan-return class-string
      */
@@ -75,398 +87,431 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     }
 
     /**
-     * Infers the return type for a method call on an {@see ActiveQuery} instance.
+     * Resolves the query type returned by {@see ActiveQuery::asArray()} from the receiver and the `$value` argument.
      *
-     * Resolves the return type for {@see ActiveQuery::all()}, {@see ActiveQuery::one()}, and {@see ActiveQuery::asArray()}
-     * methods by analyzing the model type and method context.
+     * Calls to `one()`, `all()`, `batch()`, and `each()` are resolved on `ActiveQuery<Model>` when the model is derived
+     * from the receiver's query class; otherwise, `batch()` and `each()` are delegated to
+     * {@see createBatchQueryResultType()}.
      *
-     * This enables precise type inference for static analysis and IDE autocompletion.
+     * `true` (or no argument) yields rows shaped by the model's `@property` tags, `false` returns the receiver
+     * unchanged, and a non-constant value yields the union of both. When `T` is already an array, `asArray()` keeps it
+     * unchanged, as Yii's own `T is array ? static<T>` branch does. A nullable receiver, as in a nullsafe chain, is
+     * read without `null`, which PHPStan adds back for the short-circuited call.
      *
-     * The method inspects the called method name and delegates to specialized handlers for supported methods,
-     * returning.
-     * - For {@see ActiveQuery::all()}: an array of the model type indexed by integer.
-     * - For {@see ActiveQuery::asArray()}: the result of {@see handleAsArray()} with the current model type.
-     * - For {@see ActiveQuery::one()}: a union of the model type and null.
-     * - For other methods: the result of {@see handleDefaultCase()}.
+     * @param MethodReflection $methodReflection Reflection of the called `asArray()`, `one()`, `all()`, `batch()`, or
+     * `each()` method.
+     * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
+     * @param Scope&DependencyTracker $scope Current PHPStan analysis scope, recording a dependency on a derived model.
      *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     * @param MethodCall $methodCall AST node for the method call expression.
-     * @param Scope $scope PHPStan analysis scope for type resolution.
-     *
-     * @return Type Inferred return type for the method call.
+     * @return Type|null Inferred query, row, or batch query result type, or `null` to defer to PHPStan's answer when an
+     * `asArray()` argument is unpacked, no model is derived for `one()` and `all()`, or `batch()` and `each()` already
+     * resolve.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
         Scope $scope,
-    ): Type {
-        $calledOnType = $scope->getType($methodCall->var);
-        $modelType = $this->extractModelType($calledOnType);
+    ): Type|null {
         $methodName = $methodReflection->getName();
 
-        return match ($methodName) {
-            'all' => new ArrayType(new IntegerType(), $modelType),
-            'asArray' => $this->handleAsArray($methodCall, $scope, $modelType),
-            'one' => TypeCombinator::union(new NullType(), $modelType),
-            default => $this->handleDefaultCase($methodReflection, $calledOnType, $modelType),
-        };
-    }
+        $calledOnType = TypeCombinator::removeNull($scope->getType($methodCall->var));
 
-    /**
-     * Checks if the given method is supported for dynamic return type inference.
-     *
-     * Determines support by verifying if the method name is in {@see self::SUPPORTED_METHODS} or if the first variant's
-     * return type is {@see ThisType}.
-     *
-     * This ensures that only methods with dynamic return types or fluent interfaces are handled by this extension.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     *
-     * @return bool `true` if the method is supported for dynamic return type inference; `false` otherwise.
-     */
-    public function isMethodSupported(MethodReflection $methodReflection): bool
-    {
-        if (in_array($methodReflection->getName(), self::SUPPORTED_METHODS, true)) {
-            return true;
-        }
+        $modelType = $this->resolveDerivedModelType($calledOnType, $scope);
 
-        $variants = $methodReflection->getVariants();
-
-        if (count($variants) > 0) {
-            $returnType = $variants[0]->getReturnType();
-
-            return $returnType::class === ThisType::class;
-        }
-
-        return false;
-    }
-
-    /**
-     * Constructs a {@see ConstantArrayType} representing an array shape for model property types.
-     *
-     * Iterates over the provided property map, creating a constant array type where each key is a property name and
-     * each value is its associated type.
-     *
-     * Used for precise array shape inference in {@see ActiveQuery} results with {@see ActiveQuery::asArray()} during
-     * static analysis.
-     *
-     * @param array<string, Type> $properties Map of property names to their types.
-     *
-     * @return ConstantArrayType Array shape type for the model's properties.
-     */
-    private function createConstantArrayType(array $properties): ConstantArrayType
-    {
-        $keyTypes = [];
-        $valueTypes = [];
-
-        foreach ($properties as $propertyName => $propertyType) {
-            $keyTypes[] = new ConstantStringType($propertyName);
-            $valueTypes[] = $propertyType;
-        }
-
-        return new ConstantArrayType($keyTypes, $valueTypes);
-    }
-
-    /**
-     * Returns a generic array type with string keys and mixed values.
-     *
-     * Provides a fallback associative array type for {@see ActiveQuery} results when the model type can't be determined
-     * or property extraction from PHPDoc is unavailable.
-     *
-     * This ensures static analysis and IDE autocompletion remain safe and general for dynamic query scenarios.
-     *
-     * @return ArrayType Generic array type with string keys and mixed values.
-     */
-    private function createGenericArrayType(): ArrayType
-    {
-        return new ArrayType(new StringType(), new MixedType());
-    }
-
-    /**
-     * Extracts the model type from a {@see GenericObjectType} instance of {@see ActiveQuery}.
-     *
-     * Resolves the generic type parameter representing the model class for the given {@see ActiveQuery} instance.
-     *
-     * If the provided type is a generic {@see ActiveQuery}, returns the first generic type argument as the model type;
-     * otherwise, returns {@see MixedType} as a fallback.
-     *
-     * This method enables precise type inference for dynamic return type extensions, allowing PHPStan to determine the
-     * model type used in {@see ActiveQuery} method calls such as {@see ActiveQuery::one()}, {@see ActiveQuery::all()},
-     * and {@see ActiveQuery::asArray()}.
-     *
-     * @param Type $calledOnType Type on which the method is called. Expected to be a {@see GenericObjectType} of
-     * {@see ActiveQuery} or its subclass.
-     *
-     * @return Type The extracted model type if available, or {@see MixedType} if not resolvable.
-     */
-    private function extractModelType(Type $calledOnType): Type
-    {
-        if ($calledOnType::class === GenericObjectType::class) {
-            $className = $calledOnType->getClassName();
-
-            if ($className === ActiveQuery::class) {
-                $types = $calledOnType->getTypes();
-
-                return $types[0] ?? new MixedType();
+        if ($methodName !== 'asArray') {
+            if ($modelType !== null) {
+                return $this->resolveReturnType(
+                    new GenericObjectType(ActiveQuery::class, [$modelType]),
+                    $methodName,
+                    $methodCall,
+                    $scope,
+                );
             }
 
-            if ($this->reflectionProvider->hasClass($className)) {
-                $classReflection = $this->reflectionProvider->getClass($className);
+            return in_array($methodName, ['batch', 'each'], true)
+                ? $this->createBatchQueryResultType($methodReflection, $methodCall, $scope)
+                : null;
+        }
 
-                if ($classReflection->isSubclassOfClass($this->reflectionProvider->getClass(ActiveQuery::class))) {
-                    $types = $calledOnType->getTypes();
+        $args = $methodCall->getArgs();
 
-                    return $types[0] ?? new MixedType();
-                }
+        foreach ($args as $arg) {
+            if ($arg->unpack) {
+                return null;
             }
         }
 
-        return new MixedType();
-    }
+        $valueType = isset($args[0])
+            ? $scope->getType($args[0]->value)
+            : new ConstantBooleanType(true);
 
-    /**
-     * Extracts property types from the PHPDoc block of the given class reflection.
-     *
-     * Parses the PHPDoc comment of the provided {@see ClassReflection} to retrieve property tags and their associated
-     * types.
-     *
-     * This enables array shape inference for model classes in static analysis, supporting precise type inference for
-     * associative arrays returned by {@see ActiveQuery} methods when {@see ActiveQuery::asArray()} is used.
-     *
-     * Only properties explicitly documented in the PHPDoc block are considered.
-     *
-     * If the file name or doc comment is unavailable, or if no property tags are found, an empty array is returned.
-     *
-     * @param ClassReflection $classReflection Reflection of the class being analyzed.
-     *
-     * @return array<string, Type> Associative array of property names to their types, or an empty array if not
-     * available.
-     */
-    private function extractPropertiesFromPhpDoc(ClassReflection $classReflection): array
-    {
-        $fileName = $classReflection->getFileName();
-
-        if ($fileName === null) {
-            return [];
+        if ($valueType->isFalse()->yes()) {
+            return $calledOnType;
         }
 
-        $docComment = $classReflection->getNativeReflection()->getDocComment();
+        $rowType = $modelType ?? $calledOnType->getTemplateType(ActiveQuery::class, 'T');
+        $arrayRowType = $this->createArrayRowType($rowType);
 
-        if ($docComment === false) {
-            return [];
-        }
-
-        try {
-            $resolvedPhpDoc = $this->fileTypeMapper->getResolvedPhpDoc(
-                $fileName,
-                $classReflection->getName(),
-                null,
-                null,
-                docComment: $docComment,
-            );
-
-            $propertyTags = $resolvedPhpDoc->getPropertyTags();
-
-            if (count($propertyTags) === 0) {
-                return [];
-            }
-
-            $properties = [];
-
-            foreach ($propertyTags as $propertyName => $propertyTag) {
-                $readablePropertyType = $propertyTag->getReadableType();
-
-                if ($readablePropertyType !== null) {
-                    $properties[$propertyName] = $readablePropertyType;
-                }
-            }
-
-            return $properties;
-        } catch (Throwable) {
-            return [];
-        }
-    }
-
-    /**
-     * Extracts the query class name from the provided type for dynamic return type inference.
-     *
-     * If the given type is a {@see GenericObjectType}, returns its class name; otherwise, returns the base
-     * {@see ActiveQuery} class name.
-     *
-     * @param Type $calledOnType Type on which the method is called.
-     *
-     * @return string Fully qualified class name of the query object.
-     */
-    private function extractQueryClass(Type $calledOnType): string
-    {
-        if ($calledOnType::class === GenericObjectType::class) {
-            return $calledOnType->getClassName();
-        }
-
-        return ActiveQuery::class;
-    }
-
-    /**
-     * Infers the array shape type for a model from its PHPDoc property annotations.
-     *
-     * Examines the provided model type and attempts to extract property types from its PHPDoc block using reflection.
-     *
-     * If the model type is not a single class is unknown, or property extraction fails, a generic associative array
-     * type is returned.
-     *
-     * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
-     *
-     * @return Type {@see ConstantArrayType} for the model's array shape, or a generic associative array type if
-     * extraction fails.
-     */
-    private function getArrayTypeFromModelProperties(Type $modelType): Type
-    {
-        if ($modelType::class === MixedType::class) {
-            return $this->createGenericArrayType();
-        }
-
-        $objectClassNames = $modelType->getObjectClassNames();
-
-        if (count($objectClassNames) !== 1) {
-            return $this->createGenericArrayType();
-        }
-
-        $className = $objectClassNames[0];
-
-        if ($this->reflectionProvider->hasClass($className) === false) {
-            return $this->createGenericArrayType();
-        }
-
-        $properties = $this->extractPropertiesFromPhpDoc($this->reflectionProvider->getClass($className));
-
-        if (count($properties) === 0) {
-            return $this->createGenericArrayType();
-        }
-
-        return $this->createConstantArrayType($properties);
-    }
-
-    /**
-     * Returns the type of the first argument passed to {@see ActiveQuery::asArray()} for static analysis.
-     *
-     * Determines the type of the first argument provided to the {@see ActiveQuery::asArray()} method call.
-     *
-     * If no argument is given or the argument is not an instance of {@see Arg}, this method returns a
-     * {@see ConstantBooleanType} representing `true`, which is the default behavior for {@see ActiveQuery::asArray()}
-     * in Yii Active Query.
-     *
-     * @param MethodCall $methodCall AST node for the method call expression.
-     * @param Scope $scope PHPStan analysis scope for type resolution.
-     *
-     * @return Type Type of the first argument if present, or {@see ConstantBooleanType} `true` if not provided.
-     */
-    private function getAsArrayArgument(MethodCall $methodCall, Scope $scope): Type
-    {
-        if (isset($methodCall->args[0]) === false || ($methodCall->args[0]::class === Arg::class) === false) {
-            return new ConstantBooleanType(true);
-        }
-
-        return $scope->getType($methodCall->args[0]->value);
-    }
-
-    /**
-     * Infers the return type for the {@see ActiveQuery::asArray()} method call based on the argument value.
-     *
-     * Determines the resulting generic type for the {@see ActiveQuery} instance by analyzing the argument passed to
-     * {@see ActiveQuery::asArray()}.
-     *
-     * - If the argument is `true` (or omitted), returns a {@see GenericObjectType} for the query class with an array
-     *   shape type inferred from the model's PHPDoc properties.
-     * - If the argument is `false`, returns a {@see GenericObjectType} for the query class with the original model
-     *   type.
-     * - If the argument is dynamic or unknown, returns a {@see GenericObjectType} for the query class with a union of
-     *   the model type and the array shape type.
-     *
-     * @param MethodCall $methodCall AST node for the method call expression.
-     * @param Scope $scope PHPStan analysis scope for type resolution.
-     * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
-     *
-     * @return Type Inferred {@see GenericObjectType} for the query class with the appropriate generic type argument.
-     */
-    private function handleAsArray(MethodCall $methodCall, Scope $scope, Type $modelType): Type
-    {
-        $calledOnType = $scope->getType($methodCall->var);
-        $queryClass = $this->extractQueryClass($calledOnType);
-        $argType = $this->getAsArrayArgument($methodCall, $scope);
-
-        if ($argType->isTrue()->yes()) {
-            return new GenericObjectType($queryClass, [$this->getArrayTypeFromModelProperties($modelType)]);
-        }
-
-        if ($argType->isFalse()->yes()) {
-            return new GenericObjectType($queryClass, [$modelType]);
-        }
-
-        return new GenericObjectType(
-            $queryClass,
-            [
-                TypeCombinator::union($modelType, $this->getArrayTypeFromModelProperties($modelType)),
-            ],
+        return $this->createQueryType(
+            $calledOnType,
+            $valueType->isTrue()->yes() ? $arrayRowType : TypeCombinator::union($rowType, $arrayRowType),
         );
     }
 
     /**
-     * Returns the inferred return type for ActiveQuery methods not handled by specific logic.
-     *
-     * If the method's return type is {@see ThisType}, preserves the generic model type for the {@see ActiveQuery}
-     * instance; otherwise, returns the type on which the method is called.
-     *
-     * This ensures that fluent interface methods maintain correct generic type propagation for static analysis and IDE
-     * support.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     * @param Type $calledOnType Type on which the method is called.
-     * @param Type $modelType Model type extracted from the generic {@see ActiveQuery} instance.
-     *
-     * @return Type Inferred return type, preserving the generic model type for fluent methods or returning the original
-     * type.
+     * Returns whether the reflected method is {@see ActiveQuery::asArray()}, {@see ActiveQuery::one()},
+     * {@see ActiveQuery::all()}, {@see ActiveQuery::batch()}, or {@see ActiveQuery::each()}.
      */
-    private function handleDefaultCase(MethodReflection $methodReflection, Type $calledOnType, Type $modelType): Type
+    public function isMethodSupported(MethodReflection $methodReflection): bool
     {
-        $variants = $methodReflection->getVariants();
-
-        if (count($variants) > 0) {
-            $returnType = $variants[0]->getReturnType();
-
-            if ($returnType::class === ThisType::class) {
-                return $this->preserveModelType($calledOnType, $modelType);
-            }
-        }
-
-        return $calledOnType;
+        return in_array($methodReflection->getName(), ['all', 'asArray', 'batch', 'each', 'one'], true);
     }
 
     /**
-     * Preserves the generic model type for fluent interface methods on {@see ActiveQuery}.
+     * Builds the array row type for the given query row type.
      *
-     * Returns the original {@see GenericObjectType} if present, ensuring that chained method calls on
-     * {@see ActiveQuery} maintain the correct generic type for static analysis and IDE autocompletion.
+     * @param Type $rowType Current `T` of the query.
      *
-     * If the called-on type is not a {@see GenericObjectType} but the model type is not {@see MixedType}, constructs a
-     * new {@see GenericObjectType} for {@see ActiveQuery} with the provided model type; otherwise, returns the original
-     * type.
-     *
-     * @param Type $calledOnType The type on which the method is called.
-     * @param Type $modelType The extracted model type from the generic {@see ActiveQuery} instance.
-     *
-     * @return Type The preserved generic {@see ActiveQuery} type with the correct model type, or the original type if
-     * preservation is not possible.
+     * @return Type `T` itself when it is already an array, an array shape from the declared and inherited `@property`
+     * tags of the single model class, or `array<string, mixed>` when no single model or no readable tags are available.
      */
-    private function preserveModelType(Type $calledOnType, Type $modelType): Type
+    private function createArrayRowType(Type $rowType): Type
     {
-        if ($calledOnType::class === GenericObjectType::class) {
+        if ($rowType->isArray()->yes()) {
+            return $rowType;
+        }
+
+        $genericArrayType = new ArrayType(new StringType(), new MixedType());
+
+        $modelClassNames = $rowType->getObjectClassNames();
+
+        if (count($modelClassNames) !== 1 || $this->reflectionProvider->hasClass($modelClassNames[0]) === false) {
+            return $genericArrayType;
+        }
+
+        $modelReflection = $this->reflectionProvider->getClass($modelClassNames[0]);
+        $readableTags = $this->propertyTagTypeResolver->getReadableTags($modelReflection);
+
+        if ($readableTags === []) {
+            return $genericArrayType;
+        }
+
+        $arrayShapeBuilder = ConstantArrayTypeBuilder::createEmpty();
+
+        foreach ($readableTags as $name => ['type' => $tagType, 'writable' => $writable]) {
+            [$valueType, $optional] = $this->createRowValueType($tagType, $writable, $genericArrayType);
+
+            $arrayShapeBuilder->setOffsetValueType(new ConstantStringType($name), $valueType, $optional);
+        }
+
+        return $arrayShapeBuilder->getArray();
+    }
+
+    /**
+     * Resolves the batch query result returned by {@see ActiveQuery::batch()} or {@see ActiveQuery::each()} when
+     * PHPStan's own answer is `never`.
+     *
+     * A query type inferred by {@see ActiveRecordQueryDynamicStaticMethodReturnTypeExtension} intersects a custom query
+     * class with `ActiveQuery<Model>`, and PHPStan intersects the two invariant `BatchQueryResult` return types into
+     * `never`. The method is then resolved on `ActiveQuery<T>` with the receiver's `T`, which yields the same result as
+     * on a query generic over the model. Any other answer is kept.
+     *
+     * @param MethodReflection $methodReflection Reflection of the called `batch()` or `each()` method.
+     * @param MethodCall $methodCall Method call whose receiver provides the row type.
+     * @param Scope $scope Current PHPStan analysis scope.
+     *
+     * @return Type|null Batch query result type, or `null` to keep PHPStan's answer.
+     */
+    private function createBatchQueryResultType(
+        MethodReflection $methodReflection,
+        MethodCall $methodCall,
+        Scope $scope,
+    ): Type|null {
+        $args = $methodCall->getArgs();
+
+        $neverType = new NeverType();
+
+        $returnType = ParametersAcceptorSelector::selectFromArgs(
+            $scope,
+            $args,
+            $methodReflection->getVariants(),
+        )->getReturnType();
+
+        if ($neverType->isSuperTypeOf($returnType)->yes() === false) {
+            return null;
+        }
+
+        $rowType = TypeCombinator::removeNull($scope->getType($methodCall->var))
+            ->getTemplateType(ActiveQuery::class, 'T');
+
+        if ($neverType->isSuperTypeOf($rowType)->yes()) {
+            return null;
+        }
+
+        return $this->resolveReturnType(
+            new GenericObjectType(ActiveQuery::class, [$rowType]),
+            $methodReflection->getName(),
+            $methodCall,
+            $scope,
+        );
+    }
+
+    /**
+     * Returns the receiver's query class with `T` replaced by the given row type.
+     *
+     * The receiver is returned unchanged when its `T` already equals `$rowType`. A query class with a single template
+     * parameter is parameterized with `$rowType` when that parameter resolves to `T`; otherwise (for example, a
+     * non-generic subclass of `ActiveQuery<Model>`), the result is `ActiveQuery<$rowType>`.
+     *
+     * @param Type $calledOnType Type of the query on which `asArray()` is called.
+     * @param Type $rowType Row type that the resulting query yields.
+     *
+     * @return Type Query type yielding `$rowType` rows.
+     */
+    private function createQueryType(Type $calledOnType, Type $rowType): Type
+    {
+        if ($calledOnType->getTemplateType(ActiveQuery::class, 'T')->equals($rowType)) {
             return $calledOnType;
         }
 
-        if ($modelType::class !== MixedType::class) {
-            return new GenericObjectType(ActiveQuery::class, [$modelType]);
+        $queryClassNames = $calledOnType->getObjectClassNames();
+
+        if (count($queryClassNames) === 1 && $this->reflectionProvider->hasClass($queryClassNames[0])) {
+            $queryReflection = $this->reflectionProvider->getClass($queryClassNames[0]);
+
+            if (count($queryReflection->getTemplateTags()) === 1) {
+                $queryType = new GenericObjectType($queryReflection->getName(), [$rowType]);
+
+                if ($queryType->getTemplateType(ActiveQuery::class, 'T')->equals($rowType)) {
+                    return $queryType;
+                }
+            }
         }
 
-        return $calledOnType;
+        return new GenericObjectType(ActiveQuery::class, [$rowType]);
+    }
+
+    /**
+     * Returns the row value type of a `@property` tag and whether its row key is optional.
+     *
+     * A type that, ignoring `null`, is certainly an {@see ActiveRecordInterface} is read as a to-one relation and
+     * yields `$relatedRowType` or `null`; an iterable whose value type, ignoring `null`, is certainly one is read as a
+     * to-many relation and yields an array of `$relatedRowType`, which `indexBy()` may key by any value. Both keys are
+     * optional, because a relation is present only when it is eager-loaded. Any other tag keeps its type, and its key
+     * is optional only when the tag is read-only.
+     *
+     * @param Type $tagType Readable type of the tag.
+     * @param bool $writable Whether the tag is writable, that is, declared with `@property` rather than its `-read`
+     * variant.
+     * @param Type $relatedRowType Type of a single related row.
+     *
+     * @return array{Type, bool} Row value type, and `true` when the row key is optional.
+     */
+    private function createRowValueType(Type $tagType, bool $writable, Type $relatedRowType): array
+    {
+        $type = TypeCombinator::removeNull($tagType);
+
+        if (
+            $type->isIterable()->yes()
+            && $this->isActiveRecordType(TypeCombinator::removeNull($type->getIterableValueType()))
+        ) {
+            return [new ArrayType(new MixedType(), $relatedRowType), true];
+        }
+
+        if ($this->isActiveRecordType($type)) {
+            return [TypeCombinator::addNull($relatedRowType), true];
+        }
+
+        return [$tagType, $writable === false];
+    }
+
+    /**
+     * Derives the model class from the nearest `one()` and `all()` declarations of a non-generic query class.
+     *
+     * Declarations inherited from {@see ActiveQuery} or its parents are skipped. The return type of `one()` names its
+     * object classes, ignoring arrays and `null`; the return type of `all()` names the object classes of its array
+     * values. A named Active Record subclass is a candidate, {@see ActiveRecord} and its parents are ignored as the
+     * types that Yii's unbound `T` yields, and any other class prevents the derivation.
+     *
+     * @param string $queryClassName Name of the query class to read the declarations from.
+     *
+     * @return string|null Name of the single candidate model class, or `null` when the query class is unknown,
+     * generic, or not an {@see ActiveQuery} subclass, or when its declarations name no candidate, several candidates,
+     * or another class.
+     */
+    private function deriveModelClassName(string $queryClassName): string|null
+    {
+        if ($this->reflectionProvider->hasClass($queryClassName) === false) {
+            return null;
+        }
+
+        $queryReflection = $this->reflectionProvider->getClass($queryClassName);
+        $activeQueryReflection = $this->reflectionProvider->getClass(ActiveQuery::class);
+
+        if ($queryReflection->isGeneric() || $queryReflection->isSubclassOfClass($activeQueryReflection) === false) {
+            return null;
+        }
+
+        $activeRecordReflection = $this->reflectionProvider->getClass(ActiveRecord::class);
+        $modelClassNames = [];
+
+        foreach (['all', 'one'] as $methodName) {
+            if ($queryReflection->hasNativeMethod($methodName) === false) {
+                continue;
+            }
+
+            $methodReflection = $queryReflection->getNativeMethod($methodName);
+
+            if ($methodReflection->getDeclaringClass()->isSubclassOfClass($activeQueryReflection) === false) {
+                continue;
+            }
+
+            foreach ($methodReflection->getVariants() as $variant) {
+                foreach ($this->getReturnedClassNames($methodName, $variant->getReturnType()) as $className) {
+                    if ($this->reflectionProvider->hasClass($className) === false) {
+                        return null;
+                    }
+
+                    $classReflection = $this->reflectionProvider->getClass($className);
+
+                    if ($classReflection->isSubclassOfClass($activeRecordReflection)) {
+                        $modelClassNames[$classReflection->getName()] = true;
+                    } elseif (
+                        $classReflection->getName() !== ActiveRecord::class
+                        && $activeRecordReflection->isSubclassOfClass($classReflection) === false
+                    ) {
+                        return null;
+                    }
+                }
+            }
+        }
+
+        return count($modelClassNames) === 1 ? array_key_first($modelClassNames) : null;
+    }
+
+    /**
+     * Returns the object class names that a `one()` or `all()` return type names.
+     *
+     * @param string $methodName Name of the declared method, `one` or `all`.
+     * @param Type $returnType Declared return type of the method.
+     *
+     * @return list<string> Object class names of the row type for `one()`, or of the array value types for `all()`.
+     */
+    private function getReturnedClassNames(string $methodName, Type $returnType): array
+    {
+        if ($methodName === 'one') {
+            return $this->getRowClassNames($returnType);
+        }
+
+        $classNames = [];
+
+        foreach (TypeCombinator::removeNull($returnType)->getArrays() as $arrayType) {
+            foreach ($this->getRowClassNames($arrayType->getIterableValueType()) as $className) {
+                $classNames[] = $className;
+            }
+        }
+
+        return $classNames;
+    }
+
+    /**
+     * Returns the object class names that a row type names once arrays and `null` are removed.
+     *
+     * @param Type $rowType Row type declared by `one()`, or array value type declared by `all()`.
+     *
+     * @return list<string> Object class names, or an empty list when the remaining type is not certainly an object.
+     */
+    private function getRowClassNames(Type $rowType): array
+    {
+        return TypeCombinator::remove(
+            TypeCombinator::removeNull($rowType),
+            new ArrayType(new MixedType(), new MixedType()),
+        )->getObjectClassNames();
+    }
+
+    /**
+     * Returns whether the type is certainly an {@see ActiveRecordInterface} object.
+     *
+     * The {@see Type::isObject()} check rejects the `never` type that remains of a `null`-only tag, which every type
+     * would otherwise accept as a subtype.
+     *
+     * @param Type $type Type to check, without `null`.
+     */
+    private function isActiveRecordType(Type $type): bool
+    {
+        return $type->isObject()->yes() && (new ObjectType(ActiveRecordInterface::class))->isSuperTypeOf($type)->yes();
+    }
+
+    /**
+     * Returns the model type derived from the receiver's query class, when the receiver's `T` names no model.
+     *
+     * The receiver must be a single class other than {@see ActiveQuery} itself, so that a bound query, a union, and the
+     * intersection inferred by {@see ActiveRecordQueryDynamicStaticMethodReturnTypeExtension} keep their own answer.
+     * The derivation is cached per query class; the dependency on the derived model is recorded on every call, because
+     * the receiver names the model only in the query class PHPDoc.
+     *
+     * @param Type $calledOnType Receiver type without `null`.
+     * @param Scope&DependencyTracker $scope Scope recording a dependency on the derived model class.
+     *
+     * @return ObjectType|null Derived model type, or `null` when no model is derived.
+     */
+    private function resolveDerivedModelType(Type $calledOnType, Scope $scope): ObjectType|null
+    {
+        $queryClassNames = $calledOnType->getObjectClassNames();
+
+        if (count($queryClassNames) !== 1 || strtolower($queryClassNames[0]) === strtolower(ActiveQuery::class)) {
+            return null;
+        }
+
+        $unboundType = $calledOnType->getTemplateType(ActiveQuery::class, 'T');
+
+        if ($unboundType->isSuperTypeOf(new ObjectType(ActiveRecord::class))->yes() === false) {
+            return null;
+        }
+
+        $cacheKey = strtolower($queryClassNames[0]);
+
+        if (array_key_exists($cacheKey, $this->derivedModelClassNames) === false) {
+            $this->derivedModelClassNames[$cacheKey] = $this->deriveModelClassName($queryClassNames[0]);
+        }
+
+        $modelClassName = $this->derivedModelClassNames[$cacheKey];
+
+        if ($modelClassName === null) {
+            return null;
+        }
+
+        $scope->trackClassDependency($modelClassName);
+
+        return new ObjectType($modelClassName);
+    }
+
+    /**
+     * Returns the return type of a method called with the given arguments on a query type.
+     *
+     * @param Type $queryType Query type on which the method is resolved.
+     * @param string $methodName Name of the called method.
+     * @param MethodCall $methodCall Method call providing the arguments.
+     * @param Scope $scope Current PHPStan analysis scope.
+     *
+     * @return Type|null Return type of the method, or `null` when the query type has no such method.
+     */
+    private function resolveReturnType(
+        Type $queryType,
+        string $methodName,
+        MethodCall $methodCall,
+        Scope $scope,
+    ): Type|null {
+        $methodReflection = $scope->getMethodReflection($queryType, $methodName);
+
+        if ($methodReflection === null) {
+            return null;
+        }
+
+        return ParametersAcceptorSelector::selectFromArgs(
+            $scope,
+            $methodCall->getArgs(),
+            $methodReflection->getVariants(),
+        )->getReturnType();
     }
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 use RuntimeException;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\support\stub\{MyActiveRecord, User};
@@ -26,9 +25,6 @@ final class ServiceMapComponentTest extends TestCase
      */
     private const BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnComponentClassWhenCustomComponentValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -36,13 +32,10 @@ final class ServiceMapComponentTest extends TestCase
         self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getComponentClassById('customComponent'),
-            'ServiceMap should resolve component id \'customComponent\' to \'MyActiveRecord::class\'.',
+            "ServiceMap should resolve component id 'customComponent' to 'MyActiveRecord::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnComponentClassWhenCustomInitializedComponentValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -50,27 +43,10 @@ final class ServiceMapComponentTest extends TestCase
         self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getComponentClassById('customInitializedComponent'),
-            'ServiceMap should resolve component id \'customInitializedComponent\' to \'MyActiveRecord::class\'.',
+            "ServiceMap should resolve component id 'customInitializedComponent' to 'MyActiveRecord::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
-    public function testReturnComponentDefinitionWhenClassNameValid(): void
-    {
-        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
-
-        self::assertSame(
-            ['identityClass' => 'yii2\extensions\phpstan\tests\support\stub\User'],
-            $serviceMap->getComponentDefinitionByClassName('yii\web\User'),
-            'ServiceMap should return the component definition for \'yii\web\User\'.',
-        );
-    }
-
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnComponentDefinitionWhenUserIdValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -78,26 +54,10 @@ final class ServiceMapComponentTest extends TestCase
         self::assertSame(
             ['identityClass' => User::class],
             $serviceMap->getComponentDefinitionById('user'),
-            'ServiceMap should return the component definition for \'user\'.',
+            "ServiceMap should return the component definition for 'user'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
-    public function testReturnNullWhenComponentClassNonExistent(): void
-    {
-        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
-
-        self::assertNull(
-            $serviceMap->getComponentDefinitionByClassName('nonExistentComponent'),
-            'ServiceMap should return \'null\' for a \'nonExistentComponent\' class.',
-        );
-    }
-
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnNullWhenComponentIdNonExistent(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -105,43 +65,48 @@ final class ServiceMapComponentTest extends TestCase
         self::assertSame(
             [],
             $serviceMap->getComponentDefinitionById('nonExistentComponent'),
-            'ServiceMap should return an empty array for a \'nonExistentComponent\' id.',
+            "ServiceMap should return an empty array for a 'nonExistentComponent' id.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnNullWhenComponentIdNotClass(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertNull(
             $serviceMap->getComponentClassById('assetManager'),
-            'ServiceMap should return \'null\' for \'assetManager\' component id as it is not a class but an array.',
+            "ServiceMap should return 'null' for 'assetManager' component id as it is not a class but an array.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenComponentIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Component\': \'ID\' must be a \'string\', got \'integer\'.');
+        $this->expectExceptionMessage(
+            "'Component': 'ID' must be a 'string', got 'integer'.",
+        );
 
         new ServiceMap(self::BASE_PATH . 'components-unsupported-id-not-string.php');
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
+    public function testThrowRuntimeExceptionWhenComponentNotArray(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Unsupported definition for 'unsupported-type-integer'.",
+        );
+
+        new ServiceMap(self::BASE_PATH . 'components-unsupported-type-integer.php');
+    }
+
     public function testThrowRuntimeExceptionWhenComponentsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'components-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'components' 'array'.");
+        $this->expectExceptionMessage(
+            "Configuration file '{$configPath}' must contain a valid 'components' 'array'.",
+        );
 
         new ServiceMap($configPath);
     }

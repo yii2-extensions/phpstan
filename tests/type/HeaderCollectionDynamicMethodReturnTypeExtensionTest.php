@@ -9,15 +9,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use yii\web\HeaderCollection;
 
 /**
- * Test suite for type inference of dynamic method return types in {@see HeaderCollection} for Yii component scenarios.
- *
- * Validates that PHPStan correctly infers types for dynamic HeaderCollection method calls and result sets in custom
- * {@see HeaderCollection} usage, using fixture-based assertions for header retrieval, value resolution, and
- * return type inference.
- *
- * The test class loads type assertions from a fixture file and delegates checks to the parent
- * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see HeaderCollection} dynamic method return types
- * is robust and consistent with expected behavior.
+ * Tests that {@see HeaderCollection::get()} drops `null` from the return type declared by Yii when the `$default`
+ * argument cannot be `null`.
  */
 final class HeaderCollectionDynamicMethodReturnTypeExtensionTest extends TypeInferenceTestCase
 {

@@ -6,6 +6,7 @@ return [
     'container' => [
         'singletons' => [
             'unsupported-empty-array' => [],
+            'service' => ['class' => SplObjectStorage::class],
         ],
     ],
 ];

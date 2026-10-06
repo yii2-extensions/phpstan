@@ -1,4 +1,7 @@
 parameters:
+    stubFiles:
+        - stubs/yii.stub
+
     dynamicConstantNames:
         - YII_DEBUG
         - YII_ENV
@@ -35,14 +38,14 @@ services:
         class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
     -
-        class: yii2\extensions\phpstan\type\ActiveRecordDynamicMethodReturnTypeExtension
-        tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
-    -
-        class: yii2\extensions\phpstan\type\ActiveRecordDynamicStaticMethodReturnTypeExtension
-        tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
-    -
         class: yii2\extensions\phpstan\type\ActiveRecordGetAttributeDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
+    -
+        class: yii2\extensions\phpstan\type\ActiveRecordQueryDynamicStaticMethodReturnTypeExtension
+        tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
+    -
+        class: yii2\extensions\phpstan\type\ApplicationTypeNodeResolverExtension
+        tags: [phpstan.phpDoc.typeNodeResolverExtension]
     -
         class: yii2\extensions\phpstan\type\ContainerDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]
@@ -59,8 +62,10 @@ services:
         class: yii2\extensions\phpstan\type\TargetFilterMessagesDynamicStaticMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicStaticMethodReturnTypeExtension]
     -
-        class: yii2\extensions\phpstan\StubFilesExtension
-        tags:
-            - phpstan.stubFilesExtension
+        class: yii2\extensions\phpstan\ServiceMapResultCacheValueExtension
+        tags: [phpstan.resultCacheValueExtension]
+        arguments:
+            genericComponents: %yii2.component_generics%
 
+    - yii2\extensions\phpstan\PropertyTagTypeResolver
     - yii2\extensions\phpstan\ServiceMap(%yii2.config_path%)

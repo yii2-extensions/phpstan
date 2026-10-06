@@ -4,14 +4,15 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests;
 
+use PHPUnit\Framework\Attributes\{DataProviderExternal, RequiresOperatingSystem};
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 use RuntimeException;
 use SplFileInfo;
 use SplObjectStorage;
 use SplStack;
 use yii\base\InvalidArgumentException;
 use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\tests\provider\ServiceMapServiceProvider;
 use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
 
 use function file_put_contents;
@@ -24,10 +25,12 @@ use function unlink;
  * Test suite for {@see ServiceMap} service resolution and container definition behavior.
  *
  * Validates correct mapping and retrieval of service classes and definitions from configuration files, ensuring robust
- * error handling for invalid or unsupported service structures.
+ * error handling for invalid service structures.
  *
- * The tests cover scenarios including valid and invalid service IDs, class resolution, definition extraction, and
- * exception handling for misconfigured or malformed service arrays.
+ * The tests cover scenarios including valid and invalid service IDs, class resolution, definitions whose class can't
+ * be determined being skipped, and exception handling for malformed configuration sections and scalar definitions.
+ *
+ * {@see ServiceMapServiceProvider} for test case data providers.
  */
 final class ServiceMapServiceTest extends TestCase
 {
@@ -50,9 +53,6 @@ final class ServiceMapServiceTest extends TestCase
         new ServiceMap('');
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testAllowServiceMapWhenContainerEmpty(): void
     {
         $this->expectNotToPerformAssertions();
@@ -60,22 +60,16 @@ final class ServiceMapServiceTest extends TestCase
         new ServiceMap(self::BASE_PATH . 'config-container-empty.php');
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnNullWhenServiceNonExistent(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
 
         self::assertNull(
             $serviceMap->getServiceById('non-existent-service'),
-            'ServiceMap should return \'null\' for a non-existent service.',
+            "ServiceMap should return 'null' for a non-existent service.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenClosureValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -83,13 +77,10 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             SplStack::class,
             $serviceMap->getServiceById('closure'),
-            'ServiceMap should resolve \'closure\' to \'SplStack::class\'.',
+            "ServiceMap should resolve 'closure' to 'SplStack::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenNestedValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -97,13 +88,10 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             SplFileInfo::class,
             $serviceMap->getServiceById('nested-service-class'),
-            'ServiceMap should resolve \'nested-service-class\' to \'SplFileInfo::class\'.',
+            "ServiceMap should resolve 'nested-service-class' to 'SplFileInfo::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenServiceValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -111,13 +99,10 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             SplObjectStorage::class,
             $serviceMap->getServiceById('service'),
-            'ServiceMap should resolve \'service\' to \'SplObjectStorage::class\'.',
+            "ServiceMap should resolve 'service' to 'SplObjectStorage::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenSingletonClassNameValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -125,13 +110,10 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getServiceById(MyActiveRecord::class),
-            'ServiceMap should resolve \'MyActiveRecord::class\' as a singleton \'string\' service.',
+            "ServiceMap should resolve 'MyActiveRecord::class' as a singleton 'string' service.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenSingletonClosureValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -139,13 +121,10 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             SplStack::class,
             $serviceMap->getServiceById('singleton-closure'),
-            'ServiceMap should resolve \'singleton-closure\' to \'SplStack::class\'.',
+            "ServiceMap should resolve 'singleton-closure' to 'SplStack::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenSingletonNestedValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -153,13 +132,10 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             SplFileInfo::class,
             $serviceMap->getServiceById('singleton-nested-service-class'),
-            'ServiceMap should resolve \'singleton-nested-service-class\' to \'SplFileInfo::class\'.',
+            "ServiceMap should resolve 'singleton-nested-service-class' to 'SplFileInfo::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenSingletonServiceValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -167,13 +143,10 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             SplObjectStorage::class,
             $serviceMap->getServiceById('singleton-service'),
-            'ServiceMap should resolve \'singleton-service\' to \'SplObjectStorage::class\'.',
+            "ServiceMap should resolve 'singleton-service' to 'SplObjectStorage::class'.",
         );
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testReturnServiceClassWhenSingletonStringValid(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -181,33 +154,49 @@ final class ServiceMapServiceTest extends TestCase
         self::assertSame(
             MyActiveRecord::class,
             $serviceMap->getServiceById('singleton-string'),
-            'ServiceMap should resolve \'singleton-string\' to \'MyActiveRecord::class\'.',
+            "ServiceMap should resolve 'singleton-string' to 'MyActiveRecord::class'.",
+        );
+    }
+
+    #[DataProviderExternal(ServiceMapServiceProvider::class, 'unresolvableConfigProvider')]
+    public function testSkipServiceWhenClassUnresolvable(string $configFile, string $id): void
+    {
+        $serviceMap = new ServiceMap(self::BASE_PATH . $configFile);
+
+        self::assertNull(
+            $serviceMap->getServiceById($id),
+            'Unresolvable service must be unknown.',
+        );
+        self::assertSame(
+            SplObjectStorage::class,
+            $serviceMap->getServiceById('service'),
+            'Remaining services must still be registered.',
         );
     }
 
     public function testThrowInvalidArgumentExceptionWhenConfigPathInvalid(): void
     {
         $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage("Provided config path 'invalid-path' must be a readable PHP file.");
+        $this->expectExceptionMessage(
+            "Provided config path 'invalid-path' must be a readable PHP file.",
+        );
 
         new ServiceMap('invalid-path');
     }
 
+    #[RequiresOperatingSystem('Linux|Darwin')]
     public function testThrowInvalidArgumentExceptionWhenConfigPathIsSymlinkToNonPhpFile(): void
     {
         $target = tempnam(sys_get_temp_dir(), 'phpstan-config-');
 
-        self::assertNotFalse($target, 'Temporary target file must be created.');
+        self::assertNotFalse(
+            $target,
+            'Temporary target file must be created.',
+        );
 
         file_put_contents($target, "secret-credentials\n");
 
         $symlink = $target . '.php';
-
-        if (DIRECTORY_SEPARATOR === '\\') {
-            unlink($target);
-
-            self::markTestSkipped('Symlinks are not reliably supported on Windows.');
-        }
 
         self::assertTrue(
             symlink($target, $symlink),
@@ -216,7 +205,9 @@ final class ServiceMapServiceTest extends TestCase
 
         try {
             $this->expectException(InvalidArgumentException::class);
-            $this->expectExceptionMessage("Provided config path '{$symlink}' must be a readable PHP file.");
+            $this->expectExceptionMessage(
+                "Provided config path '{$symlink}' must be a readable PHP file.",
+            );
 
             new ServiceMap($symlink);
         } finally {
@@ -225,22 +216,18 @@ final class ServiceMapServiceTest extends TestCase
         }
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenConfigNotArray(): void
     {
         $configPath = self::BASE_PATH . 'config-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$configPath}' must return an array.");
+        $this->expectExceptionMessage(
+            "Configuration file '{$configPath}' must return an array.",
+        );
 
         new ServiceMap($configPath);
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenContainerDefinitionsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'definitions-unsupported-is-not-array.php';
@@ -253,22 +240,18 @@ final class ServiceMapServiceTest extends TestCase
         new ServiceMap($configPath);
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenContainerNotArray(): void
     {
         $configPath = self::BASE_PATH . 'config-container-unsupported-type-array-invalid.php';
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'container' 'array'.");
+        $this->expectExceptionMessage(
+            "Configuration file '{$configPath}' must contain a valid 'container' 'array'.",
+        );
 
         new ServiceMap($configPath);
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenContainerSingletonsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'singletons-unsupported-is-not-array.php';
@@ -281,102 +264,43 @@ final class ServiceMapServiceTest extends TestCase
         new ServiceMap($configPath);
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenDefinitionArrayInvalid(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
-
-        new ServiceMap(self::BASE_PATH . 'definitions-unsupported-type-array-invalid.php');
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenDefinitionClosureMissingReturnType(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
-
-        new ServiceMap(self::BASE_PATH . 'definitions-closure-not-return-type.php');
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenDefinitionEmptyArray(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
-
-        new ServiceMap(self::BASE_PATH . 'definitions-unsupported-empty-array.php');
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenDefinitionIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Definition\': \'ID\' must be a \'string\', got \'integer\'.');
+        $this->expectExceptionMessage(
+            "'Definition': 'ID' must be a 'string', got 'integer'.",
+        );
 
         new ServiceMap(self::BASE_PATH . 'definitions-unsupported-id-not-string.php');
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenDefinitionNotArray(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-type-integer\'.');
+        $this->expectExceptionMessage(
+            "Unsupported definition for 'unsupported-type-integer'.",
+        );
 
         new ServiceMap(self::BASE_PATH . 'definitions-unsupported-type-integer.php');
     }
 
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenSingletonArrayInvalid(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-array-invalid\'.');
-
-        new ServiceMap(self::BASE_PATH . 'singletons-unsupported-type-array-invalid.php');
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenSingletonClosureMissingReturnType(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Please provide return type for \'closure-not-return-type\' service closure.');
-
-        new ServiceMap(self::BASE_PATH . 'singletons-closure-not-return-type.php');
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
-    public function testThrowRuntimeExceptionWhenSingletonEmptyArray(): void
-    {
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Unsupported definition for \'unsupported-empty-array\'.');
-
-        new ServiceMap(self::BASE_PATH . 'singletons-unsupported-empty-array.php');
-    }
-
-    /**
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenSingletonIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Singleton\': \'ID\' must be a \'string\', got \'integer\'.');
+        $this->expectExceptionMessage(
+            "'Singleton': 'ID' must be a 'string', got 'integer'.",
+        );
 
         new ServiceMap(self::BASE_PATH . 'singletons-unsupported-id-not-string.php');
+    }
+
+    public function testThrowRuntimeExceptionWhenSingletonNotArray(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            "Unsupported definition for 'unsupported-type-integer'.",
+        );
+
+        new ServiceMap(self::BASE_PATH . 'singletons-unsupported-type-integer.php');
     }
 }

@@ -1,0 +1,12 @@
+<?php
+
+// Declares the application classes that 'stubs/yii.stub' resolves to in this repository's own analysis. PHPStan
+// validates stub files outside the vendor directory against stub files only, so the classes must be known there.
+
+namespace yii\console {
+    class Application {}
+}
+
+namespace yii\web {
+    class Application {}
+}

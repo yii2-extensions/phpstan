@@ -102,19 +102,6 @@ final class ComponentPropertyReflection implements PropertyReflection
     }
 
     /**
-     * Retrieves the static analysis type for the dynamic Yii application component property.
-     *
-     * Returns the type as resolved by the service map or dependency injection, enabling accurate type inference for
-     * dynamic properties injected or registered at runtime.
-     *
-     * @return Type Actual type of the dynamic component property for static analysis.
-     */
-    public function getType(): Type
-    {
-        return $this->type;
-    }
-
-    /**
      * Retrieves the writable type for the dynamic Yii application component property.
      *
      * Delegates the writable type resolution to the fallback {@see PropertyReflection} instance ensuring that the type

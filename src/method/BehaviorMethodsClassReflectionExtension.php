@@ -4,15 +4,13 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\method;
 
-use PHPStan\Analyser\OutOfClassScope;
-use PHPStan\Reflection\{
-    ClassReflection,
-    MethodReflection,
-    MethodsClassReflectionExtension,
-    ReflectionProvider,
-};
+use PHPStan\Analyser\{DeclarationDependencyTracker, OutOfClassScope};
+use PHPStan\Reflection\{ClassReflection, MethodReflection, MethodsClassReflectionExtension, ReflectionProvider};
+use PHPStan\ShouldNotHappenException;
 use yii\base\Component;
-use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
+
+use function sprintf;
 
 /**
  * Resolves methods provided by behaviors attached to {@see Component} subclasses for PHPStan analysis.
@@ -30,24 +28,24 @@ final class BehaviorMethodsClassReflectionExtension implements MethodsClassRefle
      *
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
+     * @param DeclarationDependencyTracker $dependencyTracker Records the configuration values each class declaration
+     * depends on.
      */
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
         private readonly ServiceMap $serviceMap,
+        private readonly DeclarationDependencyTracker $dependencyTracker,
     ) {}
 
     /**
-     * Retrieves the method reflection for a given method name, including those provided by attached behaviors.
+     * Retrieves the reflection of a method provided by a behavior attached to the given class.
      *
-     * Resolves the {@see MethodReflection} for the specified method name on the given class, searching first among
-     * methods provided by behaviors attached to the class. If the method is not found in any behavior, it delegates
-     * to the native {@see Component} method resolution.
-     *
-     * This enables PHPStan to recognize available methods from behaviors as if they were natively declared on the
-     * component class, supporting accurate static analysis and autocompletion.
+     * PHPStan calls this method only after {@see hasMethod()} returned `true` for the same class and method name.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $methodName Name of the method to resolve.
+     *
+     * @throws ShouldNotHappenException if no attached behavior provides the method.
      *
      * @return MethodReflection Reflection instance for the resolved method.
      */
@@ -55,7 +53,15 @@ final class BehaviorMethodsClassReflectionExtension implements MethodsClassRefle
     {
         $behaviorMethod = $this->findMethodInBehaviors($classReflection, $methodName);
 
-        assert($behaviorMethod !== null);
+        if ($behaviorMethod === null) {
+            throw new ShouldNotHappenException(
+                sprintf(
+                    'Method %s::%s() is not provided by any behavior attached to the class.',
+                    $classReflection->getName(),
+                    $methodName,
+                ),
+            );
+        }
 
         return $behaviorMethod;
     }
@@ -104,9 +110,17 @@ final class BehaviorMethodsClassReflectionExtension implements MethodsClassRefle
      */
     private function findMethodInBehaviors(ClassReflection $classReflection, string $methodName): MethodReflection|null
     {
+        $this->dependencyTracker->trackValueDependency(
+            $classReflection,
+            ServiceMapResultCacheValueExtension::class,
+            ServiceMapResultCacheValueExtension::behaviorsKey($classReflection->getName()),
+        );
+
         $behaviors = $this->serviceMap->getBehaviorsByClassName($classReflection->getName());
 
         foreach ($behaviors as $behaviorClass) {
+            $this->dependencyTracker->trackClassDependency($classReflection, $behaviorClass);
+
             if ($this->reflectionProvider->hasClass($behaviorClass)) {
                 $behaviorReflection = $this->reflectionProvider->getClass($behaviorClass);
 

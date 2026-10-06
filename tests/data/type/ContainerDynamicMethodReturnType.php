@@ -16,7 +16,8 @@ use function random_int;
  * Type assertion fixture for {@see Container::get()} return types in PHPStan analysis.
  *
  * Verifies type inference for container lookups, covering class-string and string identifiers, service definitions,
- * closures, singletons, nested services, parameterized instantiation, and the `mixed` fallback for unknown identifiers.
+ * closures, singletons, nested services, parameterized instantiation, named arguments, and the `object` type declared
+ * by Yii for unknown, non-constant, and union identifiers.
  */
 final class ContainerDynamicMethodReturnType
 {
@@ -47,6 +48,7 @@ final class ContainerDynamicMethodReturnType
     public function testReturnClassWhenGetByClassNameString(): void
     {
         $container = new Container();
+
         $className = 'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord';
 
         assertType(
@@ -59,13 +61,101 @@ final class ContainerDynamicMethodReturnType
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      * @throws NotInstantiableException if a class or service can't be instantiated.
      */
-    public function testReturnMixedWhenGetWithUnknownId(): void
+    public function testReturnClassWhenGetByNamedClassArgument(): void
     {
         $container = new Container();
 
         assertType(
-            'mixed',
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
+            $container->get(class: MyActiveRecord::class),
+        );
+        assertType(
+            'Exception',
+            $container->get(params: [], class: Exception::class),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnObjectWhenGetIdIsUnpacked(): void
+    {
+        $container = new Container();
+
+        assertType(
+            'object',
+            $container->get(...['service']),
+        );
+    }
+
+    public function testReturnObjectWhenGetWithNonConstantId(string $id): void
+    {
+        $container = new Container();
+
+        assertType(
+            'object',
+            $container->get($id),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnObjectWhenGetWithUnionOfServiceIds(bool $useService): void
+    {
+        $container = new Container();
+
+        assertType(
+            'object',
+            $container->get($useService ? 'service' : 'closure'),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnObjectWhenGetWithUnknownId(): void
+    {
+        $container = new Container();
+
+        assertType(
+            'object',
             $container->get('unknown-service'),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnServiceClassWhenGetParamsAreUnpacked(): void
+    {
+        $container = new Container();
+
+        assertType(
+            'SplObjectStorage',
+            $container->get('service', ...[[]]),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnServiceWhenGetByNamedArguments(): void
+    {
+        $container = new Container();
+
+        assertType(
+            'SplObjectStorage',
+            $container->get(class: 'service'),
+        );
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord',
+            $container->get(params: [], class: 'singleton-string'),
         );
     }
 
@@ -204,6 +294,7 @@ final class ContainerDynamicMethodReturnType
         $container = new Container();
 
         $useService = (bool) random_int(0, 1);
+
         $result = $useService ? $container->get('singleton-service') : $container->get('closure');
 
         assertType(

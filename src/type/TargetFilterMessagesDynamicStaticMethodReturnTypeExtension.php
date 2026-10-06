@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\type;
 
-use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\Scope;
 use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector};
@@ -31,28 +30,41 @@ final class TargetFilterMessagesDynamicStaticMethodReturnTypeExtension implement
     /**
      * Returns an array retaining the input message key and tuple types while allowing filtering to produce an empty
      * result or gaps in integer keys.
+     *
+     * An input array that is known to be empty is returned unchanged. A call with an unpacked argument keeps the return
+     * type declared by Yii.
      */
     public function getTypeFromStaticMethodCall(
         MethodReflection $methodReflection,
         StaticCall $methodCall,
         Scope $scope,
     ): Type {
+        $args = $methodCall->getArgs();
+
         $fallbackType = ParametersAcceptorSelector::selectFromArgs(
             $scope,
-            $methodCall->getArgs(),
+            $args,
             $methodReflection->getVariants(),
         )->getReturnType();
 
-        $argument = $methodCall->getRawArgs()[0] ?? null;
+        foreach ($args as $arg) {
+            if ($arg->unpack) {
+                return $fallbackType;
+            }
+        }
 
-        if (!$argument instanceof Arg) {
+        if (isset($args[0]) === false) {
             return $fallbackType;
         }
 
-        $messagesType = $scope->getType($argument->value);
+        $messagesType = $scope->getType($args[0]->value);
 
-        if (!$messagesType->isArray()->yes()) {
+        if ($messagesType->isArray()->yes() === false) {
             return $fallbackType;
+        }
+
+        if ($messagesType->isIterableAtLeastOnce()->no()) {
+            return $messagesType;
         }
 
         return new ArrayType(

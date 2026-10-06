@@ -9,15 +9,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use yii\di\Container;
 
 /**
- * Test suite for type inference of dynamic method return types in {@see Container} for Yii DI scenarios.
- *
- * Validates that PHPStan correctly infers types for dynamic container method calls and result sets in custom
- * {@see Container} usage, using fixture-based assertions for service resolution, dependency injection, and property
- * access.
- *
- * The test class loads type assertions from a fixture file and delegates checks to the parent
- * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see Container} dynamic method return types is
- * robust and consistent with expected behavior.
+ * Tests that {@see Container::get()} resolves configured service IDs and otherwise keeps Yii's declared return type.
  */
 final class ContainerDynamicMethodReturnTypeExtensionTest extends TypeInferenceTestCase
 {
