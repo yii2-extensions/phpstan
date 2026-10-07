@@ -7,17 +7,16 @@ namespace yii2\extensions\phpstan\tests\type;
 use PHPStan\Testing\TypeInferenceTestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use yii\db\ActiveQuery;
+use yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension;
 
 /**
- * Test suite for type inference of dynamic return types in {@see ActiveQuery} for Yii Active Record scenarios.
+ * Test suite for {@see ActiveQueryDynamicMethodReturnTypeExtension} inference of {@see ActiveQuery::asArray()} rows.
  *
- * Validates that PHPStan correctly infers types for dynamic query methods and result sets in custom {@see ActiveRecord}
- * implementations, using fixture-based assertions for chained query calls, array/object result scenarios, and property
- * access.
- *
- * The test class loads type assertions from a fixture file and delegates checks to the parent
- * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see ActiveQuery} dynamic return types is robust and
- * consistent with expected behavior.
+ * Validates that `asArray()` replaces the query's `T` with an array shape built from the model's `@property` tags,
+ * keeps the model for `false`, and unions both for a non-constant argument. Generic custom query classes are kept,
+ * while non-generic ones fall back to {@see ActiveQuery} once rows become arrays; `one()`, `all()`, and fluent methods
+ * resolve through Yii's native generic PHPDoc, or through the model derived from the `one()` and `all()` overrides of
+ * a non-generic query class whose `T` names no model.
  */
 final class ActiveQueryDynamicReturnTypeExtensionTest extends TypeInferenceTestCase
 {
@@ -30,6 +29,12 @@ final class ActiveQueryDynamicReturnTypeExtensionTest extends TypeInferenceTestC
 
         yield from self::gatherAssertTypes(
             "{$directory}/data/type/ActiveQueryDynamicMethodReturnType.php",
+        );
+        yield from self::gatherAssertTypes(
+            "{$directory}/data/type/ActiveQueryDerivedModelReturnType.php",
+        );
+        yield from self::gatherAssertTypes(
+            "{$directory}/data/type/ActiveQueryDerivedModelEdgeType.php",
         );
     }
 

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 use RuntimeException;
 use yii2\extensions\phpstan\ServiceMap;
 
@@ -22,9 +21,6 @@ final class ServiceMapParamsTest extends TestCase
      */
     private const BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnEmptyParamsWhenConfigHasNoParams(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-console-config.php');
@@ -36,9 +32,6 @@ final class ServiceMapParamsTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnNumericKeyedParamsFromConfig(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'params-numeric-keys-config.php');
@@ -55,9 +48,6 @@ final class ServiceMapParamsTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnParamsFromConfig(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'params-config.php');
@@ -80,9 +70,6 @@ final class ServiceMapParamsTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenParamsIsNull(): void
     {
         $configPath = self::BASE_PATH . 'params-unsupported-is-null.php';
@@ -95,9 +82,6 @@ final class ServiceMapParamsTest extends TestCase
         new ServiceMap($configPath);
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenParamsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'params-unsupported-is-not-array.php';

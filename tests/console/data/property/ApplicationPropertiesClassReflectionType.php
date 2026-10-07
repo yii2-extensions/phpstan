@@ -13,7 +13,7 @@ use yii\log\Dispatcher;
 use yii\mail\MailerInterface;
 use yii\web\{AssetManager, UrlManager};
 
-use function PHPStan\Testing\assertType;
+use function PHPStan\Testing\{assertSuperType, assertType};
 
 /**
  * Type assertion fixture for {@see Application} property reflection via `Yii::$app` in PHPStan analysis.
@@ -50,7 +50,9 @@ final class ApplicationPropertiesClassReflectionType
 
     public function testReturnControllerFromProperty(): void
     {
-        assertType('yii\console\Controller|null', Yii::$app->controller);
+        // Yii 2.0.54 describes the generic controller as `Controller<yii\base\Module>`, later versions omit the default
+        assertSuperType('yii\console\Controller|null', Yii::$app->controller);
+        assertType('bool', Yii::$app->controller === null);
     }
 
     public function testReturnDbFromComponent(): void

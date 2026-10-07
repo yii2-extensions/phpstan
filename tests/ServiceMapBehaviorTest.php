@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\TestCase;
-use ReflectionException;
 use RuntimeException;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\support\stub\{BehaviorOne, BehaviorTwo, MyComponent};
@@ -26,9 +25,6 @@ final class ServiceMapBehaviorTest extends TestCase
      */
     private const BASE_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR;
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnBehaviorsWhenValidClassIsClassString(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -45,9 +41,6 @@ final class ServiceMapBehaviorTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnBehaviorsWhenValidClassIsString(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -64,9 +57,6 @@ final class ServiceMapBehaviorTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnEmptyArrayWhenClassHasNotBehaviors(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -80,9 +70,6 @@ final class ServiceMapBehaviorTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testReturnEmptyArrayWhenNotBehaviorsConfigured(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -96,37 +83,34 @@ final class ServiceMapBehaviorTest extends TestCase
         );
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenBehaviorDefinitionNotArray(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Behavior definition for \'MyComponent\' must be an array.');
+        $this->expectExceptionMessage(
+            "Behavior definition for 'MyComponent' must be an array.",
+        );
 
         new ServiceMap(self::BASE_PATH . 'behaviors-unsupported-definition-not-array.php');
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenBehaviorIdNotString(): void
     {
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('\'Behavior class\': \'ID\' must be a \'string\', got \'integer\'.');
+        $this->expectExceptionMessage(
+            "'Behavior class': 'ID' must be a 'string', got 'integer'.",
+        );
 
         new ServiceMap(self::BASE_PATH . 'behaviors-unsupported-id-not-string.php');
     }
 
-    /**
-     * @throws ReflectionException if the component definition is invalid or can't be resolved.
-     */
     public function testThrowRuntimeExceptionWhenBehaviorsNotArray(): void
     {
         $configPath = self::BASE_PATH . 'behaviors-unsupported-is-not-array.php';
 
         $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage("Configuration file '{$configPath}' must contain a valid 'behaviors' 'array'.");
+        $this->expectExceptionMessage(
+            "Configuration file '{$configPath}' must contain a valid 'behaviors' 'array'.",
+        );
 
         new ServiceMap($configPath);
     }

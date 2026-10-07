@@ -1,11 +1,15 @@
 includes:
     - extension.neon
     - phar://phpstan.phar/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
     - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
     bootstrapFiles:
         - tests/support/bootstrap.php
+
+    stubFiles:
+        - tests/support/application-classes.stub
 
     ignoreErrors:
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'
@@ -20,7 +24,7 @@ parameters:
     tmpDir: %currentWorkingDirectory%/runtime
 
     yii2:
-        config_path: tests/config/phpstan-console-config.php
+        config_path: tests/config/phpstan-console-analysis-config.php
 
     # Enable strict advanced checks
     checkImplicitMixed: true

@@ -9,15 +9,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use yii\di\ServiceLocator;
 
 /**
- * Test suite for type inference of dynamic method return types in {@see ServiceLocator} for Yii component scenarios.
- *
- * Validates that PHPStan correctly infers types for dynamic ServiceLocator method calls and result sets in custom
- * {@see ServiceLocator} usage, using fixture-based assertions for component resolution, dependency injection, and
- * property access.
- *
- * The test class loads type assertions from a fixture file and delegates checks to the parent
- * {@see TypeInferenceTestCase}, ensuring that extension logic for {@see ServiceLocator} dynamic method return types is
- * robust and consistent with expected behavior.
+ * Tests that {@see ServiceLocator::get()} resolves component IDs, service IDs, and class names, with nullability
+ * following the `$throwException` conditional return type declared by Yii.
  */
 final class ServiceLocatorDynamicMethodReturnTypeExtensionTest extends TypeInferenceTestCase
 {

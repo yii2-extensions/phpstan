@@ -1,18 +1,49 @@
 includes:
     - extension.neon
     - phar://phpstan.phar/conf/bleedingEdge.neon
+    - vendor/phpstan/phpstan-deprecation-rules/rules.neon
     - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
     bootstrapFiles:
         - tests/support/bootstrap.php
 
+    stubFiles:
+        - tests/support/application-classes.stub
+
     excludePaths:
         analyse:
             - tests/console/
             - tests/custom/
+            - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
+            - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
+            - tests/data/type/ServiceMapDefinitionType.php
+            - tests/support/stub/DerivedModelBaseRecordQuery.php
+            - tests/support/stub/DerivedModelDocQuery.php
+            - tests/support/stub/DerivedModelFalseAllQuery.php
+            - tests/support/stub/DerivedModelFalseElementQuery.php
+            - tests/support/stub/DerivedModelFalseOneQuery.php
+            - tests/support/stub/DerivedModelNativeQuery.php
+            - tests/support/stub/DerivedModelNonRecordQuery.php
+            - tests/support/stub/DerivedModelNullElementQuery.php
+            - tests/support/stub/DerivedModelObjectAllQuery.php
+            - tests/support/stub/DerivedModelObjectOneQuery.php
+            - tests/support/stub/DerivedModelNullableAllQuery.php
+            - tests/support/stub/DerivedModelSplitQuery.php
+            - tests/support/stub/DerivedModelTwoModelQuery.php
+            - tests/support/stub/DerivedModelUntypedAllQuery.php
+            - tests/support/stub/Invoice.php
+            - tests/support/stub/InvoiceQuery.php
+            - tests/support/stub/Shipment.php
+            - tests/support/stub/ShipmentQuery.php
+            - tests/support/stub/Ticket.php
+            - tests/support/stub/Voucher.php
+            - tests/web/data/type/ApplicationParamsOwnParamsModule.php
+            - tests/web/data/type/ApplicationParamsType.php
+            - tests/web/data/type/ParamsAwkwardKeysType.php
 
     ignoreErrors:
+        - '#Accessing PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:class is not covered.+#'
         - '#Calling PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension\:\:(has|get)Property\(\) is not covered.+#'
         - '#Creating new PHPStan\\Reflection\\Dummy\\DummyPropertyReflection is not covered.+#'
 

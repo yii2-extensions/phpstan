@@ -1,0 +1,24 @@
+<?php
+
+// The PHPDoc types below are placeholders resolved from the Yii configuration by
+// yii2\extensions\phpstan\type\ApplicationTypeNodeResolverExtension.
+
+namespace yii {
+    class BaseYii
+    {
+        /**
+         * @var yii2-extensions-phpstan-application
+         */
+        public static $app;
+    }
+}
+
+namespace yii\base {
+    class Module
+    {
+        /**
+         * @var yii2-extensions-phpstan-params
+         */
+        public $params;
+    }
+}

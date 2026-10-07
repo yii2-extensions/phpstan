@@ -6,6 +6,7 @@ return [
     'container' => [
         'definitions' => [
             'unsupported-empty-array' => [],
+            'service' => ['class' => SplObjectStorage::class],
         ],
     ],
 ];

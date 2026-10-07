@@ -6,6 +6,7 @@ return [
     'container' => [
         'definitions' => [
             'closure-not-return-type' => static fn() => new ArrayObject(),
+            'service' => ['class' => SplObjectStorage::class],
         ],
     ],
 ];

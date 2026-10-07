@@ -10,8 +10,8 @@
         <rect class="box-bg" x="20" y="20" width="570" height="100" rx="6"/>
         <rect x="20" y="20" width="4" height="100" fill="#1f883d"/>
         <text class="title" x="40" y="50">ActiveRecord &amp; ActiveQuery Analysis</text>
-        <text class="content" x="40" y="78">Type inference &#8226; generic support</text>
-        <text class="content" x="40" y="98">Property resolution &#8226; relation methods</text>
+        <text class="content" x="40" y="78">asArray() row shapes &#8226; getAttribute() types</text>
+        <text class="content" x="40" y="98">Model inference for non-generic query classes</text>
     </g>
 
     <g>
@@ -42,7 +42,7 @@
         <rect class="box-bg" x="20" y="260" width="570" height="100" rx="6"/>
         <rect x="20" y="260" width="4" height="100" fill="#1f883d"/>
         <text class="title" x="40" y="290">Framework Integration</text>
-        <text class="content" x="40" y="318">Header collection types &#8226; stub files</text>
+        <text class="content" x="40" y="318">Header collection types &#8226; logger messages</text>
         <text class="content" x="40" y="338">Yii2 constants support</text>
     </g>
 

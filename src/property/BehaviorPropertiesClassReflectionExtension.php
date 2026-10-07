@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\property;
 
-use PHPStan\Analyser\OutOfClassScope;
-use PHPStan\Reflection\{
-    ClassReflection,
-    MissingPropertyFromReflectionException,
-    PropertiesClassReflectionExtension,
-    PropertyReflection,
-    ReflectionProvider,
-};
-use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
+use PHPStan\Analyser\{DeclarationDependencyTracker, OutOfClassScope};
+use PHPStan\Reflection\{ClassReflection, PropertiesClassReflectionExtension, PropertyReflection, ReflectionProvider};
+use PHPStan\ShouldNotHappenException;
 use yii\base\Component;
-use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
+
+use function sprintf;
 
 /**
  * Resolves properties provided by behaviors attached to {@see Component} subclasses for PHPStan analysis.
@@ -30,32 +26,26 @@ final class BehaviorPropertiesClassReflectionExtension implements PropertiesClas
     /**
      * Creates a new instance of the {@see BehaviorPropertiesClassReflectionExtension} class.
      *
-     * @param AnnotationsPropertiesClassReflectionExtension $annotationsProperties Extension for handling
-     * annotation-based properties.
      * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
+     * @param DeclarationDependencyTracker $dependencyTracker Records the configuration values each class declaration
+     * depends on.
      */
     public function __construct(
-        private readonly AnnotationsPropertiesClassReflectionExtension $annotationsProperties,
         private readonly ReflectionProvider $reflectionProvider,
         private readonly ServiceMap $serviceMap,
+        private readonly DeclarationDependencyTracker $dependencyTracker,
     ) {}
 
     /**
-     * Retrieves the property reflection for a given property name, including those provided by attached behaviors.
+     * Retrieves the reflection of a property provided by a behavior attached to the given class.
      *
-     * Resolves the {@see PropertyReflection} for the specified property name on the given class, searching first among
-     * properties provided by behaviors attached to the class. If the property is not found in any behavior, it
-     * delegates to the native property resolution of the class. If still not found, it falls back to annotation-based
-     * property resolution.
-     *
-     * This enables PHPStan to recognize available properties from behaviors as if they were natively declared on the
-     * component class, supporting accurate static analysis and autocompletion.
+     * PHPStan calls this method only after {@see hasProperty()} returned `true` for the same class and property name.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
      *
-     * @throws MissingPropertyFromReflectionException if the property can't be resolved from behaviors or annotations.
+     * @throws ShouldNotHappenException if no attached behavior provides the property.
      *
      * @return PropertyReflection Reflection instance for the resolved property.
      */
@@ -63,15 +53,17 @@ final class BehaviorPropertiesClassReflectionExtension implements PropertiesClas
     {
         $behaviorProperty = $this->findPropertyInBehaviors($classReflection, $propertyName);
 
-        if ($behaviorProperty !== null) {
-            return $behaviorProperty;
+        if ($behaviorProperty === null) {
+            throw new ShouldNotHappenException(
+                sprintf(
+                    'Property %s::$%s is not provided by any behavior attached to the class.',
+                    $classReflection->getName(),
+                    $propertyName,
+                ),
+            );
         }
 
-        if ($classReflection->hasNativeProperty($propertyName)) {
-            return $classReflection->getNativeProperty($propertyName);
-        }
-
-        return $this->annotationsProperties->getProperty($classReflection, $propertyName);
+        return $behaviorProperty;
     }
 
     /**
@@ -105,7 +97,9 @@ final class BehaviorPropertiesClassReflectionExtension implements PropertiesClas
     /**
      * Searches for a property provided by behaviors attached to the specified class.
      *
-     * Iterates over all behaviors attached to the given class and checks if any of them declare the requested property.
+     * Iterates over all behaviors attached to the given class and returns the first instance property with the
+     * requested name; static behavior properties are skipped, because Yii reads a behavior property as
+     * `$behavior->$name`.
      *
      * This enables property resolution for behaviors in PHPStan static analysis, allowing detection of
      * properties that aren't natively declared on the component class but are available via attached behaviors.
@@ -113,21 +107,29 @@ final class BehaviorPropertiesClassReflectionExtension implements PropertiesClas
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
      *
-     * @return PropertyReflection|null Reflection instance for the resolved property if found in a behavior; {@see null}
+     * @return PropertyReflection|null Reflection instance for the resolved property if found in a behavior; `null`
      * otherwise.
      */
     private function findPropertyInBehaviors(
         ClassReflection $classReflection,
         string $propertyName,
     ): PropertyReflection|null {
+        $this->dependencyTracker->trackValueDependency(
+            $classReflection,
+            ServiceMapResultCacheValueExtension::class,
+            ServiceMapResultCacheValueExtension::behaviorsKey($classReflection->getName()),
+        );
+
         $behaviors = $this->serviceMap->getBehaviorsByClassName($classReflection->getName());
 
         foreach ($behaviors as $behaviorClass) {
+            $this->dependencyTracker->trackClassDependency($classReflection, $behaviorClass);
+
             if ($this->reflectionProvider->hasClass($behaviorClass)) {
                 $behaviorReflection = $this->reflectionProvider->getClass($behaviorClass);
 
-                if ($behaviorReflection->hasProperty($propertyName)) {
-                    return $behaviorReflection->getProperty($propertyName, new OutOfClassScope());
+                if ($behaviorReflection->hasInstanceProperty($propertyName)) {
+                    return $behaviorReflection->getInstanceProperty($propertyName, new OutOfClassScope());
                 }
             }
         }

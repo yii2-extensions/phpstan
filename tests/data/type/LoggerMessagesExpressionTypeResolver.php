@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\data\type;
 
 use yii\log\{FileTarget, Logger, Target};
+use yii2\extensions\phpstan\tests\support\stub\MessageContainer;
 
-use function PHPStan\Testing\assertType;
+use function PHPStan\Testing\{assertSuperType, assertType};
 
 /**
  * Type assertion fixture for Yii logger message inference.
@@ -25,16 +26,56 @@ final class LoggerMessagesExpressionTypeResolver
         );
 
         foreach ($logger->messages as $message) {
-            assertType('array<mixed>|string|Throwable|yii\\log\\PsrMessage', $message[0]);
-            assertType('int', $message[1]);
-            assertType('string', $message[2]);
-            assertType('float', $message[3]);
+            assertSuperType(
+                'list<mixed>',
+                $message,
+            );
+            assertType(
+                'array<mixed>|string|Throwable|yii\\log\\PsrMessage',
+                $message[0],
+            );
+            assertType(
+                'int',
+                $message[1],
+            );
+            assertType(
+                'string',
+                $message[2],
+            );
+            assertType(
+                'float',
+                $message[3],
+            );
             assertType(
                 'list<array{file: string, line: int, function?: string, class?: class-string, type?: string}>',
                 $message[4],
             );
-            assertType('int|null', $message[5] ?? null);
+            assertType(
+                'int|null',
+                $message[5] ?? null,
+            );
         }
+    }
+
+    public function testTargetFilteringDefersToTheDeclaredTypeWhenArgumentIsUnpacked(): void
+    {
+        // the declared type follows the Yii PHPDoc; a resolved call would be `array{}`, making the comparison `true`
+        assertSuperType(
+            'array',
+            Target::filterMessages(...[[]]),
+        );
+        assertType(
+            'bool',
+            Target::filterMessages(...[[]]) === [],
+        );
+    }
+
+    public function testTargetFilteringKeepsAnEmptyMessageArray(): void
+    {
+        assertType(
+            'array{}',
+            Target::filterMessages([]),
+        );
     }
 
     public function testTargetMessagesAndFilteringPreserveTheTupleShape(): void
@@ -53,6 +94,13 @@ final class LoggerMessagesExpressionTypeResolver
             . '5?: int}>',
             Target::filterMessages($logger->messages),
         );
+
+        foreach ($target->messages as $message) {
+            assertSuperType(
+                'list<mixed>',
+                $message,
+            );
+        }
     }
 
     public function testUnrelatedExpressionsKeepTheirNativeTypes(): void
@@ -60,15 +108,13 @@ final class LoggerMessagesExpressionTypeResolver
         $logger = new Logger();
         $container = new MessageContainer();
 
-        assertType('int', $logger->flushInterval);
-        assertType('array<mixed>', $container->messages);
+        assertType(
+            'int',
+            $logger->flushInterval,
+        );
+        assertType(
+            'array<mixed>',
+            $container->messages,
+        );
     }
-}
-
-final class MessageContainer
-{
-    /**
-     * @var array<mixed>
-     */
-    public array $messages = [];
 }

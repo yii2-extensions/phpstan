@@ -14,9 +14,9 @@ use function PHPStan\Testing\assertType;
  *
  * Verifies type inference for {@see ActiveRecord::find()}, {@see ActiveRecord::findOne()},
  * {@see ActiveRecord::findAll()}, and {@see ActiveRecord::findBySql()} on custom {@see ActiveRecord} implementations,
- * covering chained calls and array versus object result scenarios.
+ * covering chained calls, `class-string` receivers, and array versus object result scenarios.
  */
-final class ActiveRecordDynamicStaticMethodReturnType
+final class ActiveRecordStaticMethodReturnType
 {
     public function testReturnCategoryArrayQueryWhenFindBySqlWithAsArray(): void
     {
@@ -109,7 +109,7 @@ final class ActiveRecordDynamicStaticMethodReturnType
     public function testReturnUserArrayWhenFindAllAfterChaining(): void
     {
         assertType(
-            'array<int, yii2\extensions\phpstan\tests\support\stub\User>',
+            'array<yii2\extensions\phpstan\tests\support\stub\User>',
             User::find()->where(['active' => 1])->orderBy('name ASC')->all(),
         );
     }
@@ -143,6 +143,25 @@ final class ActiveRecordDynamicStaticMethodReturnType
         assertType(
             'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
             User::findBySql('SELECT * FROM users')->andWhere(['active' => 1])->limit(10),
+        );
+    }
+
+    /**
+     * @param class-string<User> $modelClass
+     */
+    public function testReturnUserQueryWhenFindOnClassStringVariable(string $modelClass): void
+    {
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
+            $modelClass::find(),
+        );
+        assertType(
+            'yii2\extensions\phpstan\tests\support\stub\User|null',
+            $modelClass::findOne(1),
+        );
+        assertType(
+            'array{id: int, name: string, email: string}|null',
+            $modelClass::find()->asArray()->one(),
         );
     }
 

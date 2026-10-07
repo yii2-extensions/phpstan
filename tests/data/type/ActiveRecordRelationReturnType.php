@@ -13,10 +13,10 @@ use function PHPStan\Testing\assertType;
  * Type assertion fixture for {@see ActiveRecord} relation method return types in PHPStan analysis.
  *
  * Verifies type inference for {@see MyActiveRecord::hasMany()} and {@see MyActiveRecord::hasOne()} on custom
- * {@see ActiveRecord} implementations, covering chained calls, array versus object results, and both class-string and
- * string class names.
+ * {@see ActiveRecord} implementations, covering chained calls, array versus object results, literal and `class-string`
+ * class names, and conditional class arguments.
  */
-final class ActiveRecordDynamicMethodReturnType
+final class ActiveRecordRelationReturnType
 {
     public function testReturnCategoryArrayQueryWhenHasManyAsArray(): void
     {
@@ -33,7 +33,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'array<int, array{id: int, name: string, parent_id: int|null}>',
+            'array<array{id: int, name: string, parent_id: int|null}>',
             $model->hasMany(Category::class, ['parent_id' => 'id'])->asArray()->all(),
         );
     }
@@ -43,7 +43,7 @@ final class ActiveRecordDynamicMethodReturnType
         $model = new MyActiveRecord();
 
         assertType(
-            'array<int, yii2\extensions\phpstan\tests\support\stub\Category>',
+            'array<yii2\extensions\phpstan\tests\support\stub\Category>',
             $model->hasMany(Category::class, ['parent_id' => 'id'])->all(),
         );
     }
@@ -75,6 +75,21 @@ final class ActiveRecordDynamicMethodReturnType
         assertType(
             'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\Category>',
             $model->hasMany('yii2\extensions\phpstan\tests\support\stub\Category', ['user_id' => 'id']),
+        );
+    }
+
+    public function testReturnUnionQueryWhenHasOneWithConditionalClass(bool $flag): void
+    {
+        $model = new MyActiveRecord();
+        $query = $model->hasOne($flag ? User::class : Category::class, ['id' => 'user_id']);
+
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\Category|yii2\extensions\phpstan\tests\support\stub\User>',
+            $query,
+        );
+        assertType(
+            'yii\db\ActiveQuery<array<string, mixed>>',
+            $query->asArray(),
         );
     }
 
@@ -118,6 +133,23 @@ final class ActiveRecordDynamicMethodReturnType
                 ->hasOne(User::class, ['id' => 'user_id'])
                 ->where(['active' => 1])
                 ->andWhere(['status' => 'published']),
+        );
+    }
+
+    /**
+     * @param class-string<User> $class
+     */
+    public function testReturnUserQueryWhenHasOneWithClassStringParameter(string $class): void
+    {
+        $model = new MyActiveRecord();
+
+        assertType(
+            'yii\db\ActiveQuery<yii2\extensions\phpstan\tests\support\stub\User>',
+            $model->hasOne($class, ['id' => 'user_id']),
+        );
+        assertType(
+            'array{id: int, name: string, email: string}|null',
+            $model->hasOne($class, ['id' => 'user_id'])->asArray()->one(),
         );
     }
 

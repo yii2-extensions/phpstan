@@ -4,21 +4,23 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\type;
 
-use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
-use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector, ReflectionProvider};
-use PHPStan\Type\{DynamicMethodReturnTypeExtension, MixedType, ObjectType, Type};
+use PHPStan\Analyser\{DependencyTracker, Scope};
+use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector};
+use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, ObjectWithoutClassType, Type, TypeCombinator};
 use yii\di\ServiceLocator;
-use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
+
+use function count;
 
 /**
- * Infers return types for {@see ServiceLocator::get()} calls based on component ID and the {@see ServiceMap} in PHPStan
- * analysis.
+ * Resolves {@see ServiceLocator::get()} calls for component IDs configured in the Yii application to their class.
  *
- * Analyzes the first argument of {@see ServiceLocator::get()} to return an {@see ObjectType} for known component
- * classes, or a {@see MixedType} for unknown or dynamic IDs. Applies to {@see ServiceLocator} and its subclasses, such
- * as modules and applications.
+ * A component whose class can't be determined is `object`. Only component IDs are resolved, since the service locator
+ * neither reads the DI container nor treats an ID as a class name: any other ID throws at runtime. Nullability follows
+ * the `$throwException` conditional return type declared by Yii, as resolved by PHPStan for the call. Unknown,
+ * non-constant, and unpacked IDs are left to PHPStan. Applies to {@see ServiceLocator} subclasses, such as modules and
+ * applications.
  *
  * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
@@ -26,23 +28,12 @@ use yii2\extensions\phpstan\ServiceMap;
 final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     /**
-     * Creates a new instance of the {@see ServiceLocatorDynamicMethodReturnTypeExtension} class.
-     *
-     * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
-    public function __construct(
-        private readonly ReflectionProvider $reflectionProvider,
-        private readonly ServiceMap $serviceMap,
-    ) {}
+    public function __construct(private readonly ServiceMap $serviceMap) {}
 
     /**
-     * Returns the class name for which this dynamic return type extension applies.
-     *
-     * Specifies the fully qualified class name of the Yii ServiceLocator {@see ServiceLocator} that this extension
-     * target for dynamic return type inference in PHPStan analysis.
-     *
-     * @return string Fully qualified class name of the supported ServiceLocator class.
+     * Returns the Yii service locator class supported by this extension.
      *
      * @phpstan-return class-string
      */
@@ -52,81 +43,79 @@ final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMet
     }
 
     /**
-     * Infers the return type for a {@see ServiceLocator::get()} method call based on the provided component ID
-     * argument.
+     * Returns the type of the component with a single constant ID, made nullable when the declared return type allows
+     * `null`.
      *
-     * Determines the most accurate return type for component resolution by analyzing the first argument of the
-     * {@see ServiceLocator::get()} call.
+     * @param MethodReflection $methodReflection Reflection of the called method.
+     * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
-     * - If the argument is a constant string and matches a known component in the {@see ServiceMap}, returns an
-     *   {@see ObjectType} for the resolved class.
-     * - If the argument is a class name known to the {@see ReflectionProvider}, returns an {@see ObjectType} for that
-     *   class.
-     * - Otherwise, returns a {@see MixedType} to indicate an unknown or dynamic component type.
-     *
-     * Falls back to the default method signature return type for unsupported or invalid calls, ensuring compatibility
-     * with PHPStan static analysis and IDE autocompletion.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     * @param MethodCall $methodCall AST node for the method call expression.
-     * @param Scope $scope PHPStan analysis scope for type resolution.
-     *
-     * @return Type Inferred return type for the component resolution call.
+     * @return Type|null Component class, `object` for a component whose class can't be determined, or `null` to defer to
+     * the return type declared by Yii.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
         Scope $scope,
-    ): Type {
-        if (isset($methodCall->args[0]) === false || $methodCall->args[0]::class !== Arg::class) {
-            return ParametersAcceptorSelector::selectFromArgs(
-                $scope,
-                $methodCall->getArgs(),
-                $methodReflection->getVariants(),
-            )->getReturnType();
+    ): Type|null {
+        $args = $methodCall->getArgs();
+
+        if (isset($args[0]) === false || $args[0]->unpack) {
+            return null;
         }
 
-        $argType = $scope->getType($methodCall->args[0]->value);
-        $constantStrings = $argType->getConstantStrings();
+        $constantStrings = $scope->getType($args[0]->value)->getConstantStrings();
 
-        if (count($constantStrings) === 1) {
-            $value = $constantStrings[0]->getValue();
-
-            $componentClass = $this->serviceMap->getComponentClassById($value);
-
-            if ($componentClass !== null) {
-                return new ObjectType($componentClass);
-            }
-
-            $serviceClass = $this->serviceMap->getServiceById($value);
-
-            if ($serviceClass !== null) {
-                return new ObjectType($serviceClass);
-            }
-
-            if ($this->reflectionProvider->hasClass($value)) {
-                return new ObjectType($value);
-            }
+        if (count($constantStrings) !== 1) {
+            return null;
         }
 
-        return new MixedType();
+        $id = $constantStrings[0]->getValue();
+
+        $scope->trackValueDependency(
+            ServiceMapResultCacheValueExtension::class,
+            ServiceMapResultCacheValueExtension::componentKey($id),
+        );
+
+        $resolvedType = $this->resolveType($id);
+
+        if ($resolvedType === null) {
+            return null;
+        }
+
+        $declaredType = ParametersAcceptorSelector::selectFromArgs(
+            $scope,
+            $args,
+            $methodReflection->getVariants(),
+        )->getReturnType();
+
+        return $declaredType->isNull()->no() ? $resolvedType : TypeCombinator::addNull($resolvedType);
     }
 
     /**
-     * Determines whether the specified method is supported for dynamic return type inference.
-     *
-     * Checks if the method name is {@see ServiceLocator::get}, which is the only method supported by this extension for
-     * dynamic return type analysis.
-     *
-     * This enables PHPStan to apply custom type inference logic exclusively to component resolution calls on the Yii
-     * Service Locator {@see ServiceLocator} and its subclasses (Module, Application).
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     *
-     * @return bool `true` if the method is {@see ServiceLocator::get}; `false` otherwise.
+     * Returns whether the reflected method is {@see ServiceLocator::get()}.
      */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
         return $methodReflection->getName() === 'get';
+    }
+
+    /**
+     * Resolves a component ID to the configured component class.
+     *
+     * @param string $id Component ID passed to {@see ServiceLocator::get()}.
+     *
+     * @return Type|null Component class, `object` for a component whose class can't be determined, or `null` when no
+     * component has the ID.
+     */
+    private function resolveType(string $id): Type|null
+    {
+        $componentClass = $this->serviceMap->getComponentClassById($id);
+
+        if ($componentClass !== null) {
+            return new ObjectType($componentClass);
+        }
+
+        return $this->serviceMap->isUnresolvedComponent($id) ? new ObjectWithoutClassType() : null;
     }
 }

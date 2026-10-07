@@ -5,25 +5,37 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan;
 
 use Closure;
-use ReflectionException;
+use ReflectionClass;
 use ReflectionFunction;
 use ReflectionNamedType;
 use RuntimeException;
-use yii\base\{BaseObject, InvalidArgumentException};
+use yii\base\InvalidArgumentException;
+use yii\di\Instance;
 use yii\web\Application;
 
+use function array_filter;
+use function array_is_list;
 use function array_key_exists;
+use function array_keys;
+use function array_values;
+use function class_exists;
+use function count;
 use function dirname;
 use function gettype;
+use function in_array;
 use function is_array;
+use function is_callable;
 use function is_file;
 use function is_object;
 use function is_readable;
 use function is_string;
-use function is_subclass_of;
+use function ltrim;
 use function pathinfo;
+use function preg_match;
 use function realpath;
 use function sprintf;
+use function str_contains;
+use function strtolower;
 
 use const PATHINFO_EXTENSION;
 
@@ -31,10 +43,28 @@ use const PATHINFO_EXTENSION;
  * Maps and normalizes service and component definitions from Yii Application configuration for static analysis.
  *
  * Loads, validates, and processes configuration files, exposing lookup methods to resolve class names and configuration
- * arrays by identifier or class name. Supports direct class names, closures, arrays, and object instances.
+ * arrays by identifier. Registers the class of every definition form Yii accepts when it can be determined statically:
+ * class name strings, arrays with a `class` or `__class` key, closures returning a single class, and object instances.
+ * Definitions whose class can't be determined, such as untyped closures, are skipped and flagged as unresolved, so the
+ * lookups return `null` and the consumers type them as `object`.
  */
 final class ServiceMap
 {
+    /**
+     * Pattern matching a syntactically valid class name without a leading backslash.
+     */
+    private const CLASS_NAME_PATTERN = '/^[a-zA-Z_\x80-\xff][\w\x80-\xff]*(?:\\\\[a-zA-Z_\x80-\xff][\w\x80-\xff]*)*$/';
+
+    /**
+     * Error message labels of the `container` subsections, indexed by subsection key.
+     */
+    private const CONTAINER_SECTIONS = ['definitions' => 'Definition', 'singletons' => 'Singleton'];
+
+    /**
+     * Return types that refer to the scope of the callable instead of naming a class.
+     */
+    private const RELATIVE_CLASS_TYPES = ['parent', 'self', 'static'];
+
     /**
      * Application type for PHPStan analysis.
      *
@@ -45,30 +75,45 @@ final class ServiceMap
     /**
      * Behavior definitions map for Yii Application analysis.
      *
-     * @phpstan-var array<string, string[]>
+     * @phpstan-var array<string, list<string>>
      */
     private array $behaviors = [];
 
     /**
-     * Reverse index mapping class names to component IDs for optimized lookups.
-     *
-     * @phpstan-var array<string, string>
-     */
-    private array $componentClassToIdMap = [];
-
-    /**
      * Component definitions map for Yii Application analysis.
      *
-     * @phpstan-var string[]
+     * @phpstan-var array<string, string>
      */
     private array $components = [];
 
     /**
      * Component definitions for Yii Application analysis.
      *
-     * @phpstan-var array<string, mixed>
+     * @phpstan-var array<string, array<array-key, mixed>>
      */
     private array $componentsDefinitions = [];
+
+    /**
+     * IDs of components defined by an array without a class key, whose class Yii takes from the core components of the
+     * application class.
+     *
+     * @phpstan-var array<string, true>
+     */
+    private array $componentsWithoutClass = [];
+
+    /**
+     * IDs of components defined by an object, whose class Yii doesn't resolve through the container.
+     *
+     * @phpstan-var array<string, true>
+     */
+    private array $objectDefinedComponents = [];
+
+    /**
+     * IDs of services defined by an object, whose class Yii doesn't resolve through the container.
+     *
+     * @phpstan-var array<string, true>
+     */
+    private array $objectDefinedServices = [];
 
     /**
      * Application params for PHPStan type inference.
@@ -80,9 +125,23 @@ final class ServiceMap
     /**
      * Service definitions map for Yii Application analysis.
      *
-     * @phpstan-var class-string[]|string[]
+     * @phpstan-var array<string, string>
      */
     private array $services = [];
+
+    /**
+     * IDs of components defined in the configuration whose class can't be determined.
+     *
+     * @phpstan-var array<string, true>
+     */
+    private array $unresolvedComponents = [];
+
+    /**
+     * IDs of services with a non-empty definition whose class can't be determined.
+     *
+     * @phpstan-var array<string, true>
+     */
+    private array $unresolvedServices = [];
 
     /**
      * Creates a new instance of the {@see ServiceMap} class.
@@ -91,7 +150,6 @@ final class ServiceMap
      * configuration file must exist and be valid. If empty or not provided, operates with empty service/component maps.
      *
      * @throws InvalidArgumentException if one or more arguments are invalid, of incorrect type or format.
-     * @throws ReflectionException if the service definitions can't be resolved or are invalid.
      * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
      */
     public function __construct(string $configPath = '')
@@ -117,12 +175,17 @@ final class ServiceMap
 
         $config = $this->loadConfig($configPath);
 
-        $this->processApplicationType($config);
-        $this->processBehaviors($config);
-        $this->processComponents($config);
-        $this->processParams($config);
-        $this->processServices($config, 'definitions', 'Definition');
-        $this->processServices($config, 'singletons', 'Singleton');
+        $this->applicationType = $config['applicationType'];
+        $this->params = $config['params'];
+
+        $this->processBehaviors($config['behaviors']);
+        $this->processComponents($config['components']);
+
+        foreach ($config['containerSections'] as [$label, $services]) {
+            $this->processServices($services, $label);
+        }
+
+        $this->resolveContainerAliases();
     }
 
     /**
@@ -169,29 +232,6 @@ final class ServiceMap
     }
 
     /**
-     * Retrieves the component definition array for a given class name.
-     *
-     * Searches the internal component map for a component whose class name matches the provided fully qualified class
-     * name.
-     *
-     * @param string $class Fully qualified class name to look up in the component map.
-     *
-     * @return array|null Component definition array with configuration options, or `null` if not found or not an array.
-     *
-     * @phpstan-return array<array-key, mixed>|null
-     */
-    public function getComponentDefinitionByClassName(string $class): array|null
-    {
-        $id = $this->componentClassToIdMap[$class] ?? null;
-
-        if ($id === null) {
-            return null;
-        }
-
-        return $this->getComponentDefinitionById($id);
-    }
-
-    /**
      * Retrieves the component definition array by its identifier.
      *
      * Looks up the component definition registered under the specified component ID in the internal component
@@ -205,9 +245,7 @@ final class ServiceMap
      */
     public function getComponentDefinitionById(string $id): array
     {
-        $definition = $this->componentsDefinitions[$id] ?? null;
-
-        return is_array($definition) ? $definition : [];
+        return $this->componentsDefinitions[$id] ?? [];
     }
 
     /**
@@ -240,190 +278,185 @@ final class ServiceMap
     }
 
     /**
-     * Extracts a nested configuration section as an array.
+     * Returns whether a component is defined by an array without a `class` or `__class` key.
      *
-     * Traverses the provided keys in order, returning the value at that path when it is an array, or an empty array
-     * when any segment is missing or not an array.
+     * {@see \yii\base\Application::preInit()} completes such a definition with the class of the matching core
+     * component, so the type the application class declares for the component still applies. Such a component is also
+     * unresolved.
      *
-     * @param array $config Yii Application configuration array to traverse.
-     * @param string ...$keys Ordered keys identifying the nested section (for example, `'container'`, `'definitions'`).
+     * @param string $id Component identifier to look up.
      *
-     * @return array Configuration section, or an empty array when the path is absent or not an array.
-     *
-     * @phpstan-param array<array-key, mixed> $config
-     * @phpstan-return array<array-key, mixed>
+     * @return bool `true` if the component is defined by an array without a class key; `false` otherwise.
      */
-    private function arraySection(array $config, string ...$keys): array
+    public function isComponentWithoutClass(string $id): bool
     {
-        $value = $config;
-
-        foreach ($keys as $key) {
-            $value = is_array($value) ? ($value[$key] ?? null) : null;
-        }
-
-        return is_array($value) ? $value : [];
+        return isset($this->componentsWithoutClass[$id]);
     }
 
     /**
-     * Loads and validates the Yii Application configuration file for static analysis.
+     * Returns whether a component is defined in the configuration but its class can't be determined.
      *
-     * Ensures the specified configuration file returns a valid array structure and that all required sections including
-     * `phpstan`, `behaviors`, `components`, `container`, `container.definitions`, and `container.singletons` are arrays
-     * when present.
+     * Covers closures without a single class return type, array callables, arrays without a class key, and classes
+     * naming a container ID on a cycle or a container ID whose class can't be determined. Components that are absent or
+     * set to `null` aren't unresolved, and an {@see Instance} reference is the component itself, since
+     * {@see \yii\di\ServiceLocator::get()} returns it without resolving it.
      *
-     * @param string $configPath Path to the Yii Application configuration file. If empty, return an empty array.
+     * @param string $id Component identifier to look up.
      *
-     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     * @return bool `true` if the component is defined with an unknown class; `false` otherwise.
+     */
+    public function isUnresolvedComponent(string $id): bool
+    {
+        return isset($this->unresolvedComponents[$id]);
+    }
+
+    /**
+     * Returns whether a container service is defined in the configuration but its class can't be determined.
      *
-     * @return array Normalized configuration array for further processing, or an empty array if no config is provided.
+     * Covers factories without a single class return type, array callables, arrays without a class key under an ID
+     * that doesn't name an instantiable class, and definitions, {@see Instance} references included, naming a container
+     * ID on a cycle or a container ID whose class can't be determined. Services that are absent, or defined empty,
+     * aren't unresolved, since Yii then uses the ID itself as the class.
      *
-     * @phpstan-return array<array-key, mixed>
+     * @param string $id Service identifier to look up.
+     *
+     * @return bool `true` if the service is defined with an unknown class; `false` otherwise.
+     */
+    public function isUnresolvedService(string $id): bool
+    {
+        return isset($this->unresolvedServices[$id]);
+    }
+
+    /**
+     * Follows a chain of container IDs from a class name to the class it resolves to.
+     *
+     * The chain stops at a class that names no other container ID, at a container ID defined by an object, whose class
+     * is returned as is, and at a container ID whose class can't be determined.
+     *
+     * @param string $className Class name that may name a container ID.
+     * @param array $visited Container IDs already on the chain.
+     *
+     * @return string|null Class name the chain resolves to, or `null` when the chain is a cycle or reaches a container
+     * ID whose class can't be determined.
+     *
+     * @phpstan-param array<string, true> $visited
+     */
+    private function followContainerAliases(string $className, array $visited): string|null
+    {
+        while (isset($this->services[$className]) && $this->services[$className] !== $className) {
+            if (isset($visited[$className])) {
+                return null;
+            }
+
+            if (isset($this->objectDefinedServices[$className])) {
+                return $this->services[$className];
+            }
+
+            $visited[$className] = true;
+            $className = $this->services[$className];
+        }
+
+        return isset($this->unresolvedServices[$className]) ? null : $className;
+    }
+
+    /**
+     * Loads, validates, and normalizes the Yii Application configuration file for static analysis.
+     *
+     * Ensures the configuration file returns an array, that `phpstan.application_type` is a string, and that the
+     * `phpstan`, `behaviors`, `components`, `params`, `container`, `container.definitions`, and `container.singletons`
+     * sections are arrays when present. Absent or `null` sections resolve to empty arrays, except `params`, which must
+     * be an array when its key is present. The `container` subsections keep the order the configuration lists them in,
+     * since {@see \Yii::configure()} applies them in that order and a later entry replaces an earlier one with the same
+     * ID.
+     *
+     * @param string $configPath Path to the Yii Application configuration file. If empty, every section is empty.
+     *
+     * @throws RuntimeException if the file doesn't return an array or a section has an unsupported type.
+     *
+     * @return array Normalized configuration sections.
+     *
+     * @phpstan-return array{
+     *     applicationType: string,
+     *     behaviors: array<array-key, mixed>,
+     *     components: array<array-key, mixed>,
+     *     containerSections: list<array{string, array<array-key, mixed>}>,
+     *     params: array<array-key, mixed>,
+     * }
      */
     private function loadConfig(string $configPath): array
     {
-        if ($configPath === '') {
-            return [];
-        }
-
-        $config = require $configPath;
+        $config = $configPath !== '' ? require $configPath : [];
 
         if (is_array($config) === false) {
-            throw new RuntimeException(sprintf("Configuration file '%s' must return an array.", $configPath));
+            throw new RuntimeException(
+                sprintf("Configuration file '%s' must return an array.", $configPath),
+            );
         }
 
-        if (isset($config['phpstan'])) {
-            if (is_array($config['phpstan']) === false) {
-                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'phpstan');
-            }
+        $applicationType = $this->section($config, 'phpstan', $configPath, 'phpstan')['application_type'] ?? '';
 
-            if (
-                isset($config['phpstan']['application_type'])
-                && is_string($config['phpstan']['application_type']) === false
-            ) {
-                $applicationType = gettype($config['phpstan']['application_type']);
-
-                $this->throwErrorWhenIsNotString('Application type', 'phpstan.application_type', $applicationType);
-            }
+        if (is_string($applicationType) === false) {
+            $this->throwErrorWhenIsNotString('Application type', 'phpstan.application_type', gettype($applicationType));
         }
 
-        if (isset($config['behaviors']) && is_array($config['behaviors']) === false) {
-            $this->throwErrorWhenConfigFileIsNotArray($configPath, 'behaviors');
-        }
+        $behaviors = $this->section($config, 'behaviors', $configPath, 'behaviors');
+        $components = $this->section($config, 'components', $configPath, 'components');
 
-        if (isset($config['components']) && is_array($config['components']) === false) {
-            $this->throwErrorWhenConfigFileIsNotArray($configPath, 'components');
-        }
+        $params = array_key_exists('params', $config) ? $config['params'] : [];
 
-        if (array_key_exists('params', $config) && is_array($config['params']) === false) {
+        if (is_array($params) === false) {
             $this->throwErrorWhenConfigFileIsNotArray($configPath, 'params');
         }
 
-        if (isset($config['container'])) {
-            if (is_array($config['container']) === false) {
-                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'container');
-            }
+        $container = $this->section($config, 'container', $configPath, 'container');
+        $containerSections = [];
 
-            if (isset($config['container']['definitions']) && is_array($config['container']['definitions']) === false) {
-                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'container.definitions');
-            }
-
-            if (isset($config['container']['singletons']) && is_array($config['container']['singletons']) === false) {
-                $this->throwErrorWhenConfigFileIsNotArray($configPath, 'container.singletons');
+        foreach (array_keys($container) as $key) {
+            if (isset(self::CONTAINER_SECTIONS[$key])) {
+                $containerSections[] = [
+                    self::CONTAINER_SECTIONS[$key],
+                    $this->section($container, $key, $configPath, 'container.' . $key),
+                ];
             }
         }
 
-        return $config;
+        return [
+            'applicationType' => $applicationType !== '' ? $applicationType : Application::class,
+            'behaviors' => $behaviors,
+            'components' => $components,
+            'containerSections' => $containerSections,
+            'params' => $params,
+        ];
     }
 
     /**
-     * Resolves a service definition to its fully qualified class name for Yii static analysis.
+     * Normalizes a class name by removing its leading backslash.
      *
-     * Supports multiple Yii configuration patterns, including direct class names, closures with return types,
-     * configuration arrays, and object instances.
+     * @param string $class Class name, with or without a leading backslash.
      *
-     * @param string $id Identifier of the service being normalized.
-     * @param mixed $definition Service definition to normalize (class name, closure, array, or object).
-     *
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
-     *
-     * @return string Fully qualified class name resolved from the definition.
-     *
-     * @phpstan-return class-string|string
+     * @return string|null Class name without a leading backslash, or `null` if it's empty.
      */
-    private function normalizeDefinition(string $id, mixed $definition): string
+    private function normalizeClassName(string $class): string|null
     {
-        if (is_string($definition)) {
-            return $definition;
-        }
+        $class = ltrim($class, '\\');
 
-        if (is_object($definition) && $definition::class === Closure::class) {
-            $returnType = (new ReflectionFunction($definition))->getReturnType();
-
-            if ($returnType === null || $returnType::class !== ReflectionNamedType::class) {
-                throw new RuntimeException(sprintf('Please provide return type for \'%s\' service closure.', $id));
-            }
-
-            return $returnType->getName();
-        }
-
-        if (is_array($definition)) {
-            $nested = $definition[0] ?? null;
-            $class = $definition['class'] ?? (is_array($nested) ? ($nested['class'] ?? null) : null);
-
-            if (is_string($class) && $class !== '') {
-                return $class;
-            }
-        }
-
-        if (is_subclass_of($id, BaseObject::class)) {
-            return $id;
-        }
-
-        $this->throwErrorWhenUnsupportedDefinition($id);
+        return $class !== '' ? $class : null;
     }
 
     /**
-     * Sets the application type for PHPStan analysis from the configuration array.
+     * Registers the behavior class names attached to each class in the `behaviors` configuration section.
      *
-     * Extracts the application type from the `phpstan.application_type` key in the provided configuration array.
+     * Non-string entries in a behavior list are ignored.
      *
-     * If not set, defaults to {@see Application::class}.
-     *
-     * @param array $config Yii Application configuration array containing PHPStan settings.
-     *
-     * @phpstan-param array<array-key, mixed> $config
-     */
-    private function processApplicationType(array $config): void
-    {
-        $phpstan = $config['phpstan'] ?? null;
-        $applicationType = is_array($phpstan) ? ($phpstan['application_type'] ?? null) : null;
-
-        $this->applicationType = is_string($applicationType) && $applicationType !== ''
-            ? $applicationType
-            : Application::class;
-    }
-
-    /**
-     * Processes and registers behavior definitions from the Yii Application configuration array.
-     *
-     * Iterates over the `behaviors` section of the provided configuration array, validating each behavior ID and
-     * definition.
-     *
-     * For each valid behavior, stores an array of associated behavior class names indexed by the behavior ID.
-     *
-     * This enables static analysis tools and IDEs to resolve attached behaviors for Yii Application classes, supporting
-     * accurate type inference and property reflection.
-     *
-     * @param array $config Yii Application configuration array containing behavior definitions.
+     * @param array $behaviors Behavior lists indexed by the fully qualified class name they're attached to.
      *
      * @throws RuntimeException if a behavior ID is not a string, or if a behavior definition is not an array.
      *
-     * @phpstan-param array<array-key, mixed> $config
+     * @phpstan-param array<array-key, mixed> $behaviors
      */
-    private function processBehaviors(array $config): void
+    private function processBehaviors(array $behaviors): void
     {
-        foreach ($this->arraySection($config, 'behaviors') as $id => $definition) {
+        foreach ($behaviors as $id => $definition) {
             if (is_string($id) === false) {
                 $this->throwErrorWhenIsNotString('Behavior class', 'ID', gettype($id));
             }
@@ -439,45 +472,52 @@ final class ServiceMap
     }
 
     /**
-     * Processes component definitions from the Yii Application configuration array.
+     * Registers the class name and remaining configuration of each component in the `components` configuration section.
      *
-     * Iterates over the components section of the provided configuration array, normalizing and registering each
-     * component definition by its identifier.
+     * Components whose class can't be determined are skipped. Array definitions with a resolved class also keep their
+     * other keys as the component definition. Components defined by an object are recorded as such, since Yii returns
+     * the object, or calls the closure, instead of resolving a class through the container.
      *
-     * @param array $config Yii Application configuration array containing component definitions.
+     * @param array $components Component definitions indexed by component ID.
      *
-     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     * @throws RuntimeException if a component ID is not a string, or if a definition is a scalar other than a `string`.
      *
-     * @phpstan-param array<array-key, mixed> $config
+     * @phpstan-param array<array-key, mixed> $components
      */
-    private function processComponents(array $config): void
+    private function processComponents(array $components): void
     {
-        foreach ($this->arraySection($config, 'components') as $id => $definition) {
+        foreach ($components as $id => $definition) {
             if (is_string($id) === false) {
                 $this->throwErrorWhenIsNotString('Component', 'ID', gettype($id));
             }
 
-            if (is_object($definition)) {
-                $className = $definition::class;
+            $className = $this->resolveComponentClass($id, $definition);
 
-                $this->components[$id] = $className;
-                $this->componentClassToIdMap[$className] = $id;
+            if ($className === null) {
+                if ($definition !== null) {
+                    $this->unresolvedComponents[$id] = true;
+                }
+
+                if (
+                    is_array($definition)
+                    && isset($definition['class']) === false
+                    && isset($definition['__class']) === false
+                    && is_callable($definition, true) === false
+                ) {
+                    $this->componentsWithoutClass[$id] = true;
+                }
 
                 continue;
             }
 
-            if (
-                is_array($definition)
-                && isset($definition['class'])
-                && is_string($definition['class'])
-                && $definition['class'] !== ''
-            ) {
-                $className = $definition['class'];
+            $this->components[$id] = $className;
 
-                $this->components[$id] = $className;
-                $this->componentClassToIdMap[$className] = $id;
+            if (is_object($definition)) {
+                $this->objectDefinedComponents[$id] = true;
+            }
 
-                unset($definition['class']);
+            if (is_array($definition)) {
+                unset($definition['class'], $definition['__class']);
 
                 $this->componentsDefinitions[$id] = $definition;
             }
@@ -485,43 +525,272 @@ final class ServiceMap
     }
 
     /**
-     * Processes application params from the Yii Application configuration array.
+     * Registers the class name resolved for each service in a `container` configuration subsection.
      *
-     * Extracts the `params` section and stores it for type inference of `Yii::$app->params` array access.
+     * Each entry replaces whatever an earlier entry recorded for its ID, as {@see \yii\di\Container::set()} and
+     * {@see \yii\di\Container::setSingleton()} replace the definition. Services whose class can't be determined are
+     * skipped, and recorded as unresolved unless the definition is empty, since Yii then uses the ID itself as the
+     * class. Services defined by an object other than an {@see Instance} reference are recorded as such, since Yii
+     * returns the object, or calls it, instead of resolving a class through the container.
      *
-     * @param array $config Yii Application configuration array containing params definitions.
-     *
-     * @phpstan-param array<array-key, mixed> $config
-     */
-    private function processParams(array $config): void
-    {
-        $this->params = $this->arraySection($config, 'params');
-    }
-
-    /**
-     * Processes container service definitions from the Yii Application configuration array.
-     *
-     * Iterates over the specified `container` subsection, normalizing and registering each service definition by its
-     * identifier.
-     *
-     * @param array $config Yii Application configuration array containing container definitions.
-     * @param string $section Container subsection to process (`'definitions'` or `'singletons'`).
+     * @param array $services Service definitions indexed by service ID.
      * @param string $label Label used in error messages to identify the subsection (`'Definition'` or `'Singleton'`).
      *
-     * @throws ReflectionException if the service definition is invalid or can't be resolved.
-     * @throws RuntimeException if a runtime error prevents the operation from completing successfully.
+     * @throws RuntimeException if a service ID is not a string, or if a definition is a scalar other than a `string`.
      *
-     * @phpstan-param array<array-key, mixed> $config
+     * @phpstan-param array<array-key, mixed> $services
      */
-    private function processServices(array $config, string $section, string $label): void
+    private function processServices(array $services, string $label): void
     {
-        foreach ($this->arraySection($config, 'container', $section) as $id => $service) {
+        foreach ($services as $id => $definition) {
             if (is_string($id) === false) {
                 $this->throwErrorWhenIsNotString($label, 'ID', gettype($id));
             }
 
-            $this->services[$id] = $this->normalizeDefinition($id, $service);
+            $definition = $this->unwrapServiceDefinition($definition);
+            $className = $this->resolveServiceClass($id, $definition);
+
+            unset($this->services[$id], $this->objectDefinedServices[$id], $this->unresolvedServices[$id]);
+
+            if ($className !== null) {
+                $this->services[$id] = $className;
+
+                if (is_object($definition) && $definition instanceof Instance === false) {
+                    $this->objectDefinedServices[$id] = true;
+                }
+            } elseif ($definition !== null && $definition !== []) {
+                $this->unresolvedServices[$id] = true;
+            }
         }
+    }
+
+    /**
+     * Resolves the class of an array definition from the first of two class keys that is set.
+     *
+     * @param array $definition Configuration array.
+     * @param string $key Class key that takes precedence.
+     * @param string $fallbackKey Class key read when `$key` is not set.
+     *
+     * @return string|null Class name without a leading backslash, or `null` if neither key holds a non-empty `string`.
+     *
+     * @phpstan-param array<array-key, mixed> $definition
+     */
+    private function resolveArrayClass(array $definition, string $key, string $fallbackKey): string|null
+    {
+        $class = $definition[$key] ?? $definition[$fallbackKey] ?? null;
+
+        return is_string($class) ? $this->normalizeClassName($class) : null;
+    }
+
+    /**
+     * Resolves the class of a component definition as {@see \yii\di\ServiceLocator::set()} and
+     * {@see \yii\di\ServiceLocator::get()} interpret it.
+     *
+     * A closure is a factory resolved from its return type; any other object, an {@see Instance} reference included, is
+     * the component itself. An array resolves from its `__class` key, then its `class` key; array callables and arrays
+     * without a class key resolve to `null`, the latter because Yii completes core components from the application
+     * class.
+     *
+     * @param string $id Component ID.
+     * @param mixed $definition Component definition.
+     *
+     * @throws RuntimeException if the definition is a scalar other than a `string`.
+     *
+     * @return string|null Class name without a leading backslash, or `null` if it can't be determined.
+     */
+    private function resolveComponentClass(string $id, mixed $definition): string|null
+    {
+        if ($definition === null) {
+            return null;
+        }
+
+        if (is_array($definition)) {
+            return is_callable($definition, true) ? null : $this->resolveArrayClass($definition, '__class', 'class');
+        }
+
+        return $this->resolveScalarOrObjectClass($id, $definition, $definition instanceof Closure);
+    }
+
+    /**
+     * Resolves the service and component classes that name another container ID through that ID's resolved class.
+     *
+     * {@see \yii\di\Container::get()} resolves the class of a string or array definition recursively when it's another
+     * container ID, and {@see \yii\di\ServiceLocator::get()} creates a string or array component through
+     * {@see \Yii::createObject()}, which resolves its class through the container as well. Object definitions keep
+     * their class, the declared return type of a closure or of an object with an `__invoke()` method, or the class of
+     * any other object, since Yii returns what the object yields. `container.definitions` and `container.singletons`
+     * share one ID space, as in the container. Chains are followed; a service or component whose chain is a cycle or
+     * reaches a container ID whose class can't be determined is dropped and flagged as unresolved. A class that names
+     * no other container ID is kept.
+     */
+    private function resolveContainerAliases(): void
+    {
+        $services = [];
+
+        foreach ($this->services as $id => $className) {
+            $resolved = isset($this->objectDefinedServices[$id])
+                ? $className
+                : $this->followContainerAliases($className, [$id => true]);
+
+            if ($resolved !== null) {
+                $services[$id] = $resolved;
+            } else {
+                $this->unresolvedServices[$id] = true;
+            }
+        }
+
+        foreach ($this->components as $id => $className) {
+            if (isset($this->objectDefinedComponents[$id])) {
+                continue;
+            }
+
+            $resolved = $this->followContainerAliases($className, []);
+
+            if ($resolved === null) {
+                unset($this->components[$id], $this->componentsDefinitions[$id]);
+
+                $this->unresolvedComponents[$id] = true;
+            } else {
+                $this->components[$id] = $resolved;
+            }
+        }
+
+        $this->services = $services;
+    }
+
+    /**
+     * Resolves the class returned by a factory callable from its declared return type.
+     *
+     * @param ReflectionFunction $factory Reflection of the closure, or of the closure created from an object with an
+     * `__invoke()` method.
+     *
+     * @return string|null Class name, or `null` if the return type is missing, nullable, a union, an intersection, a
+     * builtin type, `self`, `static`, or `parent`.
+     */
+    private function resolveFactoryClass(ReflectionFunction $factory): string|null
+    {
+        $returnType = $factory->getReturnType();
+
+        if ($returnType instanceof ReflectionNamedType === false || $returnType->isBuiltin() || $returnType->allowsNull()) {
+            return null;
+        }
+
+        $class = $returnType->getName();
+
+        return in_array(strtolower($class), self::RELATIVE_CLASS_TYPES, true) ? null : $class;
+    }
+
+    /**
+     * Resolves a service ID used as its own class, as {@see \yii\di\Container::normalizeDefinition()} does for an empty
+     * definition and for an array definition without a class key.
+     *
+     * {@see \yii\di\Container::build()} constructs any instantiable class, whether or not it extends
+     * {@see \yii\base\BaseObject}, and throws for an interface, an abstract class, or an enum. Only syntactically valid
+     * class names are passed to {@see class_exists()}, so arbitrary IDs never reach the autoloaders.
+     *
+     * @param string $id Service ID.
+     *
+     * @return string|null ID without a leading backslash when it names an instantiable class, or `null` otherwise.
+     */
+    private function resolveIdAsClass(string $id): string|null
+    {
+        $class = ltrim($id, '\\');
+
+        return preg_match(self::CLASS_NAME_PATTERN, $class) === 1
+            && class_exists($class)
+            && (new ReflectionClass($class))->isInstantiable()
+            ? $class
+            : null;
+    }
+
+    /**
+     * Resolves the class of a definition that is neither an array nor `null`.
+     *
+     * @param string $id Component or service ID.
+     * @param mixed $definition Definition to resolve.
+     * @param bool $isFactory Whether an object definition is a factory callable instead of the instance itself.
+     *
+     * @throws RuntimeException if the definition is a scalar other than a `string`.
+     *
+     * @return string|null Class name without a leading backslash, or `null` if it can't be determined.
+     */
+    private function resolveScalarOrObjectClass(string $id, mixed $definition, bool $isFactory): string|null
+    {
+        if (is_string($definition)) {
+            return $this->normalizeClassName($definition);
+        }
+
+        if (is_object($definition)) {
+            return $isFactory && is_callable($definition)
+                ? $this->resolveFactoryClass(new ReflectionFunction(Closure::fromCallable($definition)))
+                : $definition::class;
+        }
+
+        $this->throwErrorWhenUnsupportedDefinition($id);
+    }
+
+    /**
+     * Resolves the class of a container definition as {@see \yii\di\Container::setDefinitions()} and
+     * {@see \yii\di\Container::normalizeDefinition()} interpret it.
+     *
+     * An empty definition resolves to the ID itself; an {@see Instance} reference resolves to its ID, which Yii uses as
+     * the class and so resolves through the container; a callable object is a factory resolved from its return type;
+     * an array resolves from its `class` key, then its `__class` key, then the ID when the ID contains a namespace
+     * separator. Array callables resolve to `null`.
+     *
+     * @param string $id Service ID.
+     * @param mixed $definition Service definition, already unwrapped by {@see unwrapServiceDefinition()}.
+     *
+     * @throws RuntimeException if the definition is a scalar other than a `string`.
+     *
+     * @return string|null Class name without a leading backslash, or `null` if it can't be determined.
+     */
+    private function resolveServiceClass(string $id, mixed $definition): string|null
+    {
+        if ($definition === null || $definition === []) {
+            return $this->resolveIdAsClass($id);
+        }
+
+        if ($definition instanceof Instance) {
+            return $this->normalizeClassName($definition->id);
+        }
+
+        if (is_array($definition) === false) {
+            return $this->resolveScalarOrObjectClass($id, $definition, true);
+        }
+
+        if (is_callable($definition, true)) {
+            return null;
+        }
+
+        return $this->resolveArrayClass($definition, 'class', '__class')
+            ?? (str_contains($id, '\\') ? $this->resolveIdAsClass($id) : null);
+    }
+
+    /**
+     * Returns a configuration section, or an empty array when the section is absent or `null`.
+     *
+     * @param array $config Configuration array holding the section.
+     * @param string $key Key of the section in `$config`.
+     * @param string $configPath Path to the configuration file, used in the error message.
+     * @param string $path Dotted path of the section, used in the error message.
+     *
+     * @throws RuntimeException if the section is set and is not an array.
+     *
+     * @return array Configuration section.
+     *
+     * @phpstan-param array<array-key, mixed> $config
+     * @phpstan-return array<array-key, mixed>
+     */
+    private function section(array $config, string $key, string $configPath, string $path): array
+    {
+        $section = $config[$key] ?? [];
+
+        if (is_array($section) === false) {
+            $this->throwErrorWhenConfigFileIsNotArray($configPath, $path);
+        }
+
+        return $section;
     }
 
     /**
@@ -573,5 +842,25 @@ final class ServiceMap
         throw new RuntimeException(
             sprintf("Unsupported definition for '%s'.", $id),
         );
+    }
+
+    /**
+     * Unwraps a `[definition, params]` list to its definition, as {@see \yii\di\Container::setDefinitions()} and
+     * {@see \yii\di\Container::setSingletons()} do.
+     *
+     * Any other list, such as one holding a single array definition, is kept as is, since Yii doesn't unwrap it either.
+     *
+     * @param mixed $definition Service definition.
+     *
+     * @return mixed First element of the list, or the definition itself when it's not such a list.
+     */
+    private function unwrapServiceDefinition(mixed $definition): mixed
+    {
+        return is_array($definition)
+            && array_is_list($definition)
+            && count($definition) === 2
+            && is_array($definition[1])
+            ? $definition[0]
+            : $definition;
     }
 }

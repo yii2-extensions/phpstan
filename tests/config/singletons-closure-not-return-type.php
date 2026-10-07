@@ -6,6 +6,7 @@ return [
     'container' => [
         'singletons' => [
             'closure-not-return-type' => static fn() => new ArrayObject(),
+            'service' => ['class' => SplObjectStorage::class],
         ],
     ],
 ];

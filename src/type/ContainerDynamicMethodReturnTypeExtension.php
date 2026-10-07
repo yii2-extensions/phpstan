@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\type;
 
-use PhpParser\Node\Arg;
 use PhpParser\Node\Expr\MethodCall;
-use PHPStan\Analyser\Scope;
-use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector, ReflectionProvider};
-use PHPStan\Type\Constant\ConstantStringType;
-use PHPStan\Type\{DynamicMethodReturnTypeExtension, MixedType, ObjectType, Type};
+use PHPStan\Analyser\{DependencyTracker, Scope};
+use PHPStan\Reflection\MethodReflection;
+use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, ObjectWithoutClassType, Type};
 use yii\di\Container;
-use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
+
+use function count;
 
 /**
- * Infers return types for {@see Container::get()} calls based on service ID and the {@see ServiceMap} in PHPStan
- * analysis.
+ * Resolves {@see Container::get()} calls for service IDs defined in the Yii configuration to their configured class.
  *
- * Analyzes the first argument of {@see Container::get()} to return an {@see ObjectType} for known service classes, or a
- * {@see MixedType} for unknown or dynamic IDs.
+ * A service whose class can't be determined is `object`, also under a class name ID, whose instance is whatever the
+ * definition yields. Unknown, non-constant, and unpacked IDs are left to PHPStan, which applies the `@template`
+ * conditional return type declared by Yii.
  *
  * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
@@ -26,23 +26,12 @@ use yii2\extensions\phpstan\ServiceMap;
 final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     /**
-     * Creates a new instance of the {@see ContainerDynamicMethodReturnTypeExtension} class.
-     *
-     * @param ReflectionProvider $reflectionProvider Reflection provider for class and property lookups.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
-    public function __construct(
-        private readonly ReflectionProvider $reflectionProvider,
-        private readonly ServiceMap $serviceMap,
-    ) {}
+    public function __construct(private readonly ServiceMap $serviceMap) {}
 
     /**
-     * Returns the class name for which this dynamic return type extension applies.
-     *
-     * Specifies the fully qualified class name of the Yii DI container service {@see Container} that this extension
-     * targets for dynamic return type inference in PHPStan analysis.
-     *
-     * @return string Fully qualified class name of the supported container class.
+     * Returns the Yii DI container class supported by this extension.
      *
      * @phpstan-return class-string
      */
@@ -52,70 +41,50 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
     }
 
     /**
-     * Infers the return type for a {@see Container::get()} method call based on the provided service ID argument.
+     * Returns the class configured for a single constant service ID, or `object` when its class can't be determined.
      *
-     * Determines the most accurate return type for service resolution by analyzing the first argument of the
-     * {@see Container::get()} call.
+     * @param MethodReflection $methodReflection Reflection of the called method.
+     * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
-     * - If the argument is a constant string and matches a known service in the {@see ServiceMap}, returns an
-     *   {@see ObjectType} for the resolved class.
-     * - If the argument is a class name known to the {@see ReflectionProvider}, returns an {@see ObjectType} for that
-     *   class.
-     * - Otherwise, returns a {@see MixedType} to indicate an unknown or dynamic service type.
-     *
-     * Falls back to the default method signature return type for unsupported or invalid calls, ensuring compatibility
-     * with PHPStan static analysis and IDE autocompletion.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     * @param MethodCall $methodCall AST node for the method call expression.
-     * @param Scope $scope PHPStan analysis scope for type resolution.
-     *
-     * @return Type Inferred return type for the service resolution call.
+     * @return Type|null Configured service class, `object` for a service whose class can't be determined, or `null` to
+     * defer to the return type declared by Yii.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
         MethodCall $methodCall,
         Scope $scope,
-    ): Type {
-        if (isset($methodCall->args[0]) === false || $methodCall->args[0]::class !== Arg::class) {
-            return ParametersAcceptorSelector::selectFromArgs(
-                $scope,
-                $methodCall->getArgs(),
-                $methodReflection->getVariants(),
-            )->getReturnType();
+    ): Type|null {
+        $args = $methodCall->getArgs();
+
+        if (isset($args[0]) === false || $args[0]->unpack) {
+            return null;
         }
 
-        $argType = $scope->getType($methodCall->args[0]->value);
+        $constantStrings = $scope->getType($args[0]->value)->getConstantStrings();
 
-        if ($argType::class === ConstantStringType::class) {
-            $constantString = $argType->getConstantStrings()[0] ?? null;
-            $value = $constantString?->getValue() ?? '';
-            $serviceClass = $this->serviceMap->getServiceById($value);
-
-            if ($serviceClass !== null) {
-                return new ObjectType($serviceClass);
-            }
-
-            if ($this->reflectionProvider->hasClass($value)) {
-                return new ObjectType($value);
-            }
+        if (count($constantStrings) !== 1) {
+            return null;
         }
 
-        return new MixedType();
+        $id = $constantStrings[0]->getValue();
+
+        $scope->trackValueDependency(
+            ServiceMapResultCacheValueExtension::class,
+            ServiceMapResultCacheValueExtension::serviceKey($id),
+        );
+
+        $serviceClass = $this->serviceMap->getServiceById($id);
+
+        if ($serviceClass !== null) {
+            return new ObjectType($serviceClass);
+        }
+
+        return $this->serviceMap->isUnresolvedService($id) ? new ObjectWithoutClassType() : null;
     }
 
     /**
-     * Determines whether the specified method is supported for dynamic return type inference.
-     *
-     * Checks if the method name is {@see Container::get}, which is the only method supported by this extension for
-     * dynamic return type analysis.
-     *
-     * This enables PHPStan to apply custom type inference logic exclusively to service resolution calls on the Yii DI
-     * container service {@see Container}.
-     *
-     * @param MethodReflection $methodReflection Reflection instance for the method being analyzed.
-     *
-     * @return bool `true` if the method is {@see Container::get}; `false` otherwise.
+     * Returns whether the reflected method is {@see Container::get()}.
      */
     public function isMethodSupported(MethodReflection $methodReflection): bool
     {
