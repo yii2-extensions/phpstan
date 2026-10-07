@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\data\type;
 
+use ArrayIterator;
+use ArrayObject;
+use SplObjectStorage;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\NotInstantiableException;
@@ -14,9 +17,9 @@ use function PHPStan\Testing\assertType;
  * Type assertion fixture for components and container services declared by closures and class name strings.
  *
  * Verifies that a closure with a class return type resolves to that class, even when that class is an aliased container
- * ID, that a class name string resolves with or without a leading backslash, that components with an unknown class are
- * `object`, that a core component configured without a class keeps the type declared by the application, and that
- * unresolvable services, and services naming one, keep Yii's type.
+ * ID, that a class name string resolves with or without a leading backslash, that a core component configured without
+ * a class keeps the type declared by the application, and that components and services with an unknown class, and
+ * services naming one, are `object`, even under a class name ID.
  */
 final class ServiceMapDefinitionType
 {
@@ -57,6 +60,21 @@ final class ServiceMapDefinitionType
         assertType('object', Yii::$app->untypedClosure);
         assertType('object', Yii::$app->get('instanceComponent'));
         assertType('object', Yii::$app->instanceComponent);
+        assertType('object', Yii::$app->get(ArrayIterator::class));
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnObjectForUnresolvableService(): void
+    {
+        assertType('object', Yii::$container->get('untypedService'));
+        assertType('object', Yii::$container->get('instanceService'));
+        assertType('object', Yii::$container->get('untypedServiceAlias'));
+        assertType('object', Yii::$container->get(ArrayObject::class));
+        assertType('object', Yii::$container->get(SplObjectStorage::class));
+        assertType('object', Yii::$app->get(ArrayObject::class));
     }
 
     /**
@@ -76,16 +94,5 @@ final class ServiceMapDefinitionType
         assertType('yii\web\View', Yii::$app->stringView);
         assertType('yii\web\View', Yii::$app->get('stringView'));
         assertType('yii\web\View', Yii::$app->prefixedView);
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     * @throws NotInstantiableException if a class or service can't be instantiated.
-     */
-    public function testReturnYiiDeclaredTypeForUnresolvableService(): void
-    {
-        assertType('object', Yii::$container->get('untypedService'));
-        assertType('object', Yii::$container->get('instanceService'));
-        assertType('object', Yii::$container->get('untypedServiceAlias'));
     }
 }

@@ -7,7 +7,6 @@ namespace yii2\extensions\phpstan\tests;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, RequiresOperatingSystem};
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
-use SplFileInfo;
 use SplObjectStorage;
 use SplStack;
 use yii\base\InvalidArgumentException;
@@ -60,6 +59,20 @@ final class ServiceMapServiceTest extends TestCase
         new ServiceMap(self::BASE_PATH . 'config-container-empty.php');
     }
 
+    public function testReturnNullWhenServiceIsListHoldingSingleArrayDefinition(): void
+    {
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
+
+        self::assertNull(
+            $serviceMap->getServiceById('nested-service-class'),
+            'One-element list must not be unwrapped.',
+        );
+        self::assertTrue(
+            $serviceMap->isUnresolvedService('nested-service-class'),
+            'Definition must be flagged as unresolved.',
+        );
+    }
+
     public function testReturnNullWhenServiceNonExistent(): void
     {
         $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
@@ -67,6 +80,20 @@ final class ServiceMapServiceTest extends TestCase
         self::assertNull(
             $serviceMap->getServiceById('non-existent-service'),
             "ServiceMap should return 'null' for a non-existent service.",
+        );
+    }
+
+    public function testReturnNullWhenSingletonIsListHoldingSingleArrayDefinition(): void
+    {
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
+
+        self::assertNull(
+            $serviceMap->getServiceById('singleton-nested-service-class'),
+            'One-element list must not be unwrapped.',
+        );
+        self::assertTrue(
+            $serviceMap->isUnresolvedService('singleton-nested-service-class'),
+            'Definition must be flagged as unresolved.',
         );
     }
 
@@ -78,17 +105,6 @@ final class ServiceMapServiceTest extends TestCase
             SplStack::class,
             $serviceMap->getServiceById('closure'),
             "ServiceMap should resolve 'closure' to 'SplStack::class'.",
-        );
-    }
-
-    public function testReturnServiceClassWhenNestedValid(): void
-    {
-        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
-
-        self::assertSame(
-            SplFileInfo::class,
-            $serviceMap->getServiceById('nested-service-class'),
-            "ServiceMap should resolve 'nested-service-class' to 'SplFileInfo::class'.",
         );
     }
 
@@ -122,17 +138,6 @@ final class ServiceMapServiceTest extends TestCase
             SplStack::class,
             $serviceMap->getServiceById('singleton-closure'),
             "ServiceMap should resolve 'singleton-closure' to 'SplStack::class'.",
-        );
-    }
-
-    public function testReturnServiceClassWhenSingletonNestedValid(): void
-    {
-        $serviceMap = new ServiceMap(self::BASE_PATH . 'phpstan-config.php');
-
-        self::assertSame(
-            SplFileInfo::class,
-            $serviceMap->getServiceById('singleton-nested-service-class'),
-            "ServiceMap should resolve 'singleton-nested-service-class' to 'SplFileInfo::class'.",
         );
     }
 

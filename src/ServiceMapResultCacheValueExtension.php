@@ -45,7 +45,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
     public const PARAMS_KEY = 'params';
 
     /**
-     * Value returned for a component defined in the configuration whose class can't be determined.
+     * Value returned for a component or service defined in the configuration whose class can't be determined.
      */
     public const UNRESOLVED = 'unresolved';
 
@@ -114,7 +114,8 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      *   configured.
      * - `component:<id>`: a hash of the component class and its generic type argument, {@see UNRESOLVED} when the
      *   component is defined with a class that can't be determined, or {@see MISSING}.
-     * - `service:<id>`: the configured service class, or {@see MISSING}.
+     * - `service:<id>`: the configured service class, {@see UNRESOLVED} when the service is defined with a class that
+     *   can't be determined, or {@see MISSING}.
      * - `behaviors:<class>`: a hash of the ordered behavior classes, or {@see MISSING} when none are attached.
      *
      * Any other key yields {@see UNSUPPORTED}, so a result cache written by another version of the extension
@@ -134,7 +135,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
             self::APPLICATION_KEY => $this->serviceMap->getApplicationType(),
             self::PARAMS_KEY => $this->getParamsValue(),
             self::COMPONENT => $this->getComponentValue($id),
-            self::SERVICE => $this->serviceMap->getServiceById($id) ?? self::MISSING,
+            self::SERVICE => $this->getServiceValue($id),
             self::BEHAVIORS => $this->getBehaviorsValue($id),
             default => self::UNSUPPORTED,
         };
@@ -239,5 +240,14 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
         return $this->paramsValue = $params === []
             ? self::MISSING
             : hash('sha256', serialize(self::describeParamsType(ParamsTypeBuilder::build($params))));
+    }
+
+    /**
+     * Returns the value for the service with the given id.
+     */
+    private function getServiceValue(string $id): string
+    {
+        return $this->serviceMap->getServiceById($id)
+            ?? ($this->serviceMap->isUnresolvedService($id) ? self::UNRESOLVED : self::MISSING);
     }
 }

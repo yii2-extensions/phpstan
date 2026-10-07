@@ -40,6 +40,18 @@ final class ServiceMapDefinitionTest extends TestCase
         );
     }
 
+    #[DataProviderExternal(ServiceMapDefinitionProvider::class, 'unresolvedServiceProvider')]
+    public function testFlagServiceDefinedWithUnknownClass(string $id, bool $expectedUnresolved): void
+    {
+        $serviceMap = new ServiceMap(self::CONFIG_PATH);
+
+        self::assertSame(
+            $expectedUnresolved,
+            $serviceMap->isUnresolvedService($id),
+            'Only defined services without a class must be flagged.',
+        );
+    }
+
     public function testNotFlagComponentAbsentFromConfig(): void
     {
         $serviceMap = new ServiceMap(self::CONFIG_PATH);

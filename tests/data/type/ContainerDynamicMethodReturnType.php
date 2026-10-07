@@ -16,8 +16,8 @@ use function random_int;
  * Type assertion fixture for {@see Container::get()} return types in PHPStan analysis.
  *
  * Verifies type inference for container lookups, covering class-string and string identifiers, service definitions,
- * closures, singletons, nested services, parameterized instantiation, named arguments, and the `object` type declared
- * by Yii for unknown, non-constant, and union identifiers.
+ * closures, singletons, parameterized instantiation, named arguments, the `object` type declared by Yii for unknown,
+ * non-constant, and union identifiers, and `object` for one-element definition lists, which Yii rejects.
  */
 final class ContainerDynamicMethodReturnType
 {
@@ -86,6 +86,34 @@ final class ContainerDynamicMethodReturnType
         assertType(
             'object',
             $container->get(...['service']),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnObjectWhenGetNestedService(): void
+    {
+        $container = new Container();
+
+        assertType(
+            'object',
+            $container->get('nested-service-class'),
+        );
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnObjectWhenGetNestedSingleton(): void
+    {
+        $container = new Container();
+
+        assertType(
+            'object',
+            $container->get('singleton-nested-service-class'),
         );
     }
 
@@ -184,34 +212,6 @@ final class ContainerDynamicMethodReturnType
         assertType(
             'SplObjectStorage',
             $container->get('service'),
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     * @throws NotInstantiableException if a class or service can't be instantiated.
-     */
-    public function testReturnServiceWhenGetNestedService(): void
-    {
-        $container = new Container();
-
-        assertType(
-            'SplFileInfo',
-            $container->get('nested-service-class'),
-        );
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     * @throws NotInstantiableException if a class or service can't be instantiated.
-     */
-    public function testReturnServiceWhenGetNestedSingleton(): void
-    {
-        $container = new Container();
-
-        assertType(
-            'SplFileInfo',
-            $container->get('singleton-nested-service-class'),
         );
     }
 

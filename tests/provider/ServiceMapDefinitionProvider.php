@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\provider;
 
+use ArrayObject;
 use SplStack;
 use yii\caching\{ArrayCache, CacheInterface, DummyCache, FileCache};
 use yii\web\View;
@@ -196,6 +197,10 @@ final class ServiceMapDefinitionProvider
             'invokableObject',
             View::class,
         ];
+        yield 'list holding a single array definition' => [
+            'nestedList',
+            null,
+        ];
         yield 'null under non-class ID' => [
             'null',
             null,
@@ -276,5 +281,21 @@ final class ServiceMapDefinitionProvider
             'wrappedStringWithParams',
             SplStack::class,
         ];
+    }
+
+    /**
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function unresolvedServiceProvider(): iterable
+    {
+        yield 'absent ID' => ['absent', false];
+        yield 'class-keyed closure without return type' => [ArrayObject::class, true];
+        yield 'closure without return type' => ['closureUntyped', true];
+        yield 'container ID on cycle' => ['cycle.a', true];
+        yield 'container ID string naming unresolvable ID' => ['unresolvable.alias', true];
+        yield 'empty array under non-BaseObject class ID' => ['SplObjectStorage', false];
+        yield 'list holding a single array definition' => ['nestedList', true];
+        yield 'null under non-class ID' => ['null', false];
+        yield 'string' => ['string', false];
     }
 }

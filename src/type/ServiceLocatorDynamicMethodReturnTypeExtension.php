@@ -7,7 +7,7 @@ namespace yii2\extensions\phpstan\type;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{MethodReflection, ParametersAcceptorSelector, ReflectionProvider};
-use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, Type, TypeCombinator};
+use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, ObjectWithoutClassType, Type, TypeCombinator};
 use yii\di\ServiceLocator;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
@@ -16,9 +16,10 @@ use function count;
 /**
  * Resolves {@see ServiceLocator::get()} calls for component IDs, service IDs, and class names to the matching class.
  *
- * Nullability follows the `$throwException` conditional return type declared by Yii, as resolved by PHPStan for the
- * call. Unknown, non-constant, and unpacked IDs are left to PHPStan. Applies to {@see ServiceLocator} subclasses, such
- * as modules and applications.
+ * A component or service whose class can't be determined is `object`, also under a class name ID. Nullability follows
+ * the `$throwException` conditional return type declared by Yii, as resolved by PHPStan for the call. Unknown,
+ * non-constant, and unpacked IDs are left to PHPStan. Applies to {@see ServiceLocator} subclasses, such as modules and
+ * applications.
  *
  * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
@@ -45,13 +46,14 @@ final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMet
     }
 
     /**
-     * Returns the class resolved for a single constant ID, made nullable when the declared return type allows `null`.
+     * Returns the type resolved for a single constant ID, made nullable when the declared return type allows `null`.
      *
      * @param MethodReflection $methodReflection Reflection of the called method.
      * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
-     * @return Type|null Resolved component class, or `null` to defer to the return type declared by Yii.
+     * @return Type|null Resolved class, `object` for an ID whose class can't be determined, or `null` to defer to the
+     * return type declared by Yii.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
@@ -81,20 +83,19 @@ final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMet
             ServiceMapResultCacheValueExtension::serviceKey($id),
         );
 
-        $className = $this->resolveClassName($id, $scope);
+        $resolvedType = $this->resolveType($id, $scope);
 
-        if ($className === null) {
+        if ($resolvedType === null) {
             return null;
         }
 
-        $classType = new ObjectType($className);
         $declaredType = ParametersAcceptorSelector::selectFromArgs(
             $scope,
             $args,
             $methodReflection->getVariants(),
         )->getReturnType();
 
-        return $declaredType->isNull()->no() ? $classType : TypeCombinator::addNull($classType);
+        return $declaredType->isNull()->no() ? $resolvedType : TypeCombinator::addNull($resolvedType);
     }
 
     /**
@@ -108,23 +109,41 @@ final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMet
     /**
      * Resolves an ID to a component class, a service class, or an existing class with the same name.
      *
+     * A component or service whose class can't be determined resolves to `object` before any later candidate, since
+     * Yii returns whatever its definition yields.
+     *
      * @param string $id Component ID, service ID, or class name passed to {@see ServiceLocator::get()}.
      * @param DependencyTracker&Scope $scope Scope recording a dependency on the class named by the ID, when the ID is
      * used as a class.
      *
-     * @return string|null Resolved class name, or `null` when the ID is unknown.
+     * @return Type|null Resolved class, `object` for an ID whose class can't be determined, or `null` when the ID is
+     * unknown.
      */
-    private function resolveClassName(string $id, Scope $scope): string|null
+    private function resolveType(string $id, Scope $scope): Type|null
     {
-        $className = $this->serviceMap->getComponentClassById($id) ?? $this->serviceMap->getServiceById($id);
+        $componentClass = $this->serviceMap->getComponentClassById($id);
 
-        if ($className !== null) {
-            return $className;
+        if ($componentClass !== null) {
+            return new ObjectType($componentClass);
+        }
+
+        if ($this->serviceMap->isUnresolvedComponent($id)) {
+            return new ObjectWithoutClassType();
+        }
+
+        $serviceClass = $this->serviceMap->getServiceById($id);
+
+        if ($serviceClass !== null) {
+            return new ObjectType($serviceClass);
+        }
+
+        if ($this->serviceMap->isUnresolvedService($id)) {
+            return new ObjectWithoutClassType();
         }
 
         // the fallback depends on whether the class exists, which a new class file can change
         $scope->trackClassDependency($id);
 
-        return $this->reflectionProvider->hasClass($id) ? $id : null;
+        return $this->reflectionProvider->hasClass($id) ? new ObjectType($id) : null;
     }
 }

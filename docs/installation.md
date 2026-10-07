@@ -364,9 +364,11 @@ Other inference changes in this release:
   reference, no longer stops the analysis: `get()` returns `object` for it, and `Yii::$app->id` is `object` too for a
   component the application class doesn't declare. A string definition, or the `class` or `__class` of an array
   definition, that names another container ID, such as `'mailer.alias' => 'mailer.real'`, resolves through that ID,
-  following chains, and `get()` returns `object` for it when that ID's class can't be determined. The exception
-  `Please provide return type for '<id>' service closure.` no longer exists, and `Unsupported definition for '<id>'.`
-  is thrown only for an integer, float, or boolean definition. See
+  following chains, and `get()` returns `object` for it when that ID's class can't be determined. Such a definition
+  under a class name ID, such as `Foo::class => static fn() => new Bar()`, is `object` as well, no longer `Foo`. A list
+  holding only a definition, such as `[['class' => Foo::class]]`, which Yii rejects, is no longer resolved. The
+  exception `Please provide return type for '<id>' service closure.` no longer exists, and
+  `Unsupported definition for '<id>'.` is thrown only for an integer, float, or boolean definition. See
   [Definition forms](configuration.md#definition-forms).
 - `asArray()` row shapes and `getAttribute()` types include the `@property` tags inherited from parent classes, used
   traits, and interfaces, so a model that extends a generated base class gets the tags of that class. The nearest

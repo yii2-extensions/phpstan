@@ -486,7 +486,8 @@ that class can be determined from the configuration file:
   object with an `__invoke()` method is resolved from that method's return type in the same way.
 - Any other object except a `yii\di\Instance` reference, typed as its own class.
 - For container services, a `[definition, params]` list, resolved from its first element, and an empty definition, or
-  an array without a class key, under an ID that names a `yii\base\BaseObject` subclass, resolved to that ID.
+  an array without a class key, under an ID that names a `yii\base\BaseObject` subclass, resolved to that ID. A list
+  holding only a definition, such as `[['class' => Foo::class]]`, isn't unwrapped, as in Yii, which rejects it.
 - A class name that is another container ID, as a string definition or as the `class` or `__class` of an array
   definition, resolved through that ID's definition, following chains, as `Yii::$container->get()` does.
   `container.definitions` and `container.singletons` share one ID space, so either can name an ID from the other, and a
@@ -501,9 +502,9 @@ determined.
 
 A definition whose class can't be determined doesn't stop the analysis. This includes a closure without a return type or
 with a union, nullable, or builtin return type, a `yii\di\Instance` reference, an array callable, and an array without a
-class key. `get('id')` then has the type Yii declares, `object`, and for a component `Yii::$app->id` is `object` too,
-unless the application class declares that property, as `yii\web\Application` does for `request`. Add a class return
-type to the closure to get the precise type.
+class key. `get('id')` then returns `object`, also when the ID is a class name, since the definition decides what the
+container returns, and for a component `Yii::$app->id` is `object` too, unless the application class declares that
+property, as `yii\web\Application` does for `request`. Add a class return type to the closure to get the precise type.
 
 ```php
 <?php

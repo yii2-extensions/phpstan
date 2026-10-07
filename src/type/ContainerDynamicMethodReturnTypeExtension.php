@@ -7,7 +7,7 @@ namespace yii2\extensions\phpstan\type;
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\MethodReflection;
-use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, Type};
+use PHPStan\Type\{DynamicMethodReturnTypeExtension, ObjectType, ObjectWithoutClassType, Type};
 use yii\di\Container;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
@@ -16,8 +16,9 @@ use function count;
 /**
  * Resolves {@see Container::get()} calls for service IDs defined in the Yii configuration to their configured class.
  *
- * Class-string, unknown, non-constant, and unpacked IDs are left to PHPStan, which applies the `@template` conditional
- * return type declared by Yii.
+ * A service whose class can't be determined is `object`, also under a class name ID, whose instance is whatever the
+ * definition yields. Unknown, non-constant, and unpacked IDs are left to PHPStan, which applies the `@template`
+ * conditional return type declared by Yii.
  *
  * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
@@ -40,13 +41,14 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
     }
 
     /**
-     * Returns the class configured for a single constant service ID.
+     * Returns the class configured for a single constant service ID, or `object` when its class can't be determined.
      *
      * @param MethodReflection $methodReflection Reflection of the called method.
      * @param MethodCall $methodCall Method call with arguments already normalized by PHPStan.
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
-     * @return Type|null Configured service class, or `null` to defer to the return type declared by Yii.
+     * @return Type|null Configured service class, `object` for a service whose class can't be determined, or `null` to
+     * defer to the return type declared by Yii.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
@@ -74,7 +76,11 @@ final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodRe
 
         $serviceClass = $this->serviceMap->getServiceById($id);
 
-        return $serviceClass !== null ? new ObjectType($serviceClass) : null;
+        if ($serviceClass !== null) {
+            return new ObjectType($serviceClass);
+        }
+
+        return $this->serviceMap->isUnresolvedService($id) ? new ObjectWithoutClassType() : null;
     }
 
     /**

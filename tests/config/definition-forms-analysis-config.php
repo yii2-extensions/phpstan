@@ -8,6 +8,7 @@ use yii\web\View;
 
 return [
     'components' => [
+        ArrayIterator::class => static fn() => new View(),
         'closureView' => static fn(): View => new View(),
         'instanceComponent' => Instance::of('view'),
         'prefixedView' => ['class' => '\yii\web\View'],
@@ -17,11 +18,13 @@ return [
     ],
     'container' => [
         'definitions' => [
+            ArrayObject::class => static fn() => new SplStack(),
             CacheInterface::class => FileCache::class,
             'closureCache' => static fn(): CacheInterface => new ArrayCache(),
             'instanceService' => Instance::of(SplStack::class),
             'mailer.alias' => 'mailer.real',
             'mailer.real' => ['class' => View::class],
+            SplObjectStorage::class => 'untypedService',
             'typedService' => static fn(): SplStack => new SplStack(),
             'untypedService' => static fn() => new SplStack(),
             'untypedServiceAlias' => 'untypedService',

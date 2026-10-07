@@ -74,6 +74,27 @@ final class ServiceMapResultCacheValueExtensionTest extends PHPStanTestCase
         );
     }
 
+    public function testGetValueDistinguishesServiceStates(): void
+    {
+        $extension = self::createExtension('service-states');
+
+        self::assertSame(
+            ServiceMapResultCacheValueExtension::MISSING,
+            $extension->getValue(ServiceMapResultCacheValueExtension::serviceKey('absent')),
+            'Absent service must map to the missing value.',
+        );
+        self::assertSame(
+            ServiceMapResultCacheValueExtension::UNRESOLVED,
+            $extension->getValue(ServiceMapResultCacheValueExtension::serviceKey('untyped')),
+            'Service with an unknown class must map to the unresolved value.',
+        );
+        self::assertSame(
+            'SplStack',
+            $extension->getValue(ServiceMapResultCacheValueExtension::serviceKey('typed')),
+            'Resolved service must map to its class.',
+        );
+    }
+
     #[DataProviderExternal(ServiceMapResultCacheValueExtensionProvider::class, 'stableValueProvider')]
     public function testGetValueIsStableWhenUnrelatedEntryChanges(string $key, string $changedConfig): void
     {

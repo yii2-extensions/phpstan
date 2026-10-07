@@ -44,8 +44,8 @@ use const PATHINFO_EXTENSION;
  * Loads, validates, and processes configuration files, exposing lookup methods to resolve class names and configuration
  * arrays by identifier. Registers the class of every definition form Yii accepts when it can be determined statically:
  * class name strings, arrays with a `class` or `__class` key, closures returning a single class, and object instances.
- * Definitions whose class can't be determined, such as untyped closures or {@see Instance} references, are skipped, so
- * the lookups return `null` and the consumers keep the type declared by Yii.
+ * Definitions whose class can't be determined, such as untyped closures or {@see Instance} references, are skipped and
+ * flagged as unresolved, so the lookups return `null` and the consumers type them as `object`.
  */
 final class ServiceMap
 {
@@ -282,6 +282,23 @@ final class ServiceMap
     public function isUnresolvedComponent(string $id): bool
     {
         return isset($this->unresolvedComponents[$id]);
+    }
+
+    /**
+     * Returns whether a container service is defined in the configuration but its class can't be determined.
+     *
+     * Covers factories without a single class return type, {@see Instance} references, array callables, arrays without
+     * a class key under an ID that isn't a class name, and definitions naming a container ID on a cycle or a container
+     * ID whose class can't be determined. Services that are absent, or defined empty, aren't unresolved, since Yii then
+     * uses the ID itself as the class.
+     *
+     * @param string $id Service identifier to look up.
+     *
+     * @return bool `true` if the service is defined with an unknown class; `false` otherwise.
+     */
+    public function isUnresolvedService(string $id): bool
+    {
+        return isset($this->unresolvedServices[$id]);
     }
 
     /**
@@ -566,9 +583,9 @@ final class ServiceMap
      * {@see \Yii::createObject()}, which resolves its class through the container as well. Object definitions keep
      * their class, the declared return type of a closure or of an object with an `__invoke()` method, or the class of
      * any other object, since Yii returns what the object yields. `container.definitions` and `container.singletons`
-     * share one ID space, as in the container. Chains are followed; a service whose chain is a cycle or reaches a
-     * container ID whose class can't be determined is dropped, and such a component is flagged as unresolved. A class
-     * that names no other container ID is kept.
+     * share one ID space, as in the container. Chains are followed; a service or component whose chain is a cycle or
+     * reaches a container ID whose class can't be determined is dropped and flagged as unresolved. A class that names
+     * no other container ID is kept.
      */
     private function resolveContainerAliases(): void
     {
@@ -581,6 +598,8 @@ final class ServiceMap
 
             if ($resolved !== null) {
                 $services[$id] = $resolved;
+            } else {
+                $this->unresolvedServices[$id] = true;
             }
         }
 
@@ -787,8 +806,10 @@ final class ServiceMap
     }
 
     /**
-     * Unwraps a `[definition, params]` list, as {@see \yii\di\Container::setDefinitions()} and
-     * {@see \yii\di\Container::setSingletons()} do, or a list holding a single array definition, to its first element.
+     * Unwraps a `[definition, params]` list to its definition, as {@see \yii\di\Container::setDefinitions()} and
+     * {@see \yii\di\Container::setSingletons()} do.
+     *
+     * Any other list, such as one holding a single array definition, is kept as is, since Yii doesn't unwrap it either.
      *
      * @param mixed $definition Service definition.
      *
@@ -796,13 +817,10 @@ final class ServiceMap
      */
     private function unwrapServiceDefinition(mixed $definition): mixed
     {
-        if (is_array($definition) === false || array_is_list($definition) === false) {
-            return $definition;
-        }
-
-        $count = count($definition);
-
-        return ($count === 2 && is_array($definition[1] ?? null)) || ($count === 1 && is_array($definition[0]))
+        return is_array($definition)
+            && array_is_list($definition)
+            && count($definition) === 2
+            && is_array($definition[1])
             ? $definition[0]
             : $definition;
     }
