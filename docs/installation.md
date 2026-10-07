@@ -359,9 +359,10 @@ Other inference changes in this release:
   related rows (`array<array<string, mixed>>`). Any other tag keeps its own type, as a required key when it's writable
   and as an optional key when it's read-only, and write-only tags give no key. A column tagged with a value object or an
   enum keeps that type as a required key, although the row holds the raw database value.
-- Components and container services accept every definition form Yii accepts when its class can be determined, and a
-  definition whose class can't be determined, such as a closure without a return type or a `yii\di\Instance`
-  reference, no longer stops the analysis: `get()` returns `object` for it, and `Yii::$app->id` is `object` too for a
+- Components and container services accept every definition form Yii accepts when its class can be determined, a
+  `yii\di\Instance` reference in a container definition resolves through its ID, and a definition whose class can't
+  be determined, such as a closure without a return type or a `yii\di\Instance` reference in a component definition,
+  no longer stops the analysis: `get()` returns `object` for it, and `Yii::$app->id` is `object` too for a
   component the application class doesn't declare. A string definition, or the `class` or `__class` of an array
   definition, that names another container ID, such as `'mailer.alias' => 'mailer.real'`, resolves through that ID,
   following chains, and `get()` returns `object` for it when that ID's class can't be determined. Such a definition

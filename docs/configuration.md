@@ -485,6 +485,8 @@ that class can be determined from the configuration file:
 - A closure with a single class return type, such as `static fn(): View => new View()`. For container services, an
   object with an `__invoke()` method is resolved from that method's return type in the same way.
 - Any other object except a `yii\di\Instance` reference, typed as its own class.
+- For container services, a `yii\di\Instance` reference, resolved through its ID, as a class name or as another
+  container ID, since Yii uses that ID as the class.
 - For container services, a `[definition, params]` list, resolved from its first element, and an empty definition, or
   an array without a class key, under an ID that names an instantiable class, whether or not it extends
   `yii\base\BaseObject`, resolved to that ID. A list holding only a definition, such as `[['class' => Foo::class]]`,
@@ -502,8 +504,8 @@ When an ID appears in both `container.definitions` and `container.singletons`, t
 determined.
 
 A definition whose class can't be determined doesn't stop the analysis. This includes a closure without a return type or
-with a union, nullable, or builtin return type, a `yii\di\Instance` reference, an array callable, and an array without a
-class key. `get('id')` then returns `object`, also when the ID is a class name, since the definition decides what the
+with a union, nullable, or builtin return type, a `yii\di\Instance` reference in a component definition, an array
+callable, and an array without a class key. `get('id')` then returns `object`, also when the ID is a class name, since the definition decides what the
 container returns, and for a component `Yii::$app->id` is `object` too, unless the application class declares that
 property, as `yii\web\Application` does for `request`. Add a class return type to the closure to get the precise type.
 

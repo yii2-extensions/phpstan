@@ -71,7 +71,6 @@ final class ServiceMapDefinitionType
     public function testReturnObjectForUnresolvableService(): void
     {
         assertType('object', Yii::$container->get('untypedService'));
-        assertType('object', Yii::$container->get('instanceService'));
         assertType('object', Yii::$container->get('untypedServiceAlias'));
         assertType('object', Yii::$container->get(ArrayObject::class));
         assertType('object', Yii::$container->get(SplObjectStorage::class));
@@ -85,6 +84,7 @@ final class ServiceMapDefinitionType
     public function testReturnResolvedClassForServiceNamingAnotherId(): void
     {
         assertType('yii\web\View', Yii::$container->get('mailer.alias'));
+        assertType('SplStack', Yii::$container->get('instanceService'));
     }
 
     /**

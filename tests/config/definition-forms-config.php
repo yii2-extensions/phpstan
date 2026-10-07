@@ -80,6 +80,8 @@ return [
             'cycle.b' => 'cycle.a',
             'emptyDefinitionAlias' => SplObjectStorage::class,
             'instance' => Instance::of(SplStack::class),
+            'instanceNamingAliasedId' => Instance::of('mailer.alias'),
+            'instanceNamingUnresolvableId' => Instance::of('closureUntyped'),
             'invokableObject' => new InvokableViewFactory(),
             'mailer.alias' => 'mailer.real',
             'mailer.arrayAlias' => ['class' => 'mailer.real'],

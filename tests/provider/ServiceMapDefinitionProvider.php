@@ -205,9 +205,17 @@ final class ServiceMapDefinitionProvider
             'SplObjectStorage',
             'SplObjectStorage',
         ];
+        yield 'Instance reference naming aliased container ID' => [
+            'instanceNamingAliasedId',
+            View::class,
+        ];
+        yield 'Instance reference naming unresolvable container ID' => [
+            'instanceNamingUnresolvableId',
+            null,
+        ];
         yield 'Instance reference' => [
             'instance',
-            null,
+            SplStack::class,
         ];
         yield 'invokable object' => [
             'invokableObject',
@@ -251,11 +259,11 @@ final class ServiceMapDefinitionProvider
         ];
         yield 'singleton Instance reference overriding definition' => [
             'singletonInstanceOverride',
-            null,
+            DummyCache::class,
         ];
         yield 'singleton Instance reference' => [
             'singletonInstance',
-            null,
+            SplStack::class,
         ];
         yield 'singleton string overriding object definition' => [
             'singletonOverride',
@@ -311,6 +319,8 @@ final class ServiceMapDefinitionProvider
         yield 'closure without return type' => ['closureUntyped', true];
         yield 'container ID on cycle' => ['cycle.a', true];
         yield 'container ID string naming unresolvable ID' => ['unresolvable.alias', true];
+        yield 'Instance reference naming unresolvable container ID' => ['instanceNamingUnresolvableId', true];
+        yield 'Instance reference' => ['instance', false];
         yield 'empty array under non-BaseObject class ID' => ['SplObjectStorage', false];
         yield 'list holding a single array definition' => ['nestedList', true];
         yield 'null under non-class ID' => ['null', false];

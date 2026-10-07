@@ -45,8 +45,8 @@ use const PATHINFO_EXTENSION;
  * Loads, validates, and processes configuration files, exposing lookup methods to resolve class names and configuration
  * arrays by identifier. Registers the class of every definition form Yii accepts when it can be determined statically:
  * class name strings, arrays with a `class` or `__class` key, closures returning a single class, and object instances.
- * Definitions whose class can't be determined, such as untyped closures or {@see Instance} references, are skipped and
- * flagged as unresolved, so the lookups return `null` and the consumers type them as `object`.
+ * Definitions whose class can't be determined, such as untyped closures or component {@see Instance} references, are
+ * skipped and flagged as unresolved, so the lookups return `null` and the consumers type them as `object`.
  */
 final class ServiceMap
 {
@@ -288,10 +288,10 @@ final class ServiceMap
     /**
      * Returns whether a container service is defined in the configuration but its class can't be determined.
      *
-     * Covers factories without a single class return type, {@see Instance} references, array callables, arrays without
-     * a class key under an ID that doesn't name an instantiable class, and definitions naming a container ID on a cycle
-     * or a container ID whose class can't be determined. Services that are absent, or defined empty, aren't unresolved,
-     * since Yii then uses the ID itself as the class.
+     * Covers factories without a single class return type, array callables, arrays without a class key under an ID
+     * that doesn't name an instantiable class, and definitions, {@see Instance} references included, naming a container
+     * ID on a cycle or a container ID whose class can't be determined. Services that are absent, or defined empty,
+     * aren't unresolved, since Yii then uses the ID itself as the class.
      *
      * @param string $id Service identifier to look up.
      *
@@ -496,8 +496,8 @@ final class ServiceMap
      * Each entry replaces whatever an earlier entry recorded for its ID, as {@see \yii\di\Container::set()} and
      * {@see \yii\di\Container::setSingleton()} replace the definition. Services whose class can't be determined are
      * skipped, and recorded as unresolved unless the definition is empty, since Yii then uses the ID itself as the
-     * class. Services defined by an object are recorded as such, since Yii returns the object, or calls it, instead of
-     * resolving a class through the container.
+     * class. Services defined by an object other than an {@see Instance} reference are recorded as such, since Yii
+     * returns the object, or calls it, instead of resolving a class through the container.
      *
      * @param array $services Service definitions indexed by service ID.
      * @param string $label Label used in error messages to identify the subsection (`'Definition'` or `'Singleton'`).
@@ -521,7 +521,7 @@ final class ServiceMap
             if ($className !== null) {
                 $this->services[$id] = $className;
 
-                if (is_object($definition)) {
+                if (is_object($definition) && $definition instanceof Instance === false) {
                     $this->objectDefinedServices[$id] = true;
                 }
             } elseif ($definition !== null && $definition !== []) {
@@ -702,8 +702,9 @@ final class ServiceMap
      * Resolves the class of a container definition as {@see \yii\di\Container::setDefinitions()} and
      * {@see \yii\di\Container::normalizeDefinition()} interpret it.
      *
-     * An empty definition resolves to the ID itself; a callable object is a factory resolved from its return type; an
-     * array resolves from its `class` key, then its `__class` key, then the ID when the ID contains a namespace
+     * An empty definition resolves to the ID itself; an {@see Instance} reference resolves to its ID, which Yii uses as
+     * the class and so resolves through the container; a callable object is a factory resolved from its return type;
+     * an array resolves from its `class` key, then its `__class` key, then the ID when the ID contains a namespace
      * separator. Array callables resolve to `null`.
      *
      * @param string $id Service ID.
@@ -717,6 +718,10 @@ final class ServiceMap
     {
         if ($definition === null || $definition === []) {
             return $this->resolveIdAsClass($id);
+        }
+
+        if ($definition instanceof Instance) {
+            return $this->normalizeClassName($definition->id);
         }
 
         if (is_array($definition) === false) {
