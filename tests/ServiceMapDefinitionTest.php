@@ -28,6 +28,18 @@ final class ServiceMapDefinitionTest extends TestCase
     private const SINGLETONS_FIRST_CONFIG_PATH = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR
         . 'container-singletons-first-config.php';
 
+    #[DataProviderExternal(ServiceMapDefinitionProvider::class, 'componentWithoutClassProvider')]
+    public function testFlagComponentDefinedWithoutClass(string $id, bool $expectedWithoutClass): void
+    {
+        $serviceMap = new ServiceMap(self::CONFIG_PATH);
+
+        self::assertSame(
+            $expectedWithoutClass,
+            $serviceMap->isComponentWithoutClass($id),
+            'Only arrays without a class key must be flagged.',
+        );
+    }
+
     #[DataProviderExternal(ServiceMapDefinitionProvider::class, 'componentProvider')]
     public function testFlagComponentDefinedWithUnknownClass(string $id, string|null $expectedClass): void
     {

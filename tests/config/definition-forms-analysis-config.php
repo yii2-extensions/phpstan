@@ -16,6 +16,7 @@ return [
         'request' => ['cookieValidationKey' => 'secret'],
         'stringView' => View::class,
         'untypedClosure' => static fn() => new View(),
+        'user' => static fn() => new View(),
     ],
     'container' => [
         'definitions' => [

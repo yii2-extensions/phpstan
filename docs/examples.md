@@ -326,8 +326,8 @@ parent query class. When those overrides name exactly one Active Record class, a
 `@return Invoice|array|null` and `@return Invoice[]|array` that Gii generates do, `one()` is `Invoice|null`, `all()` is
 `array<Invoice>`, `batch()` and `each()` yield `Invoice`, and `asArray()` gives the `Invoice` row shape. An override that
 also declares something `yii\db\ActiveQuery` never returns, such as `@return Invoice[]|false`, a nullable `all()`,
-`@return array<Invoice|null>`, or a plain `@return array` for `all()`, names no model, so the query class keeps the
-types it declares.
+`@return array<Invoice|null>`, a plain `@return array` for `all()`, or `object` without a class, names no model, so the
+query class keeps the types it declares.
 
 ```php
 <?php
@@ -796,11 +796,11 @@ class CustomServiceManager extends ServiceLocator
         // ✅ Different ways to resolve services
         return [
             'email_by_id' => $this->get('emailService'),           // EmailService
-            'email_by_class' => $this->get(EmailService::class),   // EmailService
             'logger_by_id' => $this->get('loggerService'),         // LoggerService
-            'logger_by_class' => $this->get(LoggerService::class), // LoggerService
             'cache_optional' => $this->get('cacheService', false), // CacheService|null
             'unknown_by_id' => $this->get('unknownService'),       // object
+            // a class name is not a component ID, and the service locator throws for it at runtime
+            'by_class' => $this->get(EmailService::class),         // object
         ];
     }
 }

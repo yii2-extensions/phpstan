@@ -26,6 +26,8 @@ parameters:
             - tests/support/stub/DerivedModelNativeQuery.php
             - tests/support/stub/DerivedModelNonRecordQuery.php
             - tests/support/stub/DerivedModelNullElementQuery.php
+            - tests/support/stub/DerivedModelObjectAllQuery.php
+            - tests/support/stub/DerivedModelObjectOneQuery.php
             - tests/support/stub/DerivedModelNullableAllQuery.php
             - tests/support/stub/DerivedModelSplitQuery.php
             - tests/support/stub/DerivedModelTwoModelQuery.php

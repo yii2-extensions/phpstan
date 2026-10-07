@@ -309,6 +309,7 @@ Update `@var` and `@return` annotations, and `assertType()` expectations, that r
 | `$article->getAttribute('id')`                                    | `mixed`                             | `int`                                    |
 | `$container->get('unknown')`, `$container->get($id)`              | `mixed`                             | `object`                                 |
 | `Yii::$app->get('unknown')`, `$locator->get($id)`                 | `mixed`                             | `object`                                 |
+| `Yii::$app->get(User::class)`, `$locator->get(Foo::class)`        | `User`, `Foo`                       | `object`                                 |
 | `$locator->get('user', false)`, `$locator->get('user', $bool)`    | `User`                              | `User\|null`                             |
 | `$headers->get($name, null, false)`                               | `array<int, string>\|null`          | `array<string>\|null`                    |
 | `$headers->get($name, [], false)`                                 | `array<int, string>`                | `array<string>`                          |
@@ -319,6 +320,9 @@ without `@property` tags of its own that extends a base class declaring them. A 
 query class without generic PHPDoc gets `static::find()` and `self::find()` typed as
 `ModelQuery&yii\db\ActiveQuery<static(Model)>` instead. Relation calls with `static::class` or `get_class($this)` no
 longer abort the analysis either; `$this->hasMany(static::class, [...])` is `ActiveQuery<static(Model)>`.
+`Yii::$app->get()`, `$module->get()`, and any other service locator resolve component IDs only: a class name or a
+container service ID that no component uses keeps the type Yii declares, `object`, since the service locator throws
+for it at runtime. Use `Yii::$container->get(Foo::class)` for container services.
 
 Relation keys, which an `asArray()` row holds only when the relation is eager-loaded with `with()`, and read-only keys
 are optional. Reading one directly, as in `$row['comments']`, is reported at level 7 and higher as an offset that might
@@ -362,8 +366,8 @@ Other inference changes in this release:
 - Components and container services accept every definition form Yii accepts when its class can be determined, a
   `yii\di\Instance` reference in a container definition resolves through its ID, and a definition whose class can't
   be determined, such as a closure without a return type or a `yii\di\Instance` reference in a component definition,
-  no longer stops the analysis: `get()` returns `object` for it, and `Yii::$app->id` is `object` too for a
-  component the application class doesn't declare. A string definition, or the `class` or `__class` of an array
+  no longer stops the analysis: `get()` returns `object` for it, and `Yii::$app->id` is `object` too, even for a
+  component the application class declares, unless it's configured as an array without a class key. A string definition, or the `class` or `__class` of an array
   definition, that names another container ID, such as `'mailer.alias' => 'mailer.real'`, resolves through that ID,
   following chains, and `get()` returns `object` for it when that ID's class can't be determined. Such a definition
   under a class name ID, such as `Foo::class => static fn() => new Bar()`, is `object` as well, no longer `Foo`. A list
@@ -399,8 +403,10 @@ the `yii2\extensions\phpstan` namespace.
   registration of it. `stubs/yii.stub` and `type\ApplicationTypeNodeResolverExtension` replace the stub it generated.
 - `ServiceMap::getComponentDefinitionByClassName()` is removed; use `ServiceMap::getComponentDefinitionById()`, which
   now omits the `__class` key as well as `class`.
-- `ServiceMap::isUnresolvedComponent()` is new; it returns `true` for a component that is configured but whose class
-  can't be determined.
+- `ServiceMap::isUnresolvedComponent()` and `ServiceMap::isUnresolvedService()` are new; they return `true` for a
+  component or container service that is configured but whose class can't be determined.
+  `ServiceMap::isComponentWithoutClass()` is new too; it returns `true` for a component configured as an array without
+  a class key, which Yii completes from the core components.
 - `reflection\ComponentPropertyReflection::getType()` is removed; use `getReadableType()`.
 - Constructors that changed, with their new parameter lists (`DeclarationDependencyTracker` is
   `PHPStan\Analyser\DeclarationDependencyTracker`):
@@ -409,6 +415,7 @@ the `yii2\extensions\phpstan` namespace.
   - `type\ActiveRecordGetAttributeDynamicMethodReturnTypeExtension`: `ReflectionProvider`, `ServiceMap`,
     `PropertyTagTypeResolver` (replaces `FileTypeMapper`, which came before `ServiceMap`).
   - `type\ContainerDynamicMethodReturnTypeExtension`: `ServiceMap` (`ReflectionProvider` removed).
+  - `type\ServiceLocatorDynamicMethodReturnTypeExtension`: `ServiceMap` (`ReflectionProvider` removed).
   - `property\ApplicationPropertiesClassReflectionExtension`: `AnnotationsPropertiesClassReflectionExtension`,
     `ReflectionProvider`, `ServiceMap`, `DeclarationDependencyTracker`, `array $genericComponents = []`
     (`DeclarationDependencyTracker` added).

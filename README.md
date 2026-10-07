@@ -163,9 +163,11 @@ if (Yii::$app->user->isGuest === false) {
 ```
 
 A component is typed from a class name, an array with `class` or `__class`, a closure with a class return type, or an
-object. When its class can't be determined, as for a closure without a return type or a `yii\di\Instance` reference,
-`Yii::$app->get('id')` is typed as `object`, and so is `Yii::$app->id` unless the application class declares it, as it
-does for `request`. Add a class return type to the closure for the precise type.
+object, and a `yii\di\Instance` reference is typed as `yii\di\Instance`, which is what Yii returns for it. When its
+class can't be determined, as for a closure without a return type, `Yii::$app->get('id')` is typed as `object`, and so
+is `Yii::$app->id`, even when the application class declares it. A
+core component configured without a class, such as `request` with only `cookieValidationKey`, keeps the type the
+application class declares, since Yii completes its class. Add a class return type to the closure for the precise type.
 
 #### Application params
 
@@ -282,11 +284,11 @@ and an input known to be empty, such as `[]`, stays `array{}`.
 ```php
 $serviceLocator = new ServiceLocator();
 
-// ✅ Get component with type inference with class
-$mailer = $serviceLocator->get(Mailer::class);  // Mailer
+// ✅ Get a component by its ID
+$mailer = $serviceLocator->get('mailer');  // Mailer (if configured) or object
 
-// ✅ Get component with string identifier and without configuration in ServiceMap
-$mailer = $serviceLocator->get('mailer');  // MailerInterface (if configured) or object
+// A class name that no component uses keeps Yii's type, since get() throws for it at runtime
+$service = $serviceLocator->get(Mailer::class);  // object
 
 // Nullable when `$throwException` is not `true`
 $user = $serviceLocator->get('user', false); // User|null

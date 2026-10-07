@@ -17,6 +17,8 @@ use yii2\extensions\phpstan\tests\support\stub\{
     DerivedModelNonRecordQuery,
     DerivedModelNullElementQuery,
     DerivedModelNullableAllQuery,
+    DerivedModelObjectAllQuery,
+    DerivedModelObjectOneQuery,
     DerivedModelSplitQuery,
     DerivedModelTwoModelQuery,
     DerivedModelUntypedAllQuery,
@@ -39,6 +41,8 @@ final class ActiveQueryDerivedModelEdgeType
         DerivedModelFalseOneQuery $falseOneQuery,
         DerivedModelNullableAllQuery $nullableAllQuery,
         DerivedModelNullElementQuery $nullElementQuery,
+        DerivedModelObjectAllQuery $objectAllQuery,
+        DerivedModelObjectOneQuery $objectOneQuery,
         DerivedModelUntypedAllQuery $untypedAllQuery,
     ): void {
         assertType(
@@ -80,6 +84,18 @@ final class ActiveQueryDerivedModelEdgeType
         assertType(
             'array<yii2\extensions\phpstan\tests\support\stub\Invoice|null>',
             $nullElementQuery->all(),
+        );
+        assertType(
+            'array<object>',
+            $objectAllQuery->all(),
+        );
+        assertType(
+            'array|yii2\extensions\phpstan\tests\support\stub\Invoice|null',
+            $objectAllQuery->one(),
+        );
+        assertType(
+            'array|object|null',
+            $objectOneQuery->one(),
         );
         assertType(
             'array',

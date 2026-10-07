@@ -56,8 +56,10 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * Retrieves the property reflection for a given property on the Yii Application class or its components.
      *
      * Resolves, in order, a native property of the configured application type, a configured component, an
-     * annotation-based property, and a configured component whose class can't be determined, typed as `object`.
-     * PHPStan calls this method only after {@see hasProperty()} returned `true` for the same class and property name.
+     * annotation-based property, and a configured component whose class can't be determined, typed as `object`. Such a
+     * component takes precedence over the annotation, since its definition decides the value, unless it's an array
+     * without a class key, which Yii completes from the core component the annotation describes. PHPStan calls this
+     * method only after {@see hasProperty()} returned `true` for the same class and property name.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
@@ -82,11 +84,18 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             );
         }
 
-        if ($this->annotationsProperties->hasProperty($normalizedClassReflection, $propertyName)) {
+        $isUnresolved = $this->serviceMap->isUnresolvedComponent($propertyName);
+
+        // a configured definition decides the value, except an array without a class key, which Yii completes from the
+        // core components that the application class annotates
+        if (
+            ($isUnresolved === false || $this->serviceMap->isComponentWithoutClass($propertyName))
+            && $this->annotationsProperties->hasProperty($normalizedClassReflection, $propertyName)
+        ) {
             return $this->annotationsProperties->getProperty($normalizedClassReflection, $propertyName);
         }
 
-        if ($this->serviceMap->isUnresolvedComponent($propertyName)) {
+        if ($isUnresolved) {
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
                 new ObjectWithoutClassType(),

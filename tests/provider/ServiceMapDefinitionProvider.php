@@ -7,6 +7,7 @@ namespace yii2\extensions\phpstan\tests\provider;
 use ArrayObject;
 use SplStack;
 use yii\caching\{ArrayCache, CacheInterface, DummyCache, FileCache};
+use yii\di\Instance;
 use yii\web\View;
 use yii2\extensions\phpstan\tests\support\stub\{InvokableViewFactory, MyActiveRecord, PlainService};
 
@@ -37,7 +38,7 @@ final class ServiceMapDefinitionProvider
         yield 'closure returning nullable class' => ['closureNullable', null];
         yield 'closure returning union' => ['closureUnion', null];
         yield 'closure without return type' => ['closureUntyped', null];
-        yield 'Instance reference' => ['instance', null];
+        yield 'Instance reference' => ['instance', Instance::class];
         yield 'invokable object' => ['invokableObject', InvokableViewFactory::class];
         yield 'null' => ['null', null];
         yield 'object of aliased container ID class' => ['objectOfAliasedId', ArrayCache::class];
@@ -48,6 +49,20 @@ final class ServiceMapDefinitionProvider
         yield 'string naming unresolvable container ID' => ['containerAliasUnresolvable', null];
         yield 'string with leading backslash' => ['stringLeadingBackslash', View::class];
         yield 'string' => ['string', View::class];
+    }
+
+    /**
+     * @return iterable<string, array{string, bool}>
+     */
+    public static function componentWithoutClassProvider(): iterable
+    {
+        yield 'absent ID' => ['absent', false];
+        yield 'array callable' => ['arrayCallable', false];
+        yield 'array with __class' => ['arrayDunderClass', false];
+        yield 'array with class' => ['arrayClass', false];
+        yield 'array without class' => ['arrayWithoutClass', true];
+        yield 'closure without return type' => ['closureUntyped', false];
+        yield 'null' => ['null', false];
     }
 
     /**

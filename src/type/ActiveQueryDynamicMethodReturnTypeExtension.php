@@ -402,8 +402,8 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      *
      * The return type of `one()` may only hold objects, arrays, and `null`, and the return type of `all()` only arrays
      * whose values hold objects and arrays, as {@see ActiveQuery} returns. Any other branch, such as `false`, a
-     * collection object, `null` returned by `all()` or among its values, or values of unknown type, makes the
-     * declaration unsupported.
+     * collection object, `null` returned by `all()` or among its values, an object of no named class, or values of
+     * unknown type, makes the declaration unsupported.
      *
      * @param string $methodName Name of the declared method, `one` or `all`.
      * @param Type $returnType Declared return type of the method.
@@ -444,13 +444,14 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * @param Type $rowType Row type declared by `one()` without `null`, or array value type declared by `all()`.
      *
      * @return list<string>|null Object class names, or `null` when the row type without arrays is not certainly an
-     * object.
+     * object of named classes, such as `object` itself.
      */
     private function getRowClassNames(Type $rowType): array|null
     {
         $objectType = TypeCombinator::remove($rowType, new ArrayType(new MixedType(), new MixedType()));
+        $classNames = $objectType->isObject()->yes() ? $objectType->getObjectClassNames() : [];
 
-        return $objectType->isObject()->yes() ? $objectType->getObjectClassNames() : null;
+        return $classNames !== [] ? $classNames : null;
     }
 
     /**

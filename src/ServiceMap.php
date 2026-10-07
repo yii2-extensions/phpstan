@@ -45,8 +45,8 @@ use const PATHINFO_EXTENSION;
  * Loads, validates, and processes configuration files, exposing lookup methods to resolve class names and configuration
  * arrays by identifier. Registers the class of every definition form Yii accepts when it can be determined statically:
  * class name strings, arrays with a `class` or `__class` key, closures returning a single class, and object instances.
- * Definitions whose class can't be determined, such as untyped closures or component {@see Instance} references, are
- * skipped and flagged as unresolved, so the lookups return `null` and the consumers type them as `object`.
+ * Definitions whose class can't be determined, such as untyped closures, are skipped and flagged as unresolved, so the
+ * lookups return `null` and the consumers type them as `object`.
  */
 final class ServiceMap
 {
@@ -92,6 +92,14 @@ final class ServiceMap
      * @phpstan-var array<string, array<array-key, mixed>>
      */
     private array $componentsDefinitions = [];
+
+    /**
+     * IDs of components defined by an array without a class key, whose class Yii takes from the core components of the
+     * application class.
+     *
+     * @phpstan-var array<string, true>
+     */
+    private array $componentsWithoutClass = [];
 
     /**
      * IDs of components defined by an object, whose class Yii doesn't resolve through the container.
@@ -270,11 +278,28 @@ final class ServiceMap
     }
 
     /**
+     * Returns whether a component is defined by an array without a `class` or `__class` key.
+     *
+     * {@see \yii\base\Application::preInit()} completes such a definition with the class of the matching core
+     * component, so the type the application class declares for the component still applies. Such a component is also
+     * unresolved.
+     *
+     * @param string $id Component identifier to look up.
+     *
+     * @return bool `true` if the component is defined by an array without a class key; `false` otherwise.
+     */
+    public function isComponentWithoutClass(string $id): bool
+    {
+        return isset($this->componentsWithoutClass[$id]);
+    }
+
+    /**
      * Returns whether a component is defined in the configuration but its class can't be determined.
      *
-     * Covers closures without a single class return type, {@see Instance} references, array callables, arrays without
-     * a class key, and classes naming a container ID on a cycle or a container ID whose class can't be determined.
-     * Components that are absent or set to `null` aren't unresolved.
+     * Covers closures without a single class return type, array callables, arrays without a class key, and classes
+     * naming a container ID on a cycle or a container ID whose class can't be determined. Components that are absent or
+     * set to `null` aren't unresolved, and an {@see Instance} reference is the component itself, since
+     * {@see \yii\di\ServiceLocator::get()} returns it without resolving it.
      *
      * @param string $id Component identifier to look up.
      *
@@ -473,6 +498,15 @@ final class ServiceMap
                     $this->unresolvedComponents[$id] = true;
                 }
 
+                if (
+                    is_array($definition)
+                    && isset($definition['class']) === false
+                    && isset($definition['__class']) === false
+                    && is_callable($definition, true) === false
+                ) {
+                    $this->componentsWithoutClass[$id] = true;
+                }
+
                 continue;
             }
 
@@ -552,9 +586,10 @@ final class ServiceMap
      * Resolves the class of a component definition as {@see \yii\di\ServiceLocator::set()} and
      * {@see \yii\di\ServiceLocator::get()} interpret it.
      *
-     * A closure is a factory resolved from its return type; any other object is the component itself. An array
-     * resolves from its `__class` key, then its `class` key; array callables and arrays without a class key resolve to
-     * `null`, the latter because Yii completes core components from the application class.
+     * A closure is a factory resolved from its return type; any other object, an {@see Instance} reference included, is
+     * the component itself. An array resolves from its `__class` key, then its `class` key; array callables and arrays
+     * without a class key resolve to `null`, the latter because Yii completes core components from the application
+     * class.
      *
      * @param string $id Component ID.
      * @param mixed $definition Component definition.
@@ -683,10 +718,6 @@ final class ServiceMap
     {
         if (is_string($definition)) {
             return $this->normalizeClassName($definition);
-        }
-
-        if ($definition instanceof Instance) {
-            return null;
         }
 
         if (is_object($definition)) {

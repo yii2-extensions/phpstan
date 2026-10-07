@@ -19,8 +19,9 @@ use function PHPStan\Testing\assertType;
  *
  * Verifies that a closure with a class return type resolves to that class, even when that class is an aliased container
  * ID, that a class name string resolves with or without a leading backslash, that a core component configured without
- * a class keeps the type declared by the application, and that components and services with an unknown class, and
- * services naming one, are `object`, even under a class name ID.
+ * a class keeps the type declared by the application, that a component defined by a `yii\di\Instance` reference is that
+ * reference, and that components and services with an unknown class, and services naming one, are `object`, even under
+ * a class name ID.
  */
 final class ServiceMapDefinitionType
 {
@@ -55,13 +56,21 @@ final class ServiceMapDefinitionType
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
+    public function testReturnInstanceForComponentDefinedByInstanceReference(): void
+    {
+        assertType('yii\di\Instance', Yii::$app->get('instanceComponent'));
+        assertType('yii\di\Instance', Yii::$app->instanceComponent);
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
     public function testReturnObjectForUnresolvableComponent(): void
     {
         assertType('object', Yii::$app->get('untypedClosure'));
         assertType('object', Yii::$app->untypedClosure);
-        assertType('object', Yii::$app->get('instanceComponent'));
-        assertType('object', Yii::$app->instanceComponent);
         assertType('object', Yii::$app->get(ArrayIterator::class));
+        assertType('object', Yii::$app->user);
     }
 
     /**

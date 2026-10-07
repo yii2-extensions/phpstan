@@ -16,34 +16,12 @@ use function PHPStan\Testing\assertType;
 /**
  * Type assertion fixture for {@see ServiceLocator::get()} return types in PHPStan analysis.
  *
- * Verifies type inference for component resolution by ID and class name across {@see ServiceLocator}, {@see Module},
- * and {@see Application}, including built-in Yii components, named arguments, nullability driven by `$throwException`,
- * and the `object` type declared by Yii for unknown, non-constant, and union identifiers.
+ * Verifies type inference for component resolution by ID across {@see ServiceLocator}, {@see Module}, and
+ * {@see Application}, including named arguments, nullability driven by `$throwException`, and the `object` type declared
+ * by Yii for class names that aren't component IDs and for unknown, non-constant, and union identifiers.
  */
 final class ServiceLocatorDynamicMethodReturnType
 {
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnClassWhenGetByClassName(): void
-    {
-        $locator = new ServiceLocator();
-
-        assertType('yii2\extensions\phpstan\tests\support\stub\MyActiveRecord', $locator->get(MyActiveRecord::class));
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
-    public function testReturnClassWhenGetByClassNameString(): void
-    {
-        $locator = new ServiceLocator();
-
-        $className = 'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord';
-
-        assertType(MyActiveRecord::class, $locator->get($className));
-    }
-
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
@@ -54,6 +32,32 @@ final class ServiceLocatorDynamicMethodReturnType
         assertType('yii\web\User|null', $locator->get('user', ...[false]));
         assertType('yii\web\User', $locator->get('user', ...[true]));
         assertType('yii\web\View|null', Yii::$app->get('view', ...[false]));
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnObjectWhenGetByBuiltInClassNames(): void
+    {
+        $locator = new ServiceLocator();
+
+        assertType('object', $locator->get(User::class));
+        assertType('object', $locator->get(Request::class));
+        assertType('object', $locator->get(Response::class));
+        assertType('object', $locator->get(Session::class));
+        assertType('object|null', $locator->get(User::class, false));
+    }
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnObjectWhenGetByClassNameOfContainerService(): void
+    {
+        $locator = new ServiceLocator();
+
+        $className = 'yii2\extensions\phpstan\tests\support\stub\MyActiveRecord';
+
+        assertType('object', $locator->get(MyActiveRecord::class));
+        assertType('object', $locator->get($className));
     }
 
     /**
@@ -98,19 +102,6 @@ final class ServiceLocatorDynamicMethodReturnType
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnServicesWhenGetByBuiltInClassNames(): void
-    {
-        $locator = new ServiceLocator();
-
-        assertType(User::class, $locator->get(User::class));
-        assertType(Request::class, $locator->get(Request::class));
-        assertType(Response::class, $locator->get(Response::class));
-        assertType(Session::class, $locator->get(Session::class));
-    }
-
-    /**
-     * @throws InvalidConfigException if the configuration is invalid or incomplete.
-     */
     public function testReturnServiceWhenGetByComponentId(): void
     {
         $locator = new ServiceLocator();
@@ -129,8 +120,6 @@ final class ServiceLocatorDynamicMethodReturnType
         assertType(User::class, $locator->get('user', true));
         assertType('yii\web\User|null', $locator->get('user', false));
         assertType('yii\web\User|null', $locator->get('user', $throwException));
-        assertType(User::class, $locator->get(User::class));
-        assertType('yii\web\User|null', $locator->get(User::class, false));
     }
 
     /**
@@ -141,7 +130,7 @@ final class ServiceLocatorDynamicMethodReturnType
         $locator = new ServiceLocator();
 
         assertType(User::class, $locator->get(id: 'user'));
-        assertType(User::class, $locator->get(id: User::class, throwException: true));
+        assertType(User::class, $locator->get(id: 'user', throwException: true));
         assertType('yii\web\User|null', $locator->get(id: 'user', throwException: false));
         assertType('yii\web\User|null', $locator->get(throwException: false, id: 'user'));
     }
@@ -149,22 +138,22 @@ final class ServiceLocatorDynamicMethodReturnType
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnServiceWhenGetFromApplicationByIdOrClassName(): void
+    public function testReturnServiceWhenGetFromApplicationById(): void
     {
         $application = new Application();
 
         assertType(User::class, $application->get('user'));
-        assertType(User::class, $application->get(User::class));
+        assertType('object', $application->get(User::class));
     }
 
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
-    public function testReturnServiceWhenGetFromModuleByIdOrClassName(): void
+    public function testReturnServiceWhenGetFromModuleById(): void
     {
         $module = new Module('test');
 
         assertType(User::class, $module->get('user'));
-        assertType(User::class, $module->get(User::class));
+        assertType('object', $module->get(User::class));
     }
 }
