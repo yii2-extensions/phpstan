@@ -47,6 +47,7 @@ final class ServiceLocatorDynamicMethodReturnType
         assertType('object', $locator->get(Session::class));
         assertType('object|null', $locator->get(User::class, false));
     }
+
     /**
      * @throws InvalidConfigException if the configuration is invalid or incomplete.
      */
