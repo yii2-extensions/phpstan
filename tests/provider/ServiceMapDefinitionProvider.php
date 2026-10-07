@@ -8,7 +8,7 @@ use ArrayObject;
 use SplStack;
 use yii\caching\{ArrayCache, CacheInterface, DummyCache, FileCache};
 use yii\web\View;
-use yii2\extensions\phpstan\tests\support\stub\{InvokableViewFactory, MyActiveRecord};
+use yii2\extensions\phpstan\tests\support\stub\{InvokableViewFactory, MyActiveRecord, PlainService};
 
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\ServiceMapDefinitionTest} test cases.
@@ -93,9 +93,21 @@ final class ServiceMapDefinitionProvider
             MyActiveRecord::class,
             MyActiveRecord::class,
         ];
+        yield 'array without class under abstract class ID' => [
+            'yii\caching\Cache',
+            null,
+        ];
+        yield 'array without class under interface ID' => [
+            'yii\base\Configurable',
+            null,
+        ];
         yield 'array without class under missing class ID' => [
             'app\missing\Service',
             null,
+        ];
+        yield 'array without class under non-BaseObject class ID' => [
+            PlainService::class,
+            PlainService::class,
         ];
         yield 'array without class' => [
             'arrayWithoutClass',
@@ -169,6 +181,10 @@ final class ServiceMapDefinitionProvider
             'emptyDefinitionAlias',
             'SplObjectStorage',
         ];
+        yield 'container ID string naming non-BaseObject class ID' => [
+            'plainService.alias',
+            PlainService::class,
+        ];
         yield 'container ID string naming ID overridden by unresolvable singleton' => [
             'singletonClosureOverride.alias',
             null,
@@ -187,7 +203,7 @@ final class ServiceMapDefinitionProvider
         ];
         yield 'empty array under non-BaseObject class ID' => [
             'SplObjectStorage',
-            null,
+            'SplObjectStorage',
         ];
         yield 'Instance reference' => [
             'instance',
@@ -289,6 +305,8 @@ final class ServiceMapDefinitionProvider
     public static function unresolvedServiceProvider(): iterable
     {
         yield 'absent ID' => ['absent', false];
+        yield 'array without class under abstract class ID' => ['yii\caching\Cache', true];
+        yield 'array without class under non-BaseObject class ID' => [PlainService::class, false];
         yield 'class-keyed closure without return type' => [ArrayObject::class, true];
         yield 'closure without return type' => ['closureUntyped', true];
         yield 'container ID on cycle' => ['cycle.a', true];

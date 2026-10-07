@@ -5,7 +5,7 @@ declare(strict_types=1);
 use yii\caching\{ArrayCache, CacheInterface, DummyCache, FileCache};
 use yii\di\Instance;
 use yii\web\{Request, View};
-use yii2\extensions\phpstan\tests\support\stub\{InvokableViewFactory, MyActiveRecord};
+use yii2\extensions\phpstan\tests\support\stub\{InvokableViewFactory, MyActiveRecord, PlainService};
 
 return [
     'components' => [
@@ -62,6 +62,8 @@ return [
             ArrayCache::class => DummyCache::class,
             ArrayObject::class => static fn() => new SplStack(),
             'arrayWithoutClass' => ['flag' => 'foo'],
+            \yii\base\Configurable::class => ['flag' => 'foo'],
+            \yii\caching\Cache::class => ['flag' => 'foo'],
             'app\missing\Service' => ['flag' => 'foo'],
             CacheInterface::class => FileCache::class,
             'closureBuiltin' => static fn(): object => new SplStack(),
@@ -88,6 +90,8 @@ return [
             'null' => null,
             'object' => new SplStack(),
             'objectOfAliasedId' => new ArrayCache(),
+            PlainService::class => ['mode' => 'sync'],
+            'plainService.alias' => PlainService::class,
             'singletonClosureOverride' => FileCache::class,
             'singletonClosureOverride.alias' => 'singletonClosureOverride',
             'singletonEmptyOverride' => FileCache::class,

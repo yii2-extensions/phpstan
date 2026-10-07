@@ -5,6 +5,7 @@ declare(strict_types=1);
 use yii\caching\{ArrayCache, CacheInterface, FileCache};
 use yii\di\Instance;
 use yii\web\View;
+use yii2\extensions\phpstan\tests\support\stub\PlainService;
 
 return [
     'components' => [
@@ -24,6 +25,7 @@ return [
             'instanceService' => Instance::of(SplStack::class),
             'mailer.alias' => 'mailer.real',
             'mailer.real' => ['class' => View::class],
+            PlainService::class => ['mode' => 'sync'],
             SplObjectStorage::class => 'untypedService',
             'typedService' => static fn(): SplStack => new SplStack(),
             'untypedService' => static fn() => new SplStack(),

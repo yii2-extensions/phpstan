@@ -486,8 +486,9 @@ that class can be determined from the configuration file:
   object with an `__invoke()` method is resolved from that method's return type in the same way.
 - Any other object except a `yii\di\Instance` reference, typed as its own class.
 - For container services, a `[definition, params]` list, resolved from its first element, and an empty definition, or
-  an array without a class key, under an ID that names a `yii\base\BaseObject` subclass, resolved to that ID. A list
-  holding only a definition, such as `[['class' => Foo::class]]`, isn't unwrapped, as in Yii, which rejects it.
+  an array without a class key, under an ID that names an instantiable class, whether or not it extends
+  `yii\base\BaseObject`, resolved to that ID. A list holding only a definition, such as `[['class' => Foo::class]]`,
+  isn't unwrapped, as in Yii, which rejects it.
 - A class name that is another container ID, as a string definition or as the `class` or `__class` of an array
   definition, resolved through that ID's definition, following chains, as `Yii::$container->get()` does.
   `container.definitions` and `container.singletons` share one ID space, so either can name an ID from the other, and a

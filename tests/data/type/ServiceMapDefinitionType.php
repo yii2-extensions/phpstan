@@ -10,6 +10,7 @@ use SplObjectStorage;
 use Yii;
 use yii\base\InvalidConfigException;
 use yii\di\NotInstantiableException;
+use yii2\extensions\phpstan\tests\support\stub\PlainService;
 
 use function PHPStan\Testing\assertType;
 
@@ -84,6 +85,15 @@ final class ServiceMapDefinitionType
     public function testReturnResolvedClassForServiceNamingAnotherId(): void
     {
         assertType('yii\web\View', Yii::$container->get('mailer.alias'));
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     * @throws NotInstantiableException if a class or service can't be instantiated.
+     */
+    public function testReturnServiceIdClassForArrayWithoutClass(): void
+    {
+        assertType(PlainService::class, Yii::$container->get(PlainService::class));
     }
 
     /**

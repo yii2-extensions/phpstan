@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan;
 
 use Closure;
+use ReflectionClass;
 use ReflectionFunction;
 use ReflectionNamedType;
 use RuntimeException;
-use yii\base\{BaseObject, InvalidArgumentException};
+use yii\base\InvalidArgumentException;
 use yii\di\Instance;
 use yii\web\Application;
 
@@ -17,6 +18,7 @@ use function array_is_list;
 use function array_key_exists;
 use function array_keys;
 use function array_values;
+use function class_exists;
 use function count;
 use function dirname;
 use function gettype;
@@ -27,7 +29,6 @@ use function is_file;
 use function is_object;
 use function is_readable;
 use function is_string;
-use function is_subclass_of;
 use function ltrim;
 use function pathinfo;
 use function preg_match;
@@ -288,9 +289,9 @@ final class ServiceMap
      * Returns whether a container service is defined in the configuration but its class can't be determined.
      *
      * Covers factories without a single class return type, {@see Instance} references, array callables, arrays without
-     * a class key under an ID that isn't a class name, and definitions naming a container ID on a cycle or a container
-     * ID whose class can't be determined. Services that are absent, or defined empty, aren't unresolved, since Yii then
-     * uses the ID itself as the class.
+     * a class key under an ID that doesn't name an instantiable class, and definitions naming a container ID on a cycle
+     * or a container ID whose class can't be determined. Services that are absent, or defined empty, aren't unresolved,
+     * since Yii then uses the ID itself as the class.
      *
      * @param string $id Service identifier to look up.
      *
@@ -648,19 +649,21 @@ final class ServiceMap
      * Resolves a service ID used as its own class, as {@see \yii\di\Container::normalizeDefinition()} does for an empty
      * definition and for an array definition without a class key.
      *
-     * Only syntactically valid class names are passed to {@see is_subclass_of()}, so arbitrary IDs never reach the
-     * autoloaders.
+     * {@see \yii\di\Container::build()} constructs any instantiable class, whether or not it extends
+     * {@see \yii\base\BaseObject}, and throws for an interface, an abstract class, or an enum. Only syntactically valid
+     * class names are passed to {@see class_exists()}, so arbitrary IDs never reach the autoloaders.
      *
      * @param string $id Service ID.
      *
-     * @return string|null ID without a leading backslash when it names a {@see BaseObject} subclass, or `null`
-     * otherwise.
+     * @return string|null ID without a leading backslash when it names an instantiable class, or `null` otherwise.
      */
     private function resolveIdAsClass(string $id): string|null
     {
         $class = ltrim($id, '\\');
 
-        return preg_match(self::CLASS_NAME_PATTERN, $class) === 1 && is_subclass_of($class, BaseObject::class)
+        return preg_match(self::CLASS_NAME_PATTERN, $class) === 1
+            && class_exists($class)
+            && (new ReflectionClass($class))->isInstantiable()
             ? $class
             : null;
     }
