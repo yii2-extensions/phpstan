@@ -32,6 +32,8 @@ final class PropertyTagTypeResolver
     private array|null $frameworkClassNames = null;
 
     /**
+     * Initializes property annotation resolution and framework-class lookups.
+     *
      * @param AnnotationsPropertiesClassReflectionExtension $annotationsProperties PHPStan extension used to resolve the
      * template types of a tag against its declaring class.
      * @param ReflectionProvider $reflectionProvider Reflection provider used to collect the framework classes to skip.

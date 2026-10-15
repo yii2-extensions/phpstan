@@ -39,6 +39,8 @@ use yii\log\{Logger, PsrMessage, Target};
 final class LoggerMessagesExpressionTypeResolverExtension implements ExpressionTypeResolverExtension
 {
     /**
+     * Initializes Yii-version-aware logger message type resolution.
+     *
      * @param ReflectionProvider $reflectionProvider Reflection provider used to detect Yii 22.0 PSR message support.
      */
     public function __construct(private readonly ReflectionProvider $reflectionProvider) {}

@@ -26,6 +26,8 @@ use function count;
 final class ContainerDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     /**
+     * Initializes container service inference from the analysis configuration.
+     *
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
     public function __construct(private readonly ServiceMap $serviceMap) {}

@@ -37,37 +37,18 @@
 ### Installation
 
 ```bash
-composer require --dev yii2-extensions/phpstan:^0.5
+composer require --dev yii2-extensions/phpstan:0.5.x-dev
 ```
 
-Upgrading from 0.4.x? See [Upgrading to 0.5.0](docs/installation.md#upgrading-to-050) for the inferred type changes.
+The 0.5 line is under development. See [installation](docs/installation.md) for version selection and requirements,
+and [migration](docs/migration.md) when upgrading from 0.4.x.
+
+Requires PHP 8.1 or later, PHPStan `^2.3`, and Yii `~2.0.55 || ^22.0@dev`. The selected Yii release may require a
+newer PHP version.
 
 ### Quick start
 
-Create a `phpstan.neon` file in your project root.
-
-```neon
-includes:
-    - vendor/yii2-extensions/phpstan/extension.neon
-
-parameters:
-    level: 5
-
-    paths:
-        - src
-        - controllers
-        - models
-
-    tmpDir: %currentWorkingDirectory%/runtime
-
-    yii2:
-        config_path: config/phpstan-config.php
-        component_generics:
-            user: identityClass      # Built-in (already configured)
-            repository: modelClass   # Custom generic component
-```
-
-Create a PHPStan-specific config file (`config/phpstan-config.php`).
+Create `config/phpstan.php` with an analysis-only description of your application:
 
 ```php
 <?php
@@ -75,34 +56,28 @@ Create a PHPStan-specific config file (`config/phpstan-config.php`).
 declare(strict_types=1);
 
 return [
-    // Application params: array shape inferred for Yii::$app->params and module params
-    'params' => [
-        'turnstile.siteKey' => '',
-        'adminEmail' => 'admin@example.com',
-        'maxItems' => 100,
-    ],
-    // PHPStan only: used by this extension for behavior property/method type inference
-    'behaviors' => [
-        app\models\User::class => [
-            app\behaviors\SoftDeleteBehavior::class,
-            yii\behaviors\TimestampBehavior::class,
-        ],
-    ],
+    'params' => ['adminEmail' => 'admin@example.com'],
     'components' => [
-        'db' => [
-            'class' => yii\db\Connection::class,
-            'dsn' => 'sqlite::memory:',
-        ],
-        'user' => [
-            'class' => yii\web\User::class,
-            'identityClass' => app\models\User::class,
-        ],
-        // Add your custom components here
+        'db' => ['class' => yii\db\Connection::class],
     ],
 ];
 ```
 
-Run `PHPStan`.
+Create `phpstan.neon` in the project root, choosing paths that exist in your application:
+
+```neon
+includes:
+    - vendor/yii2-extensions/phpstan/extension.neon
+
+parameters:
+    level: 5
+    paths:
+        - models
+    yii2:
+        config_path: config/phpstan.php
+```
+
+Run PHPStan:
 
 ```bash
 vendor/bin/phpstan analyse
@@ -110,201 +85,153 @@ vendor/bin/phpstan analyse
 
 ### Type inference examples
 
+The snippets below assume an `app\models\Article` model with `id` and `title` property tags and a `published()`
+query scope. The [usage guide](docs/examples.md) describes the analysis configuration for the components, params and
+behaviors shown here. Use your application's real classes and keep that description consistent with its runtime.
+
 #### Active Record
 
-Yii ships generic PHPDoc for `ActiveRecord` and `ActiveQuery`, so `find()`, `findOne()`, `findAll()`, `hasOne()`,
-`hasMany()`, `one()`, and `all()` are typed by Yii itself. This extension adds the `asArray()` row shapes built from the
-model `@property` tags and the `getAttribute()` return types. Tags inherited from parent classes, used traits, and
-interfaces are included, so a model that extends a generated base class gets the tags of that class. In a row, relation
-tags and read-only tags give optional keys, so guard them with `??` or `isset()`.
-
-A custom query class without generic PHPDoc, as Gii generates it, needs no changes: the extension binds `find()` to the
-model named at the call site, so `one()`, `all()`, `batch()`, and `each()` yield the model. A query reached another way,
-such as a typed parameter, takes its model from the `one()` and `all()` overrides that Gii generates.
+Yii supplies generic types for `findOne()`, `findAll()`, relations and the standard query methods. This extension
+adds row shapes from model `@property` tags and precise `getAttribute()` types:
 
 ```php
-// ✅ Typed as User|null
-$user = User::findOne(1);
+use app\models\Article;
 
-// ✅ Typed as array<User>
-$users = User::findAll(['status' => 'active']);
+$article = Article::findOne(1);                   // Article|null
+$articles = Article::findAll(['title' => 'Yii']); // array<Article>
+$query = Article::find()->where(['id' => 1]);     // ArticleQuery&ActiveQuery<Article>
+$published = Article::find()->published()->one(); // Article|null
+$rows = Article::find()->asArray()->all();        // array<array{id: int, title: string}>
 
-// ✅ Generic ActiveQuery<User> preserved through method chaining
-$query = User::find()->where(['active' => 1])->orderBy('name');
-
-// ✅ Array results typed as array<array{id: int, name: string}>
-$userData = User::find()->asArray()->all();
-
-// ✅ Typed as Invoice|null, with InvoiceQuery generated by Gii
-$invoice = Invoice::find()->where(['id' => 1])->one();
-
-// ✅ Typed based on model property annotations string
-$userName = $user->getAttribute('name');
-
-// ✅ Behavior property resolution string
-$slug = $user->getAttribute('slug');
+if ($article !== null) {
+    $title = $article->getAttribute('title');     // string
+}
 ```
+
+A custom query without generic PHPDoc, such as one generated by Gii, is bound to the model at the `find()` call site.
+Use `static` or `$this` scope return types to preserve that binding. Row shapes include inherited property tags;
+relation and read-only keys are optional and need guards such as `??`. See [query limitations](docs/examples.md#custom-active-query-classes)
+when a query is reached through a typed parameter or a widened relation getter.
 
 #### Application components
 
-`Yii::$app` is typed as the class set in `phpstan.application_type` (`yii\web\Application` by default).
+`Yii::$app` uses `phpstan.application_type`, which defaults to `yii\web\Application`. Component classes come from
+the analysis configuration:
 
 ```php
-// ✅ Typed based on your configuration
-$mailer = Yii::$app->mailer; // MailerInterface
-$db = Yii::$app->db;         // Connection
-$user = Yii::$app->user;     // User
-
-// ✅ User identity with proper type inference
-if (Yii::$app->user->isGuest === false) {
-    $userId = Yii::$app->user->id;           // int|string|null
-    $identity = Yii::$app->user->identity;   // YourUserClass
-}
+$view = Yii::$app->exampleView;           // yii\web\View
+$typed = Yii::$app->get('typedView');     // yii\web\View
+$untyped = Yii::$app->get('untypedView'); // object
+$request = Yii::$app->request;            // yii\web\Request
 ```
 
-A component is typed from a class name, an array with `class` or `__class`, a closure with a class return type, or an
-object, and a `yii\di\Instance` reference is typed as `yii\di\Instance`, which is what Yii returns for it. When its
-class can't be determined, as for a closure without a return type, `Yii::$app->get('id')` is typed as `object`, and so
-is `Yii::$app->id`, even when the application class declares it. A
-core component configured without a class, such as `request` with only `cookieValidationKey`, keeps the type the
-application class declares, since Yii completes its class. Add a class return type to the closure for the precise type.
+Class names, class-key arrays, object instances and factories with a single class return type can provide precise
+types. An untyped factory yields `object`; adding an accurate return type makes the result specific. Core components
+configured without a class keep the application's annotated property type.
+
+The built-in `user: identityClass` mapping also supplies the configured identity class to `yii\web\User`'s generic
+parameter. Its `identity` property remains nullable. See [generic components](docs/configuration.md#generic-components)
+and the separate [console application configuration](docs/configuration.md#web-console-and-custom-applications).
 
 #### Application params
 
+Params values become an array shape, including nested arrays and keys containing dots or other punctuation:
+
 ```php
-// Types are inferred from the values in your phpstan-config.php 'params' key
-
-// ✅ Typed as array{'turnstile.siteKey': string, adminEmail: string, maxItems: int}
-$params = Yii::$app->params;
-
-// ✅ Typed as string
-$email = Yii::$app->params['adminEmail'];
-
-// ✅ Typed as int
-$maxItems = Yii::$app->params['maxItems'];
-
-// ✅ Nested arrays are also supported
-// 'nested' => ['db' => ['host' => 'localhost', 'port' => 3306]]
-$host = Yii::$app->params['nested']['db']['host']; // string
-
-// ✅ Module params share the configured shape, for example inside a controller
-$maxItems = $this->module->params['maxItems']; // int
+$email = Yii::$app->params['adminEmail'];          // string
+$maxItems = Yii::$app->params['maxItems'];         // int
+$enabled = Yii::$app->params['nested']['enabled']; // bool
 ```
 
-Keys that aren't valid identifiers, including keys with quotes, backslashes, whitespace, or line breaks, are part of the
-shape too. With no params configured, `Yii::$app->params` is typed as `array`.
+Scalars are widened to their types rather than retained as literal values. The same shape applies to inherited
+module params, including `$this->module->params` in a controller. With no configured params, the type stays `array`.
 
 #### Behaviors
 
+The analysis-only `behaviors` map exposes members from attached behavior classes. In the example,
+`TaggedComponent` is mapped to `TagBehavior`; the application must also attach that behavior at runtime:
+
 ```php
-// Behaviors are attached via the `phpstan-config.php` behaviors map (PHPStan only)
+use app\behaviors\TagBehavior;
+use app\components\TaggedComponent;
 
-/**
- * @property string $slug
- * @property-read int $created_at
- *
- * Note: `created_at` is provided by `TimestampBehavior`.
- */
-class SoftDeleteBehavior extends \yii\base\Behavior
-{
-    public function softDelete(): bool { /* ... */ }
-}
+$component = new TaggedComponent();
 
-// ✅ Typed based on your configuration
-$user = new User();
+$component->attachBehavior('tag', new TagBehavior());
 
-// ✅ Typed as string (inferred from behavior property)
-$slug = $user->getAttribute('slug');
-
-// ✅ Direct property access is also inferred (behavior property)
-$slug2 = $user->slug;
-
-// ✅ Typed as int (inferred from behavior property)
-$createdAt = $user->getAttribute('created_at');
-
-// ✅ Typed as bool (method defined in attached behavior)
-$result = $user->softDelete();
+$label = $component->label;         // string
+$summary = $component->summarize(); // string
 ```
+
+Properties and methods are resolved from the behavior's native members and PHPDoc. The map describes attachments;
+it does not create them. See [behavior configuration](docs/configuration.md#behaviors).
 
 #### Dependency injection
 
-```php
-$container = new Container();
+Container service definitions and aliases are resolved by their IDs:
 
-// ✅ Type-safe service resolution
-$service = $container->get(MyService::class); // MyService
-$logger = $container->get('logger');          // LoggerInterface (if configured) or object
+```php
+$view = Yii::$container->get('view.alias');   // yii\web\View
+$shared = Yii::$container->get('sharedView'); // yii\web\View
 ```
 
-Container definitions accept the same forms as components, and an object with an `__invoke()` method is resolved from
-that method's return type. A definition whose class can't be determined leaves `get()` typed as `object`.
+The example config maps `view.alias` to `view.real` and gives `sharedView` a typed factory. An unresolved definition
+keeps the result as `object`. Container factories, invocable objects and aliases have distinct rules; see
+[definition forms](docs/configuration.md#definition-forms).
 
 #### Header collection
 
 ```php
-$headers = new HeaderCollection();
+$headers = new yii\web\HeaderCollection();
 
-// ✅ Typed as string|null
-$host = $headers->get('Host');
-
-// ✅ Typed as array<string>
-$forwardedFor = $headers->get('X-Forwarded-For', ['127.0.0.1'], false);
-
-// ✅ A non-nullable default removes null from the return type
-$default = 'default-value';
-$requestId = $headers->get('X-Request-ID', $default, true); // string
-$allRequestIds = $headers->get('X-Request-ID', [$default], false); // array<string>
+$host = $headers->get('Host');                         // string|null
+$ids = $headers->get('X-Request-ID', [], false);       // array<string>
+$requestId = $headers->get('X-Request-ID', 'default'); // string
 ```
+
+A non-null default removes `null` from the return type. The `$first` argument selects a single value or an array.
 
 #### Logger messages
 
-The logger and target message buffers are inferred directly without requiring stubs or local PHPDoc overrides.
+Logger and target message buffers have tuple types without local stubs or PHPDoc overrides:
 
 ```php
-use yii\log\Logger;
-
-$logger = new Logger();
-
-foreach ($logger->messages as $message) {
-    $payload = $message[0];        // string|array<mixed>|Throwable|PsrMessage on Yii 22.0
+foreach ((new yii\log\Logger())->messages as $message) {
     $level = $message[1];          // int
     $category = $message[2];       // string
     $timestamp = $message[3];      // float
-    $trace = $message[4];          // list<array{file: string, line: int, ...}>
     $memory = $message[5] ?? null; // int|null
 }
+
+$empty = yii\log\Target::filterMessages([]); // array{}
 ```
 
-Each message tuple is a `list`, and the same tuple is inferred for `yii\log\Target::$messages`.
-`Target::filterMessages()` preserves the input key and tuple types while correctly allowing an empty filtered result,
-and an input known to be empty, such as `[]`, stays `array{}`.
+Payload types follow the installed Yii version. Filtering preserves the input key and tuple types while allowing
+an empty result. See the [logger examples](docs/examples.md#headers-and-logger-messages).
 
 #### Service locator
 
+A service locator resolves configured component IDs, while container-only IDs belong to the container:
+
 ```php
-$serviceLocator = new ServiceLocator();
-
-// ✅ Get a component by its ID
-$mailer = $serviceLocator->get('mailer');  // Mailer (if configured) or object
-
-// A class name that no component uses keeps Yii's type, since get() throws for it at runtime
-$service = $serviceLocator->get(Mailer::class);  // object
-
-// Nullable when `$throwException` is not `true`
-$user = $serviceLocator->get('user', false); // User|null
-
-// ✅ User component with proper type inference in Action or Controller
-$user = $this->controller->module->get('user'); // User
+$view = Yii::$app->get('exampleView');            // yii\web\View
+$optional = Yii::$app->get('exampleView', false); // yii\web\View|null
+$unknown = Yii::$app->get('view.alias');          // object; not a configured component ID
 ```
+
+Passing `false` or a non-constant boolean as `$throwException` makes a resolved component nullable. An `object`
+fallback does not guarantee a successful runtime lookup: unknown component IDs can throw. Use
+`Yii::$container->get('view.alias')` for the configured container alias. The analysis map describes your runtime
+configuration; it does not register services or configure a standalone locator.
 
 ## Documentation
 
-For detailed configuration options and advanced usage.
-
-- 📚 [Installation Guide](docs/installation.md)
-- ⚙️ [Configuration Reference](docs/configuration.md)
-- 💡 [Usage Examples](docs/examples.md)
-- 🧪 [Testing Guide](docs/testing.md)
+- 📚 [Installation guide](docs/installation.md)
+- ⚙️ [Configuration reference](docs/configuration.md)
+- 💡 [Usage examples](docs/examples.md)
+- 🔄 [Migration guide](docs/migration.md) and [upgrade entry point](UPGRADE.md)
+- 🤖 [AI assistance](docs/agents.md)
+- 🧪 [Testing guide](docs/testing.md)
 
 ## Package information
 

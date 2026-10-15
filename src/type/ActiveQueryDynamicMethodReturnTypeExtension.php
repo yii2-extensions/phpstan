@@ -68,6 +68,8 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
     private array $derivedModelClassNames = [];
 
     /**
+     * Initializes model reflection and property-tag resolution for query inference.
+     *
      * @param ReflectionProvider $reflectionProvider Reflection provider for query and model class lookups.
      * @param PropertyTagTypeResolver $propertyTagTypeResolver Resolver of the model's declared and inherited
      * `@property` tags.

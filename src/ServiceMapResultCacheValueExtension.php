@@ -75,6 +75,8 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
     private string|null $paramsValue = null;
 
     /**
+     * Initializes configuration value tracking with the configured generic component map.
+     *
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      * @param array<string, string> $genericComponents Map of component id to the definition key holding its generic
      * type argument (`yii2.component_generics`).
