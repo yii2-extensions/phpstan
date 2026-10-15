@@ -2,7 +2,7 @@
 
 ## PHP 8.3 requirement
 
-PHP 8.3 or later is now required.
+[PHP 8.3 or later](docs/migration.md#php-83-requirement) is now required.
 
 ## Earlier inference and API changes
 

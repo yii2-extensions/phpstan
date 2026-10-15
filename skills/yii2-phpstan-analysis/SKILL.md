@@ -77,4 +77,5 @@ separately when both are affected, and remove temporary probes after diagnosis. 
 checks and the application's tests for its integration.
 
 Report the installed versions, configurations, inferred types and checks performed, including any runtime checks
-still needed.
+still needed. Report dependency resolution, native client discovery, skill activation and PHPStan analysis
+separately.
