@@ -28,6 +28,8 @@ use function count;
 final class ServiceLocatorDynamicMethodReturnTypeExtension implements DynamicMethodReturnTypeExtension
 {
     /**
+     * Initializes component inference from the analysis configuration.
+     *
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
     public function __construct(private readonly ServiceMap $serviceMap) {}

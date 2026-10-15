@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - chore: update `composer.json` to remove unused plugin.
 - feat: infer Yii logger message array shapes and preserve them through target filtering without stubs.
 - feat!: port to `PHPStan` 2.3 (now required), remove inference already provided by `Yii2` generics, and track result cache dependencies.
+- docs: add setup, examples, migration and skill guidance; require/test Yii `2.0.55` or `22.0`, guard logger checks, retain PHP `8.1+`.
 
 ## 0.4.1 April 05, 2026
 

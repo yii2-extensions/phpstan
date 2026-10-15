@@ -1,760 +1,175 @@
 # Configuration reference
 
-## Overview
+Start with [installation](installation.md); use the [examples](examples.md) to verify inferred types. Configuration
+is split between PHPStan's NEON parameters and a PHP file describing the application.
 
-This guide covers all configuration options for the Yii PHPStan extension, from basic setup to advanced scenarios.
+## NEON parameters
 
-## Basic configuration
+The extension registers `parameters.yii2` in `extension.neon`:
 
-### Minimal setup
+| Key                  | Default               | Meaning                                                                      |
+| -------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| `config_path`        | `''`                  | PHP file to execute, relative to the process working directory or absolute.  |
+| `component_generics` | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
 
-```neon
-includes:
-    - vendor/yii2-extensions/phpstan/extension.neon
+PHPStan's `paths`, `level`, `bootstrapFiles`, `stubFiles` and `tmpDir` remain normal
+[PHPStan options](https://phpstan.org/config-reference). Choose a writable cache directory and existing analysis
+paths. Register this extension once, manually or through extension-installer.
 
-parameters:
-    level: 5
+## Analysis configuration
 
-    paths:
-        - src
+The PHP file returns an array with these optional sections:
 
-    tmpDir: %currentWorkingDirectory%/runtime
+| Section                    | Meaning                                               |
+| -------------------------- | ----------------------------------------------------- |
+| `phpstan.application_type` | Application class; defaults to `yii\web\Application`. |
+| `params`                   | Values from which the params shape is built.          |
+| `components`               | Application component IDs and definitions.            |
+| `container.definitions`    | Container service IDs and definitions.                |
+| `container.singletons`     | Container singleton IDs and definitions.              |
+| `behaviors`                | Owner class name to a list of behavior class names.   |
 
-    yii2:
-        config_path: config/phpstan-config.php
-```
+Sections must be arrays, application type must be a string, and component, service and behavior owner IDs must be
+strings. A file that returns something other than an array fails analysis. Integer, float and boolean service or
+component definitions are rejected with `Unsupported definition for '<id>'.`. Non-string entries inside a behavior
+list are ignored; keep the list explicit so omissions are visible.
 
-### Standard web application
+The file is executed, including its `require` statements and object construction. Describe types without running
+application startup, reading secrets or opening services. The extension does not instantiate string or array class
+definitions to discover types. A factory's return type is inspected without invoking the factory.
 
-```neon
-includes:
-    - vendor/yii2-extensions/phpstan/extension.neon
+## Web, console and custom applications
 
-parameters:
-    bootstrapFiles:
-        - tests/bootstrap.php
-
-    excludePaths:
-        - config/
-        - runtime/
-        - vendor/
-        - web/assets/
-
-    level: 6
-
-    paths:
-        - controllers
-        - models
-        - widgets
-        - components
-
-    tmpDir: %currentWorkingDirectory%/runtime
-
-    yii2:
-        config_path: config/phpstan-config.php
-```
-
-## Application type configuration
-
-`Yii::$app`, also when read through `\yii\BaseYii::$app`, is typed as the class set in `phpstan.application_type`, or as
-`yii\web\Application` when the key is omitted. The extension ships a static stub, `stubs/yii.stub`, registered through
-`stubFiles` in `extension.neon`, that declares `yii\BaseYii::$app` and `yii\base\Module::$params` with placeholder PHPDoc
-types; a PHPDoc type resolver of the extension (`ApplicationTypeNodeResolverExtension`) turns them into this class and
-the array shape of the configured `params`, so nothing is generated at runtime.
-
-### Web application (default)
+Set the application class in the PHP description, not under `parameters.yii2`:
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-// config/phpstan-config.php
 return [
-    'phpstan' => [
-        'application_type' => \yii\web\Application::class,
-    ],
-    // ... other configuration
+    'phpstan' => ['application_type' => yii\console\Application::class],
+    'params' => ['batchSize' => 100],
 ];
 ```
 
-### Console application
+Use a real autoloadable subclass for a custom application. The selected class determines `Yii::$app` and core
+component annotations. A console application must select `yii\console\Application` explicitly.
 
-For console applications, you **must** explicitly specify the application type.
+For a project with both entry points, create separate NEON configurations with different `paths`, `config_path`
+and preferably `tmpDir`, and run each with `-c`. One analysis has one application class and one params shape; do not
+combine Web and console code expecting `Yii::$app` to change by directory.
 
-```php
-<?php
+## Params
 
-declare(strict_types=1);
+The shape is inferred from configured values. Strings, integers, floats and booleans are widened to their types;
+`null` stays `null`, nested arrays become nested shapes, and objects/resources become `mixed`. An empty nested array
+becomes `array<mixed, mixed>`. With no params, the top-level type stays `array`.
 
-// config/phpstan-console-config.php
-return [
-    'phpstan' => [
-        'application_type' => \yii\console\Application::class,
-    ],
-    'components' => [
-        'db' => [
-            'class' => \yii\db\Connection::class,
-            'dsn' => 'sqlite::memory:',
-        ],
-    ],
-];
-```
+Keys may contain dots, quotes, whitespace or backslashes. `Yii::$app->params` and the inherited `Module::$params`
+share this shape, including `$this->module->params` in a controller. A module declaring its own native `params`
+property keeps its own type. This is one analysis-wide shape, not a separate shape for each module or request.
 
-Use a separate PHPStan configuration for the console.
+## Definition forms
 
-```neon
-# phpstan-console.neon
-includes:
-    - vendor/yii2-extensions/phpstan/extension.neon
-
-parameters:
-    paths:
-        - commands
-        - console
-
-    tmpDir: %currentWorkingDirectory%/runtime
-
-    yii2:
-        config_path: config/phpstan-console-config.php
-```
-
-## Dynamic constants configuration
-
-### Default constants
-
-The extension automatically recognizes these Yii constants:
-
-```neon
-parameters:
-    dynamicConstantNames:
-        - YII_DEBUG
-        - YII_ENV
-        - YII_ENV_DEV
-        - YII_ENV_PROD
-        - YII_ENV_TEST
-```
-
-> `dynamicConstantNames` controls how PHPStan _treats_ these constants during analysis (as non-constant values). It is
-> independent of _defining_ them: the extension's shipped `bootstrap.php` defines `YII_DEBUG`, `YII_ENV_DEV`,
-> `YII_ENV_PROD`, and `YII_ENV_TEST` with safe defaults before reading your configuration file, so configuration files
-> that reference them load without a manual bootstrap.
-
-### Adding custom constants
-
-⚠️ **Important**: When you define `dynamicConstantNames`, it **replaces** the defaults. Include Yii constants explicitly.
-
-```neon
-parameters:
-    dynamicConstantNames:
-        # Yii2 constants (must be included manually)
-        - YII_DEBUG
-        - YII_ENV
-        - YII_ENV_DEV
-        - YII_ENV_PROD
-        - YII_ENV_TEST
-        # Your custom constants
-        - APP_VERSION
-        - MAINTENANCE_MODE
-        - FEATURE_FLAGS
-```
-
-## Service map configuration
-
-### Component configuration
-
-Define your application components for proper type inference. See [Definition forms](#definition-forms) for every
-supported definition.
+Both component and container maps resolve a class name string, an array with `class` or `__class`, a closure with a
+single non-null class return type, or an object. Classes need to be autoloadable for PHPStan to inspect their members.
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-// config/phpstan-config.php
 return [
     'components' => [
-        // Database
-        'db' => [
-            'class' => \yii\db\Connection::class,
-            'dsn' => 'mysql:host=localhost;dbname=test',
-        ],
-
-        // User component with identity class
-        'user' => [
-            'class' => \yii\web\User::class,
-            'identityClass' => \app\models\User::class,
-            'loginUrl' => ['/site/login'],
-        ],
-
-        // Mailer
-        'mailer' => [
-            'class' => \yii\symfonymailer\Mailer::class,
-            'transport' => [
-                'scheme' => 'smtp',
-                'host' => 'localhost',
-            ],
-        ],
-
-        // Cache
-        'cache' => [
-            'class' => \yii\caching\FileCache::class,
-            'cachePath' => '@runtime/cache',
-        ],
-
-        // Custom components
-        'paymentService' => [
-            'class' => \app\services\PaymentService::class,
-            'apiKey' => 'test-key',
-        ],
-
-        // URL Manager
-        'urlManager' => [
-            'class' => \yii\web\UrlManager::class,
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
+        'typedView' => static fn(): yii\web\View => new yii\web\View(),
+        'untypedView' => static fn() => new yii\web\View(),
+        'request' => ['cookieValidationKey' => 'analysis-only'],
+    ],
+    'container' => [
+        'definitions' => [
+            'view.real' => ['class' => yii\web\View::class],
+            'view.alias' => 'view.real',
         ],
     ],
 ];
 ```
 
-### Generic component configuration
+`Yii::$app->get('typedView')` is `yii\web\View`; the untyped factory gives `object`. Nullable, union and builtin factory
+return types, array callables and unresolved aliases also give `object`. A typed factory is the smallest useful fix
+when the implementation has one class result. For a core component configured without a class, property access such
+as `Yii::$app->request` keeps the type declared by the application; `get('request')` still gives `object`.
 
-You can configure which property in the component definition contains the generic type information.
+Definition differences follow Yii's container and service locator contracts:
 
-#### Default generic components
+- Component arrays prefer `__class` to `class`; container arrays prefer `class` to `__class`.
+- A `yii\di\Instance` object in a component map is typed as that object. In a container map its ID is resolved instead.
+- An invocable object is a factory in a container map, resolved from its single class return type; in a component map
+  it is the component object itself. Closures are factories in both maps.
+- A container `[definition, params]` pair is resolved from its first entry. A list containing only a definition is
+  not unwrapped. An empty definition under an instantiable class ID resolves to that class.
+- A class string or array class key can name another container ID. Alias chains resolve across definitions and
+  singletons, and components can use those aliases. Cycles and unresolved targets give `object`. The class of an
+  object and the return type of a factory are final, without alias resolution.
+- Definitions and singletons share an ID space. When an ID appears in both, the subsection listed later in the PHP
+  array wins, including when its result is unresolved.
 
-The extension comes with pre-configured generic support for common Yii components:
+`Yii::$app->get()` and other service locators resolve component IDs only. A container-only ID or arbitrary class name
+keeps Yii's return type (`object`) and may throw at runtime. Resolve container services through
+`Yii::$container->get()`. Passing `false` or a non-constant boolean as a service locator's `$throwException` argument
+adds `null` to a resolved component type. The analysis map describes the application; it does not configure a newly
+created standalone locator at runtime.
+
+## Generic components
+
+The built-in mapping is `user: identityClass`. For an array component definition containing that key, the component
+property becomes `yii\web\User<IdentityClass>`. The identity can still be `null`; preserve null checks before reading
+its members. Generic component mapping applies to application property access, not every `get()` return type.
+
+Add a mapping by component ID for a custom component that actually declares a generic parameter:
 
 ```neon
 parameters:
     yii2:
         component_generics:
-            user: identityClass         # Built-in: User<IdentityClass>
+            repository: modelClass
 ```
 
-#### Adding custom generic components
+Its array definition needs `class` and `modelClass`, both naming real classes. The component must declare its template
+and use it in its PHPDoc. The mapping supplies one class argument; it does not make an ordinary class generic.
+PHPStan merges the associative map with the extension's built-in `user` mapping.
 
-You can extend the generic configuration without overriding the defaults:
+## Behaviors
 
-```neon
-parameters:
-    yii2:
-        component_generics:
-            userRepository: modelClass  # Add custom generic
-            postCollection: elementType # Add another custom generic
-```
-
-#### Service configuration
+The top-level `behaviors` section maps an owner class to behavior classes for property and method reflection:
 
 ```php
-<?php
-
-declare(strict_types=1);
-
-// config/phpstan-config.php
-return [
-    'components' => [
-        'user' => [
-            'class' => \yii\web\User::class,
-            'identityClass' => \app\models\User::class, // Generic type parameter
-        ],
-        'userRepository' => [
-            'class' => \app\repositories\Repository::class,
-            'modelClass' => \app\models\User::class,    // Generic type parameter
-        ],
-        'postCollection' => [
-            'class' => \app\collections\Collection::class,
-            'elementType' => \app\models\Post::class,   // Generic type parameter
-        ],
-    ],
-];
-```
-
-#### Usage with proper type inference
-
-```php
-<?php
-
-declare(strict_types=1);
-
-use Yii;
-
-class UserController
-{
-    public function actionProfile(): string
-    {
-        // ✅ PHPStan knows this is User<app\models\User>
-        $user = Yii::$app->user;
-
-        // ✅ PHPStan knows identity is app\models\User
-        $identity = $user->identity;
-
-        // ✅ PHPStan knows this is Repository<app\models\User>
-        $repository = Yii::$app->userRepository;
-
-        // ✅ PHPStan knows this is Collection<app\models\Post>
-        $collection = Yii::$app->postCollection;
-
-        return $this->render('profile', ['user' => $identity]);
-    }
-}
-```
-
-#### Creating generic-aware components
-
-For your custom components to work with generics, define them using PHPDoc annotations:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace app\repositories;
-
-use yii\base\Component;
-
-/**
- * Generic repository component.
- *
- * @template T of \yii\db\ActiveRecord
- */
-class Repository extends Component
-{
-    /**
-     * @phpstan-var class-string<T>
-     */
-    public string $modelClass;
-
-    /**
-     * @phpstan-return T|null
-     */
-    public function findOne(int $id): \yii\db\ActiveRecord|null
-    {
-        return $this->modelClass::findOne($id);
-    }
-
-    /**
-     * @phpstan-return T[]
-     */
-    public function findAll(): array
-    {
-        return $this->modelClass::find()->all();
-    }
-}
-```
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace app\collections;
-
-use yii\base\Component;
-
-/**
- * Generic collection component.
- *
- * @template T
- */
-class Collection extends Component
-{
-    /**
-     * @phpstan-var class-string<T>
-     */
-    public string $elementType;
-
-    /**
-     * @phpstan-var T[]
-     */
-    private array $items = [];
-
-    /**
-     * @phpstan-param T $item
-     */
-    public function add($item): void
-    {
-        $this->items[] = $item;
-    }
-
-    /**
-     * @phpstan-return T[]
-     */
-    public function getAll(): array
-    {
-        return $this->items;
-    }
-}
-```
-
-### Behavior configuration
-
-Configure behaviors for proper method and property reflection.
-
-```php
-<?php
-
-declare(strict_types=1);
-
 return [
     'behaviors' => [
-        \app\models\User::class => [
-            \yii\behaviors\TimestampBehavior::class,
-            \yii\behaviors\BlameableBehavior::class,
-        ],
-        \app\models\Post::class => [
-            \yii\behaviors\SluggableBehavior::class,
-            \app\behaviors\SeoOptimizedBehavior::class,
-        ],
+        app\models\Article::class => [app\behaviors\PublishableBehavior::class],
     ],
 ];
 ```
 
-### Behavior PHPDoc requirements
+This describes an attachment; it does not attach the behavior at runtime or discover every conditional `behaviors()`
+implementation. Keep it consistent with the application. Native members and PHPDoc on the behavior provide its
+member types. The [behavior recipe](examples.md#behaviors) explains the analysis map and the required runtime attachment.
 
-For accurate type inference, behaviors should define their properties using PHPDoc.
+## Constants and result cache
 
-```php
-<?php
+`extension.neon` registers `YII_DEBUG`, `YII_ENV` and the three environment flags as `dynamicConstantNames`. This changes
+how PHPStan reasons about their values; it does not define them. The shipped bootstrap defines four analysis defaults
+as described in [installation](installation.md#bootstrap-only-what-is-needed). Add custom constant names alongside
+the Yii entries if needed; PHPStan merges list parameters across included configurations.
 
-declare(strict_types=1);
+PHPStan 2.3 dependency tracking invalidates the affected analysis when component, container, behavior, application
+class or params types change, including values loaded from a required file. Changing a scalar param without changing
+its type need not re-analyze files. Do not delete caches routinely after configuration edits. See
+[migration](migration.md#result-cache) for the dependency boundaries.
 
-use yii\base\Behavior;
-use yii\db\ActiveRecord;
+## Diagnose an unexpected type
 
-/**
- * @template T of ActiveRecord
- * @extends Behavior<T>
- *
- * @property int $depth
- * @property int $lft
- * @property int $rgt
- * @property int|false $tree
- */
-class NestedSetsBehavior extends Behavior {}
-```
-
-### Container configuration
-
-Define DI container services.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-return [
-    'container' => [
-        'definitions' => [
-            // Interface to implementation mapping
-            \Psr\Log\LoggerInterface::class => \Monolog\Logger::class,
-            \app\contracts\PaymentInterface::class => \app\services\StripePayment::class,
-
-            // Service definitions
-            'logger' => [
-                'class' => \Monolog\Logger::class,
-                ['name' => 'app'],
-            ],
-
-            // Closure definitions, typed from their class return type
-            'eventDispatcher' => function(): \app\services\EventDispatcher {
-                return new \app\services\EventDispatcher();
-            },
-        ],
-
-        'singletons' => [
-            // Singleton services
-            \app\services\CacheManager::class => \app\services\CacheManager::class,
-            'metrics' => [
-                'class' => \app\services\MetricsCollector::class,
-                'enabled' => true,
-            ],
-        ],
-    ],
-];
-```
-
-### Definition forms
-
-Components and container services accept every definition form Yii accepts, and each one is typed as its class when
-that class can be determined from the configuration file:
-
-- A class name string, with or without a leading backslash.
-- An array with a `class` or `__class` key.
-- A closure with a single class return type, such as `static fn(): View => new View()`. For container services, an
-  object with an `__invoke()` method is resolved from that method's return type in the same way.
-- Any other object, typed as its own class. For a component that includes a `yii\di\Instance` reference, which Yii
-  returns as it is; for container services a `yii\di\Instance` reference is resolved through its ID instead, as a class
-  name or as another container ID, since Yii uses that ID as the class.
-- For container services, a `[definition, params]` list, resolved from its first element, and an empty definition, or
-  an array without a class key, under an ID that names an instantiable class, whether or not it extends
-  `yii\base\BaseObject`, resolved to that ID. A list holding only a definition, such as `[['class' => Foo::class]]`,
-  isn't unwrapped, as in Yii, which rejects it.
-- A class name that is another container ID, as a string definition or as the `class` or `__class` of an array
-  definition, resolved through that ID's definition, following chains, as `Yii::$container->get()` does.
-  `container.definitions` and `container.singletons` share one ID space, so either can name an ID from the other, and a
-  component definition can name a container ID too. The return type of a closure and the class of any other object
-  are final and aren't resolved through the container, since Yii returns those values as they are. An ID on a cycle,
-  or one that names an ID whose class can't be determined, is itself treated as a definition whose class can't be
-  determined, so `get()` returns `object` for it.
-
-When an ID appears in both `container.definitions` and `container.singletons`, the entry Yii applies last wins, as in
-`Yii::$container`: the subsection listed later under `container` replaces the earlier one, even when its class can't be
-determined.
-
-A definition whose class can't be determined doesn't stop the analysis. This includes a closure without a return type or
-with a union, nullable, or builtin return type, an array callable, and an array without a class key. `get('id')` then
-returns `object`, also when the ID is a class name, since the definition decides what the container returns, and for a
-component `Yii::$app->id` is `object` too, even when the application class declares that property. Only a component
-configured as an array without a class key keeps the type the application class declares, as `yii\web\Application`
-does for `request`, since Yii completes its class from the core components. Add a class return type to the closure to
-get the precise type.
-
-`Yii::$app->get()` and the `get()` of any other service locator resolve component IDs only. A class name or a container
-service ID that no component uses keeps the type Yii declares, `object`, since the service locator never reads the
-container and throws for an unknown ID at runtime.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-// config/phpstan-config.php
-return [
-    'components' => [
-        'stringView' => \yii\web\View::class,
-        'closureView' => static fn(): \yii\web\View => new \yii\web\View(),
-        'untypedClosure' => static fn() => new \yii\web\View(),
-        'request' => [
-            'cookieValidationKey' => 'secret',
-        ],
-    ],
-    'container' => [
-        'definitions' => [
-            'mailer.real' => ['class' => \yii\web\View::class],
-            'mailer.alias' => 'mailer.real',
-        ],
-    ],
-];
-
-// Usage
-$stringView = Yii::$app->stringView;             // yii\web\View
-$closureView = Yii::$app->get('closureView');    // yii\web\View
-$untyped = Yii::$app->untypedClosure;            // object
-$request = Yii::$app->request;                   // yii\web\Request
-$requestById = Yii::$app->get('request');        // object
-$aliased = Yii::$container->get('mailer.alias'); // yii\web\View
-```
-
-A definition that is an integer, float, or boolean still stops the analysis with `Unsupported definition for '<id>'.`,
-and so do a non-string ID and a section that isn't an array. The exception
-`Please provide return type for '<id>' service closure.` was removed in 0.5.0.
-
-## Advanced configuration
-
-### Strict analysis setup
-
-```neon
-includes:
-    - phar://phpstan.phar/conf/bleedingEdge.neon
-    - vendor/phpstan/phpstan-strict-rules/rules.neon
-    - vendor/yii2-extensions/phpstan/extension.neon
-
-parameters:
-    excludePaths:
-        - src/legacy/
-        - tests/_support/
-        - vendor/
-
-    level: 8
-
-    paths:
-        - src
-        - controllers
-        - models
-        - widgets
-        - components
-
-    tmpDir: %currentWorkingDirectory%/runtime
-
-    yii2:
-        config_path: config/phpstan-config.php
-
-    # Strict checks
-    checkImplicitMixed: true
-    checkBenevolentUnionTypes: true
-    checkUninitializedProperties: true
-    checkMissingCallableSignature: true
-    checkTooWideReturnTypesInProtectedAndPublicMethods: true
-    reportAnyTypeWideningInVarTag: true
-    reportPossiblyNonexistentConstantArrayOffset: true
-    reportPossiblyNonexistentGeneralArrayOffset: true
-
-    ignoreErrors:
-        # Ignore specific errors
-        - '#Call to an undefined method.*#'
-        - '#Access to an undefined property.*#'
-```
-
-### Performance optimization
-
-PHPStan 2.3 ships its native Turbo engine inside the `phpstan/phpstan` package; it activates automatically on PHP 8.3 or
-higher and needs no configuration from this extension. Run `vendor/bin/phpstan diagnose` to check its status.
-
-You don't need to clear the result cache in `tmpDir` (`--clear-result-cache`) when the Yii configuration changes. The
-extension declares through PHPStan's dependency tracking the configuration values that inferred types depend on, so
-editing the configuration file, or a file it pulls in with `require` such as a params file, re-analyzes only the files
-that depend on a changed value. A component or container service by id and the behaviors of a class are tracked for the
-files that read them. The application class and the params type are tracked on `yii\BaseYii` and `yii\base\Module`,
-which declare `Yii::$app` and `Module::$params`, so a change to either re-analyzes every file that depends on those
-classes or on a subclass, including files that only override or inherit the properties. A change that leaves those
-values as they were, such as a param value of the same type, re-analyzes nothing.
-
-```neon
-parameters:
-    # Bootstrap optimization
-    bootstrapFiles:
-        - vendor/autoload.php
-        - config/phpstan-bootstrap.php
-
-    # Parallel processing
-    parallel:
-        jobSize: 20
-        maximumNumberOfProcesses: 32
-        minimumNumberOfJobsPerProcess: 2
-
-    # Memory management
-    tmpDir: %currentWorkingDirectory%/runtime
-```
-
-Optimized bootstrap file.
-
-```php
-<?php
-
-declare(strict_types=1);
-
-// config/phpstan-bootstrap.php
-error_reporting(-1);
-
-// Define constants without a full application bootstrap
-defined('YII_DEBUG') or define('YII_DEBUG', true);
-defined('YII_ENV') or define('YII_ENV', 'test');
-
-// Load only essential classes
-require(dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php');
-```
-
-## Configuration without a config file
-
-If you don't want to create a separate configuration file:
-
-```neon
-parameters:
-    yii2:
-        config_path: ''  # Disable config file
-```
-
-This will work with basic type inference but won't have custom component types. `Yii::$app` is typed as
-`yii\web\Application`, and `Module::$params` as `array`.
-
-## Multiple application types
-
-For projects with both web and console applications:
-
-### Project structure
-
-```text
-phpstan-web.neon      # Web-specific configuration
-phpstan-console.neon  # Console-specific configuration
-phpstan.neon          # Base configuration
-```
-
-### Base configuration
-
-```neon
-# phpstan.neon
-includes:
-    - vendor/yii2-extensions/phpstan/extension.neon
-
-parameters:
-    level: 6
-
-    tmpDir: %currentWorkingDirectory%/runtime
-```
-
-### Web configuration
-
-```neon
-# phpstan-web.neon
-includes:
-    - phpstan.neon
-
-parameters:
-    paths:
-        - controllers
-        - models
-        - widgets
-        - web
-
-    yii2:
-        config_path: config/phpstan-config.php
-```
-
-### Console configuration
-
-```neon
-# phpstan-console.neon
-includes:
-    - phpstan.neon
-
-parameters:
-    paths:
-        - commands
-        - console
-
-    yii2:
-        config_path: config/phpstan-console-config.php
-```
-
-### Usage
+Confirm the selected configuration, process working directory, autoloading and installed versions first:
 
 ```bash
-# Analyze web application
-vendor/bin/phpstan analyse -c phpstan-web.neon
-
-# Analyze console application
-vendor/bin/phpstan analyse -c phpstan-console.neon
+vendor/bin/phpstan analyse -c phpstan.neon --debug -vvv
+vendor/bin/phpstan diagnose -c phpstan.neon
 ```
 
-### File-Level suppression
-
-```php
-// In your PHP files
-/** @phpstan-ignore-next-line */
-$result = $someObject->unknownMethod();
-
-/** @phpstan-ignore-line */
-$property = $object->unknownProperty;
-```
-
-## Validation
-
-Test your configuration:
-
-```bash
-# Check configuration syntax
-vendor/bin/phpstan analyse --dry-run
-
-# Validate service map
-vendor/bin/phpstan analyse -v
-
-# Generate baseline for existing errors
-vendor/bin/phpstan analyse --generate-baseline
-```
-
-## Next steps
-
-- 💡 [Usage Examples](examples.md)
-- 🧪 [Testing Guide](testing.md)
+Inspect the factory return type, component ID and chosen application class before adding annotations. Keep unresolved
+services as `object` until the type can be established. Use a small type assertion or `PHPStan\dumpType()` probe and
+remove temporary probes after diagnosis. Do not hide all undefined properties/methods with blanket `ignoreErrors`.
+PHPStan has no `analyse --dry-run`; an analysis itself validates configuration. If adopting a baseline for an existing
+application, review it and avoid adding the inference regression being investigated.

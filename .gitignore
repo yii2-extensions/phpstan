@@ -1,6 +1,10 @@
 # AI agents (if present)
 .codex
-.claude
+.claude/*
+!.claude/skills/
+
+# Private maintainer notes and local validation assets
+/internal/
 
 # codecoverage (if present)
 code_coverage

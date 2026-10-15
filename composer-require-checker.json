@@ -42,7 +42,8 @@
         "PHPStan\\Type\\StringType",
         "PHPStan\\Type\\Type",
         "PHPStan\\Type\\TypeCombinator",
-        "PHPStan\\Type\\VerbosityLevel"
+        "PHPStan\\Type\\VerbosityLevel",
+        "yii\\log\\PsrMessage"
     ],
     "php-core-extensions": [
         "Core",

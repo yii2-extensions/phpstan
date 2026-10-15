@@ -53,6 +53,8 @@ final class ApplicationTypeNodeResolverExtension implements TypeNodeResolverExte
     private Type|null $paramsType = null;
 
     /**
+     * Initializes configuration-backed application and params type resolution.
+     *
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      * @param ReflectionProvider $reflectionProvider Reflection provider for the class declaring a placeholder.
      * @param DeclarationDependencyTracker $dependencyTracker Records the configuration values each class declaration
