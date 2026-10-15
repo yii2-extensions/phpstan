@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.5.0 Under development
+## 0.5.0 October 15, 2026
 
 - chore: update dependencies and configuration files.
 - chore: adopt scaffold tooling and ensure compatibility with `PHPStan` 2.2 and `Yii2` generic types.
