@@ -1,11 +1,14 @@
 # Migration guide
 
+## PHP 8.3 requirement
+
+PHP 8.3 or later is now required. Update the PHP runtime used for analysis, CI and development containers.
+If the application sets Composer `config.platform.php`, update it to at least 8.3 as well.
+
 ## Upgrading to 0.5.0
 
-Version 0.5.0 requires PHPStan `^2.3` and Yii `~2.0.55 || ^22.0@dev`; the package's PHP minimum stays at 8.1.
-For Yii 2.0 applications, update the framework constraint to `~2.0.55` and resolve dependencies with Composer before
-upgrading this extension. Yii 22 applications retain their existing framework requirement. Keep advisory blocking
-and auditing enabled; see [requirements](installation.md#requirements).
+For Yii 2.0 applications, update the framework constraint to `~2.0.55` before upgrading this extension. Yii 22
+applications retain their framework requirement. See [requirements](installation.md#requirements).
 
 Yii ships generic and conditional PHPDoc types
 for `ActiveRecord`, `ActiveQuery`, `Container`, `ServiceLocator`, and `HeaderCollection`, so the extension no longer

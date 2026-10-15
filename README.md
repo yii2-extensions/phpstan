@@ -37,14 +37,8 @@
 ### Installation
 
 ```bash
-composer require --dev yii2-extensions/phpstan:0.5.x-dev
+composer require --dev yii2-extensions/phpstan:^0.5
 ```
-
-The 0.5 line is under development. See [installation](docs/installation.md) for version selection and requirements,
-and [migration](docs/migration.md) when upgrading from 0.4.x.
-
-Requires PHP 8.1 or later, PHPStan `^2.3`, and Yii `~2.0.55 || ^22.0@dev`. The selected Yii release may require a
-newer PHP version.
 
 ### Quick start
 
@@ -87,7 +81,7 @@ vendor/bin/phpstan analyse
 
 The snippets below assume an `app\models\Article` model with `id` and `title` property tags and a `published()`
 query scope. The [usage guide](docs/examples.md) describes the analysis configuration for the components, params and
-behaviors shown here. Use your application's real classes and keep that description consistent with its runtime.
+behaviors shown here.
 
 #### Active Record
 
@@ -163,8 +157,8 @@ $label = $component->label;         // string
 $summary = $component->summarize(); // string
 ```
 
-Properties and methods are resolved from the behavior's native members and PHPDoc. The map describes attachments;
-it does not create them. See [behavior configuration](docs/configuration.md#behaviors).
+Properties and methods are resolved from the behavior's native members and PHPDoc.
+See [behavior configuration](docs/configuration.md#behaviors).
 
 #### Dependency injection
 
@@ -221,8 +215,7 @@ $unknown = Yii::$app->get('view.alias');          // object; not a configured co
 
 Passing `false` or a non-constant boolean as `$throwException` makes a resolved component nullable. An `object`
 fallback does not guarantee a successful runtime lookup: unknown component IDs can throw. Use
-`Yii::$container->get('view.alias')` for the configured container alias. The analysis map describes your runtime
-configuration; it does not register services or configure a standalone locator.
+`Yii::$container->get('view.alias')` for the configured container alias.
 
 ## Documentation
 
@@ -235,7 +228,7 @@ configuration; it does not register services or configure a standalone locator.
 
 ## Package information
 
-[![PHP](https://img.shields.io/badge/%3E%3D8.1-777BB4.svg?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/releases/8.1/en.php)
+[![PHP](https://img.shields.io/badge/%3E%3D8.3-777BB4.svg?style=for-the-badge&logo=php&logoColor=white)](https://www.php.net/releases/8.3/en.php)
 [![Yii 2.0.x](https://img.shields.io/badge/dynamic/json.svg?style=for-the-badge&logo=yii&logoColor=white&color=0073AA&label=&url=https%3A%2F%2Frepo.packagist.org%2Fp2%2Fyiisoft%2Fyii2.json&query=%24.packages%5B%27yiisoft%2Fyii2%27%5D%5B0%5D.version)](https://packagist.org/packages/yiisoft/yii2)
 [![Yii 22.0.x](https://img.shields.io/badge/22.0.x-0073AA.svg?style=for-the-badge&logo=yii&logoColor=white)](https://github.com/yiisoft/yii2/tree/22.0)
 [![Latest Stable Version](https://img.shields.io/packagist/v/yii2-extensions/phpstan.svg?style=for-the-badge&logo=packagist&logoColor=white&label=Stable)](https://packagist.org/packages/yii2-extensions/phpstan)

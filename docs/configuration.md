@@ -13,8 +13,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `component_generics` | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
 
 PHPStan's `paths`, `level`, `bootstrapFiles`, `stubFiles` and `tmpDir` remain normal
-[PHPStan options](https://phpstan.org/config-reference). Choose a writable cache directory and existing analysis
-paths. Register this extension once, manually or through extension-installer.
+[PHPStan options](https://phpstan.org/config-reference).
 
 ## Analysis configuration
 
@@ -53,8 +52,7 @@ Use a real autoloadable subclass for a custom application. The selected class de
 component annotations. A console application must select `yii\console\Application` explicitly.
 
 For a project with both entry points, create separate NEON configurations with different `paths`, `config_path`
-and preferably `tmpDir`, and run each with `-c`. One analysis has one application class and one params shape; do not
-combine Web and console code expecting `Yii::$app` to change by directory.
+and preferably `tmpDir`, and run each with `-c`. Each analysis has one application class and one params shape.
 
 ## Params
 
@@ -143,9 +141,8 @@ return [
 ];
 ```
 
-This describes an attachment; it does not attach the behavior at runtime or discover every conditional `behaviors()`
-implementation. Keep it consistent with the application. Native members and PHPDoc on the behavior provide its
-member types. The [behavior recipe](examples.md#behaviors) explains the analysis map and the required runtime attachment.
+The map describes runtime attachments; conditional `behaviors()` implementations are not discovered automatically.
+Native members and PHPDoc on the behavior provide its types. See the [behavior recipe](examples.md#behaviors).
 
 ## Constants and result cache
 
@@ -170,6 +167,4 @@ vendor/bin/phpstan diagnose -c phpstan.neon
 
 Inspect the factory return type, component ID and chosen application class before adding annotations. Keep unresolved
 services as `object` until the type can be established. Use a small type assertion or `PHPStan\dumpType()` probe and
-remove temporary probes after diagnosis. Do not hide all undefined properties/methods with blanket `ignoreErrors`.
-PHPStan has no `analyse --dry-run`; an analysis itself validates configuration. If adopting a baseline for an existing
-application, review it and avoid adding the inference regression being investigated.
+remove temporary probes after diagnosis.

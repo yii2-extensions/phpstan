@@ -1,9 +1,7 @@
 # Usage examples
 
-These recipes describe application code and the types inferred from it. Use classes that exist in your application,
-register the extension as described in [installation](installation.md), and keep the analysis description consistent
-with the real configuration. The PHP configuration is executed during analysis; it does not start or configure a
-running application.
+These recipes show inferred types using the analysis setup from [installation](installation.md). Adapt the classes
+and definitions to your application.
 
 ## Application components and params
 
@@ -57,8 +55,7 @@ Configuring a core component such as `request` without a class preserves the app
 
 For a console description, select `yii\console\Application` explicitly under `phpstan.application_type` and avoid
 reusing Web-only core component definitions. Its `request` property is then `yii\console\Request`. Run a separate
-NEON configuration with the console paths. An arbitrary configured `View` component remains a `View`; selecting a
-console application does not rewrite component classes. See [application types](configuration.md#web-console-and-custom-applications).
+NEON configuration with the console paths. See [application types](configuration.md#web-console-and-custom-applications).
 
 ## Container and service locator
 
@@ -71,9 +68,8 @@ $optional = Yii::$app->get('exampleView', false); // yii\web\View|null
 $unknown = Yii::$app->get('view.alias');          // object
 ```
 
-The alias belongs to the container, while `exampleView` is a component ID. Use the appropriate resolver in the real
-application. The `object` fallback does not mean an unknown runtime lookup succeeds. Passing `false` or a non-constant
-boolean as a service locator's `$throwException` argument adds `null` to a resolved component type.
+The alias belongs to the container, while `exampleView` is a component ID. Unknown component IDs can throw at
+runtime. Passing `false` or a non-constant boolean as `$throwException` adds `null` to a resolved component type.
 
 ## Behaviors
 
@@ -121,7 +117,7 @@ of the database schema, SQL projection or selected columns. Keep annotations con
 A relation tag becomes an optional key containing related rows, and a read-only tag also produces an optional key.
 Guard optional keys with `??`, `isset()` or `array_key_exists()`, even when a query eager-loads a relation. Write-only
 tags do not produce row keys. Value-object/enum tags keep their annotated types even when a database row contains
-raw scalar values; do not treat inferred row shapes as runtime validation.
+raw scalar values.
 
 Yii supplies generic PHPDoc for basic `findOne()`, `findAll()`, `hasOne()`, `hasMany()`, `one()` and `all()` calls.
 The extension adds configuration-dependent types, row shapes, attribute types and unannotated custom-query binding.

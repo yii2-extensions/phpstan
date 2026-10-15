@@ -5,6 +5,7 @@ includes:
     - vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
+    phpVersion: 80300
     bootstrapFiles:
         - tests/support/bootstrap.php
 
