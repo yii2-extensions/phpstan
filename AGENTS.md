@@ -1,7 +1,7 @@
 # PHPStan repository guide
 
 This package is `yii2-extensions/phpstan`, namespace `yii2\extensions\phpstan`. Inspect `composer.json`, the Git diff,
-`extension.neon` and the relevant source/tests before changing inference. The 0.5 line requires PHP >=8.1,
+`extension.neon` and the relevant source/tests before changing inference. The current development revision requires PHP >=8.3,
 PHPStan ^2.3 and Yii `~2.0.55 || ^22.0@dev`; the selected framework may require newer PHP. Do not copy another
 extension's Yii 22-only requirement or widen constraints without verifying compatibility.
 

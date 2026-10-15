@@ -34,3 +34,4 @@ jobs:
       concurrency-group: |
         phpunit-compatibility-${{ github.workflow }}-${{ github.ref }}
       extensions: intl
+      php-version: '["8.3","8.4","8.5"]'
