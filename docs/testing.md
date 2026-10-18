@@ -28,9 +28,13 @@ dependency cases. Both static configurations matter because `Yii::$app` has one 
 analysis. `composer ecs` applies fixes and `composer rector` refactors files; use them only for intentional changes
 and inspect their diffs.
 
-`composer-require-checker.json` allowlists `yii\log\PsrMessage`, a Yii 22-only logger payload type. The resolver
-checks for that class through reflection before including it; the allowlist lets dependency checking run on Yii
-2.0.55 as well. Retain the existence guard and version-aware logger tests when changing this entry.
+The logger resolver looks up the optional Yii 22 `yii\log\PsrMessage` class by name and checks for it through
+reflection before including it. The test bootstrap defines the expected payload type for the installed Yii version,
+so PHPUnit and direct static checks validate the same fixture on Yii 2.0.55 and Yii 22. Retain the existence guard
+and both sets of expectations when changing logger inference.
+
+When checking an isolated consumer, preserve its `composer.json` and configured vendor directory together. PHPStan
+uses that manifest to recognize dependency stubs; copying only the vendor tree can trigger project-stub validation.
 
 ## Verify documented application setups
 

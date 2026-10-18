@@ -33,6 +33,29 @@ final class ServiceMapResultCacheValueExtensionTest extends PHPStanTestCase
         );
     }
 
+    public function testGetValueDistinguishesClasslessComponentFromUnresolvedFactory(): void
+    {
+        $extension = self::createExtension('component-states');
+
+        $classless = $extension->getValue(ServiceMapResultCacheValueExtension::componentKey('classless'));
+
+        self::assertNotSame(
+            $extension->getValue(ServiceMapResultCacheValueExtension::componentKey('untyped')),
+            $classless,
+            'A classless core component retains its annotated type; an untyped factory yields `object`.',
+        );
+        self::assertNotSame(
+            $extension->getValue(ServiceMapResultCacheValueExtension::componentKey('absent')),
+            $classless,
+            'A classless definition must remain distinct from an absent component.',
+        );
+        self::assertSame(
+            $extension->getValue(ServiceMapResultCacheValueExtension::componentKey('classlessConfigured')),
+            $classless,
+            'Configuration values that do not change the annotated core type must not invalidate it.',
+        );
+    }
+
     public function testGetValueDistinguishesComponentStates(): void
     {
         $extension = self::createExtension('component-states');

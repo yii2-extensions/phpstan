@@ -160,8 +160,10 @@ final class ActiveQueryDerivedModelEdgeType
         DerivedModelNativeQuery $nativeQuery,
         DerivedModelDocQuery $docQuery,
     ): void {
-        assertType('yii2\extensions\phpstan\tests\support\stub\Post|null', $nativeQuery->one());
-        assertType('array<yii2\extensions\phpstan\tests\support\stub\Post>', $nativeQuery->all());
+        assertType('yii2\extensions\phpstan\tests\support\stub\Post', $nativeQuery->one());
+        assertType('list<yii2\extensions\phpstan\tests\support\stub\Post>', $nativeQuery->all());
+        assertType('yii2\extensions\phpstan\tests\support\stub\Post', $nativeQuery->where(['id' => 1])->one());
+        assertType('list<yii2\extensions\phpstan\tests\support\stub\Post>', $nativeQuery->asArray(false)->all());
         assertType('array{title: string, content: string}|null', $nativeQuery->asArray()->one());
         assertType('yii2\extensions\phpstan\tests\support\stub\Post|null', $docQuery->one());
         assertType('array<yii2\extensions\phpstan\tests\support\stub\Post>', $docQuery->where(['id' => 1])->all());

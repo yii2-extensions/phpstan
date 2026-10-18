@@ -45,12 +45,12 @@ final class ParamsTypeBuilder
 
         $keyTypes = [];
         $valueTypes = [];
-        $nextAutoIndex = 0;
+        $nextAutoIndex = null;
 
         foreach ($params as $key => $value) {
             if (is_int($key)) {
                 $keyTypes[] = new ConstantIntegerType($key);
-                $nextAutoIndex = max($nextAutoIndex, $key + 1);
+                $nextAutoIndex = $nextAutoIndex === null ? $key + 1 : max($nextAutoIndex, $key + 1);
             } else {
                 $keyTypes[] = new ConstantStringType($key);
             }
@@ -63,7 +63,7 @@ final class ParamsTypeBuilder
         return new ConstantArrayType(
             $keyTypes,
             $valueTypes,
-            [$nextAutoIndex],
+            [$nextAutoIndex ?? 0],
             [],
             TrinaryLogic::createFromBoolean(array_is_list($params)),
         );

@@ -6,7 +6,7 @@ namespace yii2\extensions\phpstan\type;
 
 use PhpParser\Node\Expr\MethodCall;
 use PHPStan\Analyser\{DependencyTracker, Scope};
-use PHPStan\Reflection\{MethodReflection, ReflectionProvider};
+use PHPStan\Reflection\{ClassReflection, MethodReflection, ReflectionProvider};
 use PHPStan\Type\{DynamicMethodReturnTypeExtension, MixedType, Type};
 use yii\db\ActiveRecord;
 use yii2\extensions\phpstan\{PropertyTagTypeResolver, ServiceMap, ServiceMapResultCacheValueExtension};
@@ -19,7 +19,8 @@ use function count;
  * Examines the constant string argument passed to {@see ActiveRecord::getAttribute()} and resolves the corresponding
  * property type from the `@property` tags that the model declares or inherits, falling back to behaviors registered
  * through the {@see ServiceMap}, and finally to {@see MixedType} for unknown or non-constant attribute names and for
- * unpacked arguments.
+ * unpacked arguments. Read-only tags retain `mixed`, because a readable virtual property is not evidence of a stored
+ * attribute.
  *
  * {@see ActiveRecord} for Active Record API details.
  * {@see DynamicMethodReturnTypeExtension} for PHPStan dynamic return type extension contract.
@@ -110,7 +111,9 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
             return new MixedType();
         }
 
-        $propertyType = $this->propertyTagTypeResolver->getReadableType(
+        $scope->trackClassDependency($className);
+
+        $propertyType = $this->getAttributeTypeFromTags(
             $this->reflectionProvider->getClass($className),
             $attributeName,
         );
@@ -147,6 +150,25 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
     }
 
     /**
+     * Returns an attribute tag type without treating read-only property contracts as stored attributes.
+     *
+     * @param ClassReflection $classReflection Model or behavior whose property tags are inspected.
+     * @param string $attributeName Requested attribute name.
+     *
+     * @return Type|null Writable tag type, `mixed` for a read-only tag, or `null` when no readable tag exists.
+     */
+    private function getAttributeTypeFromTags(ClassReflection $classReflection, string $attributeName): Type|null
+    {
+        $tag = $this->propertyTagTypeResolver->getReadableTags($classReflection)[$attributeName] ?? null;
+
+        if ($tag === null) {
+            return null;
+        }
+
+        return $tag['writable'] ? $tag['type'] : new MixedType();
+    }
+
+    /**
      * Searches for property types in attached behaviors' PHPDoc annotations.
      *
      * Iterates through all behaviors registered for the specified model class via the {@see ServiceMap} and examines
@@ -156,8 +178,8 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
      * include properties defined in attached behaviors, enabling accurate type inference for dynamic attributes that
      * are provided by behaviors rather than the model directly.
      *
-     * The search process validates each behavior class existence, creates reflection instances, and delegates to
-     * {@see PropertyTagTypeResolver::getReadableType()} for the tags that each behavior class declares or inherits.
+     * The search process validates each behavior class existence and inspects its inherited property tags, retaining
+     * `mixed` for read-only tags.
      *
      * @param string $className Fully qualified class name to check.
      * @param string $attributeName The attribute name to search for.
@@ -179,7 +201,7 @@ final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtension implements 
             if ($this->reflectionProvider->hasClass($behaviorClass)) {
                 $behaviorReflection = $this->reflectionProvider->getClass($behaviorClass);
 
-                $propertyType = $this->propertyTagTypeResolver->getReadableType($behaviorReflection, $attributeName);
+                $propertyType = $this->getAttributeTypeFromTags($behaviorReflection, $attributeName);
 
                 if ($propertyType !== null) {
                     return $propertyType;

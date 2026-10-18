@@ -65,6 +65,11 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
     private const COMPONENT = 'component';
 
     /**
+     * Cache state for a component that retains the application's annotated core type.
+     */
+    private const COMPONENT_WITHOUT_CLASS = 'without-class';
+
+    /**
      * Key prefix for DI container definitions and singletons.
      */
     private const SERVICE = 'service';
@@ -217,6 +222,10 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
         $componentClass = $this->serviceMap->getComponentClassById($id);
 
         if ($componentClass === null) {
+            if ($this->serviceMap->isComponentWithoutClass($id)) {
+                return self::COMPONENT_WITHOUT_CLASS;
+            }
+
             return $this->serviceMap->isUnresolvedComponent($id) ? self::UNRESOLVED : self::MISSING;
         }
 

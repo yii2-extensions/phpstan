@@ -51,7 +51,8 @@ use function strtolower;
  * model derived from the nearest `one()` and `all()` declarations below {@see ActiveQuery}. When their return types
  * name exactly one Active Record subclass, ignoring arrays, `null`, and the Active Record base classes that Yii's
  * unbound `T` yields, `one()`, `all()`, `batch()`, and `each()` are resolved on `ActiveQuery<Model>`, and `asArray()`
- * builds the model's row shape. Otherwise, PHPStan's own answer is kept.
+ * builds the model's row shape. An equally precise or narrower declared return type is kept, as is PHPStan's own
+ * answer when no model is derived.
  *
  * {@see ActiveQuery} for Active Query API details.
  * {@see PropertyTagTypeResolver} for the collection of declared and inherited `@property` tags.
@@ -93,7 +94,8 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * Resolves the query type returned by {@see ActiveQuery::asArray()} from the receiver and the `$value` argument.
      *
      * Calls to `one()`, `all()`, `batch()`, and `each()` are resolved on `ActiveQuery<Model>` when the model is derived
-     * from the receiver's query class; otherwise, `batch()` and `each()` are delegated to
+     * from the receiver's query class, unless the declared return type is equally precise or narrower; otherwise,
+     * `batch()` and `each()` are delegated to
      * {@see createBatchQueryResultType()}.
      *
      * `true` (or no argument) yields rows shaped by the model's `@property` tags, `false` returns the receiver
@@ -107,8 +109,8 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope, recording a dependency on a derived model.
      *
      * @return Type|null Inferred query, row, or batch query result type, or `null` to defer to PHPStan's answer when an
-     * `asArray()` argument is unpacked, no model is derived for `one()` and `all()`, or `batch()` and `each()` already
-     * resolve.
+     * `asArray()` argument is unpacked, no model is derived for `one()` and `all()`, the declared return type is
+     * equally precise or narrower, or `batch()` and `each()` already resolve.
      */
     public function getTypeFromMethodCall(
         MethodReflection $methodReflection,
@@ -123,12 +125,21 @@ final class ActiveQueryDynamicMethodReturnTypeExtension implements DynamicMethod
 
         if ($methodName !== 'asArray') {
             if ($modelType !== null) {
-                return $this->resolveReturnType(
+                $derivedReturnType = $this->resolveReturnType(
                     new GenericObjectType(ActiveQuery::class, [$modelType]),
                     $methodName,
                     $methodCall,
                     $scope,
                 );
+                $declaredReturnType = ParametersAcceptorSelector::selectFromArgs(
+                    $scope,
+                    $methodCall->getArgs(),
+                    $methodReflection->getVariants(),
+                )->getReturnType();
+
+                return $derivedReturnType !== null && $derivedReturnType->isSuperTypeOf($declaredReturnType)->yes()
+                    ? null
+                    : $derivedReturnType;
             }
 
             return in_array($methodName, ['batch', 'each'], true)

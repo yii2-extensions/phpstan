@@ -15,6 +15,7 @@ use yii2\extensions\phpstan\tests\support\stub\{
     NestedSetsModel,
     Post,
     User,
+    VirtualAttributeRecord,
 };
 
 use function PHPStan\Testing\assertType;
@@ -61,6 +62,23 @@ final class ActiveRecordGetAttributeDynamicMethodReturnType
         $post = new Post();
 
         assertType('mixed', $post->getAttribute(...['title']));
+    }
+
+    public function testReturnMixedWhenGetAttributeNamesVirtualGetters(): void
+    {
+        $record = new VirtualAttributeRecord();
+
+        assertType('mixed', $record->getAttribute('label'));
+    }
+
+    public function testReturnMixedWhenGetAttributeOnRelationAndReadOnlyTags(): void
+    {
+        $book = new Book();
+
+        assertType('mixed', $book->getAttribute('comments'));
+        assertType('mixed', $book->getAttribute('author'));
+        assertType('mixed', $book->getAttribute('label'));
+        assertType('mixed', $book->getAttribute('secret'));
     }
 
     public function testReturnMixedWhenGetAttributeWithBehaviorPhpDoc(): void
@@ -113,15 +131,5 @@ final class ActiveRecordGetAttributeDynamicMethodReturnType
         $model = new ModelWithConflictingProperty();
 
         assertType('string', $model->getAttribute('lft'));
-    }
-
-    public function testReturnTagTypeWhenGetAttributeOnRelationAndReadOnlyTags(): void
-    {
-        $book = new Book();
-
-        assertType('array<yii2\extensions\phpstan\tests\support\stub\Comment>', $book->getAttribute('comments'));
-        assertType('yii2\extensions\phpstan\tests\support\stub\User', $book->getAttribute('author'));
-        assertType('string', $book->getAttribute('label'));
-        assertType('mixed', $book->getAttribute('secret'));
     }
 }

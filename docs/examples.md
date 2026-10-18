@@ -114,6 +114,10 @@ The extension uses model `@property` tags, including tags inherited from parent 
 nearest declaration wins; framework base-model tags are excluded. This is annotation-based inference, not inspection
 of the database schema, SQL projection or selected columns. Keep annotations consistent with real data.
 
+`getAttribute()` reads stored attributes without invoking virtual getters. Read-only tags therefore retain `mixed`
+for attribute access, even when property access has a more precise annotated type. Writable tags used for attribute
+inference must describe stored attributes.
+
 A relation tag becomes an optional key containing related rows, and a read-only tag also produces an optional key.
 Guard optional keys with `??`, `isset()` or `array_key_exists()`, even when a query eager-loads a relation. Write-only
 tags do not produce row keys. Value-object/enum tags keep their annotated types even when a database row contains
