@@ -114,8 +114,9 @@ Other inference changes in this release:
   enum keeps that type as a required key, although the row holds the raw database value.
 - Components and container services accept every definition form Yii accepts when its class can be determined, a
   `yii\di\Instance` reference in a container definition resolves through its ID, and a definition whose class can't
-  be determined, such as a closure without a return type or a `yii\di\Instance` reference in a component definition,
-  no longer stops the analysis: `get()` returns `object` for it, and `Yii::$app->id` is `object` too, even for a
+  be determined, such as a closure without a return type, no longer stops the analysis: `get()` returns `object` for it,
+  and `Yii::$app->id` is `object` too. An `Instance` object used as a component is typed as `yii\di\Instance`, since the
+  service locator returns that object directly. The unresolved `object` fallback applies even for a
   component the application class declares, unless it's configured as an array without a class key. A string definition, or the `class` or `__class` of an array
   definition, that names another container ID, such as `'mailer.alias' => 'mailer.real'`, resolves through that ID,
   following chains, and `get()` returns `object` for it when that ID's class can't be determined. Such a definition
@@ -128,6 +129,8 @@ Other inference changes in this release:
   traits, and interfaces, so a model that extends a generated base class gets the tags of that class. The nearest
   declaration of a name wins, and tags declared by `yii\db\ActiveRecord` and the classes, interfaces, and traits it's
   built from aren't included.
+- `getAttribute()` retains `mixed` for read-only tags, because Yii's attribute accessor doesn't invoke getters or load
+  relations. Writable tags used for attribute inference must describe stored attributes.
 - `asArray()` keeps the row shape through a nullsafe chain: `$user?->hasOne(Category::class, [...])->asArray()` is
   `ActiveQuery<array{...}>|null`.
 - Calls that unpack any argument, such as `$headers->get('Accept', ...$args)`, `Target::filterMessages(...$args)`,

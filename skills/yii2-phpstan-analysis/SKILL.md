@@ -12,9 +12,18 @@ Use the installed package revision and its [requirements](https://yii2-framework
 
 ## Read the relevant contract
 
-Inspect the application Composer requirements/lock, existing NEON includes, analysis bootstrap and selected PHP
-configuration before editing. Prefer supplied local Markdown or the package's `docs/` at that revision. Otherwise
-check the relevant published Markdown before relying on it:
+In a root package checkout, use `composer show --self --format=json` for metadata. For installed dependencies,
+resolve the real path and read the configured vendor directory's `composer/installed.php` (`versions[<package>]`):
+`install_path`, `pretty_version` and Composer's selected `reference`. Do not blindly prefer `source.reference`
+over `dist.reference`. For any live package checkout, including a symlinked path install, inspect its current
+`HEAD` and files even when clean; report metadata mismatches and let the actual files govern. Uncommitted changes
+have no matching SHA. Otherwise use the selected reference or a verified matching tag only after establishing
+its source provenance. Compare `composer.lock`; it may differ from the inspected installation. Identify a
+lock-only state when no package files are installed, and resolve dependencies separately. Use hosted pages,
+catalogs or snapshots only when their source revision matches.
+
+Inspect existing NEON includes, analysis bootstrap and selected PHP configuration before editing. Prefer matching
+supplied Markdown or package `docs/`. Otherwise check these published pages against the resolved revision:
 
 - Setup and bootstrap: <https://yii2-framework.github.io/docs/extensions/phpstan/installation/index.md>.
 - Components, params, behaviors and container definitions:
@@ -25,9 +34,10 @@ check the relevant published Markdown before relying on it:
   <https://yii2-framework.github.io/docs/extensions/phpstan/migration/index.md>.
 
 For documentation outside the local checkout, use the package source at
-`https://github.com/yii2-extensions/phpstan/tree/<installed-ref>/docs` or the published guides. For exact APIs, inspect
-source PHPDoc or `https://yii2-framework.github.io/docs/reference/phpstan.json`. Use the site's `llms.txt` when the
-needed page is unknown.
+`https://github.com/yii2-extensions/phpstan/tree/<installed-ref>/docs`, substituting the resolved reference. If guides
+are unavailable or offline, inspect local source/PHPDoc and the changelog, and report the gap. For exact APIs, inspect
+the relevant type and its PHPDoc in the resolved package files. Use the site's
+`llms.txt` when the needed page is unknown.
 
 ## Establish a reproducible analysis
 

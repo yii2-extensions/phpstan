@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.5.1 Under development
 
+- fix: improve Yii/PHPStan inference, cache invalidation, compatibility, regression coverage, and documentation.
+
 ## 0.5.0 October 15, 2026
 
 - chore: update dependencies and configuration files.

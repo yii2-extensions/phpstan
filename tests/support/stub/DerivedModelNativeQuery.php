@@ -7,12 +7,20 @@ namespace yii2\extensions\phpstan\tests\support\stub;
 use yii\db\ActiveQuery;
 
 /**
- * Stub query class whose `one()` override declares the model natively, for query model derivation tests.
+ * Stub query class with non-null `one()` and list `all()` declarations for model derivation tests.
  */
 final class DerivedModelNativeQuery extends ActiveQuery
 {
-    public function one($db = null): Post|null
+    /**
+     * @return list<Post>
+     */
+    public function all($db = null): array
     {
-        return null;
+        return [];
+    }
+
+    public function one($db = null): Post
+    {
+        return new Post();
     }
 }

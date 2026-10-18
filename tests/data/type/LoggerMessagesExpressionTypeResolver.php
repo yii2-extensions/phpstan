@@ -19,7 +19,7 @@ final class LoggerMessagesExpressionTypeResolver
         $logger = new Logger();
 
         assertType(
-            'array<int|string, array{0: array<mixed>|string|Throwable|yii\\log\\PsrMessage, 1: int, 2: string, '
+            'array<int|string, array{0: ' . PHPSTAN_TEST_LOG_PAYLOAD_TYPE . ', 1: int, 2: string, '
             . '3: float, 4: list<array{file: string, line: int, function?: string, class?: class-string, type?: string}>, '
             . '5?: int}>',
             $logger->messages,
@@ -31,7 +31,7 @@ final class LoggerMessagesExpressionTypeResolver
                 $message,
             );
             assertType(
-                'array<mixed>|string|Throwable|yii\\log\\PsrMessage',
+                PHPSTAN_TEST_LOG_PAYLOAD_TYPE,
                 $message[0],
             );
             assertType(
@@ -84,12 +84,12 @@ final class LoggerMessagesExpressionTypeResolver
         $target = new FileTarget();
 
         assertType(
-            'list<array{0: array<mixed>|string|Throwable|yii\\log\\PsrMessage, 1: int, 2: string, 3: float, '
+            'list<array{0: ' . PHPSTAN_TEST_LOG_PAYLOAD_TYPE . ', 1: int, 2: string, 3: float, '
             . '4: list<array{file: string, line: int, function?: string, class?: class-string, type?: string}>, 5?: int}>',
             $target->messages,
         );
         assertType(
-            'array<int|string, array{0: array<mixed>|string|Throwable|yii\\log\\PsrMessage, 1: int, 2: string, '
+            'array<int|string, array{0: ' . PHPSTAN_TEST_LOG_PAYLOAD_TYPE . ', 1: int, 2: string, '
             . '3: float, 4: list<array{file: string, line: int, function?: string, class?: class-string, type?: string}>, '
             . '5?: int}>',
             Target::filterMessages($logger->messages),

@@ -24,7 +24,7 @@ use PHPStan\Type\{
 use PHPStan\Type\Accessory\AccessoryArrayListType;
 use PHPStan\Type\Constant\{ConstantArrayType, ConstantArrayTypeBuilder, ConstantIntegerType, ConstantStringType};
 use Throwable;
-use yii\log\{Logger, PsrMessage, Target};
+use yii\log\{Logger, Target};
 
 /**
  * Infers the documented tuple shape for Yii logger and log-target message buffers.
@@ -102,8 +102,10 @@ final class LoggerMessagesExpressionTypeResolverExtension implements ExpressionT
             new ObjectType(Throwable::class),
         ];
 
-        if ($this->reflectionProvider->hasClass(PsrMessage::class)) {
-            $payloadTypes[] = new ObjectType(PsrMessage::class);
+        $psrMessageClass = 'yii\\log\\PsrMessage';
+
+        if ($this->reflectionProvider->hasClass($psrMessageClass)) {
+            $payloadTypes[] = new ObjectType($psrMessageClass);
         }
 
         $elementTypes = [

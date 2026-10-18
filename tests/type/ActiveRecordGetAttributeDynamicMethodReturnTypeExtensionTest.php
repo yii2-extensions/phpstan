@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\type;
 
 use PHPStan\Testing\TypeInferenceTestCase;
-use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\DataProviderExternal;
+use yii2\extensions\phpstan\tests\provider\ActiveRecordGetAttributeDynamicMethodReturnTypeExtensionProvider;
+use yii2\extensions\phpstan\tests\support\stub\VirtualAttributeRecord;
 
 /**
  * Test suite for type inference of dynamic return types in {@see ActiveRecord::getAttribute()} method calls.
@@ -20,29 +22,34 @@ use PHPUnit\Framework\Attributes\DataProvider;
  *
  * This validates the ability of the PHPStan extension to resolve property types from PHPDoc annotations in both model
  * classes and their attached behaviors, with proper precedence handling when property names conflict.
+ *
+ * {@see ActiveRecordGetAttributeDynamicMethodReturnTypeExtensionProvider} for type assertion datasets.
  */
 final class ActiveRecordGetAttributeDynamicMethodReturnTypeExtensionTest extends TypeInferenceTestCase
 {
-    /**
-     * @return iterable<mixed>
-     */
-    public static function dataFileAsserts(): iterable
-    {
-        $directory = dirname(__DIR__);
-
-        yield from self::gatherAssertTypes(
-            "{$directory}/data/type/ActiveRecordGetAttributeDynamicMethodReturnType.php",
-        );
-    }
-
     public static function getAdditionalConfigFiles(): array
     {
         return [dirname(__DIR__) . '/support/extension-test.neon'];
     }
 
-    #[DataProvider('dataFileAsserts')]
+    #[DataProviderExternal(ActiveRecordGetAttributeDynamicMethodReturnTypeExtensionProvider::class, 'dataFileAsserts')]
     public function testFileAsserts(string $assertType, string $file, mixed ...$args): void
     {
         $this->assertFileAsserts($assertType, $file, ...$args);
+    }
+
+    public function testGetAttributeDoesNotInvokeVirtualGetters(): void
+    {
+        $record = new VirtualAttributeRecord();
+
+        self::assertSame(
+            'visible',
+            $record->label,
+            'Property access must invoke the getter.',
+        );
+        self::assertNull(
+            $record->getAttribute('label'),
+            'Attribute access must not invoke the read-only getter.',
+        );
     }
 }

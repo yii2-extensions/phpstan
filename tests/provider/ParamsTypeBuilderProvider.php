@@ -14,6 +14,19 @@ use function fopen;
 final class ParamsTypeBuilderProvider
 {
     /**
+     * @return iterable<string, array{array<array-key, mixed>}>
+     */
+    public static function appendProvider(): iterable
+    {
+        yield 'negative key' => [[-5 => 'value']];
+        yield 'negative keys out of order' => [[-2 => 'a', -5 => 'b']];
+        yield 'negative and string keys' => [['name' => 'value', -5 => 'a']];
+        yield 'negative and zero keys' => [[-5 => 'a', 0 => 'b']];
+        yield 'positive sparse keys' => [[2 => 'a', 5 => 'b']];
+        yield 'string keys' => [['name' => 'value']];
+    }
+
+    /**
      * @return iterable<string, array{array<array-key, mixed>, string}>
      */
     public static function paramsProvider(): iterable

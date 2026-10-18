@@ -219,12 +219,28 @@ fallback does not guarantee a successful runtime lookup: unknown component IDs c
 
 ## Documentation
 
-- 📚 [Installation guide](docs/installation.md)
-- ⚙️ [Configuration reference](docs/configuration.md)
-- 💡 [Usage examples](docs/examples.md)
-- 🔄 [Migration guide](docs/migration.md) and [upgrade entry point](UPGRADE.md)
-- 🤖 [AI assistance](docs/agents.md)
-- 🧪 [Testing guide](docs/testing.md)
+Practical guides and complete examples for Yii type inference and application
+analysis.
+
+- 📚 [Installation Guide](docs/installation.md)
+- ⚙️ [Configuration Guide](docs/configuration.md)
+- 💡 [Usage Examples](docs/examples.md)
+- 🔄 [Migration Guide](docs/migration.md) and [Upgrade Entry Point](UPGRADE.md)
+- 🧪 [Testing Guide](docs/testing.md)
+
+## AI assistance
+
+AI agents: use the repository guides and source for the installed revision.
+For a [documentation deployment](https://yii2-framework.github.io/docs/) with
+`llms.txt`, read that index first. When Markdown export is enabled, append
+`index.md` to a page URL. For Yii conventions, use the `yii2-framework` skill
+from a local framework documentation checkout.
+
+- 🤖 [yii2-phpstan-analysis skill](docs/agents.md): installation for Claude
+  Code, Codex, and OpenCode.
+
+If the hosted sources are unavailable, use the repository guides and locally
+available skills.
 
 ## Package information
 

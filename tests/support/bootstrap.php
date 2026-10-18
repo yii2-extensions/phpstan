@@ -16,3 +16,13 @@ define('YII_ENV', 'test');
 // require composer autoloader if available
 require "{$rootDir}/vendor/autoload.php";
 require "{$rootDir}/vendor/yiisoft/yii2/Yii.php";
+
+// expose the executed expectation to PHPStan instead of a statically inferred union of both Yii versions
+$loggerPayloadTypeConstant = 'PHPSTAN_TEST_LOG_PAYLOAD_TYPE';
+
+define(
+    $loggerPayloadTypeConstant,
+    class_exists('yii\\log\\PsrMessage')
+        ? 'array<mixed>|string|Throwable|yii\\log\\PsrMessage'
+        : 'array<mixed>|string|Throwable',
+);
