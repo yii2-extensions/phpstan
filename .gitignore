@@ -3,9 +3,6 @@
 .claude/*
 !.claude/skills/
 
-# Private maintainer notes and local validation assets
-/internal/
-
 # codecoverage (if present)
 code_coverage
 
@@ -43,6 +40,9 @@ package-lock.json
 # phpunit (if present)
 .phpunit.cache
 .phpunit.result.cache
+
+# private maintainer files (if present)
+/internal/
 
 # vagrant (if present)
 .vagrant

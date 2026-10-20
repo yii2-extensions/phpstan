@@ -48,12 +48,6 @@
                 "extension.neon"
             ]
         },
-        "scaffold": {
-            "allowed-packages": [
-                "php-forge/baseline",
-                "php-forge/coding-standard"
-            ]
-        },
         "skills": {
             "source": "skills"
         }
@@ -66,26 +60,54 @@
         }
     },
     "scripts": {
-        "check-dependencies": "./vendor/bin/composer-require-checker check",
-        "ecs": "./vendor/bin/ecs --fix",
-        "rector": "./vendor/bin/rector process",
-        "static": "./vendor/bin/phpstan --memory-limit=-1",
-        "static-console": "./vendor/bin/phpstan --configuration=phpstan-console.neon --memory-limit=-1",
-        "tests": "php -d memory_limit=-1 ./vendor/bin/phpunit",
-        "ecs-check": "./vendor/bin/ecs check --ansi",
+        "actionlint": "actionlint",
+        "check-dependencies": "composer-require-checker check",
+        "codespell": "codespell --config .github/linters/.codespellrc",
+        "ecs": "ecs check --fix",
+        "ecs-check": "ecs check --ansi",
+        "editorconfig-checker": "editorconfig-checker -config .github/linters/.editorconfig-checker.json",
+        "gitleaks": "gitleaks git --config .github/linters/.gitleaks.toml --redact",
+        "markdownlint": "markdownlint-cli2 --config .github/linters/.markdown-lint.yml '**/*.md'",
+        "prettier": "prettier --check --config .prettierrc.json --ignore-path .prettierignore '**/*.md' '**/*.{yml,yaml}'",
         "quality": [
-            "actionlint",
-            "codespell --config .github/linters/.codespellrc --skip=./.git,./vendor/*,./node_modules/*,./internal/*,./.phpunit.cache/*,./code_coverage/*,./runtime/*",
-            "editorconfig-checker -config .github/linters/.editorconfig-checker.json",
-            "markdownlint-cli2 --config .github/linters/.markdown-lint.yml '**/*.md' '#vendor/**' '#node_modules/**' '#internal/**' '#runtime/**'",
-            "prettier --check --config .prettierrc.json --ignore-path .prettierignore '**/*.md' '**/*.{yml,yaml}' '!runtime/**' '!internal/**'",
-            "yamllint -d 'extends: default\nrules:\n  comments:\n    min-spaces-from-content: 1\n  line-length: disable\n  truthy: disable' .github"
+            "@actionlint",
+            "@codespell",
+            "@editorconfig-checker",
+            "@markdownlint",
+            "@prettier",
+            "@yamllint"
         ],
-        "zizmor": "zizmor --persona=pedantic .github",
+        "rector": "rector process",
+        "rector-check": "rector process --dry-run",
         "security": [
             "@zizmor",
-            "gitleaks git --config .github/linters/.gitleaks.toml --redact"
-        ]
+            "@gitleaks"
+        ],
+        "static": "phpstan --memory-limit=-1",
+        "static-console": "phpstan --configuration=phpstan-console.neon --memory-limit=-1",
+        "tests": "@php -d memory_limit=-1 vendor/bin/phpunit",
+        "yamllint": "yamllint -c .github/linters/.yamllint.yml .github",
+        "zizmor": "zizmor --persona=pedantic .github"
+    },
+    "scripts-descriptions": {
+        "actionlint": "Lints GitHub Actions workflows with actionlint.",
+        "check-dependencies": "Verifies that used symbols are declared as Composer dependencies.",
+        "codespell": "Checks spelling with codespell.",
+        "ecs": "Applies coding standard fixes with ECS.",
+        "ecs-check": "Checks coding standards with ECS without modifying files.",
+        "editorconfig-checker": "Checks files against the EditorConfig rules.",
+        "gitleaks": "Scans Git history for secrets with Gitleaks.",
+        "markdownlint": "Lints Markdown files with markdownlint-cli2.",
+        "prettier": "Checks Markdown and YAML formatting with Prettier.",
+        "quality": "Runs all repository quality checks.",
+        "rector": "Applies automated refactoring with Rector.",
+        "rector-check": "Previews Rector refactoring without modifying files.",
+        "security": "Runs the workflow security and secret scanning checks.",
+        "static": "Runs static analysis with PHPStan.",
+        "static-console": "Runs static analysis with PHPStan using the console application configuration.",
+        "tests": "Runs PHPUnit.",
+        "yamllint": "Lints YAML files with yamllint.",
+        "zizmor": "Audits GitHub Actions workflows with zizmor."
     },
     "repositories": [
         {
