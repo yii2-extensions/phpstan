@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.5.2 Under development
 
+- chore: bundle the skill source, sync trusted skills via Composer, and pin CI workflows to `yii2-framework/actions` `v2.0.1`.
+
 ## 0.5.1 October 18, 2026
 
 - fix: improve Yii/PHPStan inference, cache invalidation, compatibility, regression coverage, and documentation.

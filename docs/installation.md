@@ -98,3 +98,5 @@ vendor/bin/phpstan diagnose -c phpstan.neon
 ```
 
 See the [usage examples](examples.md) for inferred types and their limitations.
+
+[Back to documentation](../README.md#documentation)

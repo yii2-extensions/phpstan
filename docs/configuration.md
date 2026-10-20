@@ -168,3 +168,5 @@ vendor/bin/phpstan diagnose -c phpstan.neon
 Inspect the factory return type, component ID and chosen application class before adding annotations. Keep unresolved
 services as `object` until the type can be established. Use a small type assertion or `PHPStan\dumpType()` probe and
 remove temporary probes after diagnosis.
+
+[Back to documentation](../README.md#documentation)

@@ -171,3 +171,5 @@ input key and tuple types while permitting an empty result.
 
 See [configuration](configuration.md) for unresolved definitions and [migration](migration.md) for changes to old
 inferred types and extension APIs.
+
+[Back to documentation](../README.md#documentation)
