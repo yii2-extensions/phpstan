@@ -1,26 +1,108 @@
 # Testing
 
-Install the development dependencies in a source checkout and record the installed versions:
+This package provides a consistent set of [Composer](https://getcomposer.org/) scripts for local validation.
+
+Tool references:
+
+- [Actionlint](https://github.com/rhysd/actionlint) for GitHub Actions workflow linting.
+- [Codespell](https://github.com/codespell-project/codespell) for spelling checks.
+- [Composer Require Checker](https://github.com/maglnet/ComposerRequireChecker) for dependency definition checks.
+- [Easy Coding Standard (ECS)](https://github.com/easy-coding-standard/easy-coding-standard) for coding standards.
+- [EditorConfig Checker](https://github.com/editorconfig-checker/editorconfig-checker) for EditorConfig compliance.
+- [Gitleaks](https://github.com/gitleaks/gitleaks) for secret scanning.
+- [Markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) for Markdown linting.
+- [PHPStan](https://phpstan.org/) for static analysis.
+- [PHPUnit](https://phpunit.de/) for unit tests.
+- [Prettier](https://prettier.io/) for Markdown and YAML formatting checks.
+- [Rector](https://github.com/rectorphp/rector) for automated refactoring.
+- [Yamllint](https://github.com/adrienverge/yamllint) for YAML linting.
+- [Zizmor](https://github.com/zizmorcore/zizmor) for GitHub Actions security audits.
+
+## Automated refactoring (Rector)
+
+Run Rector to apply automated code refactoring. This command modifies files.
 
 ```bash
-composer install
-composer validate --strict
-composer audit
-composer show yiisoft/yii2
-vendor/bin/phpstan --version
+composer rector
 ```
 
-The library's lockfile is ignored; CI resolves dependencies for Yii 2.0.55 and Yii 22 on PHP 8.3, 8.4 and 8.5.
-Static analysis targets PHP 8.3 and runs on PHP 8.3 and 8.5 in CI, with both Web and console configurations.
+Preview the refactoring without modifying files.
+
+```bash
+composer rector-check
+```
+
+## Coding standards (ECS)
+
+Check coding standards without modifying files.
+
+```bash
+composer ecs-check
+```
+
+Apply coding standard fixes. Review the changes before keeping them.
+
+```bash
+composer ecs
+```
+
+## Dependency definition check
+
+Verify that runtime dependencies are correctly declared in `composer.json`.
+
+```bash
+composer check-dependencies
+```
 
 ## Repository quality checks
 
 Make the CLI tools used by the shared quality workflow available on `PATH`:
 actionlint with its ShellCheck helper, codespell, EditorConfig Checker, markdownlint-cli2, Prettier and
-yamllint. The command reads the repository's linter, formatter and ignore files. It skips ignored local dependency, runtime and private artifact trees that are absent from a clean CI checkout.
+yamllint. Run all checks:
 
 ```bash
 composer quality
+```
+
+Each tool also has its own script:
+
+```bash
+composer actionlint
+composer codespell
+composer editorconfig-checker
+composer markdownlint
+composer prettier
+composer yamllint
+```
+
+The linter configuration lives in `.github/linters`, and the Prettier configuration in `.prettierrc.json` and
+`.prettierignore`. CI uses the same files.
+
+Check changed files and relative links. Use headings or bullets when numbered-list continuations conflict with
+EditorConfig indentation.
+
+## Static analysis (PHPStan)
+
+Run static analysis with the Web application configuration (`phpstan.neon`).
+
+```bash
+composer static
+```
+
+Run static analysis with the console application configuration (`phpstan-console.neon`), matching the second CI job.
+
+```bash
+composer static-console
+```
+
+Static analysis targets PHP 8.3 and runs on PHP 8.3 and 8.5 in CI, with both configurations.
+
+## Unit tests (PHPUnit)
+
+Run the full type inference suite. The script runs PHPUnit without a PHP memory limit.
+
+```bash
+composer tests
 ```
 
 ## Workflow security checks
@@ -32,28 +114,64 @@ with the same pedantic persona used by the shared security workflow:
 composer zizmor
 ```
 
-Run that audit and scan Git history with the repository's Gitleaks configuration:
+Scan Git history for secrets with the repository's Gitleaks configuration:
+
+```bash
+composer gitleaks
+```
+
+Run both checks. Findings make the command fail; inspect them rather than
+disabling the checks.
 
 ```bash
 composer security
 ```
 
-Zizmor's online audits require GitHub API access. Report offline limitations separately; do not count a skipped audit as passed.
+Zizmor needs GitHub API access for its online audits. If the tool runs offline,
+report that limit separately. To request an offline audit explicitly:
+
+```bash
+composer zizmor -- --offline
+```
+
+Report hosted CI execution and its PHP/OS matrix separately from these local
+commands. Keep generated reports in ignored `internal/`.
+
+## Passing extra arguments
+
+Composer scripts support forwarding additional arguments using `--`.
+
+Run PHPUnit with code coverage report generation.
+
+```bash
+composer tests -- --coverage-html internal/coverage
+```
+
+Run PHPStan with a different memory limit.
+
+```bash
+composer static -- --memory-limit=512M
+```
+
+## Install and audit
+
+Install the development dependencies in a source checkout and record the installed versions:
+
+```bash
+composer install
+composer validate --strict
+composer audit
+composer show yiisoft/yii2
+vendor/bin/phpstan --version
+```
+
+The library's lockfile is ignored; CI resolves dependencies for Yii 2.0.55 and Yii 22 on PHP 8.3, 8.4 and 8.5.
 
 ## Package checks
 
-```bash
-composer tests
-composer static
-composer static-console
-composer check-dependencies
-vendor/bin/ecs check
-```
-
 PHPUnit compares inferred types through `PHPStan\Testing\TypeInferenceTestCase`, including configuration and cache
 dependency cases. Both static configurations matter because `Yii::$app` has one configured application type per
-analysis. `composer static` checks the Web configuration; `composer static-console` checks `phpstan-console.neon`, matching the second CI job. `composer ecs` applies fixes and `composer rector` refactors files; use them only for intentional changes
-and inspect their diffs.
+analysis, so run both `composer static` and `composer static-console`.
 
 The logger resolver looks up the optional Yii 22 `yii\log\PsrMessage` class by name and checks for it through
 reflection before including it. The test bootstrap defines the expected payload type for the installed Yii version,
@@ -68,28 +186,6 @@ uses that manifest to recognize dependency stubs; copying only the vendor tree c
 Adapt the [usage recipes](examples.md) to the application and inspect the affected types. Run both Web and console
 analyses when relevant, and verify runtime behavior attachments or database/HTTP integration when they change.
 
-## Coding standards (ECS)
-
-Check standards without changing files:
-
-```bash
-composer ecs-check
-```
-
-`composer ecs` applies fixes. Review its changes before keeping them.
-
-## Documentation quality
-
-The pinned reusable workflow in `.github/workflows/quality.yml` runs Prettier 3.8.4, EditorConfig Checker 3.7.0 and
-Markdownlint CLI2 0.22.1. Use its repository configurations together:
-
-```bash
-npx prettier@3.8.4 --check --config .prettierrc.json --ignore-path .prettierignore '**/*.md' '**/*.{yml,yaml}'
-editorconfig-checker -config .github/linters/.editorconfig-checker.json
-npx markdownlint-cli2@0.22.1 --config .github/linters/.markdown-lint.yml '**/*.md' '#vendor/**' '#runtime/**'
-```
-
-Check changed files and relative links. Use headings or bullets when numbered-list continuations conflict with
-EditorConfig indentation. For client discovery and activation, see [AI assistance](agents.md).
+For client discovery and activation, see [AI assistance](agents.md).
 
 [Back to documentation](../README.md#documentation)

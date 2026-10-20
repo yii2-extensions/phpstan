@@ -22,7 +22,7 @@ Use the commands in `docs/testing.md`. Run both Web and console static configura
 executable examples when relevant. Validate Prettier and EditorConfig together with Markdownlint on every edited
 file, including skill files and migration notes. Multi-line numbered-list continuations can conflict with the
 Markdown indentation rule; prefer headings or bullets instead of disabling the checks. `composer ecs` and
-`composer rector` mutate files; use `vendor/bin/ecs check` for verification.
+`composer rector` mutate files; use `composer ecs-check` for verification.
 
 The documentation site consumes this package's `docs/`, `src/` PHPDoc and `skills/`. Do not edit generated site
 outputs or its shared navigation/catalog during package-only work; provide the exact catalog proposal to the site
