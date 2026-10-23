@@ -6,6 +6,7 @@ namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 
 /**
@@ -76,7 +77,7 @@ final class ServiceMapParamsTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'params' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'params'),
         );
 
         new ServiceMap($configPath);
@@ -88,7 +89,7 @@ final class ServiceMapParamsTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'params' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'params'),
         );
 
         new ServiceMap($configPath);

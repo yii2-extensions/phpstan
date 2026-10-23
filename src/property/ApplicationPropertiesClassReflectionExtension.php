@@ -12,11 +12,11 @@ use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\{ObjectType, ObjectWithoutClassType, Type};
 use yii\base\Application;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
 use function is_string;
-use function sprintf;
 
 /**
  * Resolves dynamic component properties on the Yii Application instance for PHPStan analysis.
@@ -104,11 +104,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
         }
 
         throw new ShouldNotHappenException(
-            sprintf(
-                'Property %s::$%s is neither native, a component, nor annotation-based.',
-                $normalizedClassReflection->getName(),
-                $propertyName,
-            ),
+            Message::PROPERTY_NOT_RESOLVED->getMessage($normalizedClassReflection->getName(), $propertyName),
         );
     }
 

@@ -10,6 +10,7 @@ use RuntimeException;
 use SplObjectStorage;
 use SplStack;
 use yii\base\InvalidArgumentException;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\provider\ServiceMapServiceProvider;
 use yii2\extensions\phpstan\tests\support\stub\MyActiveRecord;
@@ -183,7 +184,7 @@ final class ServiceMapServiceTest extends TestCase
     {
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage(
-            "Provided config path 'invalid-path' must be a readable PHP file.",
+            Message::CONFIG_PATH_NOT_READABLE->getMessage('invalid-path'),
         );
 
         new ServiceMap('invalid-path');
@@ -211,7 +212,7 @@ final class ServiceMapServiceTest extends TestCase
         try {
             $this->expectException(InvalidArgumentException::class);
             $this->expectExceptionMessage(
-                "Provided config path '{$symlink}' must be a readable PHP file.",
+                Message::CONFIG_PATH_NOT_READABLE->getMessage($symlink),
             );
 
             new ServiceMap($symlink);
@@ -227,7 +228,7 @@ final class ServiceMapServiceTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must return an array.",
+            Message::CONFIG_FILE_NOT_ARRAY->getMessage($configPath),
         );
 
         new ServiceMap($configPath);
@@ -239,7 +240,7 @@ final class ServiceMapServiceTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'container.definitions' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'container.definitions'),
         );
 
         new ServiceMap($configPath);
@@ -251,7 +252,7 @@ final class ServiceMapServiceTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'container' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'container'),
         );
 
         new ServiceMap($configPath);
@@ -263,7 +264,7 @@ final class ServiceMapServiceTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'container.singletons' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'container.singletons'),
         );
 
         new ServiceMap($configPath);
@@ -273,7 +274,7 @@ final class ServiceMapServiceTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "'Definition': 'ID' must be a 'string', got 'integer'.",
+            Message::VALUE_NOT_STRING->getMessage('Definition', 'ID', 'integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'definitions-unsupported-id-not-string.php');
@@ -283,7 +284,7 @@ final class ServiceMapServiceTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Unsupported definition for 'unsupported-type-integer'.",
+            Message::UNSUPPORTED_DEFINITION->getMessage('unsupported-type-integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'definitions-unsupported-type-integer.php');
@@ -293,7 +294,7 @@ final class ServiceMapServiceTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "'Singleton': 'ID' must be a 'string', got 'integer'.",
+            Message::VALUE_NOT_STRING->getMessage('Singleton', 'ID', 'integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'singletons-unsupported-id-not-string.php');
@@ -303,7 +304,7 @@ final class ServiceMapServiceTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Unsupported definition for 'unsupported-type-integer'.",
+            Message::UNSUPPORTED_DEFINITION->getMessage('unsupported-type-integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'singletons-unsupported-type-integer.php');
