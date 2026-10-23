@@ -7,6 +7,7 @@ namespace yii2\extensions\phpstan\tests;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 use yii\web\Application;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 
 /**
@@ -51,7 +52,7 @@ final class ServiceMapTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "'Application type': 'phpstan.application_type' must be a 'string', got 'integer'.",
+            Message::VALUE_NOT_STRING->getMessage('Application type', 'phpstan.application_type', 'integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'phpstan-unsupported-type-array-invalid.php');
@@ -63,7 +64,7 @@ final class ServiceMapTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'phpstan' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'phpstan'),
         );
 
         new ServiceMap($configPath);

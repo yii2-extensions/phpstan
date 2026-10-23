@@ -7,6 +7,7 @@ namespace yii2\extensions\phpstan;
 use PHPStan\Analyser\ResultCache\ResultCacheValueExtension;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\{Type, VerbosityLevel};
+use yii2\extensions\phpstan\exception\Message;
 
 use function count;
 use function hash;
@@ -197,7 +198,9 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
 
         foreach ($constantArrays[0]->getKeyTypes() as $position => $keyType) {
             $description[$keyType->getValue()] = self::describeParamsType(
-                $valueTypes[$position] ?? throw new ShouldNotHappenException('Shape key without a value type.'),
+                $valueTypes[$position] ?? throw new ShouldNotHappenException(
+                    Message::SHAPE_KEY_WITHOUT_VALUE_TYPE->getMessage(),
+                ),
             );
         }
 

@@ -12,6 +12,7 @@ use RuntimeException;
 use yii\base\InvalidArgumentException;
 use yii\di\Instance;
 use yii\web\Application;
+use yii2\extensions\phpstan\exception\Message;
 
 use function array_filter;
 use function array_is_list;
@@ -33,7 +34,6 @@ use function ltrim;
 use function pathinfo;
 use function preg_match;
 use function realpath;
-use function sprintf;
 use function str_contains;
 use function strtolower;
 
@@ -164,7 +164,7 @@ final class ServiceMap
                 || pathinfo($resolvedPath, PATHINFO_EXTENSION) !== 'php'
             ) {
                 throw new InvalidArgumentException(
-                    sprintf('Provided config path \'%s\' must be a readable PHP file.', $configPath),
+                    Message::CONFIG_PATH_NOT_READABLE->getMessage($configPath),
                 );
             }
 
@@ -389,7 +389,7 @@ final class ServiceMap
 
         if (is_array($config) === false) {
             throw new RuntimeException(
-                sprintf("Configuration file '%s' must return an array.", $configPath),
+                Message::CONFIG_FILE_NOT_ARRAY->getMessage($configPath),
             );
         }
 
@@ -463,7 +463,7 @@ final class ServiceMap
 
             if (is_array($definition) === false) {
                 throw new RuntimeException(
-                    sprintf("Behavior definition for '%s' must be an array.", $id),
+                    Message::BEHAVIOR_DEFINITION_NOT_ARRAY->getMessage($id),
                 );
             }
 
@@ -806,7 +806,7 @@ final class ServiceMap
     private function throwErrorWhenConfigFileIsNotArray(string ...$args): never
     {
         throw new RuntimeException(
-            sprintf("Configuration file '%s' must contain a valid '%s' 'array'.", ...$args),
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage(...$args),
         );
     }
 
@@ -823,7 +823,7 @@ final class ServiceMap
     private function throwErrorWhenIsNotString(string ...$args): never
     {
         throw new RuntimeException(
-            sprintf("'%s': '%s' must be a 'string', got '%s'.", ...$args),
+            Message::VALUE_NOT_STRING->getMessage(...$args),
         );
     }
 
@@ -840,7 +840,7 @@ final class ServiceMap
     private function throwErrorWhenUnsupportedDefinition(string $id): never
     {
         throw new RuntimeException(
-            sprintf("Unsupported definition for '%s'.", $id),
+            Message::UNSUPPORTED_DEFINITION->getMessage($id),
         );
     }
 

@@ -56,9 +56,8 @@ composer check-dependencies
 
 ## Repository quality checks
 
-Make the CLI tools used by the shared quality workflow available on `PATH`:
-actionlint with its ShellCheck helper, codespell, EditorConfig Checker, markdownlint-cli2, Prettier and
-yamllint. Run all checks:
+Make the CLI tools used by the shared quality workflow available on `PATH`: actionlint with its ShellCheck helper,
+codespell, EditorConfig Checker, markdownlint-cli2, Prettier and yamllint. Run all checks:
 
 ```bash
 composer quality
@@ -107,8 +106,8 @@ composer tests
 
 ## Workflow security checks
 
-Make zizmor and Gitleaks available on `PATH`. Audit the current workflow files
-with the same pedantic persona used by the shared security workflow:
+Make zizmor and Gitleaks available on `PATH`. Audit the current workflow files with the same pedantic persona used by
+the shared security workflow:
 
 ```bash
 composer zizmor
@@ -120,22 +119,21 @@ Scan Git history for secrets with the repository's Gitleaks configuration:
 composer gitleaks
 ```
 
-Run both checks. Findings make the command fail; inspect them rather than
-disabling the checks.
+Run both checks. Findings make the command fail; inspect them rather than disabling the checks.
 
 ```bash
 composer security
 ```
 
-Zizmor needs GitHub API access for its online audits. If the tool runs offline,
-report that limit separately. To request an offline audit explicitly:
+Zizmor needs GitHub API access for its online audits. If the tool runs offline, report that limit separately. To request
+an offline audit explicitly:
 
 ```bash
 composer zizmor -- --offline
 ```
 
-Report hosted CI execution and its PHP/OS matrix separately from these local
-commands. Keep generated reports in ignored `internal/`.
+Report hosted CI execution and its PHP/OS matrix separately from these local commands. Keep generated reports in ignored
+`internal/`.
 
 ## Passing extra arguments
 
@@ -173,13 +171,13 @@ PHPUnit compares inferred types through `PHPStan\Testing\TypeInferenceTestCase`,
 dependency cases. Both static configurations matter because `Yii::$app` has one configured application type per
 analysis, so run both `composer static` and `composer static-console`.
 
-The logger resolver looks up the optional Yii 22 `yii\log\PsrMessage` class by name and checks for it through
-reflection before including it. The test bootstrap defines the expected payload type for the installed Yii version,
-so PHPUnit and direct static checks validate the same fixture on Yii 2.0.55 and Yii 22. Retain the existence guard
-and both sets of expectations when changing logger inference.
+The logger resolver looks up the optional Yii 22 `yii\log\PsrMessage` class by name and checks for it through reflection
+before including it. The test bootstrap defines the expected payload type for the installed Yii version, so PHPUnit and
+direct static checks validate the same fixture on Yii 2.0.55 and Yii 22. Retain the existence guard and both sets of
+expectations when changing logger inference.
 
-When checking an isolated consumer, preserve its `composer.json` and configured vendor directory together. PHPStan
-uses that manifest to recognize dependency stubs; copying only the vendor tree can trigger project-stub validation.
+When checking an isolated consumer, preserve its `composer.json` and configured vendor directory together. PHPStan uses
+that manifest to recognize dependency stubs; copying only the vendor tree can trigger project-stub validation.
 
 ## Verify documented application setups
 

@@ -6,6 +6,7 @@ namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\support\stub\{MyActiveRecord, User};
 
@@ -83,7 +84,7 @@ final class ServiceMapComponentTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "'Component': 'ID' must be a 'string', got 'integer'.",
+            Message::VALUE_NOT_STRING->getMessage('Component', 'ID', 'integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'components-unsupported-id-not-string.php');
@@ -93,7 +94,7 @@ final class ServiceMapComponentTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Unsupported definition for 'unsupported-type-integer'.",
+            Message::UNSUPPORTED_DEFINITION->getMessage('unsupported-type-integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'components-unsupported-type-integer.php');
@@ -105,7 +106,7 @@ final class ServiceMapComponentTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'components' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'components'),
         );
 
         new ServiceMap($configPath);

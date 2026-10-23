@@ -8,9 +8,8 @@ use PHPStan\Analyser\{DeclarationDependencyTracker, OutOfClassScope};
 use PHPStan\Reflection\{ClassReflection, MethodReflection, MethodsClassReflectionExtension, ReflectionProvider};
 use PHPStan\ShouldNotHappenException;
 use yii\base\Component;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
-
-use function sprintf;
 
 /**
  * Resolves methods provided by behaviors attached to {@see Component} subclasses for PHPStan analysis.
@@ -55,11 +54,7 @@ final class BehaviorMethodsClassReflectionExtension implements MethodsClassRefle
 
         if ($behaviorMethod === null) {
             throw new ShouldNotHappenException(
-                sprintf(
-                    'Method %s::%s() is not provided by any behavior attached to the class.',
-                    $classReflection->getName(),
-                    $methodName,
-                ),
+                Message::BEHAVIOR_METHOD_NOT_FOUND->getMessage($classReflection->getName(), $methodName),
             );
         }
 

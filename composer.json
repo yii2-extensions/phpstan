@@ -2,11 +2,17 @@
     "name": "yii2-extensions/phpstan",
     "type": "library",
     "description": "PHPStan extension for Yii2",
+    "homepage": "https://yii2-framework.github.io/docs/extensions/phpstan/",
     "keywords": [
         "yii2",
         "phpstan"
     ],
     "license": "BSD-3-Clause",
+    "support": {
+        "docs": "https://yii2-framework.github.io/docs/extensions/phpstan/",
+        "issues": "https://github.com/yii2-extensions/phpstan/issues",
+        "source": "https://github.com/yii2-extensions/phpstan"
+    },
     "authors": [
         {
             "name": "Wilmer Arambula",

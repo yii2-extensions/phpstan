@@ -6,6 +6,7 @@ namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\support\stub\{BehaviorOne, BehaviorTwo, MyComponent};
 
@@ -87,7 +88,7 @@ final class ServiceMapBehaviorTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Behavior definition for 'MyComponent' must be an array.",
+            Message::BEHAVIOR_DEFINITION_NOT_ARRAY->getMessage('MyComponent'),
         );
 
         new ServiceMap(self::BASE_PATH . 'behaviors-unsupported-definition-not-array.php');
@@ -97,7 +98,7 @@ final class ServiceMapBehaviorTest extends TestCase
     {
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "'Behavior class': 'ID' must be a 'string', got 'integer'.",
+            Message::VALUE_NOT_STRING->getMessage('Behavior class', 'ID', 'integer'),
         );
 
         new ServiceMap(self::BASE_PATH . 'behaviors-unsupported-id-not-string.php');
@@ -109,7 +110,7 @@ final class ServiceMapBehaviorTest extends TestCase
 
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage(
-            "Configuration file '{$configPath}' must contain a valid 'behaviors' 'array'.",
+            Message::CONFIG_SECTION_NOT_ARRAY->getMessage($configPath, 'behaviors'),
         );
 
         new ServiceMap($configPath);
