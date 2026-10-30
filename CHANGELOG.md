@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.5.3 Under development
 
+- fix: stop applying the configured application's members and components to unrelated application receivers, such as console under Web.
+
 ## 0.5.2 October 23, 2026
 
 - chore: bundle the skill source, sync trusted skills via Composer, and pin CI workflows to `yii2-framework/actions` `v2.0.1`.

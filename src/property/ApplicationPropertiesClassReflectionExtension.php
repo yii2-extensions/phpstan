@@ -13,7 +13,7 @@ use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\{ObjectType, ObjectWithoutClassType, Type};
 use yii\base\Application;
 use yii2\extensions\phpstan\exception\Message;
-use yii2\extensions\phpstan\reflection\ComponentPropertyReflection;
+use yii2\extensions\phpstan\reflection\{ComponentPropertyReflection, ReceiverPropertyReflection};
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
 use function is_string;
@@ -55,11 +55,12 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
     /**
      * Retrieves the property reflection for a given property on the Yii Application class or its components.
      *
-     * Resolves, in order, a native property of the configured application type, a configured component, an
+     * Resolves, in order, a native property of the associated application class, a configured component, an
      * annotation-based property, and a configured component whose class can't be determined, typed as `object`. Such a
      * component takes precedence over the annotation, since its definition decides the value, unless it's an array
-     * without a class key, which Yii completes from the core component the annotation describes. PHPStan calls this
-     * method only after {@see hasProperty()} returned `true` for the same class and property name.
+     * without a class key, which Yii completes from the core component the annotation describes. A class unrelated to
+     * the configured application type resolves only its own native and annotated members. PHPStan calls this method
+     * only after {@see hasProperty()} returned `true` for the same class and property name.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
@@ -70,13 +71,17 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      */
     public function getProperty(ClassReflection $classReflection, string $propertyName): PropertyReflection
     {
-        $normalizedClassReflection = $this->normalizeClassReflection($classReflection);
+        $associatedClassReflection = $this->resolveAssociatedClassReflection($classReflection);
+        $normalizedClassReflection = $associatedClassReflection ?? $classReflection;
 
         if ($normalizedClassReflection->hasNativeProperty($propertyName)) {
             return $normalizedClassReflection->getNativeProperty($propertyName);
         }
 
-        if (null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)) {
+        if (
+            $associatedClassReflection !== null
+            && null !== $componentClass = $this->serviceMap->getComponentClassById($propertyName)
+        ) {
             return new ComponentPropertyReflection(
                 new DummyPropertyReflection($propertyName),
                 $this->resolveType($componentClass, $propertyName),
@@ -84,7 +89,7 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             );
         }
 
-        $isUnresolved = $this->serviceMap->isUnresolvedComponent($propertyName);
+        $isUnresolved = $associatedClassReflection !== null && $this->serviceMap->isUnresolvedComponent($propertyName);
 
         // a configured definition decides the value, except an array without a class key, which Yii completes from the
         // core components that the application class annotates
@@ -92,7 +97,18 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             ($isUnresolved === false || $this->serviceMap->isComponentWithoutClass($propertyName))
             && $this->annotationsProperties->hasProperty($normalizedClassReflection, $propertyName)
         ) {
-            return $this->annotationsProperties->getProperty($normalizedClassReflection, $propertyName);
+            $property = $this->annotationsProperties->getProperty($normalizedClassReflection, $propertyName);
+
+            // PHPStan resolves an inherited property again on the ancestor declaring it, which may be refined to the
+            // configured application type, so an unrelated application declares the property itself
+            if (
+                $associatedClassReflection === null
+                && $property->getDeclaringClass()->getName() !== $classReflection->getName()
+            ) {
+                return new ReceiverPropertyReflection($property, $classReflection);
+            }
+
+            return $property;
         }
 
         if ($isUnresolved) {
@@ -113,7 +129,8 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      *
      * Applies only to {@see Application} and its subclasses, and checks native properties, dynamic components
      * registered via the service map, annotation-based properties, and components configured with an unknown class,
-     * in the same order as {@see getProperty()}.
+     * in the same order as {@see getProperty()}. Configured components apply only to a class associated with the
+     * configured application type; an unrelated application class checks only its own native and annotated members.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
@@ -144,33 +161,56 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
             $this->dependencyTracker->trackClassDependency($classReflection, $configuredApplicationType);
         }
 
-        $normalizedClassReflection = $this->normalizeClassReflection($classReflection);
+        $associatedClassReflection = $this->resolveAssociatedClassReflection($classReflection);
 
-        return $normalizedClassReflection->hasNativeProperty($propertyName)
+        if ($associatedClassReflection === null) {
+            // an unrelated application keeps its own members and never receives the configured components
+            return $classReflection->hasNativeProperty($propertyName)
+                || $this->annotationsProperties->hasProperty($classReflection, $propertyName);
+        }
+
+        return $associatedClassReflection->hasNativeProperty($propertyName)
             || $this->serviceMap->getComponentClassById($propertyName) !== null
-            || $this->annotationsProperties->hasProperty($normalizedClassReflection, $propertyName)
+            || $this->annotationsProperties->hasProperty($associatedClassReflection, $propertyName)
             || $this->serviceMap->isUnresolvedComponent($propertyName);
     }
 
     /**
-     * Normalizes the class reflection for Yii Application subclasses to ensure consistent property resolution.
+     * Resolves the class reflection the configured application's members and components apply to.
      *
-     * The normalization process ensures that dynamic property resolution and component lookup use the explicitly
-     * configured application type rather than attempting to infer it from context.
+     * An ancestor of the configured application type, such as {@see Application} or `yii\web\Application` for a custom
+     * Web application, is refined to the configured type, since a single entry point is analyzed. The configured type
+     * itself and its subclasses keep their own reflection, so their native and annotated members and their generic
+     * substitutions aren't replaced by a broader class. Any other application, such as a console application under a
+     * Web description, is unrelated and receives neither the configured members nor the configured components.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      *
-     * @return ClassReflection Normalized class reflection for the configured application type.
+     * @return ClassReflection|null Class reflection associated with the configured application type, or `null` if the
+     * class is unrelated to it or the configured application type can't be reflected.
      */
-    private function normalizeClassReflection(ClassReflection $classReflection): ClassReflection
+    private function resolveAssociatedClassReflection(ClassReflection $classReflection): ClassReflection|null
     {
         $configuredApplicationType = $this->serviceMap->getApplicationType();
 
-        if ($this->reflectionProvider->hasClass($configuredApplicationType)) {
-            return $this->reflectionProvider->getClass($configuredApplicationType);
+        if ($this->reflectionProvider->hasClass($configuredApplicationType) === false) {
+            return null;
         }
 
-        return $classReflection;
+        $configuredClassReflection = $this->reflectionProvider->getClass($configuredApplicationType);
+
+        if (
+            $classReflection->getName() === $configuredClassReflection->getName()
+            || $classReflection->isSubclassOfClass($configuredClassReflection)
+        ) {
+            return $classReflection;
+        }
+
+        if ($configuredClassReflection->isSubclassOfClass($classReflection)) {
+            return $configuredClassReflection;
+        }
+
+        return null;
     }
 
     /**

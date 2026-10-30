@@ -5,13 +5,14 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\console\data\property;
 
 use Yii;
-use yii\base\{Security, View};
+use yii\base\{Application as BaseApplication, Security, View};
 use yii\console\{Application, ErrorHandler, Request, Response};
 use yii\db\Connection;
 use yii\i18n\{Formatter, I18N};
 use yii\log\Dispatcher;
 use yii\mail\MailerInterface;
-use yii\web\{AssetManager, UrlManager};
+use yii\web\{Application as WebApplication, AssetManager, UrlManager};
+use yii2\extensions\phpstan\tests\support\stub\{ApplicationCustom, User};
 
 use function PHPStan\Testing\{assertSuperType, assertType};
 
@@ -19,7 +20,7 @@ use function PHPStan\Testing\{assertSuperType, assertType};
  * Type assertion fixture for {@see Application} property reflection via `Yii::$app` in PHPStan analysis.
  *
  * Verifies type inference for core console application properties and components, including native, interface,
- * nullable, and union-typed members.
+ * nullable, and union-typed members, and that unrelated Web application receivers retain their own members.
  */
 final class ApplicationPropertiesClassReflectionType
 {
@@ -46,6 +47,11 @@ final class ApplicationPropertiesClassReflectionType
     public function testReturnCacheFromComponent(): void
     {
         assertType('yii\caching\CacheInterface|null', Yii::$app->cache);
+    }
+
+    public function testReturnConsoleRequestFromBaseApplicationReceiver(BaseApplication $app): void
+    {
+        assertType(Request::class, $app->request);
     }
 
     public function testReturnControllerFromProperty(): void
@@ -155,6 +161,11 @@ final class ApplicationPropertiesClassReflectionType
         assertType('string', Yii::$app->vendorPath);
     }
 
+    public function testReturnStringFromVirtualPropertyOfCustomApplicationReceiver(ApplicationCustom $app): void
+    {
+        assertType('string', $app->virtualProperty);
+    }
+
     public function testReturnUrlManagerFromComponent(): void
     {
         assertType(UrlManager::class, Yii::$app->urlManager);
@@ -163,5 +174,28 @@ final class ApplicationPropertiesClassReflectionType
     public function testReturnViewFromComponent(): void
     {
         assertType(View::class, Yii::$app->view);
+    }
+
+    public function testReturnWebRequestFromCustomApplicationReceiver(ApplicationCustom $app): void
+    {
+        assertType('yii\web\Request', $app->request);
+    }
+
+    public function testReturnWebRequestFromWebApplicationReceiver(WebApplication $app): void
+    {
+        assertType('yii\web\Request', $app->request);
+    }
+
+    public function testReturnWebSessionFromWebApplicationReceiver(WebApplication $app): void
+    {
+        assertType('yii\web\Session', $app->session);
+    }
+
+    /**
+     * @param WebApplication<User> $app
+     */
+    public function testReturnWebUserFromGenericWebApplicationReceiver(WebApplication $app): void
+    {
+        assertType('yii\web\User<yii2\extensions\phpstan\tests\support\stub\User>', $app->user);
     }
 }
