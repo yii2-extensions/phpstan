@@ -155,27 +155,9 @@ trait ResultCacheIntegrationTrait
      */
     private static function assertRestored(int $expected, string $stderr, string $run): void
     {
-        $matches = [];
-
-        $count = preg_match_all(
-            '/Result cache restored(?: in [\d.]+ seconds)?\. (\d+) files? will be reanalysed\./',
-            $stderr,
-            $matches,
-        );
-
         self::assertSame(
-            1,
-            $count,
-            sprintf("%s must restore the result cache once.\n%s", $run, $stderr),
-        );
-        self::assertStringNotContainsString(
-            'Result cache not used',
-            $stderr,
-            sprintf('%s must reuse the cached results, not only the `tmpDir`.', $run),
-        );
-        self::assertSame(
-            (string) $expected,
-            $matches[1][0],
+            $expected,
+            self::reanalysedFiles($stderr, $run),
             sprintf('%s must reanalyse %d files.', $run, $expected),
         );
     }
@@ -305,6 +287,33 @@ trait ResultCacheIntegrationTrait
         }
 
         return $contents;
+    }
+
+    /**
+     * Returns the number of files reanalysed after a single result cache restore.
+     */
+    private static function reanalysedFiles(string $stderr, string $run): int
+    {
+        $matches = [];
+
+        $count = preg_match_all(
+            '/Result cache restored(?: in [\d.]+ seconds)?\. (\d+) files? will be reanalysed\./',
+            $stderr,
+            $matches,
+        );
+
+        self::assertSame(
+            1,
+            $count,
+            sprintf("%s must restore the result cache once.\n%s", $run, $stderr),
+        );
+        self::assertStringNotContainsString(
+            'Result cache not used',
+            $stderr,
+            sprintf('%s must reuse the cached results, not only the `tmpDir`.', $run),
+        );
+
+        return (int) $matches[1][0];
     }
 
     private static function removeDirectory(string $directory): void
