@@ -11,8 +11,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 use function array_diff_assoc;
 use function dirname;
 use function explode;
-use function preg_match_all;
-use function sprintf;
 use function var_export;
 
 use const DIRECTORY_SEPARATOR;
@@ -323,33 +321,6 @@ final class ApplicationComponentResultCacheIntegrationTest extends TestCase
 
             PHP,
         );
-    }
-
-    /**
-     * Returns the number of files reanalysed after a single result cache restore.
-     */
-    private static function reanalysedFiles(string $stderr, string $run): int
-    {
-        $matches = [];
-
-        $count = preg_match_all(
-            '/Result cache restored(?: in [\d.]+ seconds)?\. (\d+) files? will be reanalysed\./',
-            $stderr,
-            $matches,
-        );
-
-        self::assertSame(
-            1,
-            $count,
-            sprintf("%s must restore the result cache once.\n%s", $run, $stderr),
-        );
-        self::assertStringNotContainsString(
-            'Result cache not used',
-            $stderr,
-            sprintf('%s must reuse the cached results, not only the `tmpDir`.', $run),
-        );
-
-        return (int) $matches[1][0];
     }
 
     /**
