@@ -16,6 +16,7 @@ parameters:
         analyse:
             - tests/console/
             - tests/custom/
+            - tests/data/diagnostic/DeclaredPropertyDiagnostic.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
             - tests/data/type/ServiceMapDefinitionType.php
@@ -39,6 +40,7 @@ parameters:
             - tests/support/stub/ShipmentQuery.php
             - tests/support/stub/Ticket.php
             - tests/support/stub/Voucher.php
+            - tests/web/data/type/ApplicationParamsModule.php
             - tests/web/data/type/ApplicationParamsOwnParamsModule.php
             - tests/web/data/type/ApplicationParamsType.php
             - tests/web/data/type/ParamsAwkwardKeysType.php
