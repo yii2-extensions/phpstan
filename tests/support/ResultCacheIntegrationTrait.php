@@ -123,13 +123,15 @@ trait ResultCacheIntegrationTrait
 
         $exitCode = proc_close($process);
         $stderr = $this->readFile('output/stderr.txt');
-        $report = $this->report($this->readFile('output/stdout.txt'));
 
         self::assertSame(
             1,
             $exitCode,
             "Analysis must report the dumped types without crashing.\n" . $stderr,
         );
+
+        $report = $this->report($this->readFile('output/stdout.txt'), $stderr);
+
         self::assertSame(
             [],
             $report['errors'],
@@ -347,15 +349,17 @@ trait ResultCacheIntegrationTrait
      * Extracts the non-file-specific errors and the normalized file results from the JSON error output, requiring every
      * reported file to belong to the generated project.
      *
+     * The error output is included when no report is found, since a configuration error still exits with code `1`.
+     *
      * @phpstan-return array{errors: list<string>, results: list<array{string, int, string, string|null}>}
      */
-    private function report(string $stdout): array
+    private function report(string $stdout, string $stderr): array
     {
         $start = strpos($stdout, '{"totals"');
 
         if ($start === false) {
             throw new RuntimeException(
-                sprintf('PHPStan did not print a JSON report: %s', $stdout),
+                sprintf("PHPStan did not print a JSON report: %s\n%s", $stdout, $stderr),
             );
         }
 
