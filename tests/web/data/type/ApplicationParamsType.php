@@ -7,6 +7,7 @@ namespace yii2\extensions\phpstan\tests\web\data\type;
 use Countable;
 use Yii;
 use yii\base\{Application as BaseApplication, Module};
+use yii\BaseYii;
 use yii\console\Application as ConsoleApplication;
 use yii\web\Application as WebApplication;
 use yii2\extensions\phpstan\tests\support\stub\ApplicationParamsOwner;
@@ -25,29 +26,89 @@ final class ApplicationParamsType
     {
         Yii::$app = $console;
 
-        assertType('yii\console\Application', Yii::$app);
+        assertType(
+            'yii\console\Application',
+            Yii::$app,
+        );
+    }
+
+    public function testAssignedApplicationThroughBaseYiiLeavesYiiSpellingUnnarrowed(): void
+    {
+        BaseYii::$app = null;
+
+        assertType(
+            'null',
+            BaseYii::$app,
+        );
+        // known PHPStan limitation: each class spelling is a separate expression, although at runtime both name the
+        // same static property and `Yii::$app` is `null` here
+        assertType(
+            'yii\web\Application',
+            Yii::$app,
+        );
     }
 
     public function testAssignedBaseApplication(BaseApplication $base): void
     {
         Yii::$app = $base;
 
-        assertType('yii\base\Application', Yii::$app);
+        assertType(
+            'yii\base\Application',
+            Yii::$app,
+        );
     }
 
     public function testAssignedNullableApplication(WebApplication|null $web): void
     {
         Yii::$app = $web;
 
-        assertType('yii\web\Application|null', Yii::$app);
+        assertType(
+            'yii\web\Application|null',
+            Yii::$app,
+        );
+    }
+
+    public function testAssignedNullableApplicationNarrowedByNullCheck(WebApplication|null $web): void
+    {
+        Yii::$app = $web;
+
+        if (Yii::$app === null) {
+            assertType(
+                'null',
+                Yii::$app,
+            );
+
+            return;
+        }
+
+        assertType(
+            'yii\web\Application',
+            Yii::$app,
+        );
+    }
+
+    public function testAssignedNullApplication(): void
+    {
+        Yii::$app = null;
+
+        assertType(
+            'null',
+            Yii::$app,
+        );
     }
 
     public function testAssignedParam(): void
     {
         Yii::$app->params['adminEmail'] = 1;
 
-        assertType('1', Yii::$app->params['adminEmail']);
-        assertType('int', Yii::$app->params['maxItems']);
+        assertType(
+            '1',
+            Yii::$app->params['adminEmail'],
+        );
+        assertType(
+            'int',
+            Yii::$app->params['maxItems'],
+        );
     }
 
     /**
@@ -59,7 +120,10 @@ final class ApplicationParamsType
             Yii::$app->params['maxItems'] = $value;
         }
 
-        assertType('int', Yii::$app->params['maxItems']);
+        assertType(
+            'int',
+            Yii::$app->params['maxItems'],
+        );
     }
 
     public function testAssignedParamInIfElseBranches(bool $condition): void
@@ -70,24 +134,95 @@ final class ApplicationParamsType
             Yii::$app->params['maxItems'] = 5;
         }
 
-        assertType("5|'x'", Yii::$app->params['maxItems']);
+        assertType(
+            "5|'x'",
+            Yii::$app->params['maxItems'],
+        );
+    }
+
+    public function testAssignedParams(): void
+    {
+        Yii::$app->params = ['adminEmail' => 'x'];
+
+        assertType(
+            "array{adminEmail: 'x'}",
+            Yii::$app->params,
+        );
+    }
+
+    public function testAssignedSelectedApplication(WebApplication $web): void
+    {
+        Yii::$app = $web;
+
+        assertType(
+            'yii\web\Application',
+            Yii::$app,
+        );
     }
 
     public function testAssignedUnionApplication(ConsoleApplication $console, WebApplication $web, bool $condition): void
     {
         Yii::$app = $condition ? $console : $web;
 
-        assertType('yii\console\Application|yii\web\Application', Yii::$app);
+        assertType(
+            'yii\console\Application|yii\web\Application',
+            Yii::$app,
+        );
 
         if (Yii::$app instanceof ConsoleApplication) {
-            assertType('yii\console\Application', Yii::$app);
+            assertType(
+                'yii\console\Application',
+                Yii::$app,
+            );
+        }
+    }
+
+    public function testCoalesceApplication(WebApplication $fallback): void
+    {
+        assertType(
+            'yii\web\Application',
+            Yii::$app ?? $fallback,
+        );
+        assertType(
+            'yii\web\Application',
+            Yii::$app ?? null,
+        );
+    }
+
+    public function testCompareApplicationWithNull(): void
+    {
+        if (Yii::$app === null) {
+            assertType(
+                '*NEVER*',
+                Yii::$app,
+            );
+        } else {
+            assertType(
+                'yii\web\Application',
+                Yii::$app,
+            );
+        }
+
+        if (Yii::$app !== null) {
+            assertType(
+                'yii\web\Application',
+                Yii::$app,
+            );
+        } else {
+            assertType(
+                '*NEVER*',
+                Yii::$app,
+            );
         }
     }
 
     public function testContradictoryNarrowingIsNever(): void
     {
         if (is_string(Yii::$app->params['adminEmail']) && is_int(Yii::$app->params['adminEmail'])) {
-            assertType('*NEVER*', Yii::$app->params['adminEmail']);
+            assertType(
+                '*NEVER*',
+                Yii::$app->params['adminEmail'],
+            );
         }
     }
 
@@ -95,64 +230,174 @@ final class ApplicationParamsType
     {
         $email = Yii::$app->params['adminEmail'] ?? 'default';
 
-        assertType('string', $email);
-        assertType('string', Yii::$app->params['nested']['key1'] ?? 'default');
-        assertType("'default'", Yii::$app->params['nullableParam'] ?? 'default');
-        assertType("'default'", Yii::$app->params['missing'] ?? 'default');
-        assertType('bool', isset(Yii::$app->params['adminEmail']) ? Yii::$app->params['debugMode'] : false);
-        assertType('int', Yii::$app->params['nested']['key2']);
+        assertType(
+            'string',
+            $email,
+        );
+        assertType(
+            'string',
+            Yii::$app->params['nested']['key1'] ?? 'default',
+        );
+        assertType(
+            "'default'",
+            Yii::$app->params['nullableParam'] ?? 'default',
+        );
+        assertType(
+            "'default'",
+            Yii::$app->params['missing'] ?? 'default',
+        );
+        assertType(
+            'bool',
+            isset(Yii::$app->params['adminEmail']) ? Yii::$app->params['debugMode'] : false,
+        );
+        assertType(
+            'int',
+            Yii::$app->params['nested']['key2'],
+        );
 
         if (isset(Yii::$app->params['adminEmail'])) {
-            assertType('string', Yii::$app->params['adminEmail']);
+            assertType(
+                'string',
+                Yii::$app->params['adminEmail'],
+            );
         }
+    }
+
+    public function testIssetApplication(): void
+    {
+        assertType(
+            'true',
+            isset(Yii::$app),
+        );
+
+        if (isset(Yii::$app)) {
+            assertType(
+                'yii\web\Application',
+                Yii::$app,
+            );
+        } else {
+            assertType(
+                'yii\web\Application',
+                Yii::$app,
+            );
+        }
+    }
+
+    public function testIssetNestedNullableAndMissingParams(): void
+    {
+        assertType(
+            'true',
+            isset(Yii::$app->params['nested']['key1']),
+        );
+        assertType(
+            'false',
+            isset(Yii::$app->params['nested']['missing']),
+        );
+        assertType(
+            'false',
+            isset(Yii::$app->params['nullableParam']),
+        );
+        assertType(
+            'false',
+            isset(Yii::$app->params['missing']),
+        );
+        assertType(
+            "'default'",
+            Yii::$app->params['nested']['missing'] ?? 'default',
+        );
     }
 
     public function testNarrowedApplication(): void
     {
         if (Yii::$app instanceof ConsoleApplication) {
-            assertType('*NEVER*', Yii::$app);
+            assertType(
+                '*NEVER*',
+                Yii::$app,
+            );
+        }
+    }
+
+    public function testNarrowedApplicationToSelectedClass(): void
+    {
+        if (Yii::$app instanceof WebApplication) {
+            assertType(
+                'yii\web\Application',
+                Yii::$app,
+            );
+        } else {
+            assertType(
+                '*NEVER*',
+                Yii::$app,
+            );
         }
     }
 
     public function testNarrowedParams(): void
     {
         if (Yii::$app->params['adminEmail'] === 'admin@example.com') {
-            assertType("'admin@example.com'", Yii::$app->params['adminEmail']);
+            assertType(
+                "'admin@example.com'",
+                Yii::$app->params['adminEmail'],
+            );
         }
 
         if (is_string(Yii::$app->params['nested']['key1'])) {
-            assertType('string', Yii::$app->params['nested']['key1']);
+            assertType(
+                'string',
+                Yii::$app->params['nested']['key1'],
+            );
         }
 
-        assertType('null', Yii::$app->params['nullableParam']);
+        assertType(
+            'null',
+            Yii::$app->params['nullableParam'],
+        );
     }
 
     public function testPushedListParam(): void
     {
         Yii::$app->params['tags'][] = 'z';
 
-        assertType("array{string, string, 'z'}", Yii::$app->params['tags']);
+        assertType(
+            "array{string, string, 'z'}",
+            Yii::$app->params['tags'],
+        );
     }
 
     public function testResolveApplicationThroughAnyBaseYiiSpelling(): void
     {
-        assertType('yii\web\Application', \yii\BaseYii::$app);
-        assertType('yii\web\Application', \Yii::$app);
+        assertType(
+            'yii\web\Application',
+            \yii\BaseYii::$app,
+        );
+        assertType(
+            'yii\web\Application',
+            \Yii::$app,
+        );
     }
 
     public function testResolveParamsThroughApplicationVariable(): void
     {
         $app = Yii::$app;
 
-        assertType('string', $app->params['adminEmail']);
+        assertType(
+            'string',
+            $app->params['adminEmail'],
+        );
     }
 
     public function testResolveParamsThroughIntersectionAndUnionOwners(
         Module&Countable $countable,
         Module|ApplicationParamsOwner $owner,
     ): void {
-        assertType('int', $countable->params['maxItems']);
-        assertType('int|string', $owner->params['maxItems']);
+        assertType(
+            'int',
+            $countable->params['maxItems'],
+        );
+        assertType(
+            'int|string',
+            $owner->params['maxItems'],
+        );
     }
 
     public function testResolveParamsThroughNullsafeModule(): void

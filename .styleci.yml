@@ -6,6 +6,7 @@ version: 8.3
 finder:
   exclude:
     - docs
+    - tests/data/diagnostic
     - vendor
 
 enabled:

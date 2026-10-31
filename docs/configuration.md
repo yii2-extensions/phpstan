@@ -67,6 +67,30 @@ it as an internal error and doesn't save the result cache, so the error repeats 
 For a project with both entry points, create separate NEON configurations with different `paths`, `config_path` and
 preferably `tmpDir`, and run each with `-c`. Each analysis has one application class and one params shape.
 
+## Non-null `Yii::$app`
+
+The shipped stub declares `Yii::$app` as exactly the selected application class, without `null`. This is an analysis
+contract for code that runs after the application is created, not a statement about Yii's lifecycle: Yii declares the
+property nullable, and it is `null` before an application exists or after code resets it. Assignments, including
+`Yii::$app = null`, still narrow the property as usual, but only for the spelling used: after
+`yii\BaseYii::$app = null`, PHPStan still types `Yii::$app` as the application, although both name the same property at
+runtime.
+
+Under this contract PHPStan treats some null checks and checks for the other application kind as redundant or
+impossible. With a Web application, PHPStan 2.3.1 reports:
+
+- `isset(Yii::$app)` as `isset.property` and `Yii::$app ?? $fallback` as `nullCoalesce.property`, from level 4;
+- `Yii::$app instanceof yii\console\Application` as `instanceof.alwaysFalse`, typing its branch as `*NEVER*`, and the
+  check for the selected class as `instanceof.alwaysTrue`, from level 4; code after a branch that always returns can be
+  reported as `deadCode.unreachable`;
+- `Yii::$app = null` as `assign.propertyType`, from level 3.
+
+`Yii::$app === null` isn't reported, but its branch is `*NEVER*` as well. A console analysis gives the same results with
+the application kinds swapped.
+
+Web and console are analyzed separately so that each run keeps the exact application type. Code included in both runs,
+such as a helper that checks the application kind, receives these diagnostics in the run where its check is constant.
+
 ## Params
 
 The shape is inferred from configured values. Strings, integers, floats and booleans are widened to their types; `null`
