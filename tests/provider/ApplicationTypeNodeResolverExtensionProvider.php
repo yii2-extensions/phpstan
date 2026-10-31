@@ -32,13 +32,25 @@ final class ApplicationTypeNodeResolverExtensionProvider
             'phpstan-custom-app-config.php',
             'yii2\extensions\phpstan\tests\support\stub\ApplicationCustom',
         ];
+        yield 'custom console application' => [
+            'phpstan-console-custom-app-config.php',
+            'yii2\extensions\phpstan\tests\support\stub\ApplicationConsoleCustom',
+        ];
         yield 'default application' => [
             '',
+            'yii\web\Application',
+        ];
+        yield 'empty application type' => [
+            'phpstan-empty-app-type-config.php',
             'yii\web\Application',
         ];
         yield 'global namespace application' => [
             'phpstan-global-class-app-config.php',
             'GlobalApplication',
+        ];
+        yield 'leading backslash' => [
+            'phpstan-leading-backslash-app-config.php',
+            'yii\web\Application',
         ];
         yield 'web application' => [
             'phpstan-config.php',

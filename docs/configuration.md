@@ -28,10 +28,11 @@ The PHP file returns an array with these optional sections:
 | `container.singletons`     | Container singleton IDs and definitions.              |
 | `behaviors`                | Owner class name to a list of behavior class names.   |
 
-Sections must be arrays, application type must be a string, and component, service and behavior owner IDs must be
-strings. A file that returns something other than an array fails analysis. Integer, float and boolean service or
-component definitions are rejected with `Unsupported definition for '<id>'.`. Non-string entries inside a behavior list
-are ignored; keep the list explicit so omissions are visible.
+Sections must be arrays, application type must be a string naming an application class (see
+[Web, console and custom applications](#web-console-and-custom-applications)), and component, service and behavior owner
+IDs must be strings. A file that returns something other than an array fails analysis. Integer, float and boolean
+service or component definitions are rejected with `Unsupported definition for '<id>'.`. Non-string entries inside a
+behavior list are ignored; keep the list explicit so omissions are visible.
 
 The file is executed, including its `require` statements and object construction, and PHPStan can execute it more than
 once in an analysis. It can't rely on `bootstrapFiles`; load its prerequisites as described in
@@ -50,8 +51,18 @@ return [
 ];
 ```
 
-Use a real autoloadable subclass for a custom application. The selected class determines `Yii::$app` and core component
-annotations. A console application must select `yii\console\Application` explicitly.
+An omitted or empty `application_type` selects `yii\web\Application`. Any other value must name `yii\base\Application`
+or a class extending it, such as a console, Web or custom subclass, in any namespace. The selected class determines
+`Yii::$app` and core component annotations. A console application must select `yii\console\Application` explicitly.
+
+The extension checks the class through PHPStan's reflection when the analysis first reads `Yii::$app` or an application
+property, not while the PHP file runs. The class can therefore come from Composer autoloading, an analyzed path,
+`bootstrapFiles` or a file this description requires; see
+[how PHPStan discovers symbols](https://phpstan.org/user-guide/discovering-symbols) and
+[configuration and bootstrap order](installation.md#load-what-the-analysis-configuration-needs). A class declared only
+in a stub file, an unknown class, an interface, a trait, an enum, or a class that doesn't extend `yii\base\Application`
+stops the analysis with `Application type '<value>' in 'phpstan.application_type' is <kind>; ...`. PHPStan 2.3.1 reports
+it as an internal error and doesn't save the result cache, so the error repeats until the value is fixed.
 
 For a project with both entry points, create separate NEON configurations with different `paths`, `config_path` and
 preferably `tmpDir`, and run each with `-c`. Each analysis has one application class and one params shape.

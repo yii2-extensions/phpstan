@@ -14,6 +14,12 @@ use function sprintf;
 enum Message: string
 {
     /**
+     * Error when the configured application type doesn't name `yii\base\Application` or a class extending it.
+     */
+    case APPLICATION_TYPE_NOT_APPLICATION_CLASS = "Application type '%s' in 'phpstan.application_type' is %s; it must be "
+        . "'yii\\base\\Application' or a class extending it that PHPStan can discover.";
+
+    /**
      * Error when a behavior definition is not an array.
      */
     case BEHAVIOR_DEFINITION_NOT_ARRAY = "Behavior definition for '%s' must be an array.";
