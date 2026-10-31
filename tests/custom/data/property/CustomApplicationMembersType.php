@@ -14,19 +14,25 @@ use function PHPStan\Testing\assertType;
  * Type assertion fixture for a custom Web application selected through `phpstan.application_type` that declares its own
  * native and annotated members.
  *
- * Verifies that `Yii::$app` exposes both own members of {@see ApplicationCustomMembers} together with the members and
- * the identity argument it inherits from the Web application.
+ * Verifies that `Yii::$app` exposes both own members of {@see ApplicationCustomMembers} together with the members it
+ * inherits from the Web application, and that the concrete identity bound by its `@extends` tag replaces the default
+ * `IdentityInterface` argument.
  */
 final class CustomApplicationMembersType
 {
+    public function testReturnConcreteIdentityUserFromGetUserMethod(): void
+    {
+        assertType('yii\web\User<yii2\extensions\phpstan\tests\support\stub\User>', Yii::$app->getUser());
+    }
+
+    public function testReturnConcreteIdentityUserFromUserProperty(): void
+    {
+        assertType('yii\web\User<yii2\extensions\phpstan\tests\support\stub\User>', Yii::$app->user);
+    }
+
     public function testReturnCustomApplicationInstanceFromYiiApp(): void
     {
         assertType(ApplicationCustomMembers::class, Yii::$app);
-    }
-
-    public function testReturnInheritedIdentityUserFromUserProperty(): void
-    {
-        assertType('yii\web\User<yii\web\IdentityInterface>', Yii::$app->user);
     }
 
     public function testReturnIntFromNativeProperty(): void

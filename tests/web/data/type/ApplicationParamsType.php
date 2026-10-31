@@ -32,7 +32,7 @@ final class ApplicationParamsType
         );
     }
 
-    public function testAssignedApplicationThroughBaseYii(): void
+    public function testAssignedApplicationThroughBaseYiiLeavesYiiSpellingUnnarrowed(): void
     {
         BaseYii::$app = null;
 
@@ -40,6 +40,8 @@ final class ApplicationParamsType
             'null',
             BaseYii::$app,
         );
+        // known PHPStan limitation: each class spelling is a separate expression, although at runtime both name the
+        // same static property and `Yii::$app` is `null` here
         assertType(
             'yii\web\Application',
             Yii::$app,

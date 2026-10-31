@@ -72,7 +72,9 @@ preferably `tmpDir`, and run each with `-c`. Each analysis has one application c
 The shipped stub declares `Yii::$app` as exactly the selected application class, without `null`. This is an analysis
 contract for code that runs after the application is created, not a statement about Yii's lifecycle: Yii declares the
 property nullable, and it is `null` before an application exists or after code resets it. Assignments, including
-`Yii::$app = null`, still narrow the property as usual.
+`Yii::$app = null`, still narrow the property as usual, but only for the spelling used: after
+`yii\BaseYii::$app = null`, PHPStan still types `Yii::$app` as the application, although both name the same property at
+runtime.
 
 Under this contract PHPStan treats some null checks and checks for the other application kind as redundant or
 impossible. With a Web application, PHPStan 2.3.1 reports:
