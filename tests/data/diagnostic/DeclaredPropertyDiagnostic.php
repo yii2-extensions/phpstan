@@ -31,20 +31,20 @@ final class DeclaredPropertyDiagnostic
 
     public function isConsoleApplication(): bool
     {
-        if (Yii::$app instanceof ConsoleApplication) {
-            return true;
-        }
+        return (bool) (Yii::$app instanceof ConsoleApplication)
 
-        return false;
+
+
+         ;
     }
 
     public function isWebApplication(): bool
     {
-        if (Yii::$app instanceof WebApplication) {
-            return true;
-        }
+        return (bool) (Yii::$app instanceof WebApplication)
 
-        return false;
+
+
+         ;
     }
 
     public function missingParam(): string
