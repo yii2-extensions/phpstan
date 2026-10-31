@@ -19,21 +19,7 @@ use const DIRECTORY_SEPARATOR;
 
 /**
  * Integration tests for the application component values that {@see ServiceMapResultCacheValueExtension} exposes to
- * the PHPStan result cache, across cold and warm runs of a real PHPStan process.
- *
- * The test generates its own project in a temporary directory: a stable NEON file, a stable configuration wrapper that
- * selects the Web application explicitly, requires a separate file returning only `components` and holds stable params,
- * and one file per consumer. The component whose definition changes and a stable component are each read through
- * `yii\di\ServiceLocator::get()` with a constant ID and through a `yii\BaseYii::$app` property; a control file reads a
- * local array shape without Yii. Only one component definition changes during the sequence, from
- * `yii\caching\ArrayCache` to `yii\caching\FileCache`. Each run reports file, line and identifier of every diagnostic,
- * plus the type shown by `PHPStan\dumpType()`; messages are not compared otherwise.
- *
- * The two routes record their dependency with different precision. `ServiceLocator::get()` records `component:<id>`
- * for the analysed file. A property read records it through PHPStan's `DeclarationDependencyTracker` against the
- * application class, since its reflection is reused for the rest of the process, so every file depending on that class
- * and finishing later in the same process may be reanalysed too. The changed run therefore requires both readers of
- * the changing component, and allows at most the other application property consumer besides them.
+ * the PHPStan result cache across cold and warm runs.
  */
 final class ApplicationComponentResultCacheIntegrationTest extends TestCase
 {
@@ -49,13 +35,13 @@ final class ApplicationComponentResultCacheIntegrationTest extends TestCase
     ];
 
     /**
-     * Readers of the changing component plus the only other file depending on the application class, the stable
-     * property consumer, which a class-level dependency may also reanalyse.
+     * Readers of the changing component plus the stable property consumer, which shares the application class
+     * dependency that PHPStan tracks per class.
      */
     private const int MAXIMUM_REANALYSED = 3;
 
     /**
-     * Number of files whose analysis reads the changing component: its locator and its property consumer.
+     * Readers of the changing component: its locator and property consumers.
      */
     private const int MINIMUM_REANALYSED = 2;
 
@@ -265,6 +251,8 @@ final class ApplicationComponentResultCacheIntegrationTest extends TestCase
                 paths:
                     - {$this->neonPath($this->path('project/src'))}
                 tmpDir: {$this->neonPath($this->path('tmp'))}
+                bootstrapFiles:
+                    - {$this->neonPath(self::yiiBootstrapFile())}
                 stubFiles:
                     - {$this->neonPath(self::applicationClassesStub())}
                 yii2:
@@ -338,8 +326,7 @@ final class ApplicationComponentResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Returns the number of files the run reanalysed after restoring the result cache, requiring a single restore and
-     * the reuse of the cached results.
+     * Returns the number of files reanalysed after a single result cache restore.
      */
     private static function reanalysedFiles(string $stderr, string $run): int
     {
@@ -366,29 +353,30 @@ final class ApplicationComponentResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Returns the hashes of every input of the analysis except the components file: the generated NEON file,
-     * configuration wrapper, consumers and control file, and the included extension configuration and stubs.
+     * Returns the hashes of every analysis input except the components file.
      *
      * @phpstan-return array<string, string>
      */
     private function stableInputHashes(): array
     {
-        return $this->inputHashes(
-            [
-                'project/phpstan.neon',
-                'project/config.php',
-                'project/src/ChangingLocatorConsumer.php',
-                'project/src/ChangingPropertyConsumer.php',
-                'project/src/Control.php',
-                'project/src/StableLocatorConsumer.php',
-                'project/src/StablePropertyConsumer.php',
-            ],
-        );
+        return [
+            ...$this->inputHashes(
+                [
+                    'project/phpstan.neon',
+                    'project/config.php',
+                    'project/src/ChangingLocatorConsumer.php',
+                    'project/src/ChangingPropertyConsumer.php',
+                    'project/src/Control.php',
+                    'project/src/StableLocatorConsumer.php',
+                    'project/src/StablePropertyConsumer.php',
+                ],
+            ),
+            'vendor/yiisoft/yii2/Yii.php' => self::hashFile(self::yiiBootstrapFile()),
+        ];
     }
 
     /**
-     * Writes the component definitions, the only file that changes during the sequence; the stable definition is always
-     * written identically.
+     * Writes the component definitions, the only file that changes.
      */
     private function writeComponents(string $changingClass): void
     {
@@ -411,11 +399,7 @@ final class ApplicationComponentResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Writes a consumer class that dumps the type of a component read and of one of its properties, on lines 11 and 12.
-     *
-     * @param string $parameter Parameter declaration of the read method, or an empty string.
-     * @param string $read Expression reading the component.
-     * @param string $property Property read on the component.
+     * Writes a consumer that dumps a component read and one of its properties on lines 11 and 12.
      */
     private function writeConsumer(string $className, string $parameter, string $read, string $property): void
     {
@@ -439,5 +423,21 @@ final class ApplicationComponentResultCacheIntegrationTest extends TestCase
 
             PHP,
         );
+    }
+
+    /**
+     * Returns Yii's `Yii.php`, which Yii 2.0.55 doesn't classmap.
+     */
+    private static function yiiBootstrapFile(): string
+    {
+        return dirname(__DIR__)
+            . DIRECTORY_SEPARATOR
+            . 'vendor'
+            . DIRECTORY_SEPARATOR
+            . 'yiisoft'
+            . DIRECTORY_SEPARATOR
+            . 'yii2'
+            . DIRECTORY_SEPARATOR
+            . 'Yii.php';
     }
 }
