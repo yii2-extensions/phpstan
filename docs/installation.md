@@ -73,8 +73,9 @@ unshaped params. See [source-checkout stubs](migration.md#upgrading-to-050) if i
 
 ## Bootstrap only what is needed
 
-Composer autoloading discovers the package classes. An application using global `Yii` may also need a small bootstrap
-file to load that class, aliases or additional application autoloading:
+Composer autoloading discovers the package classes. The analyzed code of an application using global `Yii` may also need
+a small bootstrap file, such as `config/phpstan-bootstrap.php`, to load that class, aliases or additional application
+autoloading. Keep it safe to load more than once:
 
 ```php
 <?php
@@ -84,10 +85,42 @@ declare(strict_types=1);
 require_once dirname(__DIR__) . '/vendor/yiisoft/yii2/Yii.php';
 ```
 
-Register it with `parameters.bootstrapFiles` in NEON. The extension itself defines `YII_DEBUG=true`,
-`YII_ENV_DEV=false`, `YII_ENV_PROD=false` and `YII_ENV_TEST=true` before requiring the analysis configuration, unless
-already defined. It does not define `YII_ENV`. If the analysis configuration reads additional constants or calls `Yii`
-directly, load those prerequisites before that code executes.
+Register it with `parameters.bootstrapFiles` in NEON:
+
+```neon
+parameters:
+    bootstrapFiles:
+        - config/phpstan-bootstrap.php
+```
+
+## Load what the analysis configuration needs
+
+`bootstrapFiles` prepare the analyzed code, not the file named by `yii2.config_path`. The extension requires the
+analysis configuration while PHPStan builds its services. With PHPStan 2.3.1, `bootstrapFiles` ran later in cold and
+warm result cache runs and in a single-process `--debug` run. Do not rely on a bootstrap file running first: a constant,
+alias or class provided only by it can be missing when the configuration runs, and a branch on it silently takes the
+other path.
+
+The extension itself defines `YII_DEBUG=true`, `YII_ENV_DEV=false`, `YII_ENV_PROD=false` and `YII_ENV_TEST=true` before
+requiring the analysis configuration, unless already defined. It does not define `YII_ENV`. Load any other prerequisite
+from the analysis configuration itself, for example by requiring the same bootstrap file:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+require_once __DIR__ . '/phpstan-bootstrap.php';
+
+return [
+    'params' => ['adminEmail' => 'admin@example.com'],
+];
+```
+
+PHPStan 2.3.1 also loads `bootstrapFiles` with `require_once`, so a file shared this way runs once per process. Keep its
+contents idempotent anyway: use `require_once` and guard constants with `defined()`. Loading `Yii.php` with plain
+`require` after `Yii` is already loaded redeclares its classes and stops the analysis. On Yii 22, Composer's classmap
+autoloads `Yii` as soon as the configuration uses it, so a later plain `require` in a bootstrap file fails.
 
 ## Verify
 

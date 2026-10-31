@@ -45,10 +45,13 @@ Register `extension.neon` once, either through an enabled extension-installer pl
 extensions/settings and use existing application paths. `yii2.config_path` is resolved relative to the process working
 directory, not the NEON file; use the application root or an absolute readable `.php` file.
 
-The PHP description is executed with `require` and must return an array. Keep it deterministic and independent of
-database connections and application startup. The `phpstan` and behavior map describe analysis types. Supply
-autoloading/aliases needed by application classes; load global `Yii` with a minimal bootstrap if needed. The extension
-preserves predefined constants, defines four analysis flags, and does not define `YII_ENV`.
+The PHP description is executed with `require`, possibly more than once, and must return an array. Keep it
+deterministic, idempotent and independent of database connections and application startup. The `phpstan` and behavior
+map describe analysis types. `bootstrapFiles` supply autoloading, aliases and global `Yii` to analyzed code, but are not
+guaranteed to run before the description; PHPStan 2.3.1 runs them later. The description must load its own
+prerequisites, for example with `require_once` of the same idempotent bootstrap. Load `Yii.php` with `require_once`; a
+plain `require` after `Yii` is loaded redeclares it. The extension preserves predefined constants, defines four analysis
+flags before requiring the description, and does not define `YII_ENV`.
 
 Select console/custom application classes in `phpstan.application_type` inside the PHP array; the default is Web. Use
 separate NEON runs for Web and console paths. There is one application class and one inherited module params shape per
