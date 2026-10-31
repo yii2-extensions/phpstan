@@ -11,9 +11,14 @@ use PHPStan\Reflection\Dummy\DummyPropertyReflection;
 use PHPStan\ShouldNotHappenException;
 use PHPStan\Type\Generic\GenericObjectType;
 use PHPStan\Type\{ObjectType, ObjectWithoutClassType, Type};
+use RuntimeException;
 use yii\base\Application;
 use yii2\extensions\phpstan\exception\Message;
-use yii2\extensions\phpstan\reflection\{ComponentPropertyReflection, ReceiverPropertyReflection};
+use yii2\extensions\phpstan\reflection\{
+    ApplicationClassResolver,
+    ComponentPropertyReflection,
+    ReceiverPropertyReflection,
+};
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
 use function is_string;
@@ -65,6 +70,8 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
      *
+     * @throws RuntimeException if the configured application type doesn't name {@see Application} or a class extending
+     * it.
      * @throws ShouldNotHappenException if the property is neither native, a configured component, nor annotation-based.
      *
      * @return PropertyReflection Property reflection instance for the specified property.
@@ -135,6 +142,9 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      * @param string $propertyName Name of the property to resolve.
      *
+     * @throws RuntimeException if the configured application type doesn't name {@see Application} or a class extending
+     * it.
+     *
      * @return bool `true` if the property exists as a native, component, or annotated property; `false` otherwise.
      */
     public function hasProperty(ClassReflection $classReflection, string $propertyName): bool
@@ -182,22 +192,27 @@ final class ApplicationPropertiesClassReflectionExtension implements PropertiesC
      * Web application, is refined to the configured type, since a single entry point is analyzed. The configured type
      * itself and its subclasses keep their own reflection, so their native and annotated members and their generic
      * substitutions aren't replaced by a broader class. Any other application, such as a console application under a
-     * Web description, is unrelated and receives neither the configured members nor the configured components.
+     * Web description, is unrelated and receives neither the configured members nor the configured components. The
+     * configured application type is validated by {@see ApplicationClassResolver}.
      *
      * @param ClassReflection $classReflection Reflection of the class being analyzed.
      *
+     * @throws RuntimeException if the configured application type doesn't name {@see Application} or a class extending
+     * it.
+     *
      * @return ClassReflection|null Class reflection associated with the configured application type, or `null` if the
-     * class is unrelated to it or the configured application type can't be reflected.
+     * class is unrelated to it, or if neither {@see Application} nor the configured application type can be reflected.
      */
     private function resolveAssociatedClassReflection(ClassReflection $classReflection): ClassReflection|null
     {
-        $configuredApplicationType = $this->serviceMap->getApplicationType();
+        $configuredClassReflection = ApplicationClassResolver::resolve(
+            $this->serviceMap->getApplicationType(),
+            $this->reflectionProvider,
+        );
 
-        if ($this->reflectionProvider->hasClass($configuredApplicationType) === false) {
+        if ($configuredClassReflection === null) {
             return null;
         }
-
-        $configuredClassReflection = $this->reflectionProvider->getClass($configuredApplicationType);
 
         if (
             $classReflection->getName() === $configuredClassReflection->getName()

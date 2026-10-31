@@ -53,9 +53,12 @@ prerequisites, for example with `require_once` of the same idempotent bootstrap.
 plain `require` after `Yii` is loaded redeclares it. The extension preserves predefined constants, defines four analysis
 flags before requiring the description, and does not define `YII_ENV`.
 
-Select console/custom application classes in `phpstan.application_type` inside the PHP array; the default is Web. Use
-separate NEON runs for Web and console paths. There is one application class and one inherited module params shape per
-analysis. Params scalars widen to their types; no params means an unshaped array.
+Select console/custom application classes in `phpstan.application_type` inside the PHP array; the default is Web. The
+value must be `yii\base\Application` or a subclass that PHPStan can reflect (autoloaded, analyzed, loaded by
+`bootstrapFiles` or by the description). An internal error starting with `Application type '<value>'` means a missing,
+stub-only or non-application class; fix the value or make the class discoverable. Use separate NEON runs for Web and
+console paths. There is one application class and one inherited module params shape per analysis. Params scalars widen
+to their types; no params means an unshaped array.
 
 ## Diagnose the smallest missing type
 

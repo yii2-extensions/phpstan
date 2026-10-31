@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: stop applying the configured application's members and components to unrelated application receivers, such as console under Web.
 - test: pin custom Web application inference for classless and configured `user` components with explicit `application_type`.
 - docs: document that `config_path` can't rely on `bootstrapFiles`, recommend idempotent `require_once` loading and test the order.
+- fix: reject a `phpstan.application_type` that doesn't name `yii\base\Application` or a subclass with a precise configuration error.
 
 ## 0.5.2 October 23, 2026
 

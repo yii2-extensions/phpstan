@@ -9,7 +9,9 @@ use PHPStan\PhpDoc\TypeNodeResolverExtension;
 use PHPStan\PhpDocParser\Ast\Type\{IdentifierTypeNode, TypeNode};
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Type\{ArrayType, MixedType, ObjectType, Type};
+use RuntimeException;
 use yii2\extensions\phpstan\{ParamsTypeBuilder, ServiceMap, ServiceMapResultCacheValueExtension};
+use yii2\extensions\phpstan\reflection\ApplicationClassResolver;
 
 use function ltrim;
 
@@ -19,7 +21,8 @@ use function ltrim;
  * The static stub (`stubs/yii.stub`) declares both properties with the placeholder types {@see APPLICATION_TYPE} and
  * {@see PARAMS_TYPE}. This extension resolves them from the Yii configuration: the application placeholder to the
  * configured application class, and the params placeholder to the array shape built by {@see ParamsTypeBuilder}, or to
- * `array` when no params are configured. Every other type node is left to PHPStan.
+ * `array` when no params are configured. Every other type node is left to PHPStan. The application class is validated
+ * by {@see ApplicationClassResolver} before its type is built.
  *
  * Since the stub never changes, each resolution records that the class declaring the placeholder depends on the
  * configured application class or params shape. PHPStan propagates that dependency to every file depending on the
@@ -72,6 +75,9 @@ final class ApplicationTypeNodeResolverExtension implements TypeNodeResolverExte
      * @param TypeNode $typeNode PHPDoc type node being resolved.
      * @param NameScope $nameScope Name scope of the PHPDoc holding the type node.
      *
+     * @throws RuntimeException if the configured application type doesn't name `yii\base\Application` or a class
+     * extending it.
+     *
      * @return Type|null Configured application or params type, or `null` for any other type node.
      */
     public function resolve(TypeNode $typeNode, NameScope $nameScope): Type|null
@@ -93,8 +99,23 @@ final class ApplicationTypeNodeResolverExtension implements TypeNodeResolverExte
         $this->trackDeclaringClass($nameScope, $key);
 
         return $key === ServiceMapResultCacheValueExtension::APPLICATION_KEY
-            ? $this->applicationType ??= new ObjectType(ltrim($this->serviceMap->getApplicationType(), '\\'))
+            ? $this->applicationType ??= $this->buildApplicationType()
             : $this->paramsType ??= $this->buildParamsType();
+    }
+
+    /**
+     * Builds the application type after validating the configured application class.
+     *
+     * @throws RuntimeException if the configured application type doesn't name `yii\base\Application` or a class
+     * extending it.
+     */
+    private function buildApplicationType(): Type
+    {
+        $applicationType = $this->serviceMap->getApplicationType();
+
+        ApplicationClassResolver::resolve($applicationType, $this->reflectionProvider);
+
+        return new ObjectType(ltrim($applicationType, '\\'));
     }
 
     /**

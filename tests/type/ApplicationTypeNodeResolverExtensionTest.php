@@ -9,9 +9,11 @@ use PHPStan\PhpDocParser\Ast\Type\{IdentifierTypeNode, TypeNode};
 use PHPStan\Testing\PHPStanTestCase;
 use PHPStan\Type\VerbosityLevel;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
+use RuntimeException;
 use yii\BaseYii;
+use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
-use yii2\extensions\phpstan\tests\provider\ApplicationTypeNodeResolverExtensionProvider;
+use yii2\extensions\phpstan\tests\provider\{ApplicationClassResolverProvider, ApplicationTypeNodeResolverExtensionProvider};
 use yii2\extensions\phpstan\tests\support\stub\RecordingDeclarationDependencyTracker;
 use yii2\extensions\phpstan\type\ApplicationTypeNodeResolverExtension;
 
@@ -21,7 +23,8 @@ use function file_get_contents;
 /**
  * Unit tests for {@see ApplicationTypeNodeResolverExtension} resolution of the placeholder types of the shipped stub.
  *
- * {@see ApplicationTypeNodeResolverExtensionProvider} for test case data providers.
+ * {@see ApplicationTypeNodeResolverExtensionProvider} and {@see ApplicationClassResolverProvider} for test case data
+ * providers.
  */
 final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
 {
@@ -46,8 +49,9 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
     public function testResolveParamsPlaceholderToConfiguredShape(): void
     {
         self::assertSame(
-            'array{emptyList: array<mixed, mixed>, siteName: string, sparse: array{2: string, 5: string}, '
-            . "\"O'Reilly\": string, 'C:\\path': string, resource: mixed}",
+            <<<TYPE
+            array{emptyList: array<mixed, mixed>, siteName: string, sparse: array{2: string, 5: string}, "O'Reilly": string, 'C:\path': string, resource: mixed}
+            TYPE,
             self::resolve('params-empty-array-config.php', ApplicationTypeNodeResolverExtension::PARAMS_TYPE),
             'Type must be the shape built from the configured params.',
         );
@@ -62,10 +66,23 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
         );
     }
 
+    public function testResolveParamsPlaceholderWithoutValidatingApplicationType(): void
+    {
+        self::assertSame(
+            'array',
+            self::resolve(
+                'phpstan-invalid-app-missing-class-config.php',
+                ApplicationTypeNodeResolverExtension::PARAMS_TYPE,
+            ),
+            'Params type must not depend on the application type.',
+        );
+    }
+
     #[DataProviderExternal(ApplicationTypeNodeResolverExtensionProvider::class, 'unrelatedTypeNodeProvider')]
     public function testResolveReturnsNullForUnrelatedTypeNode(TypeNode $typeNode): void
     {
         $tracker = new RecordingDeclarationDependencyTracker();
+
         $extension = self::createExtension(new ServiceMap(self::BASE_PATH . 'params-config.php'), $tracker);
 
         self::assertNull(
@@ -110,7 +127,11 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
             new NameScope(null, []),
         );
 
-        self::assertSame([], $tracker->dependencies, 'No declaring class means no dependency.');
+        self::assertSame(
+            [],
+            $tracker->dependencies,
+            'No declaring class means no dependency.',
+        );
     }
 
     #[DataProviderExternal(ApplicationTypeNodeResolverExtensionProvider::class, 'trackedPlaceholderProvider')]
@@ -149,6 +170,20 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
             $stub,
             'Stub must declare `Module::$params` with the params placeholder.',
         );
+    }
+
+    #[DataProviderExternal(ApplicationClassResolverProvider::class, 'rejectedApplicationTypeProvider')]
+    public function testThrowRuntimeExceptionForRejectedApplicationType(
+        string $config,
+        string $applicationType,
+        string $kind,
+    ): void {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage(
+            Message::APPLICATION_TYPE_NOT_APPLICATION_CLASS->getMessage($applicationType, $kind),
+        );
+
+        self::resolve($config, ApplicationTypeNodeResolverExtension::APPLICATION_TYPE);
     }
 
     /**
