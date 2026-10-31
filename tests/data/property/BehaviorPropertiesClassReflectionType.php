@@ -55,6 +55,7 @@ final class BehaviorPropertiesClassReflectionType
     {
         $component = new MyComponent();
 
+        // Yii reads the first attached behavior that has the property; `BehaviorTwo` declares it as `int`
         assertType('string', $component->sharedProperty);
     }
 

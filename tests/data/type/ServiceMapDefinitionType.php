@@ -21,7 +21,8 @@ use function PHPStan\Testing\assertType;
  * ID, that a class name string resolves with or without a leading backslash, that a core component configured without
  * a class keeps the type declared by the application, that a component defined by a `yii\di\Instance` reference is that
  * reference, and that components and services with an unknown class, and services naming one, are `object`, even under
- * a class name ID.
+ * a class name ID. A component ID absent from the configuration is not described: property access is undefined, while
+ * `get()` keeps Yii's `object`.
  */
 final class ServiceMapDefinitionType
 {
@@ -51,6 +52,15 @@ final class ServiceMapDefinitionType
     {
         assertType('SplStack', Yii::$container->get('typedService'));
         assertType('yii\caching\CacheInterface', Yii::$container->get('closureCache'));
+    }
+
+    /**
+     * @throws InvalidConfigException if the configuration is invalid or incomplete.
+     */
+    public function testReturnErrorForUndescribedComponent(): void
+    {
+        assertType('*ERROR*', Yii::$app->undescribedComponent);
+        assertType('object', Yii::$app->get('undescribedComponent'));
     }
 
     /**

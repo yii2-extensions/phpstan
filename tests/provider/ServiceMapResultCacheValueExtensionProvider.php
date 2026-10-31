@@ -24,6 +24,10 @@ final class ServiceMapResultCacheValueExtensionProvider
             ServiceMapResultCacheValueExtension::behaviorsKey('app\models\Post'),
             'behaviors-changed',
         ];
+        yield 'component alias target' => [
+            ServiceMapResultCacheValueExtension::componentKey('aliasedMailer'),
+            'service-changed',
+        ];
         yield 'component class' => [
             ServiceMapResultCacheValueExtension::componentKey('cache'),
             'component-class-changed',
@@ -61,6 +65,10 @@ final class ServiceMapResultCacheValueExtensionProvider
      */
     public static function stableValueProvider(): iterable
     {
+        yield 'aliased component' => [
+            ServiceMapResultCacheValueExtension::componentKey('aliasedMailer'),
+            'component-class-changed',
+        ];
         yield 'application type' => [
             ServiceMapResultCacheValueExtension::APPLICATION_KEY,
             'component-class-changed',
