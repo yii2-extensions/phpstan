@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.5.3 Under development
 
 - fix: stop applying the configured application's members and components to unrelated application receivers, such as console under Web.
+- test: pin custom Web application inference for classless and configured `user` components with explicit `application_type`.
 
 ## 0.5.2 October 23, 2026
 
