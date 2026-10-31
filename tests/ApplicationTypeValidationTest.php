@@ -52,7 +52,8 @@ use const PHP_BINARY;
  *
  * Each case runs PHPStan in a separate process against files generated in its own temporary directory, with its own
  * result cache. The generated project declares application classes reachable only through one discovery source each:
- * a file the configuration requires, an analysed path, a bootstrap file, and a stub file.
+ * a file the configuration requires, an analysed path, a bootstrap file, and a stub file. The probe reads
+ * `yii\BaseYii::$app`, the property the shipped stub declares, since global `Yii` is autoloadable only on Yii 22.
  *
  * {@see ApplicationTypeValidationProvider} for test case data providers.
  */
@@ -275,7 +276,7 @@ final class ApplicationTypeValidationTest extends TestCase
 
             function application(): void
             {
-                \PHPStan\dumpType(\Yii::$app);
+                \PHPStan\dumpType(\yii\BaseYii::$app);
             }
 
             function request(\yii\base\Application $app): void
