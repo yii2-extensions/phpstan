@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: pin `Yii::$app` and `Module::$params` declared-property types and diagnostics, and document the non-null `Yii::$app` contract.
 - test: pin params-only result cache reuse and reanalysis across cold and warm PHPStan runs, with an unaffected control file.
 - test: pin result cache reuse and reanalysis when only `phpstan.application_type` switches from Web to console, with unaffected control files.
+- test: pin result cache reuse and reanalysis when only one container service definition changes, with unaffected service and control files.
 
 ## 0.5.2 October 23, 2026
 

@@ -48,6 +48,7 @@ final class BehaviorMethodsClassReflectionType
     {
         $component = new MyComponent();
 
+        // Yii calls the first attached behavior that has the method; `BehaviorTwo` declares it as `int`
         assertType('string', $component->sharedMethod());
     }
 

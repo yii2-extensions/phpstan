@@ -19,15 +19,21 @@ final class BehaviorTwo extends Behavior
      */
     public array $arrayProperty = [];
     public int $behaviorTwoProperty = 42;
-    public string $sharedProperty = 'from behavior two';
+    /**
+     * Shares its name with a {@see BehaviorOne} property of another type, so the type shows which behavior wins.
+     */
+    public int $sharedProperty = 2;
 
     public function behaviorTwoMethod(): string
     {
         return 'behavior two';
     }
 
-    public function sharedMethod(): string
+    /**
+     * Shares its name with a {@see BehaviorOne} method of another return type, so the type shows which behavior wins.
+     */
+    public function sharedMethod(): int
     {
-        return 'from behavior two';
+        return 2;
     }
 }

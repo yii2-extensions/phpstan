@@ -11,6 +11,7 @@ return [
         'app\models\User' => ['app\behaviors\TimestampBehavior'],
     ],
     'components' => [
+        'aliasedMailer' => 'mailer',
         'cache' => ['class' => 'yii\caching\FileCache'],
         'initialized' => new SplObjectStorage(),
         'user' => ['class' => 'yii\web\User', 'identityClass' => 'app\models\User'],
