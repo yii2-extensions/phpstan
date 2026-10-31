@@ -33,9 +33,11 @@ strings. A file that returns something other than an array fails analysis. Integ
 component definitions are rejected with `Unsupported definition for '<id>'.`. Non-string entries inside a behavior list
 are ignored; keep the list explicit so omissions are visible.
 
-The file is executed, including its `require` statements and object construction. Describe types without running
-application startup, reading secrets or opening services. The extension does not instantiate string or array class
-definitions to discover types. A factory's return type is inspected without invoking the factory.
+The file is executed, including its `require` statements and object construction, and PHPStan can execute it more than
+once in an analysis. It can't rely on `bootstrapFiles`; load its prerequisites as described in
+[installation](installation.md#load-what-the-analysis-configuration-needs). Describe types without running application
+startup, reading secrets or opening services. The extension does not instantiate string or array class definitions to
+discover types. A factory's return type is inspected without invoking the factory.
 
 ## Web, console and custom applications
 
@@ -148,8 +150,8 @@ Native members and PHPDoc on the behavior provide its types. See the [behavior r
 
 `extension.neon` registers `YII_DEBUG`, `YII_ENV` and the three environment flags as `dynamicConstantNames`. This
 changes how PHPStan reasons about their values; it does not define them. The shipped bootstrap defines four analysis
-defaults as described in [installation](installation.md#bootstrap-only-what-is-needed). Add custom constant names
-alongside the Yii entries if needed; PHPStan merges list parameters across included configurations.
+defaults as described in [installation](installation.md#load-what-the-analysis-configuration-needs). Add custom constant
+names alongside the Yii entries if needed; PHPStan merges list parameters across included configurations.
 
 PHPStan 2.3 dependency tracking invalidates the affected analysis when component, container, behavior, application class
 or params types change, including values loaded from a required file. Changing a scalar param without changing its type
