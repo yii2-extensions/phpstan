@@ -13,6 +13,7 @@ use SplFileInfo;
 use function array_filter;
 use function array_values;
 use function bin2hex;
+use function clearstatcache;
 use function count;
 use function dirname;
 use function fclose;
@@ -27,6 +28,7 @@ use function is_link;
 use function is_resource;
 use function is_string;
 use function json_decode;
+use function max;
 use function mkdir;
 use function preg_match_all;
 use function proc_close;
@@ -36,6 +38,7 @@ use function realpath;
 use function rmdir;
 use function sort;
 use function sprintf;
+use function stat;
 use function str_replace;
 use function str_starts_with;
 use function strlen;
@@ -151,6 +154,48 @@ trait ResultCacheIntegrationTrait
     }
 
     /**
+     * Asserts that the first warm run after the cold run restored the result cache, reanalysed no file and kept the
+     * results.
+     *
+     * PHPStan records no stat signature for an analysed file changed in or after the second its run started, and the
+     * next run then saves the cache again; that save is accepted only when an analysed file changed in or after the
+     * second the cold run was started.
+     *
+     * @phpstan-param array{stderr: string, results: list<array{string, int, string, string|null}>} $warm
+     * @phpstan-param list<array{string, int, string, string|null}> $expected
+     */
+    private function assertFirstWarmRunUnchanged(array $warm, array $expected, int $coldStartedAt, string $run): void
+    {
+        self::assertRestored(0, $warm['stderr'], $run);
+
+        $outcomes = [];
+
+        self::assertSame(
+            1,
+            preg_match_all(
+                '/Result cache (was not rewritten because it is unchanged|is saved)\./',
+                $warm['stderr'],
+                $outcomes,
+            ),
+            sprintf("%s must either keep or save the result cache, once.\n%s", $run, $warm['stderr']),
+        );
+
+        if (($outcomes[1][0] ?? null) === 'is saved') {
+            self::assertGreaterThanOrEqual(
+                $coldStartedAt,
+                $this->lastAnalysedFileChange(),
+                sprintf('%s may save the result cache only for analysed files changed as the cold run started.', $run),
+            );
+        }
+
+        self::assertSame(
+            $expected,
+            $warm['results'],
+            sprintf('%s must restore the initial results.', $run),
+        );
+    }
+
+    /**
      * Asserts that the run restored the result cache and reanalysed the given number of files.
      */
     private static function assertRestored(int $expected, string $stderr, string $run): void
@@ -254,6 +299,34 @@ trait ResultCacheIntegrationTrait
             && ($path === $workDirectory || str_starts_with($path, $workDirectory . DIRECTORY_SEPARATOR))
             && is_link($path) === false
             && is_dir($path);
+    }
+
+    /**
+     * Returns the latest modification or status change time, in seconds, of the analysed files under `project/src`.
+     */
+    private function lastAnalysedFileChange(): int
+    {
+        clearstatcache();
+
+        $latest = 0;
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($this->path('project/src'), FilesystemIterator::SKIP_DOTS),
+        );
+
+        /** @var SplFileInfo $file */
+        foreach ($files as $file) {
+            $stat = stat($file->getPathname());
+
+            if ($stat === false) {
+                throw new RuntimeException(
+                    sprintf('Analysed file "%s" could not be inspected.', $file->getPathname()),
+                );
+            }
+
+            $latest = max($latest, $stat['mtime'], $stat['ctime']);
+        }
+
+        return $latest;
     }
 
     private function neonPath(string $path): string
