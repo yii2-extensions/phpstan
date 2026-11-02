@@ -17,6 +17,8 @@
         "PHPStan\\Reflection\\PropertiesClassReflectionExtension",
         "PHPStan\\Reflection\\PropertyReflection",
         "PHPStan\\Reflection\\ReflectionProvider",
+        "PHPStan\\Rules\\Rule",
+        "PHPStan\\Rules\\RuleErrorBuilder",
         "PHPStan\\ShouldNotHappenException",
         "PHPStan\\TrinaryLogic",
         "PHPStan\\Type\\Accessory\\AccessoryArrayListType",

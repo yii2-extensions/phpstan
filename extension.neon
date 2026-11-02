@@ -13,14 +13,25 @@ parameters:
         config_path: ''
         component_generics:
             user: identityClass
+        rules:
+            createObjectUnknownOption: false
 
 parametersSchema:
     yii2: structure(
         [
             config_path: schema(string()),
-            component_generics: schema(arrayOf(string(), string()))
+            component_generics: schema(arrayOf(string(), string())),
+            rules: structure(
+                [
+                    createObjectUnknownOption: bool()
+                ]
+            )
         ]
     )
+
+conditionalTags:
+    yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule:
+        phpstan.rules.rule: %yii2.rules.createObjectUnknownOption%
 
 services:
     -
@@ -34,6 +45,8 @@ services:
     -
         class: yii2\extensions\phpstan\property\BehaviorPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
+        class: yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule
     -
         class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]

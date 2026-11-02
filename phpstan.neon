@@ -16,7 +16,10 @@ parameters:
         analyse:
             - tests/console/
             - tests/custom/
+            - tests/data/diagnostic/CreateObjectUnknownOptionDiagnostic.php
             - tests/data/diagnostic/DeclaredPropertyDiagnostic.php
+            - tests/data/rule/CreateObjectStandAside.php
+            - tests/data/rule/CreateObjectUnknownOption.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
             - tests/data/type/ServiceMapDefinitionType.php
