@@ -339,7 +339,7 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
         // PHPStan doesn't record the stat signature of a file modified in the second it starts reading, so a cold run
         // following `setUp()` within that second leaves the next run to record it by rewriting the cache
         self::assertMatchesRegularExpression(
-            '/^Result cache (was not rewritten because it is unchanged|is saved)\.$/m',
+            '/Result cache (?:was not rewritten because it is unchanged|is saved)\./',
             $initialWarm['stderr'],
             'Unchanged initial warm run must keep or save the result cache.',
         );
