@@ -76,5 +76,13 @@ final class CreateObjectStandAside
         $factory = Yii::createObject(...);
 
         $factory(['class' => Target::class, 'colour' => 'first-class callable']);
+        Yii::createObject(type: ['class' => Target::class, 'colour' => 'unknown named argument'], extra: true);
+        Yii::createObject(['class' => Target::class, 'colour' => 'extra argument'], [], 'extra');
+        Yii::getAlias('@yii');
+        Yii::$key(['class' => Target::class, 'colour' => 'dynamic method']);
+
+        $className::createObject(['class' => Target::class, 'colour' => 'dynamic class']);
+
+        \Missing\Factory::createObject(['class' => Target::class, 'colour' => 'missing factory']);
     }
 }
