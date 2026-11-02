@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: pin result cache reuse and reanalysis when only one application component definition changes, for locator and property readers.
 - test: pin result cache reuse and reanalysis when only one behavior definition changes, for method, property and `getAttribute()` readers.
 - test: pin result cache reuse and reanalysis when a missing application component gains a class, for locator and property readers.
+- test: pin result cache reanalysis when a resolved application component becomes unresolved, for locator and property readers.
 
 ## 0.5.2 October 23, 2026
 
