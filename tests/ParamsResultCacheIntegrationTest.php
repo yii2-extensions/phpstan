@@ -10,6 +10,7 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
 use function dirname;
 use function sprintf;
+use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -65,6 +66,7 @@ final class ParamsResultCacheIntegrationTest extends TestCase
         $this->writeParams("['mode' => 'alpha']");
 
         $initialParams = self::hashFile($this->path('project/params.php'));
+        $coldStartedAt = time();
         $cold = $this->analyse();
 
         self::assertStringContainsString(
@@ -89,20 +91,11 @@ final class ParamsResultCacheIntegrationTest extends TestCase
 
         $warm = $this->analyse();
 
-        self::assertRestored(
-            0,
-            $warm['stderr'],
-            'Unchanged warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $warm['stderr'],
-            'Unchanged warm run must keep the result cache as it is.',
-        );
-        self::assertSame(
+        $this->assertFirstWarmRunUnchanged(
+            $warm,
             $initial,
-            $warm['results'],
-            'Unchanged warm run must restore the initial results.',
+            $coldStartedAt,
+            'Unchanged warm run',
         );
 
         $this->writeParams("['mode' => 'beta']");
