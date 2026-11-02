@@ -7,10 +7,11 @@ split between PHPStan's NEON parameters and a PHP file describing the applicatio
 
 The extension registers `parameters.yii2` in `extension.neon`:
 
-| Key                  | Default               | Meaning                                                                      |
-| -------------------- | --------------------- | ---------------------------------------------------------------------------- |
-| `config_path`        | `''`                  | PHP file to execute, relative to the process working directory or absolute.  |
-| `component_generics` | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
+| Key                               | Default               | Meaning                                                                      |
+| --------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| `config_path`                     | `''`                  | PHP file to execute, relative to the process working directory or absolute.  |
+| `component_generics`              | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
+| `rules.createObjectUnknownOption` | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).         |
 
 PHPStan's `paths`, `level`, `bootstrapFiles`, `stubFiles` and `tmpDir` remain normal
 [PHPStan options](https://phpstan.org/config-reference).
@@ -180,6 +181,59 @@ return [
 
 The map describes runtime attachments; conditional `behaviors()` implementations are not discovered automatically.
 Native members and PHPDoc on the behavior provide its types. See the [behavior recipe](examples.md#behaviors).
+
+## Unknown `Yii::createObject()` options
+
+An opt-in rule reports configuration options that Yii can't assign when it creates the object. Enable it per project:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            createObjectUnknownOption: true
+```
+
+```php
+final class Feed extends yii\base\BaseObject
+{
+    public string $url = '';
+
+    public function setTimeout(int $seconds): void {}
+}
+
+Yii::createObject(['class' => Feed::class, 'url' => '/rss', 'timeout' => 5]);        // valid
+Yii::createObject(['class' => Feed::class, 'url' => '/rss', 'timeoutSeconds' => 5]); // reported
+```
+
+The second call throws `yii\base\UnknownPropertyException` at runtime and is reported at the line of the
+`timeoutSeconds` key with the identifier `yii2.createObject.unknownOption`. Values are not type-checked.
+
+The rule reports only when Yii's assignment path is certain:
+
+- the call is `createObject()` declared by `yii\BaseYii`, through `Yii`, `BaseYii`, an imported alias or a subclass that
+  doesn't override it, with no `$params` other than an empty literal array;
+- the configuration is a literal array with literal string keys and no unpacking, and the literal `__class` value, or
+  else the literal `class` value, names the class;
+- the class is instantiable and inherits both the constructor and `__set()` of `yii\base\BaseObject`;
+- the analysis configuration has no `container.definitions` or `container.singletons` entry for that class name.
+
+An option is accepted when it names a public property or a public or protected `set` method, inherited or from a trait.
+Options that fail differently at runtime are not reported either: a private `set` method, a name with only a `get`
+method, and static or read-only properties. `class` and `__class` are reserved. A `@property` tag alone does not make an
+option assignable, since Yii assigns through native members. The container binding is looked up by the class name as
+written, as Yii does, so `'\app\Feed'` doesn't match a binding for `app\Feed`.
+
+The rule stands aside for `yii\base\Component` subclasses, whose `__set()` also accepts events and behaviors; custom
+constructors or `__set()` methods; abstract or unknown classes; dynamic, unpacked or conditional configuration; class
+names that aren't literal; and a `__construct()` key or non-empty `$params`, which can move the configuration to another
+constructor argument. A container binding of the class stands aside even when it resolves to the same class, because a
+factory, an object or an existing singleton can ignore the configuration.
+
+The analysis configuration is treated as the complete list of container bindings: a binding registered at runtime
+outside it, for example in a bootstrap class, is not seen. An empty `[]` or `null` binding is recorded only when its
+class can be autoloaded while the analysis configuration runs, before `bootstrapFiles`. Describe such bindings in the
+analysis configuration or keep the rule disabled for that code. Adding or removing a binding, or changing the created
+class, reanalyses the affected calls without clearing the result cache.
 
 ## Constants and result cache
 

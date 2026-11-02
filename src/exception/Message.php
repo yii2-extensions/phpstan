@@ -50,6 +50,12 @@ enum Message: string
     case CONFIG_SECTION_NOT_ARRAY = "Configuration file '%s' must contain a valid '%s' 'array'.";
 
     /**
+     * Error when a literal `createObject()` option names no public property or setter of the created class.
+     */
+    case CREATE_OBJECT_UNKNOWN_OPTION = '%s::createObject() sets unknown property %s::$%s: the class has no public '
+        . 'property or setter with that name.';
+
+    /**
      * Error when an application property is neither native, a component, nor annotation-based.
      */
     case PROPERTY_NOT_RESOLVED = 'Property %s::$%s is neither native, a component, nor annotation-based.';

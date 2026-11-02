@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: pin result cache reuse and reanalysis when a missing application component gains a class, for locator and property readers.
 - test: pin result cache reanalysis when a resolved application component becomes unresolved, for locator and property readers.
 - test: accept a first warm result cache save without reanalysis only after same-second analysed file writes in four cache tests.
+- feat: add opt-in `yii2.createObject.unknownOption` rule for literal `Yii::createObject()` options a `BaseObject` class cannot assign.
 
 ## 0.5.2 October 23, 2026
 
