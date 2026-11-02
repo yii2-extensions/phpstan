@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: pin result cache reuse and reanalysis when only `phpstan.application_type` switches from Web to console, with unaffected control files.
 - test: pin result cache reuse and reanalysis when only one container service definition changes, with unaffected service and control files.
 - test: pin result cache reuse and reanalysis when only one application component definition changes, for locator and property readers.
+- test: pin result cache reuse and reanalysis when only one behavior definition changes, for method, property and `getAttribute()` readers.
 
 ## 0.5.2 October 23, 2026
 
