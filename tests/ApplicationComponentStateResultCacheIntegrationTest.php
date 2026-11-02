@@ -11,6 +11,7 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 use function array_splice;
 use function dirname;
 use function explode;
+use function implode;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -23,7 +24,8 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
     use ResultCacheIntegrationTrait;
 
     /**
-     * Definition line added for the changing component, the only change of the sequence.
+     * Class definition line of the changing component, added when the component was missing and replaced when it
+     * becomes unresolved.
      */
     private const string ADDED_DEFINITION = "    'changing' => ['class' => 'yii\\\\caching\\\\FileCache'],";
 
@@ -69,6 +71,11 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
      * Prefix of the temporary directory owned by each test.
      */
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-component-state-result-cache-';
+
+    /**
+     * Definition line that replaces the changing component class with a factory whose class can't be determined.
+     */
+    private const string UNRESOLVED_DEFINITION = "    'changing' => static fn() => new \\yii\\caching\\FileCache(),";
 
     public function testReanalyseComponentReadersWhenMissingComponentIsDefinedWithClass(): void
     {
@@ -197,6 +204,191 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             $after,
             $changed['results'],
             'Readers of the added component must see its class and lose their stale diagnostics.',
+        );
+        self::assertNotSame(
+            self::resultsOf('src/ChangingLocatorConsumer.php', $before),
+            self::resultsOf('src/ChangingLocatorConsumer.php', $changed['results']),
+            'Locator consumer results must come from a new analysis.',
+        );
+        self::assertNotSame(
+            self::resultsOf('src/ChangingPropertyConsumer.php', $before),
+            self::resultsOf('src/ChangingPropertyConsumer.php', $changed['results']),
+            'Property consumer results must come from a new analysis.',
+        );
+        self::assertSame(
+            self::STABLE_CONSUMERS,
+            [
+                ...self::resultsOf('src/StableLocatorConsumer.php', $changed['results']),
+                ...self::resultsOf('src/StablePropertyConsumer.php', $changed['results']),
+            ],
+            'Stable component consumer results must be unaffected by another component definition.',
+        );
+        self::assertSame(
+            self::CONTROL,
+            self::resultsOf('src/Control.php', $changed['results']),
+            'Control results must be unaffected by the component definition.',
+        );
+
+        $changedWarm = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $changedWarm['stderr'],
+            'Unchanged changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changedWarm['stderr'],
+            'Unchanged changed warm run must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $after,
+            $changedWarm['results'],
+            'Unchanged changed warm run must restore the changed results.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $changed['results'],
+            $finalCold['results'],
+            'Final cold results must match the results after detecting the change.',
+        );
+        self::assertSame(
+            $changedHash,
+            self::hashFile($this->path('project/components.php')),
+            'Final runs must use the changed components.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes(),
+            'Only the components file may change during the sequence.',
+        );
+    }
+
+    public function testReanalyseComponentReadersWhenResolvedComponentBecomesUnresolved(): void
+    {
+        $stableInputs = $this->stableInputHashes();
+
+        $before = [
+            ['src/ChangingLocatorConsumer.php', 11, 'phpstan.dumpType', 'yii\caching\FileCache'],
+            ['src/ChangingLocatorConsumer.php', 12, 'phpstan.dumpType', 'string'],
+            ['src/ChangingPropertyConsumer.php', 11, 'phpstan.dumpType', 'yii\caching\FileCache'],
+            ['src/ChangingPropertyConsumer.php', 12, 'phpstan.dumpType', 'string'],
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+        ];
+        $after = [
+            ['src/ChangingLocatorConsumer.php', 11, 'phpstan.dumpType', 'object'],
+            ['src/ChangingLocatorConsumer.php', 12, 'phpstan.dumpType', '*ERROR*'],
+            ['src/ChangingLocatorConsumer.php', 12, 'property.notFound', null],
+            ['src/ChangingPropertyConsumer.php', 11, 'phpstan.dumpType', 'object'],
+            ['src/ChangingPropertyConsumer.php', 12, 'phpstan.dumpType', '*ERROR*'],
+            ['src/ChangingPropertyConsumer.php', 12, 'property.notFound', null],
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+        ];
+
+        $this->writeComponents(true);
+
+        $initialLines = explode("\n", $this->readFile('project/components.php'));
+        $initialHash = self::hashFile($this->path('project/components.php'));
+
+        self::assertSame(
+            self::ADDED_DEFINITION,
+            $initialLines[5] ?? null,
+            'Changing component must start with its class definition.',
+        );
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertFileExists(
+            $this->path('tmp/resultCache.php'),
+            'Result cache file must be created in the owned `tmpDir`.',
+        );
+        self::assertSame(
+            $before,
+            $initialCold['results'],
+            'Initial run must resolve the configured class on both routes.',
+        );
+
+        $initialWarm = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $initialWarm['stderr'],
+            'Unchanged initial warm run',
+        );
+        // PHPStan doesn't record the stat signature of a file modified in the second it starts reading, so a cold run
+        // following `setUp()` within that second leaves the next run to record it by rewriting the cache
+        self::assertMatchesRegularExpression(
+            '/^Result cache (was not rewritten because it is unchanged|is saved)\.$/m',
+            $initialWarm['stderr'],
+            'Unchanged initial warm run must keep or save the result cache.',
+        );
+        self::assertSame(
+            $before,
+            $initialWarm['results'],
+            'Unchanged initial warm run must restore the initial results.',
+        );
+
+        $expectedLines = $initialLines;
+        $expectedLines[5] = self::UNRESOLVED_DEFINITION;
+
+        $this->writeFile('project/components.php', implode("\n", $expectedLines));
+
+        $changedHash = self::hashFile($this->path('project/components.php'));
+
+        self::assertNotSame(
+            $initialHash,
+            $changedHash,
+            'Components file must change its contents.',
+        );
+        self::assertSame(
+            $expectedLines,
+            explode("\n", $this->readFile('project/components.php')),
+            'Only the changing component line may be replaced.',
+        );
+
+        $changed = $this->analyse();
+        $reanalysed = self::reanalysedFiles($changed['stderr'], 'Changed warm run');
+
+        self::assertGreaterThanOrEqual(
+            self::MINIMUM_REANALYSED,
+            $reanalysed,
+            'Both readers of the changed component must be reanalysed.',
+        );
+        self::assertLessThanOrEqual(
+            self::MAXIMUM_REANALYSED,
+            $reanalysed,
+            'Only files depending on the changed component or on the application class may be reanalysed.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $changed['stderr'],
+            'Changed warm run must save the new results.',
+        );
+        self::assertSame(
+            $after,
+            $changed['results'],
+            'Readers of the changed component must lose its class and report the unknown property.',
         );
         self::assertNotSame(
             self::resultsOf('src/ChangingLocatorConsumer.php', $before),
