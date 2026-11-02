@@ -73,6 +73,7 @@ final class CreateObjectUnknownOption
             [],
         );
     }
+
     public function reportUnknownOptions(): void
     {
         Yii::createObject(
