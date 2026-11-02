@@ -37,9 +37,10 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
     ];
 
     /**
-     * Files the first unchanged warm run may reanalyse: none, or the two application property readers, whose class
-     * dependency on the configured application PHPStan 2.3.4 hashes with a file path that changes once after a cold run
-     * under the autoloader that Yii 2.0.55's `Yii.php` registers.
+     * Files each unchanged warm run before the component is added may reanalyse: none, or the two application property
+     * readers, whose class dependency on the configured application PHPStan 2.3.4 hashes with a file path that the
+     * autoloader registered by Yii 2.0.55's `Yii.php` spells differently; forked workers reuse it after one warm run,
+     * while spawned workers, the only kind on Windows, resolve it again on every run.
      */
     private const array INITIAL_WARM_REANALYSED = [0, 2];
 
@@ -134,17 +135,22 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
         );
 
         $stableWarm = $this->analyse();
+        $stableReanalysed = self::reanalysedFiles($stableWarm['stderr'], 'Second unchanged warm run');
 
-        self::assertRestored(
-            0,
-            $stableWarm['stderr'],
-            'Unchanged initial warm run',
+        self::assertContains(
+            $stableReanalysed,
+            self::INITIAL_WARM_REANALYSED,
+            'Second unchanged warm run may only reanalyse the application property readers.',
         );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $stableWarm['stderr'],
-            'Unchanged initial warm run must keep the result cache as it is.',
-        );
+
+        if ($stableReanalysed === 0) {
+            self::assertStringContainsString(
+                'Result cache was not rewritten because it is unchanged.',
+                $stableWarm['stderr'],
+                'Unchanged initial warm run must keep the result cache as it is.',
+            );
+        }
+
         self::assertSame(
             $before,
             $stableWarm['results'],
