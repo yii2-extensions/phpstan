@@ -4,6 +4,10 @@ declare(strict_types=1);
 
 use yii2\extensions\phpstan\tests\support\createobject\{
     AliasTarget,
+    ComponentBehavior,
+    ComponentBoundTarget,
+    ComponentMappedContract,
+    ComponentMappedTarget,
     EmptyDefinitionTarget,
     FactoryTarget,
     InstanceTarget,
@@ -13,9 +17,14 @@ use yii2\extensions\phpstan\tests\support\createobject\{
 };
 
 return [
+    'behaviors' => [
+        ComponentMappedContract::class => [ComponentBehavior::class],
+        ComponentMappedTarget::class => [ComponentBehavior::class],
+    ],
     'container' => [
         'definitions' => [
             AliasTarget::class => Target::class,
+            ComponentBoundTarget::class => static fn(): ComponentBoundTarget => new ComponentBoundTarget(),
             EmptyDefinitionTarget::class => [],
             FactoryTarget::class => static fn(): FactoryTarget => new FactoryTarget(),
             InstanceTarget::class => new InstanceTarget(),

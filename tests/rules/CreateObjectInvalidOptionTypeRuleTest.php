@@ -7,8 +7,10 @@ namespace yii2\extensions\phpstan\tests\rules;
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use PHPUnit\Framework\Attributes\TestWith;
+use TypeError;
 use yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule;
 use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\tests\provider\CreateObjectComponentOptionRuntimeProvider;
 
 use function dirname;
 use function sprintf;
@@ -41,6 +43,94 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
         $this->assertDiagnostics('CreateObjectValidOptionType.php', []);
     }
 
+    public function testReportComponentValuesOfNativeMembersOnly(): void
+    {
+        $this->assertDiagnostics(
+            'CreateObjectComponentOption.php',
+            [
+                [
+                    53,
+                    self::property(
+                        'ComponentTarget',
+                        'name',
+                        'array{}',
+                        'string',
+                    ),
+                ],
+                [
+                    73,
+                    self::property(
+                        'ComponentMembersTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
+                ],
+                [
+                    101,
+                    self::property(
+                        'ComponentBehaviorsTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
+                ],
+                [
+                    246,
+                    self::setter(
+                        'ComponentMembersTarget',
+                        'guarded',
+                        "'abc'",
+                        'ComponentMembersTarget::setGuarded()',
+                        'int',
+                    ),
+                ],
+                [
+                    283,
+                    self::property(
+                        'ComponentMembersTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
+                ],
+                [
+                    288,
+                    self::setter(
+                        'ComponentMembersTarget',
+                        'limit',
+                        "'abc'",
+                        'ComponentMembersTarget::setLimit()',
+                        'int',
+                    ),
+                ],
+            ],
+        );
+    }
+
+    public function testReportComponentValuesOnlyForCallsThatThrowTypeError(): void
+    {
+        $errors = $this->gatherAnalyserErrors([dirname(__DIR__) . '/data/rule/CreateObjectComponentOption.php']);
+
+        self::assertNotSame(
+            [],
+            $errors,
+            'Fixture must produce diagnostics.',
+        );
+
+        foreach ($errors as $error) {
+            $method = CreateObjectComponentOptionRuntimeProvider::methodAt($error->getLine());
+
+            [$outcome] = CreateObjectComponentOptionRuntimeProvider::outcome($method);
+
+            self::assertSame(
+                TypeError::class,
+                $outcome,
+                sprintf('Runtime outcome of `%s()` must be a `TypeError`.', $method),
+            );
+        }
+    }
+
     public function testReportConstantKnownValuesAtKeyOrCallLine(): void
     {
         $this->assertDiagnostics(
@@ -48,23 +138,49 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
             [
                 [
                     20,
-                    self::property('TypedTarget', 'count', 'array{}', 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        'array{}',
+                        'int',
+                    ),
                 ],
                 [
                     25,
-                    self::property('TypedTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     32,
-                    self::property('TypedTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     37,
-                    self::property('TypedTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     44,
-                    self::setter('TypedTarget', 'tags', "'abc'", 'TypedTarget::setTags()', 'array'),
+                    self::setter(
+                        'TypedTarget',
+                        'tags',
+                        "'abc'",
+                        'TypedTarget::setTags()',
+                        'array',
+                    ),
                 ],
             ],
         );
@@ -89,43 +205,95 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
             [
                 [
                     26,
-                    self::property('TypedTarget', 'enabled', 'array{}', 'bool'),
+                    self::property(
+                        'TypedTarget',
+                        'enabled',
+                        'array{}',
+                        'bool',
+                    ),
                 ],
                 [
                     31,
-                    self::property('TypedTarget', 'key', 'array{}', 'int|string'),
+                    self::property(
+                        'TypedTarget',
+                        'key',
+                        'array{}',
+                        'int|string',
+                    ),
                 ],
                 [
                     36,
-                    self::property('TypedTarget', 'count', 'array{}', 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        'array{}',
+                        'int',
+                    ),
                 ],
                 [
                     41,
-                    self::setter('TypedTarget', 'label', 'array{}', 'TypedTarget::setLabel()', 'string|null'),
+                    self::setter(
+                        'TypedTarget',
+                        'label',
+                        'array{}',
+                        'TypedTarget::setLabel()',
+                        'string|null',
+                    ),
                 ],
                 [
                     46,
-                    self::property('TypedTarget', 'both', 'array{}', 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'both',
+                        'array{}',
+                        'int',
+                    ),
                 ],
                 [
                     51,
-                    self::property('TypedTarget', 'title', 'array{}', 'string'),
+                    self::property(
+                        'TypedTarget',
+                        'title',
+                        'array{}',
+                        'string',
+                    ),
                 ],
                 [
                     56,
-                    self::setter('TypedTarget', 'text', 'array{}', 'TypedTarget::setText()', 'string'),
+                    self::setter(
+                        'TypedTarget',
+                        'text',
+                        'array{}',
+                        'TypedTarget::setText()',
+                        'string',
+                    ),
                 ],
                 [
                     61,
-                    self::property('TypedTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     66,
-                    self::property('TypedTarget', 'count', self::TARGETS . 'TypedSuit::Hearts', 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        self::TARGETS . 'TypedSuit::Hearts',
+                        'int',
+                    ),
                 ],
                 [
                     71,
-                    self::property('TypedTarget', 'count', self::TARGETS . 'TypedSuit::Hearts', 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        self::TARGETS . 'TypedSuit::Hearts',
+                        'int',
+                    ),
                 ],
                 [
                     76,
@@ -138,119 +306,277 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
                 ],
                 [
                     81,
-                    self::property('TypedChildTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedChildTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     86,
-                    self::property('TypedTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     91,
-                    self::property('TypedTarget', 'ratio', "'1abc'", 'float'),
+                    self::property(
+                        'TypedTarget',
+                        'ratio',
+                        "'1abc'",
+                        'float',
+                    ),
                 ],
                 [
                     99,
-                    self::property('TypedTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     107,
-                    self::property('TypedTarget', 'count', "'abc'", 'int', 'yii\BaseYii'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                        'yii\BaseYii',
+                    ),
                 ],
                 [
                     112,
-                    self::property('TypedTarget', 'count', "'abc'", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "'abc'",
+                        'int',
+                    ),
                 ],
                 [
                     117,
-                    self::property('TypedTarget', 'limit', "'abc'", 'int|null'),
+                    self::property(
+                        'TypedTarget',
+                        'limit',
+                        "'abc'",
+                        'int|null',
+                    ),
                 ],
                 [
                     122,
-                    self::property('TypedTarget', 'count', 'null', 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        'null',
+                        'int',
+                    ),
                 ],
                 [
                     127,
-                    self::property('TypedTarget', 'title', 'null', 'string'),
+                    self::property(
+                        'TypedTarget',
+                        'title',
+                        'null',
+                        'string',
+                    ),
                 ],
                 [
                     132,
-                    self::setter('TypedTarget', 'flag', self::TARGETS . 'TypedPlain', 'TypedTarget::setFlag()', 'bool'),
+                    self::setter(
+                        'TypedTarget',
+                        'flag',
+                        self::TARGETS . 'TypedPlain',
+                        'TypedTarget::setFlag()',
+                        'bool',
+                    ),
                 ],
                 [
                     137,
-                    self::property('TypedTarget', 'value', 'stdClass', self::TARGETS . 'TypedValue|null'),
+                    self::property(
+                        'TypedTarget',
+                        'value',
+                        'stdClass',
+                        self::TARGETS . 'TypedValue|null',
+                    ),
                 ],
                 [
                     142,
-                    self::property('TypedTarget', 'count', self::TARGETS . 'TypedPlain', 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        self::TARGETS . 'TypedPlain',
+                        'int',
+                    ),
                 ],
                 [
                     147,
-                    self::property('TypedChildTarget', 'weight', "'abc'", 'float'),
+                    self::property(
+                        'TypedChildTarget',
+                        'weight',
+                        "'abc'",
+                        'float',
+                    ),
                 ],
                 [
                     152,
-                    self::setter('TypedTarget', 'guardedCount', "'abc'", 'TypedTarget::setGuardedCount()', 'array'),
+                    self::setter(
+                        'TypedTarget',
+                        'guardedCount',
+                        "'abc'",
+                        'TypedTarget::setGuardedCount()',
+                        'array',
+                    ),
                 ],
                 [
                     157,
-                    self::setter('TypedTarget', 'shared', "'abc'", 'TypedTarget::setShared()', 'array'),
+                    self::setter(
+                        'TypedTarget',
+                        'shared',
+                        "'abc'",
+                        'TypedTarget::setShared()',
+                        'array',
+                    ),
                 ],
                 [
                     162,
-                    self::setter('TypedTarget', 'defaultCount', "'abc'", 'TypedTarget::setDefaultCount()', 'int'),
+                    self::setter(
+                        'TypedTarget',
+                        'defaultCount',
+                        "'abc'",
+                        'TypedTarget::setDefaultCount()',
+                        'int',
+                    ),
                 ],
                 [
                     167,
-                    self::property('TypedTarget', 'items', "'abc'", 'array'),
+                    self::property(
+                        'TypedTarget',
+                        'items',
+                        "'abc'",
+                        'array',
+                    ),
                 ],
                 [
                     172,
-                    self::setter('TypedTarget', 'tags', "'abc'", 'TypedTarget::setTags()', 'array'),
+                    self::setter(
+                        'TypedTarget',
+                        'tags',
+                        "'abc'",
+                        'TypedTarget::setTags()',
+                        'array',
+                    ),
                 ],
                 [
                     177,
-                    self::setter('TypedTarget', 'factory', "'strlen'", 'TypedTarget::setFactory()', 'Closure'),
+                    self::setter(
+                        'TypedTarget',
+                        'factory',
+                        "'strlen'",
+                        'TypedTarget::setFactory()',
+                        'Closure',
+                    ),
                 ],
                 [
                     182,
-                    self::property('TypedTarget', 'suit', "'H'", self::TARGETS . 'TypedSuit'),
+                    self::property(
+                        'TypedTarget',
+                        'suit',
+                        "'H'",
+                        self::TARGETS . 'TypedSuit',
+                    ),
                 ],
                 [
                     187,
-                    self::setter('TypedTarget', 'limitTo', "'abc'", 'TypedTarget::setLimitTo()', 'int'),
+                    self::setter(
+                        'TypedTarget',
+                        'limitTo',
+                        "'abc'",
+                        'TypedTarget::setLimitTo()',
+                        'int',
+                    ),
                 ],
                 [
                     192,
-                    self::property('TypedTarget', 'rows', "'abc'", 'iterable'),
+                    self::property(
+                        'TypedTarget',
+                        'rows',
+                        "'abc'",
+                        'iterable',
+                    ),
                 ],
                 [
                     197,
-                    self::setter('TypedChildTarget', 'traitLevel', "'abc'", 'TypedTarget::setTraitLevel()', 'int'),
+                    self::setter(
+                        'TypedChildTarget',
+                        'traitLevel',
+                        "'abc'",
+                        'TypedTarget::setTraitLevel()',
+                        'int',
+                    ),
                 ],
                 [
                     202,
-                    self::setter('TypedTarget', 'traitLevel', "'abc'", 'TypedTarget::setTraitLevel()', 'int'),
+                    self::setter(
+                        'TypedTarget',
+                        'traitLevel',
+                        "'abc'",
+                        'TypedTarget::setTraitLevel()',
+                        'int',
+                    ),
                 ],
                 [
                     207,
-                    self::setter('TypedTarget', 'pair', "'abc'", 'TypedTarget::setPair()', 'int'),
+                    self::setter(
+                        'TypedTarget',
+                        'pair',
+                        "'abc'",
+                        'TypedTarget::setPair()',
+                        'int',
+                    ),
                 ],
                 [
                     212,
-                    self::setter('TypedTarget', 'values', "'abc'", 'TypedTarget::setValues()', 'int'),
+                    self::setter(
+                        'TypedTarget',
+                        'values',
+                        "'abc'",
+                        'TypedTarget::setValues()',
+                        'int',
+                    ),
                 ],
                 [
                     217,
-                    self::setter('TypedChildTarget', 'limitTo', "'abc'", 'TypedChildTarget::setLimitTo()', 'array|int'),
+                    self::setter(
+                        'TypedChildTarget',
+                        'limitTo',
+                        "'abc'",
+                        'TypedChildTarget::setLimitTo()',
+                        'array|int',
+                    ),
                 ],
                 [
                     222,
-                    self::property('TypedTarget', 'count', "''", 'int'),
+                    self::property(
+                        'TypedTarget',
+                        'count',
+                        "''",
+                        'int',
+                    ),
                 ],
                 [
                     222,
-                    self::property('TypedTarget', 'title', 'array{}', 'string'),
+                    self::property(
+                        'TypedTarget',
+                        'title',
+                        'array{}',
+                        'string',
+                    ),
                 ],
             ],
         );
@@ -279,7 +605,11 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
         $actual = [];
 
         foreach ($this->gatherAnalyserErrors([dirname(__DIR__) . '/data/rule/' . $file]) as $error) {
-            $actual[] = [$error->getLine(), $error->getIdentifier(), $error->getMessage()];
+            $actual[] = [
+                $error->getLine(),
+                $error->getIdentifier(),
+                $error->getMessage(),
+            ];
         }
 
         $expectedDiagnostics = [];

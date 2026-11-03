@@ -12,6 +12,9 @@ final class Options
     public const array BASE = ['class' => Target::class, 'colour' => 'base'];
     public const array CHILD_CLASS = ['class' => ChildTarget::class];
     public const string CLASS_KEY = 'class';
+    public const string COMPONENT = ComponentMembersTarget::class;
+    public const string COMPONENT_BEHAVIOR = ComponentBehavior::class;
+    public const string COMPONENT_BEHAVIORS = ComponentBehaviorsTarget::class;
     public const array COMPONENT_CONFIG = ['class' => ComponentTarget::class, 'colour' => 'component'];
     public const array CONFIG = ['class' => Target::class, 'colour' => 'red'];
     public const array CONSTRUCTOR_CONFIG = ['class' => Target::class, '__construct()' => [[], 'x'], 'colour' => 'x'];

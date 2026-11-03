@@ -6,8 +6,6 @@ namespace yii2\extensions\phpstan\tests\provider;
 
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\CreateObjectUnknownOptionDiagnosticTest} test cases.
- *
- * Provides the enabled rule switches and the diagnostics expected on the shared fixture, as line and identifier pairs.
  */
 final class CreateObjectUnknownOptionDiagnosticProvider
 {
@@ -28,6 +26,7 @@ final class CreateObjectUnknownOptionDiagnosticProvider
                 [29, 'arguments.count'],
                 [44, 'array.duplicateKey'],
                 [45, 'arguments.count'],
+                [56, 'array.duplicateKey'],
             ],
         ];
         yield 'unknown option enabled' => [
@@ -48,6 +47,10 @@ final class CreateObjectUnknownOptionDiagnosticProvider
                 [43, 'yii2.createObject.unknownOption'],
                 [44, 'array.duplicateKey'],
                 [45, 'arguments.count'],
+                [51, 'yii2.createObject.unknownOption'],
+                [53, 'yii2.createObject.unknownOption'],
+                [56, 'array.duplicateKey'],
+                [56, 'yii2.createObject.unknownOption'],
             ],
         ];
         yield 'invalid option type enabled' => [
@@ -64,6 +67,10 @@ final class CreateObjectUnknownOptionDiagnosticProvider
                 [43, 'yii2.createObject.invalidOptionType'],
                 [44, 'array.duplicateKey'],
                 [45, 'arguments.count'],
+                [52, 'yii2.createObject.invalidOptionType'],
+                [53, 'yii2.createObject.invalidOptionType'],
+                [55, 'yii2.createObject.invalidOptionType'],
+                [56, 'array.duplicateKey'],
             ],
         ];
         yield 'both enabled' => [
@@ -86,6 +93,13 @@ final class CreateObjectUnknownOptionDiagnosticProvider
                 [43, 'yii2.createObject.invalidOptionType'],
                 [44, 'array.duplicateKey'],
                 [45, 'arguments.count'],
+                [51, 'yii2.createObject.unknownOption'],
+                [52, 'yii2.createObject.invalidOptionType'],
+                [53, 'yii2.createObject.unknownOption'],
+                [53, 'yii2.createObject.invalidOptionType'],
+                [55, 'yii2.createObject.invalidOptionType'],
+                [56, 'array.duplicateKey'],
+                [56, 'yii2.createObject.unknownOption'],
             ],
         ];
     }

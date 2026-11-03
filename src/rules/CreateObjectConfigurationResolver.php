@@ -11,7 +11,7 @@ use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{ClassReflection, ReflectionProvider};
 use PHPStan\Type\Constant\ConstantArrayType;
 use PHPStan\Type\Type;
-use yii\base\BaseObject;
+use yii\base\{BaseObject, Component};
 use yii\BaseYii;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
@@ -22,9 +22,8 @@ use function ltrim;
 /**
  * Resolves the class and options of a {@see BaseYii::createObject()} call whose assignment path Yii makes certain.
  *
- * Shared by the `Yii::createObject()` rules. A configuration is resolved only when its keys and class are literal or
- * proven by one constant native type, for a class without container binding that inherits the constructor and
- * `__set()` of {@see BaseObject}; any other call is left alone. PHPDoc types are not consulted.
+ * Requires keys and class proven by literals or native types, no container binding, and a class that inherits the
+ * constructor of {@see BaseObject} and the `__set()` of {@see BaseObject} or {@see Component}.
  *
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
@@ -53,7 +52,7 @@ final class CreateObjectConfigurationResolver
 
     /**
      * Returns the configuration of the call when Yii assigns every option to the created class through
-     * `BaseObject::__set()` semantics.
+     * `BaseObject::__set()` or `Component::__set()` semantics.
      *
      * Records the container binding and class declaration dependencies of the call before deciding, so that the result
      * cache reanalyses the call when either changes.
@@ -233,12 +232,21 @@ final class CreateObjectConfigurationResolver
     }
 
     /**
-     * Returns whether the class itself declares the method as {@see BaseObject} does.
+     * Returns whether the native method of the class, possibly inherited, is declared by one of the given classes.
+     *
+     * @param list<string> $declaringClasses Fully qualified names of the accepted declaring classes.
      */
-    private static function isDeclaredByBaseObject(ClassReflection $classReflection, string $methodName): bool
-    {
+    private static function isDeclaredBy(
+        ClassReflection $classReflection,
+        string $methodName,
+        array $declaringClasses,
+    ): bool {
         return $classReflection->hasNativeMethod($methodName)
-            && $classReflection->getNativeMethod($methodName)->getDeclaringClass()->getName() === BaseObject::class;
+            && in_array(
+                $classReflection->getNativeMethod($methodName)->getDeclaringClass()->getName(),
+                $declaringClasses,
+                true,
+            );
     }
 
     /**
@@ -372,8 +380,8 @@ final class CreateObjectConfigurationResolver
     }
 
     /**
-     * Returns the class when Yii assigns every option through `BaseObject::__set()` semantics: an instantiable class
-     * whose constructor and `__set()` are both declared by {@see BaseObject}, which makes it that class or a subclass.
+     * Returns the class when it is instantiable and inherits the constructor of {@see BaseObject} and the `__set()` of
+     * {@see BaseObject} or {@see Component}.
      */
     private function resolveConfigurableClass(string $className): ClassReflection|null
     {
@@ -387,8 +395,8 @@ final class CreateObjectConfigurationResolver
             return null;
         }
 
-        return self::isDeclaredByBaseObject($classReflection, '__construct')
-            && self::isDeclaredByBaseObject($classReflection, '__set')
+        return self::isDeclaredBy($classReflection, '__construct', [BaseObject::class])
+            && self::isDeclaredBy($classReflection, '__set', [BaseObject::class, Component::class])
             ? $classReflection
             : null;
     }

@@ -6,13 +6,18 @@ namespace yii2\extensions\phpstan\tests\rules;
 
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
+use yii\base\UnknownPropertyException;
 use yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\data\rule\CreateObjectStaticTarget;
+use yii2\extensions\phpstan\tests\provider\CreateObjectComponentOptionRuntimeProvider;
 
 use function dirname;
 use function sprintf;
 use function str_contains;
+use function strlen;
+use function strrpos;
+use function substr;
 
 /**
  * Unit tests for {@see CreateObjectUnknownOptionRule}.
@@ -25,6 +30,11 @@ final class CreateObjectUnknownOptionRuleTest extends RuleTestCase
      * Error identifier of the rule.
      */
     private const string IDENTIFIER = 'yii2.createObject.unknownOption';
+
+    /**
+     * Start of the message of `yii\base\UnknownPropertyException` thrown by `__set()`.
+     */
+    private const string RUNTIME_PREFIX = 'Setting unknown property: ';
 
     /**
      * Namespace of the configurable target fixtures.
@@ -44,6 +54,62 @@ final class CreateObjectUnknownOptionRuleTest extends RuleTestCase
     public function testAcceptPublicPropertiesSettersInheritedMembersAndUnclaimedOptions(): void
     {
         $this->assertDiagnostics('CreateObjectValidOption.php', []);
+    }
+
+    public function testReportComponentOptionsOnlyForCallsThatThrowUnknownPropertyException(): void
+    {
+        $errors = $this->gatherAnalyserErrors([dirname(__DIR__) . '/data/rule/CreateObjectComponentOption.php']);
+
+        self::assertNotSame(
+            [],
+            $errors,
+            'Fixture must produce diagnostics.',
+        );
+
+        foreach ($errors as $error) {
+            $method = CreateObjectComponentOptionRuntimeProvider::methodAt($error->getLine());
+
+            [$outcome, $message] = CreateObjectComponentOptionRuntimeProvider::outcome($method);
+
+            self::assertSame(
+                UnknownPropertyException::class,
+                $outcome,
+                sprintf('Runtime outcome of `%s()` must be an unknown property.', $method),
+            );
+
+            $prefix = strlen(self::RUNTIME_PREFIX);
+            $class = substr($message, $prefix, (int) strrpos($message, '::') - $prefix);
+
+            self::assertStringContainsString(
+                "unknown property {$class}::\$",
+                $error->getMessage(),
+                sprintf('Diagnostic of `%s()` must name the class Yii reports.', $method),
+            );
+        }
+    }
+
+    public function testReportComponentOptionsThatNoBehaviorCanReceive(): void
+    {
+        $this->assertDiagnostics(
+            'CreateObjectComponentOption.php',
+            [
+                [111, self::message('Yii', 'yii\base\Component', 'colour')],
+                [116, self::message('Yii', 'ComponentTarget', 'colour')],
+                [149, self::message('Yii', 'ComponentMembersTarget', 'colour')],
+                [159, self::message('Yii', 'ComponentEventTarget', 'colour')],
+                [178, self::message('Yii', 'ComponentTarget', 'colour')],
+                [197, self::message('Yii', 'ComponentTarget', 'colour')],
+                [222, self::message('Yii', 'ComponentMembersTarget', 'colour')],
+                [230, self::message('Yii', 'ComponentMembersTarget', 'secret')],
+                [251, self::message('Yii', 'ComponentMembersTarget', 'internal')],
+                [296, self::message('Yii', 'ComponentMembersTarget', 'colour')],
+                [297, self::message('Yii', 'ComponentMembersTarget', 'size')],
+                [308, self::message('Yii', 'ComponentMembersTarget', 'colour')],
+                [315, self::message('Yii', 'ComponentMembersTarget', 'colour')],
+                [320, self::message('Yii', 'ComponentMembersTarget', 'As colour')],
+                [326, self::message('Yii', 'ComponentMembersTarget', 'On change')],
+            ],
+        );
     }
 
     public function testReportConstantKnownUnknownOptionsAtKeyOrCallLine(): void
