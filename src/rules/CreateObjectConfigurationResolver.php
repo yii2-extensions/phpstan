@@ -17,12 +17,12 @@ use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
 use function count;
 use function in_array;
-use function ltrim;
 
 /**
  * Resolves the class and options of a {@see BaseYii::createObject()} call whose assignment path Yii makes certain.
  *
- * Requires keys and class proven by literals or native types, no container binding, and a class that inherits the
+ * Requires keys and class proven by literals or native types, a container ID that is unbound or bound only through
+ * definitions that name a class ({@see ServiceMap::getConstructedClassById()}), and a created class that inherits the
  * constructor of {@see BaseObject} and the `__set()` of {@see BaseObject} or {@see Component}.
  *
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
@@ -54,8 +54,9 @@ final class CreateObjectConfigurationResolver
      * Returns the configuration of the call when Yii assigns every option to the created class through
      * `BaseObject::__set()` or `Component::__set()` semantics.
      *
-     * Records the container binding and class declaration dependencies of the call before deciding, so that the result
-     * cache reanalyses the call when either changes.
+     * Records the construction dependency of the container ID before deciding, and the declaration dependency of the
+     * created class once known, so that the result cache reanalyses the call when a definition on the chain or that
+     * class changes.
      *
      * @param StaticCall $node Static call to inspect.
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
@@ -87,17 +88,18 @@ final class CreateObjectConfigurationResolver
 
         [$id, $options] = $configuration;
 
-        $className = ltrim($id, '\\');
-
         $scope->trackValueDependency(
             ServiceMapResultCacheValueExtension::class,
-            ServiceMapResultCacheValueExtension::serviceKey($id),
+            ServiceMapResultCacheValueExtension::constructionKey($id),
         );
-        $scope->trackClassDependency($className);
 
-        if ($this->serviceMap->getServiceById($id) !== null || $this->serviceMap->isUnresolvedService($id)) {
+        $className = $this->serviceMap->getConstructedClassById($id);
+
+        if ($className === null) {
             return null;
         }
+
+        $scope->trackClassDependency($className);
 
         $classReflection = $this->resolveConfigurableClass($className);
 

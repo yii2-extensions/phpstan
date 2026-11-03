@@ -92,14 +92,12 @@ final class CreateObjectInvalidOptionTypeRuntimeProvider
      * Runtime outcome of each call the rule leaves alone: the thrown exception class or the created class.
      */
     private const array STAND_ASIDE = [
-        'aliasBinding' => TypeError::class,
         'arrayForCallableSetter' => TypeError::class,
         'constructorArguments' => TypedTarget::class,
         'customConstructor' => TypeError::class,
         'customMagicSetter' => TypeError::class,
         'declaredObjectForStringSetter' => TypedTarget::class,
         'dynamicKey' => UnknownPropertyException::class,
-        'emptyDefinitionBinding' => TypeError::class,
         'emptyOptionName' => TypeError::class,
         'enumCaseForStringSetter' => TypeError::class,
         'factoryBinding' => FactoryTarget::class,

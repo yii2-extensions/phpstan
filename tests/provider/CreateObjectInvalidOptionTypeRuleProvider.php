@@ -9,6 +9,7 @@ use RuntimeException;
 use yii2\extensions\phpstan\tests\data\rule\{
     CreateObjectComponentOption,
     CreateObjectConstantInvalidOptionType,
+    CreateObjectContainerBinding,
     CreateObjectInvalidOptionType,
 };
 use yii2\extensions\phpstan\tests\support\FixtureMethod;
@@ -217,6 +218,52 @@ final class CreateObjectInvalidOptionTypeRuleProvider
                             "'abc'",
                             'TypedTarget::setTags()',
                             'array',
+                        ),
+                    ],
+                ],
+            ],
+            CreateObjectContainerBinding::class => [
+                'componentAliasInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'ComponentMembersTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'emptyDefinitionInvalidValue' => [
+                    [
+                        "'name'",
+                        self::property(
+                            'EmptyDefinitionTarget',
+                            'name',
+                            'array{}',
+                            'string',
+                        ),
+                    ],
+                ],
+                'interfaceAliasInvalidValue' => [
+                    [
+                        "'name'",
+                        self::property(
+                            'Target',
+                            'name',
+                            'array{}',
+                            'string',
+                        ),
+                    ],
+                ],
+                'threeHopChainInvalidValue' => [
+                    [
+                        "'name'",
+                        self::property(
+                            'Target',
+                            'name',
+                            'array{}',
+                            'string',
                         ),
                     ],
                 ],

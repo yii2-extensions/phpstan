@@ -10,9 +10,10 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use yii\base\UnknownPropertyException;
 use yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\data\rule\CreateObjectComponentOption;
+use yii2\extensions\phpstan\tests\data\rule\{CreateObjectComponentOption, CreateObjectContainerBinding};
 use yii2\extensions\phpstan\tests\provider\{
     CreateObjectComponentOptionRuntimeProvider,
+    CreateObjectContainerBindingRuntimeProvider,
     CreateObjectUnknownOptionRuleProvider,
 };
 use yii2\extensions\phpstan\tests\support\{CreateObjectRuleTestTrait, FixtureMethod};
@@ -57,6 +58,38 @@ final class CreateObjectUnknownOptionRuleTest extends RuleTestCase
     public function testAcceptPublicPropertiesSettersInheritedMembersAndUnclaimedOptions(): void
     {
         $this->assertNoDiagnostics('CreateObjectValidOption.php');
+    }
+
+    public function testReportBoundOptionsOnlyForCallsThatThrowUnknownPropertyException(): void
+    {
+        $errors = $this->fixtureErrors(dirname(__DIR__) . '/data/rule/CreateObjectContainerBinding.php');
+
+        self::assertNotSame(
+            [],
+            $errors,
+            'Fixture must produce diagnostics.',
+        );
+
+        foreach ($errors as $error) {
+            $method = FixtureMethod::at(CreateObjectContainerBinding::class, $error->getLine());
+
+            [$outcome, $message] = CreateObjectContainerBindingRuntimeProvider::outcome($method);
+
+            self::assertSame(
+                UnknownPropertyException::class,
+                $outcome,
+                sprintf('Runtime outcome of `%s()` must be an unknown property.', $method),
+            );
+
+            $prefix = strlen(self::RUNTIME_PREFIX);
+            $class = substr($message, $prefix, (int) strrpos($message, '::') - $prefix);
+
+            self::assertStringContainsString(
+                "unknown property {$class}::\$",
+                $error->getMessage(),
+                sprintf('Diagnostic of `%s()` must name the class Yii builds.', $method),
+            );
+        }
     }
 
     public function testReportComponentOptionsOnlyForCallsThatThrowUnknownPropertyException(): void

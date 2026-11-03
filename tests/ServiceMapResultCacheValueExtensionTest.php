@@ -77,6 +77,32 @@ final class ServiceMapResultCacheValueExtensionTest extends PHPStanTestCase
         );
     }
 
+    public function testGetValueDistinguishesConstructionStates(): void
+    {
+        $extension = self::createExtension('construction-states');
+
+        self::assertSame(
+            'SplStack',
+            $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('alias')),
+            'Alias must map to the class it names.',
+        );
+        self::assertSame(
+            'Unbound\Target',
+            $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('\Unbound\Target')),
+            'Unbound ID must map to itself without a leading backslash.',
+        );
+        self::assertSame(
+            'not-proven',
+            $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('factory')),
+            'Factory of the same class must map to the not proven value.',
+        );
+        self::assertSame(
+            'not-proven',
+            $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('singleton')),
+            'Singleton of the same class must map to the not proven value.',
+        );
+    }
+
     public function testGetValueDistinguishesParamsShapesWithSameDescription(): void
     {
         $joined = new ServiceMap(self::BASE_PATH . 'params-keys-joined.php');
@@ -181,6 +207,11 @@ final class ServiceMapResultCacheValueExtensionTest extends PHPStanTestCase
             'component:user',
             ServiceMapResultCacheValueExtension::componentKey('user'),
             'Prefix must be `component`.',
+        );
+        self::assertSame(
+            'construction:mailer',
+            ServiceMapResultCacheValueExtension::constructionKey('mailer'),
+            'Prefix must be `construction`.',
         );
         self::assertSame(
             'service:mailer',

@@ -232,28 +232,55 @@ The rule reports only when Yii's assignment path is certain:
   doesn't override it, with no `$params` or with `$params` whose native type is an empty array;
 - the native type of the configuration is exactly one array shape with string keys and no optional key, and its
   `__class` value, or else its `class` value, is one class name;
-- the class is instantiable, inherits the constructor of `yii\base\BaseObject` and inherits `__set()` from
-  `yii\base\BaseObject` or `yii\base\Component`;
-- the analysis configuration has no `container.definitions` or `container.singletons` entry for that class name.
+- the class name has no container binding, or only bindings that pass the configuration on unchanged, as described
+  below;
+- the class Yii builds is instantiable, inherits the constructor of `yii\base\BaseObject` and inherits `__set()` from
+  `yii\base\BaseObject` or `yii\base\Component`.
 
 An option is accepted when it names a public property or a public or protected `set` method, inherited or from a trait.
 Options that fail differently at runtime are not reported either: a private `set` method, a name with only a `get`
 method, and static or read-only properties. `class` and `__class` are reserved. A `@property` tag alone does not make an
-option assignable, since Yii assigns through native members. The container binding is looked up by the class name as
-written, as Yii does, so `'\app\Feed'` doesn't match a binding for `app\Feed`.
+option assignable, since Yii assigns through native members.
 
 The rule stands aside for custom constructors or `__set()` methods; abstract or unknown classes; configurations whose
 native type allows more than one array shape, an optional or integer key, or unknown unpacked data; class values that
 aren't one known name; and a `__construct()` key or `$params` that may be non-empty, which can move the configuration to
-another constructor argument. A container binding of the class stands aside even when it resolves to the same class,
-because a factory, an object or an existing singleton can ignore the configuration.
+another constructor argument.
+
+`Yii::createObject()` passes the configuration to `Yii::$container`, so a container binding of the class name can
+replace the class or ignore the configuration. The rule follows a `container.definitions` entry for the class name only
+when Yii then builds one class and assigns the configuration to it as given:
+
+- a class name string, a `yii\di\Instance` reference, or an array whose only key is `class` or `__class`, which makes
+  Yii build that class instead; the class can itself be a bound ID, so chains of several entries are followed;
+- `[]` or `null`, which makes Yii build the class name itself;
+- either form in a `[definition, params]` pair whose params are `[]`.
+
+```php
+'container' => [
+    'definitions' => [
+        FeedInterface::class => 'feed.default',
+        'feed.default' => ['class' => Feed::class],
+    ],
+],
+```
+
+```php
+Yii::createObject(['class' => FeedInterface::class, 'timeoutSeconds' => 5]); // reported for Feed
+```
+
+IDs are compared as written, as Yii does: `'\app\Feed'` doesn't match an entry for `app\Feed`, and a chain that names
+`'\app\Feed'` builds that class directly, bypassing such an entry. Every other binding on the chain stands aside, even
+when it resolves to the same class: a `container.singletons` entry, a later singleton for the same ID, a factory or an
+invocable object, which may ignore the configuration or apply it, an object, which Yii returns as is, an array with
+other keys, whose options Yii merges into the configuration and assigns first, a definition with non-empty params, which
+can move the configuration to another constructor argument, and a cycle, which Yii follows until the process fails.
 
 The analysis configuration is treated as the complete list of container bindings: a binding registered at runtime
-outside it, for example in a bootstrap class, is not seen. An empty `[]` or `null` binding is recorded only when its
-class can be autoloaded while the analysis configuration runs, before `bootstrapFiles`. Describe such bindings in the
-analysis configuration or keep the rule disabled for that code. Adding or removing a binding or a behavior in the
-analysis configuration, changing the created class or one of its parents, or changing a constant the configuration reads
-reanalyses the affected calls without clearing the result cache.
+outside it, for example in a bootstrap class, is not seen. Describe such bindings in the analysis configuration or keep
+the rule disabled for that code. Changing a binding on the chain, whether its target or its form, adding or removing a
+behavior in the analysis configuration, changing the class Yii builds or one of its parents, or changing a constant the
+configuration reads reanalyses the affected calls without clearing the result cache.
 
 For a `yii\base\Component` subclass, `__set()` also attaches `on ...` event handlers and `as ...` behaviors, and passes
 a name without a public property or setter to the attached behaviors. `on ...` and `as ...` options are never reported.
