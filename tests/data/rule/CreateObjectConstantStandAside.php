@@ -91,7 +91,6 @@ class CreateObjectConstantStandAside
         Yii::createObject(Options::CONSTRUCTOR_CONFIG);
         Yii::createObject(Options::NULL_CLASS_CONFIG);
         Yii::createObject(Options::NO_CLASS_CONFIG);
-        Yii::createObject(Options::COMPONENT_CONFIG);
         Yii::createObject(['class' => Options::FACTORY_TARGET, Options::UNKNOWN => 'factory']);
         Yii::createObject(['class' => Options::EMPTY_CLASS, 'colour' => 'empty class']);
         Yii::createObject([...Options::CONFIG, 'class' => Options::EMPTY_CLASS]);

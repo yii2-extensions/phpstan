@@ -7,7 +7,6 @@ namespace yii2\extensions\phpstan\tests\data\rule;
 use Yii;
 use yii2\extensions\phpstan\tests\support\createobject\{
     AliasTarget,
-    ComponentTarget,
     CustomConstructorTarget,
     CustomSetterTarget,
     EmptyDefinitionTarget,
@@ -36,11 +35,6 @@ final class CreateObjectOptionTypeStandAside
     public function arrayForCallableSetter(): object
     {
         return Yii::createObject(['class' => TypedTarget::class, 'handler' => []]);
-    }
-
-    public function componentSubclass(): object
-    {
-        return Yii::createObject(['class' => ComponentTarget::class, 'name' => []]);
     }
 
     public function constructorArguments(): object

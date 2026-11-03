@@ -31,8 +31,6 @@ use function sprintf;
 
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\rules\CreateObjectInvalidOptionTypeRuntimeTest} test cases.
- *
- * Provides every public method of the option type fixtures with the runtime outcome Yii produces for its call.
  */
 final class CreateObjectInvalidOptionTypeRuntimeProvider
 {
@@ -96,7 +94,6 @@ final class CreateObjectInvalidOptionTypeRuntimeProvider
     private const array STAND_ASIDE = [
         'aliasBinding' => TypeError::class,
         'arrayForCallableSetter' => TypeError::class,
-        'componentSubclass' => TypeError::class,
         'constructorArguments' => TypedTarget::class,
         'customConstructor' => TypeError::class,
         'customMagicSetter' => TypeError::class,

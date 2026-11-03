@@ -232,7 +232,8 @@ The rule reports only when Yii's assignment path is certain:
   doesn't override it, with no `$params` or with `$params` whose native type is an empty array;
 - the native type of the configuration is exactly one array shape with string keys and no optional key, and its
   `__class` value, or else its `class` value, is one class name;
-- the class is instantiable and inherits both the constructor and `__set()` of `yii\base\BaseObject`;
+- the class is instantiable, inherits the constructor of `yii\base\BaseObject` and inherits `__set()` from
+  `yii\base\BaseObject` or `yii\base\Component`;
 - the analysis configuration has no `container.definitions` or `container.singletons` entry for that class name.
 
 An option is accepted when it names a public property or a public or protected `set` method, inherited or from a trait.
@@ -241,18 +242,46 @@ method, and static or read-only properties. `class` and `__class` are reserved. 
 option assignable, since Yii assigns through native members. The container binding is looked up by the class name as
 written, as Yii does, so `'\app\Feed'` doesn't match a binding for `app\Feed`.
 
-The rule stands aside for `yii\base\Component` subclasses, whose `__set()` also accepts events and behaviors; custom
-constructors or `__set()` methods; abstract or unknown classes; configurations whose native type allows more than one
-array shape, an optional or integer key, or unknown unpacked data; class values that aren't one known name; and a
-`__construct()` key or `$params` that may be non-empty, which can move the configuration to another constructor
-argument. A container binding of the class stands aside even when it resolves to the same class, because a factory, an
-object or an existing singleton can ignore the configuration.
+The rule stands aside for custom constructors or `__set()` methods; abstract or unknown classes; configurations whose
+native type allows more than one array shape, an optional or integer key, or unknown unpacked data; class values that
+aren't one known name; and a `__construct()` key or `$params` that may be non-empty, which can move the configuration to
+another constructor argument. A container binding of the class stands aside even when it resolves to the same class,
+because a factory, an object or an existing singleton can ignore the configuration.
 
 The analysis configuration is treated as the complete list of container bindings: a binding registered at runtime
 outside it, for example in a bootstrap class, is not seen. An empty `[]` or `null` binding is recorded only when its
 class can be autoloaded while the analysis configuration runs, before `bootstrapFiles`. Describe such bindings in the
-analysis configuration or keep the rule disabled for that code. Adding or removing a binding, changing the created
-class, or changing a constant the configuration reads reanalyses the affected calls without clearing the result cache.
+analysis configuration or keep the rule disabled for that code. Adding or removing a binding or a behavior in the
+analysis configuration, changing the created class or one of its parents, or changing a constant the configuration reads
+reanalyses the affected calls without clearing the result cache.
+
+For a `yii\base\Component` subclass, `__set()` also attaches `on ...` event handlers and `as ...` behaviors, and passes
+a name without a public property or setter to the attached behaviors. `on ...` and `as ...` options are never reported.
+Any other option without a public property or setter is reported only when no behavior can receive it:
+
+- the class inherits `behaviors()` and `ensureBehaviors()` from `yii\base\Component`, without an override in the class,
+  a parent class or a trait;
+- the configuration has no `as ...` option, wherever it appears;
+- the [`behaviors`](#behaviors) section of the analysis configuration lists no behavior for the class, a parent class,
+  an interface it implements or a trait it uses;
+- no earlier option in the configuration calls a `set` method or attaches an event handler through an overridden `on()`,
+  because that code can attach a behavior before Yii assigns the option.
+
+```php
+final class Feed extends yii\base\Component
+{
+    public string $url = '';
+}
+
+Yii::createObject(['class' => Feed::class, 'on refresh' => $handler, 'url' => '/rss']); // valid
+Yii::createObject(['class' => Feed::class, 'url' => '/rss', 'timeoutSeconds' => 5]);    // reported
+Yii::createObject(['class' => Feed::class, 'as cache' => CacheBehavior::class, 'ttl' => 60]); // not checked
+```
+
+The prefixes are compared case-sensitively, as Yii does, so `'On refresh'` is reported. The rule doesn't read the
+`behaviors()` method or the behavior definitions; a behavior attached only at runtime, outside the analysis
+configuration and the class hierarchy, for example by an `init()` override or a bootstrap class after construction,
+doesn't receive configuration options and doesn't affect the rule.
 
 PHPStan doesn't follow every way a local variable can change. `extract()`, `include`, `eval()`, a `foreach` loop by
 reference, or a called function that writes a `global` variable can replace a configuration whose native type still
@@ -288,11 +317,13 @@ the unknown option rule, and a name with no public property or setter is left to
 
 Yii assigns a public, non-static property directly, even when a setter with the same name exists. Any other option
 reaches `__set()`, which calls the public or protected `set` method; the value is checked against its first parameter.
-`yii\BaseYii` and `yii\base\BaseObject` don't declare `strict_types`, so PHP coerces scalar values: `'20'` is accepted
-by an `int` property, `5` by a `string` one and any scalar by a `bool` one. A value is reported only when no value of
-its native type can be coerced to the native type of the property or parameter, as with `'all'` for `int`, `''` or
-`'1abc'` for `int` or `float`, an array for a scalar, a scalar for an array, `null` for a non-nullable type, or an
-object of an unrelated class.
+For a `yii\base\Component` subclass, `__set()` calls the setter before it considers events and behaviors, so these
+checks also apply when the class attaches behaviors; an option that only a behavior can receive is not checked.
+`yii\BaseYii`, `yii\base\BaseObject` and `yii\base\Component` don't declare `strict_types`, so PHP coerces scalar
+values: `'20'` is accepted by an `int` property, `5` by a `string` one and any scalar by a `bool` one. A value is
+reported only when no value of its native type can be coerced to the native type of the property or parameter, as with
+`'all'` for `int`, `''` or `'1abc'` for `int` or `float`, an array for a scalar, a scalar for an array, `null` for a
+non-nullable type, or an object of an unrelated class.
 
 The rule stands aside when the rejection isn't certain:
 

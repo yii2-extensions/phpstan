@@ -10,7 +10,6 @@ use yii2\extensions\phpstan\tests\support\createobject\{
     AbstractTarget,
     AliasTarget,
     ChildTarget,
-    ComponentTarget,
     CustomConstructorTarget,
     CustomSetterTarget,
     EmptyDefinitionTarget,
@@ -51,7 +50,6 @@ final class CreateObjectStandAside
         Yii::createObject(['class' => EmptyDefinitionTarget::class, 'colour' => 'empty definition']);
         Yii::createObject(['class' => CustomConstructorTarget::class, 'alias' => 'consumed']);
         Yii::createObject(['class' => CustomSetterTarget::class, 'colour' => 'magic']);
-        Yii::createObject(['class' => ComponentTarget::class, 'colour' => 'component']);
         Yii::createObject(['class' => AbstractTarget::class, 'colour' => 'abstract']);
         Yii::createObject(['class' => PlainTarget::class, 'colour' => 'plain']);
         Yii::createObject(['class' => 'Missing\Target', 'colour' => 'missing']);
@@ -68,7 +66,6 @@ final class CreateObjectStandAside
         Yii::createObject(['class' => $value, 'colour' => 'mixed']);
         Yii::createObject(['__class' => null, 'class' => Target::class, 'colour' => 'null __class']);
         Yii::createObject(['colour' => 'no class']);
-        Yii::createObject(['class' => Target::class, 'class' => ComponentTarget::class, 'colour' => 'last class']);
         Yii::createObject(['class' => Target::class, 'colour' => 'unpacked arguments'], ...[$params]);
 
         OverridingFactory::createObject(['class' => Target::class, 'colour' => 'override']);
@@ -76,6 +73,7 @@ final class CreateObjectStandAside
         $factory = Yii::createObject(...);
 
         $factory(['class' => Target::class, 'colour' => 'first-class callable']);
+
         Yii::createObject(type: ['class' => Target::class, 'colour' => 'unknown named argument'], extra: true);
         Yii::createObject(['class' => Target::class, 'colour' => 'extra argument'], [], 'extra');
         Yii::getAlias('@yii');

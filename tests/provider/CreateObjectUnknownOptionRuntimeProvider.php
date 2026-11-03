@@ -29,8 +29,6 @@ use function random_int;
 
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\rules\CreateObjectUnknownOptionRuntimeTest} test cases.
- *
- * Provides the `Yii::createObject()` calls of the rule fixtures, one option at a time, with their runtime outcome.
  */
 final class CreateObjectUnknownOptionRuntimeProvider
 {
@@ -40,8 +38,6 @@ final class CreateObjectUnknownOptionRuntimeProvider
     private const string UNKNOWN = 'colour';
 
     /**
-     * Calls whose option the rule reports, with the class and option named by the exception.
-     *
      * @phpstan-return iterable<string, array{Closure(): object, string, string}>
      */
     public static function reportedOptionProvider(): iterable
@@ -245,8 +241,6 @@ final class CreateObjectUnknownOptionRuntimeProvider
     }
 
     /**
-     * Calls the rule leaves alone, with the class of the created object or the exception they throw.
-     *
      * @phpstan-return iterable<string, array{Closure(): object, class-string}>
      */
     public static function standAsideProvider(): iterable
@@ -350,10 +344,6 @@ final class CreateObjectUnknownOptionRuntimeProvider
         yield 'constant __construct() moves the configuration to an ignored argument' => [
             static fn(): object => Yii::createObject(Options::CONSTRUCTOR_CONFIG),
             Target::class,
-        ];
-        yield 'constant component configuration' => [
-            static fn(): object => Yii::createObject(Options::COMPONENT_CONFIG),
-            UnknownPropertyException::class,
         ];
     }
 

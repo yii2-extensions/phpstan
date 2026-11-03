@@ -11,7 +11,7 @@ use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{ClassReflection, ReflectionProvider};
 use PHPStan\Rules\{IdentifierRuleError, Rule, RuleErrorBuilder};
 use PHPStan\Type\{StringType, Type, TypeCombinator, TypeUtils, VerbosityLevel};
-use yii\base\BaseObject;
+use yii\base\{BaseObject, Component};
 use yii\BaseYii;
 use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
@@ -23,11 +23,8 @@ use function sprintf;
 /**
  * Reports {@see BaseYii::createObject()} option values that the property or setter Yii assigns them to never accepts.
  *
- * Analyses the same configurations and classes as {@see CreateObjectUnknownOptionRule}. A public instance property is
- * assigned directly and takes precedence over a setter; any other option reaches `BaseObject::__set()`, which calls a
- * public or protected `set` method. Both run without `strict_types`, so a value is reported only when PHP's weak type
- * coercion can't convert any of its possible values to the native type of the property or of the first setter
- * parameter. PHPDoc types are not consulted.
+ * A value is reported only when PHP's weak type coercion can't convert it to the native type of the public property or
+ * of the first setter parameter. PHPDoc types are not consulted.
  *
  * {@see Rule} for PHPStan rule contract.
  * {@see CreateObjectConfigurationResolver} for the configurations and classes the rule analyses.
@@ -138,10 +135,10 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
      * Returns the native type that Yii checks the option value against and the member that declares it.
      *
      * {@see BaseYii::configure()} assigns a public instance property directly, so its type applies even when a setter
-     * exists. A protected, private or static property is inaccessible from there, and `BaseObject::__set()` calls the
-     * `set` method instead, which must be public or protected to be callable from {@see BaseObject}. Read-only, hooked
-     * and asymmetric-visibility properties, private setters, setters without parameters and setters with more than one
-     * signature are left alone.
+     * exists. A protected, private or static property is inaccessible from there, and `__set()` calls the `set` method
+     * instead, which must be public or protected to be callable from {@see BaseObject} or {@see Component}. Read-only,
+     * hooked and asymmetric-visibility properties, private setters, setters without parameters and setters with more
+     * than one signature are left alone.
      *
      * @return array{Type, string}|null Native type and member description, or `null` when no assignment path with a
      * type check is proven.
@@ -176,6 +173,7 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         }
 
         $variants = $setter->getVariants();
+
         $parameter = count($variants) === 1 ? $variants[0]->getParameters()[0] ?? null : null;
 
         return $parameter === null
