@@ -44,6 +44,7 @@
         "PHPStan\\Type\\StringType",
         "PHPStan\\Type\\Type",
         "PHPStan\\Type\\TypeCombinator",
+        "PHPStan\\Type\\TypeUtils",
         "PHPStan\\Type\\VerbosityLevel"
     ],
     "php-core-extensions": [

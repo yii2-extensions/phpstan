@@ -7,11 +7,12 @@ split between PHPStan's NEON parameters and a PHP file describing the applicatio
 
 The extension registers `parameters.yii2` in `extension.neon`:
 
-| Key                               | Default               | Meaning                                                                      |
-| --------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
-| `config_path`                     | `''`                  | PHP file to execute, relative to the process working directory or absolute.  |
-| `component_generics`              | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
-| `rules.createObjectUnknownOption` | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).         |
+| Key                                   | Default               | Meaning                                                                      |
+| ------------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| `config_path`                         | `''`                  | PHP file to execute, relative to the process working directory or absolute.  |
+| `component_generics`                  | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
+| `rules.createObjectInvalidOptionType` | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).       |
+| `rules.createObjectUnknownOption`     | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).         |
 
 PHPStan's `paths`, `level`, `bootstrapFiles`, `stubFiles` and `tmpDir` remain normal
 [PHPStan options](https://phpstan.org/config-reference).
@@ -206,7 +207,8 @@ Yii::createObject(['class' => Feed::class, 'url' => '/rss', 'timeoutSeconds' => 
 ```
 
 The second call throws `yii\base\UnknownPropertyException` at runtime and is reported at the line of the
-`timeoutSeconds` key with the identifier `yii2.createObject.unknownOption`. Values are not type-checked.
+`timeoutSeconds` key with the identifier `yii2.createObject.unknownOption`. Values are checked by the separate
+[option type rule](#invalid-yiicreateobject-option-types).
 
 The configuration doesn't have to be written in the call. Keys, the class and the configuration itself can come from
 class constants, local variables or unpacked constant arrays, as long as PHPStan's native type proves a single value:
@@ -255,6 +257,59 @@ class, or changing a constant the configuration reads reanalyses the affected ca
 PHPStan doesn't follow every way a local variable can change. `extract()`, `include`, `eval()`, a `foreach` loop by
 reference, or a called function that writes a `global` variable can replace a configuration whose native type still
 describes the earlier value. Pass the configuration directly or keep the rule disabled for such code.
+
+## Invalid `Yii::createObject()` option types
+
+A second opt-in rule reports option values that the property or setter Yii assigns them to can never accept. It is
+independent of the unknown option rule; enable either or both:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            createObjectInvalidOptionType: true
+```
+
+```php
+final class Feed extends yii\base\BaseObject
+{
+    public int $limit = 10;
+
+    public function setTags(array $tags): void {}
+}
+
+Yii::createObject(['class' => Feed::class, 'limit' => '20', 'tags' => ['news']]); // valid
+Yii::createObject(['class' => Feed::class, 'limit' => 'all', 'tags' => 'news']);  // two reported
+```
+
+The second call throws `TypeError` at runtime. Each option is reported at the same line as an unknown option would be,
+with the identifier `yii2.createObject.invalidOptionType`. The rule analyses exactly the calls and classes described for
+the unknown option rule, and a name with no public property or setter is left to that rule.
+
+Yii assigns a public, non-static property directly, even when a setter with the same name exists. Any other option
+reaches `__set()`, which calls the public or protected `set` method; the value is checked against its first parameter.
+`yii\BaseYii` and `yii\base\BaseObject` don't declare `strict_types`, so PHP coerces scalar values: `'20'` is accepted
+by an `int` property, `5` by a `string` one and any scalar by a `bool` one. A value is reported only when no value of
+its native type can be coerced to the native type of the property or parameter, as with `'all'` for `int`, `''` or
+`'1abc'` for `int` or `float`, an array for a scalar, a scalar for an array, `null` for a non-nullable type, or an
+object of an unrelated class.
+
+The rule stands aside when the rejection isn't certain:
+
+- PHPDoc types of the property, the parameter or the value are not consulted, so `@var non-empty-string` doesn't make
+  `''` invalid and a value documented only by `@return` or `@param` is treated as its native type;
+- a value whose native type is only partly incompatible, such as a `string` parameter or `'abc'|5`, is not reported;
+- an object is never reported for a type that accepts `string`, because a subclass or an internal class can be converted
+  to a string;
+- a string or an array is never reported for a `callable` parameter, because the function or method it names can exist
+  only at runtime;
+- read-only, hooked and asymmetric-visibility properties, private setters, setters without parameters and options with
+  an empty name are not checked;
+- some values that PHP rejects are not reported either: `INF` or `NAN` for `int`, and scalar values for a `true` or
+  `false` type, which PHP doesn't coerce.
+
+The result cache reanalyses a call when the native type of the property or setter changes, including one inherited from
+a parent class or trait, and when a class named in that type changes.
 
 ## Constants and result cache
 

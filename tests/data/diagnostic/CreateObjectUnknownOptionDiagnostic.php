@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\data\diagnostic;
 
 use Yii;
-use yii2\extensions\phpstan\tests\support\createobject\{Options, Target};
+use yii2\extensions\phpstan\tests\support\createobject\{Options, Target, TypedTarget};
 
 /**
  * Fixture for {@see \yii2\extensions\phpstan\tests\CreateObjectUnknownOptionDiagnosticTest} with native errors.
@@ -35,5 +35,14 @@ final class CreateObjectUnknownOptionDiagnostic
     public function createDocumented(array $config): void
     {
         Yii::createObject($config);
+    }
+
+    public function createTyped(): void
+    {
+        Yii::createObject(['class' => TypedTarget::class, 'count' => 'abc']);
+        Yii::createObject(['class' => TypedTarget::class, 'count' => [], 'colour' => 'red']);
+        Yii::createObject(['class' => TypedTarget::class, 'count' => 'abc', 'count' => 5]);
+        Yii::createObject(['class' => TypedTarget::class, 'count' => 'abc'], [], 'extra');
+        Yii::createObject(['class' => TypedTarget::class, 'count' => '5', 'title' => 5]);
     }
 }
