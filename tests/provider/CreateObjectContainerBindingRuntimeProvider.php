@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\provider;
 
+use Error;
 use ReflectionClass;
 use ReflectionMethod;
 use RuntimeException;
@@ -11,7 +12,7 @@ use TypeError;
 use yii\base\UnknownPropertyException;
 use yii\di\NotInstantiableException;
 use yii2\extensions\phpstan\tests\data\rule\CreateObjectContainerBinding;
-use yii2\extensions\phpstan\tests\support\createobject\{FactoryTarget, Target};
+use yii2\extensions\phpstan\tests\support\createobject\{ComponentMembersTarget, FactoryTarget, Target};
 
 use function array_diff;
 use function array_keys;
@@ -28,6 +29,7 @@ final class CreateObjectContainerBindingRuntimeProvider
      */
     public const array NOT_EXECUTED = [
         'cycle' => 'Container::get() recurses without end on a definition cycle and the process crashes.',
+        'definitionOptionsCycle' => 'Container::get() recurses without end on a definition cycle and the process crashes.',
     ];
 
     /**
@@ -63,11 +65,27 @@ final class CreateObjectContainerBindingRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::__class',
         ],
+        'classIdDefinitionOptions' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sDefinitionOptionsTarget::colour',
+        ],
         'componentAlias' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sComponentMembersTarget::colour',
         ],
         'componentAliasInvalidValue' => [
+            TypeError::class,
+            'Cannot assign string to property %sComponentMembersTarget::$count',
+        ],
+        'componentDefinitionEventOption' => [
+            ComponentMembersTarget::class,
+            '',
+        ],
+        'componentDefinitionOptions' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sComponentMembersTarget::colour',
+        ],
+        'componentDefinitionOptionsInvalidValue' => [
             TypeError::class,
             'Cannot assign string to property %sComponentMembersTarget::$count',
         ],
@@ -87,9 +105,65 @@ final class CreateObjectContainerBindingRuntimeProvider
             TypeError::class,
             'Cannot assign array to property %sCustomConstructorTarget::$name',
         ],
+        'definitionAnnotatedOption' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::documented',
+        ],
+        'definitionConstructOption' => [
+            Target::class,
+            '',
+        ],
+        'definitionIntegerOption' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::0',
+        ],
         'definitionOptions' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
+        ],
+        'definitionOptionsInvalidValue' => [
             TypeError::class,
             'Cannot assign array to property %sTarget::$name',
+        ],
+        'definitionOptionsOnChain' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
+        ],
+        'definitionOptionsOnChainInvalidValue' => [
+            TypeError::class,
+            'Cannot assign array to property %sTarget::$tag',
+        ],
+        'definitionOptionsToCustomConstructor' => [
+            TypeError::class,
+            'Cannot assign array to property %sCustomConstructorTarget::$name',
+        ],
+        'definitionOptionsValid' => [
+            Target::class,
+            '',
+        ],
+        'definitionOptionsWithParams' => [
+            TypeError::class,
+            'Cannot assign array to property %sTarget::$name',
+        ],
+        'definitionProtectedOption' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::internal',
+        ],
+        'definitionReadonlyOption' => [
+            Error::class,
+            'Cannot ',
+        ],
+        'definitionSetterOption' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
+        ],
+        'definitionStaticOption' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::shared',
+        ],
+        'definitionUnknownOption' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
         ],
         'emptyDefinition' => [
             UnknownPropertyException::class,
@@ -123,6 +197,10 @@ final class CreateObjectContainerBindingRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sFactoryTarget::colour',
         ],
+        'legacyClassDefinitionOptions' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
+        ],
         'mappedComponentAlias' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sComponentMappedTarget::colour',
@@ -147,6 +225,10 @@ final class CreateObjectContainerBindingRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
         ],
+        'singletonWithOptions' => [
+            TypeError::class,
+            'Cannot assign array to property %sTarget::$name',
+        ],
         'threeHopChain' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
@@ -158,6 +240,10 @@ final class CreateObjectContainerBindingRuntimeProvider
         'validOptionsThroughChain' => [
             Target::class,
             '',
+        ],
+        'wrappedDefinitionOptions' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
         ],
         'zeroDefinition' => [
             NotInstantiableException::class,

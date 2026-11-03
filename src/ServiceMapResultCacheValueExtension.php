@@ -33,57 +33,47 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
     /**
      * Key of the configured application class.
      */
-    public const APPLICATION_KEY = 'application';
-
+    public const string APPLICATION_KEY = 'application';
     /**
      * Value returned for keys whose id has no configuration entry.
      */
-    public const MISSING = 'missing';
-
+    public const string MISSING = 'missing';
     /**
      * Key of the array shape inferred for the application params.
      */
-    public const PARAMS_KEY = 'params';
-
+    public const string PARAMS_KEY = 'params';
     /**
      * Value returned for a component or service defined in the configuration whose class can't be determined.
      */
-    public const UNRESOLVED = 'unresolved';
-
+    public const string UNRESOLVED = 'unresolved';
     /**
      * Value returned for keys this class doesn't build, such as keys stored by another version of the extension.
      */
-    public const UNSUPPORTED = 'unsupported';
-
+    public const string UNSUPPORTED = 'unsupported';
     /**
      * Key prefix for the behaviors attached to a class.
      */
-    private const BEHAVIORS = 'behaviors';
-
+    private const string BEHAVIORS = 'behaviors';
     /**
      * Key prefix for application components.
      */
-    private const COMPONENT = 'component';
-
+    private const string COMPONENT = 'component';
     /**
      * Cache state for a component that retains the application's annotated core type.
      */
-    private const COMPONENT_WITHOUT_CLASS = 'without-class';
-
+    private const string COMPONENT_WITHOUT_CLASS = 'without-class';
     /**
      * Key prefix for the class the container builds and configures for an ID.
      */
-    private const CONSTRUCTION = 'construction';
-
+    private const string CONSTRUCTION = 'construction';
     /**
      * Cache state for a container ID whose definitions don't prove the class built with the configuration given.
      */
-    private const CONSTRUCTION_NOT_PROVEN = 'not-proven';
-
+    private const string CONSTRUCTION_NOT_PROVEN = 'not-proven';
     /**
      * Key prefix for DI container definitions and singletons.
      */
-    private const SERVICE = 'service';
+    private const string SERVICE = 'service';
 
     /**
      * Params value computed on first use, since PHPStan asks for it again for every analysed file reading params.
@@ -109,7 +99,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      */
     public static function behaviorsKey(string $className): string
     {
-        return self::BEHAVIORS . ':' . $className;
+        return self::BEHAVIORS . ":{$className}";
     }
 
     /**
@@ -119,7 +109,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      */
     public static function componentKey(string $id): string
     {
-        return self::COMPONENT . ':' . $id;
+        return self::COMPONENT . ":{$id}";
     }
 
     /**
@@ -129,7 +119,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      */
     public static function constructionKey(string $id): string
     {
-        return self::CONSTRUCTION . ':' . $id;
+        return self::CONSTRUCTION . ":{$id}";
     }
 
     /**
@@ -144,8 +134,9 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      *   component is defined with a class that can't be determined, or {@see MISSING}.
      * - `service:<id>`: the configured service class, {@see UNRESOLVED} when the service is defined with a class that
      *   can't be determined, or {@see MISSING}.
-     * - `construction:<id>`: the class {@see ServiceMap::getConstructedClassById()} returns, or `not-proven`, which no
-     *   class name can equal.
+     * - `construction:<id>`: the class {@see ServiceMap::getConfiguredClassById()} returns, followed by a space and a
+     *   hash of the names {@see ServiceMap::getDefinitionOptionNamesById()} returns when there are any, or
+     *   `not-proven`; no class name can equal the last two forms.
      * - `behaviors:<class>`: a hash of the ordered behavior classes, or {@see MISSING} when none are attached.
      *
      * Any other key yields {@see UNSUPPORTED}, so a result cache written by another version of the extension
@@ -166,7 +157,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
             self::PARAMS_KEY => $this->getParamsValue(),
             self::COMPONENT => $this->getComponentValue($id),
             self::SERVICE => $this->getServiceValue($id),
-            self::CONSTRUCTION => $this->serviceMap->getConstructedClassById($id) ?? self::CONSTRUCTION_NOT_PROVEN,
+            self::CONSTRUCTION => $this->getConstructionValue($id),
             self::BEHAVIORS => $this->getBehaviorsValue($id),
             default => self::UNSUPPORTED,
         };
@@ -195,7 +186,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      */
     public static function serviceKey(string $id): string
     {
-        return self::SERVICE . ':' . $id;
+        return self::SERVICE . ":{$id}";
     }
 
     /**
@@ -217,6 +208,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
         }
 
         $valueTypes = $constantArrays[0]->getValueTypes();
+
         $description = [];
 
         foreach ($constantArrays[0]->getKeyTypes() as $position => $keyType) {
@@ -260,7 +252,23 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
             ? $this->serviceMap->getComponentDefinitionById($id)[$genericProperty] ?? null
             : null;
 
-        return hash('sha256', $componentClass . "\n" . (is_string($genericType) ? $genericType : ''));
+        return hash('sha256', "{$componentClass}\n" . (is_string($genericType) ? $genericType : ''));
+    }
+
+    /**
+     * Returns the value for the class the container builds for the given id and the definition options it merges.
+     */
+    private function getConstructionValue(string $id): string
+    {
+        $className = $this->serviceMap->getConfiguredClassById($id);
+
+        if ($className === null) {
+            return self::CONSTRUCTION_NOT_PROVEN;
+        }
+
+        $options = $this->serviceMap->getDefinitionOptionNamesById($id);
+
+        return $options === [] ? $className : "{$className} " . hash('sha256', serialize($options));
     }
 
     /**
