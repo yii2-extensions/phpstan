@@ -16,55 +16,85 @@ use yii2\extensions\phpstan\tests\support\createobject\{
 };
 
 /**
- * Literal `Yii::createObject()` options that the created class can't assign, one call per line.
+ * Literal `Yii::createObject()` options that the created class can't assign, one call per method.
  */
 final class CreateObjectUnknownOption
 {
-    public function reportThroughEveryCallForm(): void
+    public function aliasedYii(): void
     {
-        \Yii::createObject(
-            [
-                'class' => Target::class,
-                'colour' => 'global',
-            ],
-        );
         ObjectFactory::createObject(
             [
                 'class' => Target::class,
                 'colour' => 'alias',
             ],
         );
+    }
+
+    public function annotatedProperties(): void
+    {
+        Yii::createObject(
+            [
+                'class' => Target::class,
+                'documented' => 'annotation',
+                'annotated' => 'annotation',
+            ],
+        );
+    }
+
+    public function baseYii(): void
+    {
         BaseYii::createObject(
             [
                 'class' => Target::class,
                 'colour' => 'base',
             ],
         );
-        Factory::createObject(
-            [
-                'class' => Target::class,
-                'colour' => 'subclass',
-            ],
-        );
+    }
+
+    public function caseInsensitiveMethodName(): void
+    {
         Yii::createobject(
             [
                 'class' => Target::class,
                 'colour' => 'case-insensitive method',
             ],
         );
+    }
+
+    public function caseSensitivePropertyName(): void
+    {
         Yii::createObject(
-            type: [
+            [
                 'class' => Target::class,
-                'colour' => 'named',
+                'Name' => 'case-sensitive property',
             ],
         );
+    }
+
+    public function dunderClassOverClass(): void
+    {
         Yii::createObject(
-            params: [],
-            type: [
-                'class' => Target::class,
-                'colour' => 'named reordered',
+            [
+                'class' => ComponentTarget::class,
+                '__class' => Target::class,
+                'colour' => 'red',
             ],
         );
+    }
+
+    public function duplicateOption(): void
+    {
+        Yii::createObject(
+            [
+                'class' => Target::class,
+                'colour' => 'red',
+                'colour' => 'blue',
+            ],
+        );
+    }
+
+    public function emptyParams(): void
+    {
         Yii::createObject(
             [
                 'class' => Target::class,
@@ -74,34 +104,28 @@ final class CreateObjectUnknownOption
         );
     }
 
-    public function reportUnknownOptions(): void
+    public function eventKeyOnBaseObject(): void
     {
         Yii::createObject(
             [
-                'class' => Target::class,
-                'colour' => 'red',
+                'class' => BaseObject::class,
+                'on change' => 'event',
             ],
         );
-        Yii::createObject(
+    }
+
+    public function fullyQualifiedYii(): void
+    {
+        \Yii::createObject(
             [
                 'class' => Target::class,
-                'Name' => 'case-sensitive property',
+                'colour' => 'global',
             ],
         );
-        Yii::createObject(
-            [
-                'class' => Target::class,
-                'internal' => 'protected',
-                'secret' => 'private',
-            ],
-        );
-        Yii::createObject(
-            [
-                'class' => Target::class,
-                'documented' => 'annotation',
-                'annotated' => 'annotation',
-            ],
-        );
+    }
+
+    public function inheritedNonPublicProperties(): void
+    {
         Yii::createObject(
             [
                 'class' => ChildTarget::class,
@@ -109,38 +133,10 @@ final class CreateObjectUnknownOption
                 'internal' => 'inherited',
             ],
         );
-        Yii::createObject(
-            [
-                'class' => ComponentTarget::class,
-                '__class' => Target::class,
-                'colour' => 'red',
-            ],
-        );
-        Yii::createObject(
-            [
-                'class' => Target::class,
-                'colour' => 'red',
-                'colour' => 'blue',
-            ],
-        );
-        Yii::createObject(
-            [
-                'class' => BaseObject::class,
-                'on change' => 'event',
-            ],
-        );
-        Yii::createObject(
-            [
-                'class' => '\yii2\extensions\phpstan\tests\support\createobject\Target',
-                'colour' => 1,
-            ],
-        );
-        Yii::createObject(
-            [
-                'class' => '\yii2\extensions\phpstan\tests\support\createobject\FactoryTarget',
-                'colour' => 1,
-            ],
-        );
+    }
+
+    public function lastClassValue(): void
+    {
         Yii::createObject(
             [
                 'class' => ComponentTarget::class,
@@ -148,11 +144,87 @@ final class CreateObjectUnknownOption
                 'colour' => 'last class',
             ],
         );
+    }
+
+    public function leadingBackslash(): void
+    {
+        Yii::createObject(
+            [
+                'class' => '\yii2\extensions\phpstan\tests\support\createobject\Target',
+                'colour' => 1,
+            ],
+        );
+    }
+
+    public function leadingBackslashMissesBinding(): void
+    {
+        Yii::createObject(
+            [
+                'class' => '\yii2\extensions\phpstan\tests\support\createobject\FactoryTarget',
+                'colour' => 1,
+            ],
+        );
+    }
+
+    public function namedArgument(): void
+    {
+        Yii::createObject(
+            type: [
+                'class' => Target::class,
+                'colour' => 'named',
+            ],
+        );
+    }
+
+    public function namedArgumentsReordered(): void
+    {
+        Yii::createObject(
+            params: [],
+            type: [
+                'class' => Target::class,
+                'colour' => 'named reordered',
+            ],
+        );
+    }
+
+    public function nonPublicProperties(): void
+    {
+        Yii::createObject(
+            [
+                'class' => Target::class,
+                'internal' => 'protected',
+                'secret' => 'private',
+            ],
+        );
+    }
+
+    public function unknownAfterValidOption(): void
+    {
         Yii::createObject(
             [
                 'class' => Target::class,
                 'name' => 'valid',
                 'colour' => 'red',
+            ],
+        );
+    }
+
+    public function unknownOption(): void
+    {
+        Yii::createObject(
+            [
+                'class' => Target::class,
+                'colour' => 'red',
+            ],
+        );
+    }
+
+    public function yiiSubclass(): void
+    {
+        Factory::createObject(
+            [
+                'class' => Target::class,
+                'colour' => 'subclass',
             ],
         );
     }

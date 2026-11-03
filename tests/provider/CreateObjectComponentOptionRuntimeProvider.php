@@ -208,22 +208,6 @@ final class CreateObjectComponentOptionRuntimeProvider
     private const string TARGETS = 'yii2\extensions\phpstan\tests\support\createobject\\';
 
     /**
-     * Returns the name of the fixture method whose body contains the given line.
-     */
-    public static function methodAt(int|null $line): string
-    {
-        foreach ((new ReflectionClass(CreateObjectComponentOption::class))->getMethods() as $method) {
-            if ($line >= $method->getStartLine() && $line <= $method->getEndLine()) {
-                return $method->getName();
-            }
-        }
-
-        throw new RuntimeException(
-            sprintf('No fixture method contains line %s.', $line ?? 'null'),
-        );
-    }
-
-    /**
      * Returns the runtime outcome of a fixture method: the thrown or created class and the start of the message.
      *
      * @phpstan-return array{class-string, string}
