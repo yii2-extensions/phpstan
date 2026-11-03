@@ -208,12 +208,28 @@ Yii::createObject(['class' => Feed::class, 'url' => '/rss', 'timeoutSeconds' => 
 The second call throws `yii\base\UnknownPropertyException` at runtime and is reported at the line of the
 `timeoutSeconds` key with the identifier `yii2.createObject.unknownOption`. Values are not type-checked.
 
+The configuration doesn't have to be written in the call. Keys, the class and the configuration itself can come from
+class constants, local variables or unpacked constant arrays, as long as PHPStan's native type proves a single value:
+
+```php
+$config = ['class' => Feed::class, 'url' => '/rss'];
+$config['timeoutSeconds'] = 5;
+
+Yii::createObject($config); // reported at this line
+```
+
+An option written as a key in the call is reported at that key, including a constant key such as `self::OPTION`, when
+the configuration is an array literal without unpacking and every key has one constant string value. Otherwise, every
+option is reported at the call line: this includes a configuration that comes from a variable or a constant, and an
+array literal that unpacks another array. PHPDoc types such as `@param array{...}`, `@var` or `@return` never prove a
+configuration; only native types, which PHPStan derives from literal values, constants and assignments, do.
+
 The rule reports only when Yii's assignment path is certain:
 
 - the call is `createObject()` declared by `yii\BaseYii`, through `Yii`, `BaseYii`, an imported alias or a subclass that
-  doesn't override it, with no `$params` other than an empty literal array;
-- the configuration is a literal array with literal string keys and no unpacking, and the literal `__class` value, or
-  else the literal `class` value, names the class;
+  doesn't override it, with no `$params` or with `$params` whose native type is an empty array;
+- the native type of the configuration is exactly one array shape with string keys and no optional key, and its
+  `__class` value, or else its `class` value, is one class name;
 - the class is instantiable and inherits both the constructor and `__set()` of `yii\base\BaseObject`;
 - the analysis configuration has no `container.definitions` or `container.singletons` entry for that class name.
 
@@ -224,16 +240,21 @@ option assignable, since Yii assigns through native members. The container bindi
 written, as Yii does, so `'\app\Feed'` doesn't match a binding for `app\Feed`.
 
 The rule stands aside for `yii\base\Component` subclasses, whose `__set()` also accepts events and behaviors; custom
-constructors or `__set()` methods; abstract or unknown classes; dynamic, unpacked or conditional configuration; class
-names that aren't literal; and a `__construct()` key or non-empty `$params`, which can move the configuration to another
-constructor argument. A container binding of the class stands aside even when it resolves to the same class, because a
-factory, an object or an existing singleton can ignore the configuration.
+constructors or `__set()` methods; abstract or unknown classes; configurations whose native type allows more than one
+array shape, an optional or integer key, or unknown unpacked data; class values that aren't one known name; and a
+`__construct()` key or `$params` that may be non-empty, which can move the configuration to another constructor
+argument. A container binding of the class stands aside even when it resolves to the same class, because a factory, an
+object or an existing singleton can ignore the configuration.
 
 The analysis configuration is treated as the complete list of container bindings: a binding registered at runtime
 outside it, for example in a bootstrap class, is not seen. An empty `[]` or `null` binding is recorded only when its
 class can be autoloaded while the analysis configuration runs, before `bootstrapFiles`. Describe such bindings in the
-analysis configuration or keep the rule disabled for that code. Adding or removing a binding, or changing the created
-class, reanalyses the affected calls without clearing the result cache.
+analysis configuration or keep the rule disabled for that code. Adding or removing a binding, changing the created
+class, or changing a constant the configuration reads reanalyses the affected calls without clearing the result cache.
+
+PHPStan doesn't follow every way a local variable can change. `extract()`, `include`, `eval()`, a `foreach` loop by
+reference, or a called function that writes a `global` variable can replace a configuration whose native type still
+describes the earlier value. Pass the configuration directly or keep the rule disabled for such code.
 
 ## Constants and result cache
 

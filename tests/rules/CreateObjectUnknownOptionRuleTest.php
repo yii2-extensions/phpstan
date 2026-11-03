@@ -8,6 +8,7 @@ use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
 use yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule;
 use yii2\extensions\phpstan\ServiceMap;
+use yii2\extensions\phpstan\tests\data\rule\CreateObjectStaticTarget;
 
 use function dirname;
 use function sprintf;
@@ -35,9 +36,54 @@ final class CreateObjectUnknownOptionRuleTest extends RuleTestCase
         return [dirname(__DIR__) . '/support/extension-create-object-test.neon'];
     }
 
+    public function testAcceptConstantKnownOptionsTheClassAssigns(): void
+    {
+        $this->assertDiagnostics('CreateObjectConstantValidOption.php', []);
+    }
+
     public function testAcceptPublicPropertiesSettersInheritedMembersAndUnclaimedOptions(): void
     {
         $this->assertDiagnostics('CreateObjectValidOption.php', []);
+    }
+
+    public function testReportConstantKnownUnknownOptionsAtKeyOrCallLine(): void
+    {
+        $this->assertDiagnostics(
+            'CreateObjectConstantUnknownOption.php',
+            [
+                [21, self::message('Yii', 'Target', 'colour')],
+                [22, self::message('Yii', 'Target', 'colour')],
+                [26, self::message('Yii', 'Target', 'colour')],
+                [31, self::message('Yii', 'Target', 'colour')],
+                [32, self::message('Yii', 'Target', 'colour')],
+                [38, self::message('Yii', 'Target', 'colour')],
+                [44, self::message('Yii', 'Target', 'colour')],
+                [51, self::message('Yii', 'Target', 'colour')],
+                [64, self::message('Yii', 'Target', 'colour')],
+                [70, self::message('Yii', 'Target', 'colour')],
+                [76, self::message('Yii', 'Target', 'colour')],
+                [82, self::message('Yii', 'Target', 'colour')],
+                [91, self::message('Yii', 'Target', 'colour')],
+                [98, self::message('Yii', 'Target', 'colour')],
+                [104, self::message('Yii', 'Target', 'colour')],
+                [111, self::message('Yii', 'FactoryTarget', 'colour')],
+                [123, self::message('Yii', 'Target', 'colour')],
+                [128, self::message('Yii', 'Target', 'colour')],
+                [131, self::message('Yii', 'Target', 'colour')],
+                [142, self::message('Yii', 'Target', '1')],
+                [151, self::message('Yii', 'Target', 'colour')],
+            ],
+        );
+    }
+
+    public function testReportLateStaticClassOfFinalClassOnlyOutsideLiteralConfiguration(): void
+    {
+        $this->assertDiagnostics(
+            'CreateObjectStaticTarget.php',
+            [
+                [19, self::message('Yii', CreateObjectStaticTarget::class, 'colour')],
+            ],
+        );
     }
 
     public function testReportUnknownOptionsWithIdentifierAndLine(): void
@@ -70,6 +116,11 @@ final class CreateObjectUnknownOptionRuleTest extends RuleTestCase
                 [155, self::message('Yii', 'Target', 'colour')],
             ],
         );
+    }
+
+    public function testStandAsideWhenNativeTypesDoNotProveOneConstantConfiguration(): void
+    {
+        $this->assertDiagnostics('CreateObjectConstantStandAside.php', []);
     }
 
     public function testStandAsideWhenTargetOrAssignmentIsNotProven(): void

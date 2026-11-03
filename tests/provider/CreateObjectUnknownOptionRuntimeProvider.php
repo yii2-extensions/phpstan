@@ -8,6 +8,7 @@ use Closure;
 use Yii;
 use yii\base\{BaseObject, InvalidCallException, UnknownMethodException, UnknownPropertyException};
 use yii\BaseYii;
+use yii2\extensions\phpstan\tests\data\rule\CreateObjectStaticTarget;
 use yii2\extensions\phpstan\tests\support\createobject\{
     AliasTarget,
     ChildTarget,
@@ -18,10 +19,13 @@ use yii2\extensions\phpstan\tests\support\createobject\{
     Factory,
     FactoryTarget,
     InstanceTarget,
+    Options,
     SingletonTarget,
     Target,
     UnresolvedTarget,
 };
+
+use function random_int;
 
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\rules\CreateObjectUnknownOptionRuntimeTest} test cases.
@@ -30,6 +34,11 @@ use yii2\extensions\phpstan\tests\support\createobject\{
  */
 final class CreateObjectUnknownOptionRuntimeProvider
 {
+    /**
+     * Unknown option name read through `self::` by the constant-known cases.
+     */
+    private const string UNKNOWN = 'colour';
+
     /**
      * Calls whose option the rule reports, with the class and option named by the exception.
      *
@@ -111,6 +120,125 @@ final class CreateObjectUnknownOptionRuntimeProvider
         ];
         yield 'named arguments' => [
             static fn(): object => Yii::createObject(params: [], type: ['class' => Target::class, 'colour' => 'named']),
+            Target::class,
+            'colour',
+        ];
+        yield 'other class constant key' => [
+            static fn(): object => Yii::createObject(['class' => Target::class, Options::UNKNOWN => 'value']),
+            Target::class,
+            'colour',
+        ];
+        yield 'self constant key' => [
+            static fn(): object => Yii::createObject(['class' => Target::class, self::UNKNOWN => 'value']),
+            Target::class,
+            'colour',
+        ];
+        yield 'constant class key' => [
+            static fn(): object => Yii::createObject([Options::CLASS_KEY => Target::class, 'colour' => 'value']),
+            Target::class,
+            'colour',
+        ];
+        yield 'constant class value' => [
+            static fn(): object => Yii::createObject(['class' => Options::TARGET, 'colour' => 'value']),
+            Target::class,
+            'colour',
+        ];
+        yield 'local class value' => [
+            static function (): object {
+                $className = Target::class;
+
+                return Yii::createObject(['class' => $className, 'colour' => 'value']);
+            },
+            Target::class,
+            'colour',
+        ];
+        yield 'constant __class value' => [
+            static fn(): object => Yii::createObject(
+                ['class' => ComponentTarget::class, '__class' => Options::TARGET, 'colour' => 'value'],
+            ),
+            Target::class,
+            'colour',
+        ];
+        yield 'leading backslash constant misses the binding' => [
+            static fn(): object => Yii::createObject(
+                ['class' => Options::FACTORY_TARGET_WITH_BACKSLASH, 'colour' => 'value'],
+            ),
+            FactoryTarget::class,
+            'colour',
+        ];
+        yield 'local configuration' => [
+            static function (): object {
+                $config = ['class' => Target::class, 'colour' => 'local'];
+
+                return Yii::createObject($config);
+            },
+            Target::class,
+            'colour',
+        ];
+        yield 'other class constant configuration' => [
+            static fn(): object => Yii::createObject(Options::CONFIG),
+            Target::class,
+            'colour',
+        ];
+        yield 'assigned offset' => [
+            static function (): object {
+                $config = ['class' => Target::class, 'name' => 'public'];
+                $config['colour'] = 'assigned offset';
+
+                return Yii::createObject($config);
+            },
+            Target::class,
+            'colour',
+        ];
+        yield 'unpacked constant configuration' => [
+            static fn(): object => Yii::createObject([...Options::BASE, 'name' => 'unpacked']),
+            Target::class,
+            'colour',
+        ];
+        yield 'later class replaces unpacked class' => [
+            static fn(): object => Yii::createObject([...Options::COMPONENT_CONFIG, 'class' => Target::class]),
+            Target::class,
+            'colour',
+        ];
+        yield 'later unpacking replaces class' => [
+            static fn(): object => Yii::createObject(
+                ['class' => ComponentTarget::class, 'colour' => 'replaced class', ...Options::TARGET_CLASS],
+            ),
+            Target::class,
+            'colour',
+        ];
+        yield 'constant empty params' => [
+            static fn(): object => Yii::createObject(Options::CONFIG, Options::NO_PARAMS),
+            Target::class,
+            'colour',
+        ];
+        yield 'local empty params' => [
+            static function (): object {
+                $params = [];
+
+                return Yii::createObject(Options::CONFIG, $params);
+            },
+            Target::class,
+            'colour',
+        ];
+        yield 'late static class of a final class' => [
+            static fn(): object => CreateObjectStaticTarget::createWithConstantKey(),
+            CreateObjectStaticTarget::class,
+            'colour',
+        ];
+        yield 'numeric string key in a literal configuration' => [
+            static fn(): object => Yii::createObject(['class' => Target::class, '1' => 'numeric string key']),
+            Target::class,
+            '1',
+        ];
+        yield 'union of one shape' => [
+            static function (): object {
+                $config = random_int(0, 1) === 1
+                    ? Options::CONFIG
+                    : ['class' => Target::class, 'colour' => 'same keys, other value'];
+
+                return Yii::createObject($config);
+            },
             Target::class,
             'colour',
         ];
@@ -197,6 +325,36 @@ final class CreateObjectUnknownOptionRuntimeProvider
             static fn(): object => Yii::createObject(['class' => Target::class, 'registry' => 'value']),
             UnknownPropertyException::class,
         ];
+        yield 'late static class of a final class in a literal configuration' => [
+            static fn(): object => CreateObjectStaticTarget::createWithLiteralKeys(),
+            UnknownPropertyException::class,
+        ];
+        yield 'reference capture replaces the constant configuration' => [
+            static function (): object {
+                $config = Options::CONFIG;
+
+                $replace = static function () use (&$config): void {
+                    $config = Options::VALID_CONFIG;
+                };
+
+                $replace();
+
+                return Yii::createObject($config);
+            },
+            Target::class,
+        ];
+        yield 'constant params move the configuration to an ignored argument' => [
+            static fn(): object => Yii::createObject(Options::CONFIG, Options::PARAMS),
+            Target::class,
+        ];
+        yield 'constant __construct() moves the configuration to an ignored argument' => [
+            static fn(): object => Yii::createObject(Options::CONSTRUCTOR_CONFIG),
+            Target::class,
+        ];
+        yield 'constant component configuration' => [
+            static fn(): object => Yii::createObject(Options::COMPONENT_CONFIG),
+            UnknownPropertyException::class,
+        ];
     }
 
     /**
@@ -239,6 +397,28 @@ final class CreateObjectUnknownOptionRuntimeProvider
                 ['__class' => Target::class, 'class' => ComponentTarget::class, 'name' => '__class wins'],
             ),
             Target::class,
+        ];
+        yield 'constant keys and class value' => [
+            static fn(): object => Yii::createObject(
+                [Options::CLASS_KEY => Options::TARGET, Options::VALID => 'public', 'label' => 'setter'],
+            ),
+            Target::class,
+        ];
+        yield 'constant configuration' => [
+            static fn(): object => Yii::createObject(Options::VALID_CONFIG, Options::NO_PARAMS),
+            Target::class,
+        ];
+        yield 'unpacked class replaces class' => [
+            static fn(): object => Yii::createObject(
+                ['class' => Target::class, 'colourCode' => 'child property', ...Options::CHILD_CLASS],
+            ),
+            ChildTarget::class,
+        ];
+        yield 'later class replaces unpacked class' => [
+            static fn(): object => Yii::createObject(
+                [...Options::VALID_CONFIG, 'class' => ChildTarget::class, 'shade' => 'child setter'],
+            ),
+            ChildTarget::class,
         ];
     }
 }

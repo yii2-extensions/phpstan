@@ -24,6 +24,8 @@ final class CreateObjectUnknownOptionDiagnosticProvider
                 [20, 'arguments.count'],
                 [21, 'argument.unknown'],
                 [23, 'variable.undefined'],
+                [24, 'array.duplicateKey'],
+                [29, 'arguments.count'],
             ],
         ];
         yield 'enabled' => [
@@ -37,6 +39,10 @@ final class CreateObjectUnknownOptionDiagnosticProvider
                 [21, 'argument.unknown'],
                 [22, 'yii2.createObject.unknownOption'],
                 [23, 'variable.undefined'],
+                [24, 'array.duplicateKey'],
+                [24, 'yii2.createObject.unknownOption'],
+                [28, 'yii2.createObject.unknownOption'],
+                [29, 'arguments.count'],
             ],
         ];
     }

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\rules;
 
 use PhpParser\Node;
-use PhpParser\Node\{ArrayItem, Expr, Identifier, Name};
 use PhpParser\Node\Expr\{Array_, ClassConstFetch, StaticCall};
+use PhpParser\Node\{Expr, Identifier, Name};
 use PhpParser\Node\Scalar\String_;
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{ClassReflection, ReflectionProvider};
 use PHPStan\Rules\{IdentifierRuleError, Rule, RuleErrorBuilder};
+use PHPStan\Type\Constant\ConstantArrayType;
+use PHPStan\Type\Type;
 use yii\base\BaseObject;
 use yii\BaseYii;
 use yii2\extensions\phpstan\exception\Message;
@@ -21,10 +23,11 @@ use function in_array;
 use function ltrim;
 
 /**
- * Reports literal {@see BaseYii::createObject()} options that Yii can't assign to the created object.
+ * Reports {@see BaseYii::createObject()} options that Yii can't assign to the created object.
  *
- * Applies only to a literal configuration of a class without container binding that inherits the constructor and
- * `__set()` of {@see BaseObject}; any other call is left alone.
+ * Applies only to a configuration whose keys and class are literal or proven by one constant native type, for a class
+ * without container binding that inherits the constructor and `__set()` of {@see BaseObject}; any other call is left
+ * alone. PHPDoc types are not consulted.
  *
  * {@see Rule} for PHPStan rule contract.
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
@@ -65,12 +68,13 @@ final class CreateObjectUnknownOptionRule implements Rule
     }
 
     /**
-     * Returns one error per distinct literal option that the created class can't assign.
+     * Returns one error per distinct option that the created class can't assign.
      *
      * @param StaticCall $node Static call to inspect.
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
-     * @return list<IdentifierRuleError> Errors reported at the line of the first occurrence of each unknown option.
+     * @return list<IdentifierRuleError> Errors reported at the first key of each unknown option, or at the call line
+     * when the configuration doesn't locate the key.
      */
     public function processNode(Node $node, Scope $scope): array
     {
@@ -80,17 +84,21 @@ final class CreateObjectUnknownOptionRule implements Rule
             return [];
         }
 
-        $options = self::literalOptions($node);
+        $type = self::configurationArgument($node, $scope);
 
-        if ($options === null) {
+        if ($type === null) {
             return [];
         }
 
-        $id = self::targetClassId($options, $scope);
+        $configuration = self::isLiteralConfiguration($type)
+            ? self::literalConfiguration($type, $scope)
+            : self::constantConfiguration($type, $node->getStartLine(), $scope);
 
-        if ($id === null) {
+        if ($configuration === null) {
             return [];
         }
+
+        [$id, $options] = $configuration;
 
         $className = ltrim($id, '\\');
 
@@ -112,7 +120,7 @@ final class CreateObjectUnknownOptionRule implements Rule
 
         $errors = [];
 
-        foreach ($options as [$name, $item]) {
+        foreach ($options as [$name, $line]) {
             if (self::isUnknownOption($classReflection, $name)) {
                 $errors[] = RuleErrorBuilder::message(
                     Message::CREATE_OBJECT_UNKNOWN_OPTION->getMessage(
@@ -122,12 +130,136 @@ final class CreateObjectUnknownOptionRule implements Rule
                     ),
                 )
                     ->identifier(self::IDENTIFIER)
-                    ->line($item->getStartLine())
+                    ->line($line)
                     ->build();
             }
         }
 
         return $errors;
+    }
+
+    /**
+     * Returns the class value Yii selects: the `__class` value when the configuration contains that key, else the
+     * `class` value.
+     *
+     * @template T of Expr|Type
+     *
+     * @param list<array{string, int, T}> $options Name, line and effective value of each option.
+     *
+     * @return T|null Selected value, or `null` when no class key is present or `__construct()` supplies constructor
+     * arguments.
+     */
+    private static function classValue(array $options): Expr|Type|null
+    {
+        if (self::optionValue($options, '__construct()') !== null) {
+            return null;
+        }
+
+        return self::optionValue($options, '__class') ?? self::optionValue($options, 'class');
+    }
+
+    /**
+     * Returns the `$type` argument when the arguments are positional or named `type`/`params`, without unpacking, and
+     * `$params` is absent or natively known to be an empty array.
+     */
+    private static function configurationArgument(StaticCall $node, Scope $scope): Expr|null
+    {
+        $arguments = [];
+
+        foreach ($node->getArgs() as $position => $arg) {
+            if ($arg->unpack) {
+                return null;
+            }
+
+            $name = $arg->name === null ? self::PARAMETERS[$position] ?? null : $arg->name->toString();
+
+            if ($name === null || in_array($name, self::PARAMETERS, true) === false || isset($arguments[$name])) {
+                return null;
+            }
+
+            $arguments[$name] = $arg->value;
+        }
+
+        $params = $arguments['params'] ?? null;
+
+        if ($params !== null) {
+            $paramsType = $scope->getNativeType($params);
+
+            if ($paramsType->isArray()->yes() === false || $paramsType->isIterableAtLeastOnce()->no() === false) {
+                return null;
+            }
+        }
+
+        return $arguments['type'] ?? null;
+    }
+
+    /**
+     * Returns the only constant array a native type can hold, without optional keys or an unsealed part.
+     *
+     * A single constant array doesn't prove the value on its own: an intersection can synthesize one for a callable
+     * array, so the array must also contain every value of the type.
+     */
+    private static function constantArray(Type $type): ConstantArrayType|null
+    {
+        $arrays = $type->getConstantArrays();
+
+        if (count($arrays) !== 1) {
+            return null;
+        }
+
+        $array = $arrays[0];
+
+        return $array->isSuperTypeOf($type)->yes()
+            && $array->getOptionalKeys() === []
+            && $array->isUnsealed()->yes() === false
+            ? $array
+            : null;
+    }
+
+    /**
+     * Returns the class ID and options of a configuration whose native type is one constant array with string keys.
+     *
+     * Each option is located at its first key when the configuration is an array literal without unpacking whose keys
+     * all have one constant string value; otherwise every option is located at the call line.
+     *
+     * @return array{string, list<array{string, int}>}|null Class name as written and the name and line of each option,
+     * or `null` when the native type holds more than one array, an optional key, an integer key, or no single class.
+     */
+    private static function constantConfiguration(Expr $type, int $callLine, Scope $scope): array|null
+    {
+        $array = self::constantArray($scope->getNativeType($type));
+
+        if ($array === null) {
+            return null;
+        }
+
+        $lines = self::keyLines($type, $scope);
+        $options = [];
+
+        foreach ($array->getKeyTypes() as $keyType) {
+            $name = self::constantString($keyType);
+
+            if ($name === null) {
+                return null;
+            }
+
+            $options[] = [$name, $lines[$name] ?? $callLine, $array->getOffsetValueType($keyType)];
+        }
+
+        $classType = self::classValue($options);
+        $id = $classType === null ? null : self::constantString($classType);
+
+        return $id === null || $id === '' ? null : [$id, self::optionLines($options)];
+    }
+
+    /**
+     * Returns the value of a native type that holds exactly one constant string.
+     */
+    private static function constantString(Type $type): string|null
+    {
+        $strings = $type->getConstantStrings();
+
+        return count($strings) === 1 && $strings[0]->isSuperTypeOf($type)->yes() ? $strings[0]->getValue() : null;
     }
 
     /**
@@ -137,6 +269,26 @@ final class CreateObjectUnknownOptionRule implements Rule
     {
         return $classReflection->hasNativeMethod($methodName)
             && $classReflection->getNativeMethod($methodName)->getDeclaringClass()->getName() === BaseObject::class;
+    }
+
+    /**
+     * Returns whether the configuration is an array literal without unpacking whose keys are all literal strings.
+     *
+     * @phpstan-assert-if-true Array_ $type
+     */
+    private static function isLiteralConfiguration(Expr $type): bool
+    {
+        if ($type instanceof Array_ === false) {
+            return false;
+        }
+
+        foreach ($type->items as $item) {
+            if ($item->unpack || $item->key instanceof String_ === false) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -167,7 +319,41 @@ final class CreateObjectUnknownOptionRule implements Rule
     }
 
     /**
-     * Returns the literal class name an expression holds, as written for a string and resolved for `::class`.
+     * Returns the first line of each key of an array literal without unpacking, by option name.
+     *
+     * @return array<int|string, int> Line by option name; empty when the expression isn't such a literal or a key
+     * doesn't have one constant string value, so that no option is located at an item it may not come from.
+     */
+    private static function keyLines(Expr $type, Scope $scope): array
+    {
+        if ($type instanceof Array_ === false) {
+            return [];
+        }
+
+        $lines = [];
+
+        foreach ($type->items as $item) {
+            $name = match (true) {
+                $item->key === null => null,
+                $item->key instanceof String_ => $item->key->value,
+                default => self::constantString($scope->getNativeType($item->key)),
+            };
+
+            if ($name === null) {
+                return [];
+            }
+
+            $lines[$name] ??= $item->getStartLine();
+        }
+
+        return $lines;
+    }
+
+    /**
+     * Returns the literal class name an expression holds, as written for a string and resolved for `::class`, or else
+     * the one constant string of its native type.
+     *
+     * A `static::` fetch is refused in both forms, since late static binding selects the class at runtime.
      */
     private static function literalClassName(Expr $expr, Scope $scope): string|null
     {
@@ -175,83 +361,80 @@ final class CreateObjectUnknownOptionRule implements Rule
             return $expr->value === '' ? null : $expr->value;
         }
 
-        if (
-            $expr instanceof ClassConstFetch
-            && $expr->class instanceof Name
-            && $expr->class->toLowerString() !== 'static'
-            && $expr->name instanceof Identifier
-            && $expr->name->toLowerString() === 'class'
-        ) {
-            return $scope->resolveName($expr->class);
+        if ($expr instanceof ClassConstFetch && $expr->class instanceof Name) {
+            if ($expr->class->toLowerString() === 'static') {
+                return null;
+            }
+
+            if ($expr->name instanceof Identifier && $expr->name->toLowerString() === 'class') {
+                return $scope->resolveName($expr->class);
+            }
         }
 
-        return null;
+        $className = self::constantString($scope->getNativeType($expr));
+
+        return $className === '' ? null : $className;
     }
 
     /**
-     * Returns the distinct literal options of the configuration array passed as `$type`, in first-occurrence order, each
-     * with its first item and its last value, as PHP builds the array.
+     * Returns the class ID and the distinct options of an array literal whose keys are all literal strings, in
+     * first-occurrence order, each at the line of its first item, as PHP builds the array.
      *
-     * @return list<array{string, ArrayItem, Expr}>|null Name, first item and effective value of each option, or `null`
-     * when the arguments or the configuration aren't fully literal: unpacking, unknown or repeated named arguments, extra
-     * or non-empty `$params`, or a key that isn't a literal `string`.
+     * @return array{string, list<array{string, int}>}|null Class name as written and the name and line of each option,
+     * or `null` when no class key is present, the selected class value isn't one class name, or `__construct()`
+     * supplies constructor arguments.
      */
-    private static function literalOptions(StaticCall $node): array|null
+    private static function literalConfiguration(Array_ $type, Scope $scope): array|null
     {
-        $arguments = [];
-
-        foreach ($node->getArgs() as $position => $arg) {
-            if ($arg->unpack) {
-                return null;
-            }
-
-            $name = $arg->name === null ? self::PARAMETERS[$position] ?? null : $arg->name->toString();
-
-            if ($name === null || in_array($name, self::PARAMETERS, true) === false || isset($arguments[$name])) {
-                return null;
-            }
-
-            $arguments[$name] = $arg->value;
-        }
-
-        $type = $arguments['type'] ?? null;
-        $params = $arguments['params'] ?? null;
-
-        if (
-            $type instanceof Array_ === false
-            || ($params !== null && ($params instanceof Array_ === false || $params->items !== []))
-        ) {
-            return null;
-        }
-
         $options = [];
         $positions = [];
 
         foreach ($type->items as $item) {
-            if ($item->unpack || $item->key instanceof String_ === false) {
-                return null;
-            }
-
-            $name = $item->key->value;
+            $name = $item->key instanceof String_ ? $item->key->value : '';
             $position = $positions[$name] ?? null;
 
             if ($position !== null && isset($options[$position])) {
                 $options[$position] = [$options[$position][0], $options[$position][1], $item->value];
             } else {
                 $positions[$name] = count($options);
-                $options[] = [$name, $item, $item->value];
+                $options[] = [$name, $item->getStartLine(), $item->value];
             }
         }
 
-        return $options;
+        $classExpr = self::classValue($options);
+        $id = $classExpr === null ? null : self::literalClassName($classExpr, $scope);
+
+        return $id === null ? null : [$id, self::optionLines($options)];
+    }
+
+    /**
+     * Returns the name and line of each option, dropping its value.
+     *
+     * @param list<array{string, int, Expr|Type}> $options Name, line and effective value of each option.
+     *
+     * @return list<array{string, int}>
+     */
+    private static function optionLines(array $options): array
+    {
+        $lines = [];
+
+        foreach ($options as [$name, $line]) {
+            $lines[] = [$name, $line];
+        }
+
+        return $lines;
     }
 
     /**
      * Returns the effective value of an option, or `null` when the configuration doesn't contain it.
      *
-     * @param list<array{string, ArrayItem, Expr}> $options Literal options of the configuration.
+     * @template T of Expr|Type
+     *
+     * @param list<array{string, int, T}> $options Name, line and effective value of each option.
+     *
+     * @return T|null
      */
-    private static function optionValue(array $options, string $name): Expr|null
+    private static function optionValue(array $options, string $name): Expr|Type|null
     {
         foreach ($options as [$optionName, , $value]) {
             if ($optionName === $name) {
@@ -312,25 +495,5 @@ final class CreateObjectUnknownOptionRule implements Rule
             && $classReflection->getNativeMethod('createObject')->getDeclaringClass()->getName() === BaseYii::class
             ? $classReflection->getDisplayName()
             : null;
-    }
-
-    /**
-     * Returns the container ID {@see BaseYii::createObject()} passes to the container: the literal `__class` value when
-     * the key is present, else the literal `class` value.
-     *
-     * @param list<array{string, ArrayItem, Expr}> $options Literal options of the configuration.
-     *
-     * @return string|null Class name as written, or `null` when the selected value isn't a literal class name, no class
-     * key is present, or `__construct()` supplies constructor arguments.
-     */
-    private static function targetClassId(array $options, Scope $scope): string|null
-    {
-        if (self::optionValue($options, '__construct()') !== null) {
-            return null;
-        }
-
-        $selected = self::optionValue($options, '__class') ?? self::optionValue($options, 'class');
-
-        return $selected === null ? null : self::literalClassName($selected, $scope);
     }
 }
