@@ -6,7 +6,7 @@ namespace yii2\extensions\phpstan\rules;
 
 use PhpParser\Node\Expr\{Array_, ClassConstFetch, StaticCall};
 use PhpParser\Node\{Expr, Identifier, Name};
-use PhpParser\Node\Scalar\String_;
+use PhpParser\Node\Scalar\{Int_, String_};
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{ClassReflection, ReflectionProvider};
 use PHPStan\Type\Constant\ConstantArrayType;
@@ -17,6 +17,8 @@ use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
 use function count;
 use function in_array;
+use function is_int;
+use function max;
 
 /**
  * Resolves the class and options of a {@see BaseYii::createObject()} call whose assignment path Yii makes certain.
@@ -25,6 +27,11 @@ use function in_array;
  * definitions that name a class ({@see ServiceMap::getConfiguredClassById()}) and whose options, if any, are all plain
  * public properties of the created class, and a created class that inherits the constructor of {@see BaseObject} and
  * the `__set()` of {@see BaseObject} or {@see Component}.
+ *
+ * Constructor arguments from `$params`, a `__construct()` option and the definitions on the chain are accepted when
+ * their keys, merged as {@see \yii\di\Container::build()} merges them, name at most the one `$config` parameter of
+ * that constructor, by position `0` or by name `config`. Yii then assigns the options of the configuration when there
+ * are any, and otherwise uses that argument as the configuration, which is resolved only when the call supplies it.
  *
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
@@ -35,6 +42,14 @@ final class CreateObjectConfigurationResolver
      */
     public const array RESERVED_OPTIONS = ['__class', 'class'];
 
+    /**
+     * Name of the only parameter of the constructor of {@see BaseObject}.
+     */
+    private const string CONFIG_PARAMETER = 'config';
+    /**
+     * Option whose array {@see \yii\di\Container::build()} passes as constructor arguments instead of assigning it.
+     */
+    private const string CONSTRUCT_OPTION = '__construct()';
     /**
      * Parameters of {@see BaseYii::createObject()} in declaration order.
      */
@@ -52,8 +67,9 @@ final class CreateObjectConfigurationResolver
     ) {}
 
     /**
-     * Returns the configuration of the call when Yii assigns every option to the created class through
-     * `BaseObject::__set()` or `Component::__set()` semantics.
+     * Returns the configuration that Yii assigns to the created class through `BaseObject::__set()` or
+     * `Component::__set()` semantics: the options of the call, or the constructor argument that the call supplies as
+     * configuration when neither the call nor a definition has options.
      *
      * Records the construction dependency of the container ID before deciding, and the declaration dependency of the
      * created class once known, so that the result cache reanalyses the call when a definition on the chain or that
@@ -62,8 +78,8 @@ final class CreateObjectConfigurationResolver
      * @param StaticCall $node Static call to inspect.
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
      *
-     * @return CreateObjectConfiguration|null Resolved configuration, or `null` when the call, the configuration or the
-     * created class isn't proven.
+     * @return CreateObjectConfiguration|null Resolved configuration, or `null` when the call, the configuration, the
+     * constructor arguments or the created class isn't proven, or a definition supplies the configuration.
      */
     public function resolve(StaticCall $node, Scope $scope): CreateObjectConfiguration|null
     {
@@ -73,21 +89,48 @@ final class CreateObjectConfigurationResolver
             return null;
         }
 
-        $type = self::configurationArgument($node, $scope);
+        $arguments = self::callArguments($node);
 
-        if ($type === null) {
+        if ($arguments === null) {
             return null;
         }
 
+        [$type, $params] = $arguments;
+
+        $callParams = $params === null ? null : self::constantArray($scope->getNativeType($params));
+
+        if ($params !== null && $callParams === null) {
+            return null;
+        }
+
+        $line = $node->getStartLine();
+
         $configuration = self::isLiteralConfiguration($type)
             ? self::literalConfiguration($type, $scope)
-            : self::constantConfiguration($type, $node->getStartLine(), $scope);
+            : self::constantConfiguration($type, $line, $scope)
+                ?? self::classNameConfiguration($type, $callParams, $scope);
 
         if ($configuration === null) {
             return null;
         }
 
         [$id, $options] = $configuration;
+
+        $construct = self::optionValue($options, self::CONSTRUCT_OPTION);
+
+        $callConstruct = null;
+
+        if ($construct !== null) {
+            $callConstruct = self::constantArray(
+                $construct instanceof Expr ? $scope->getNativeType($construct) : $construct,
+            );
+
+            if ($callConstruct === null) {
+                return null;
+            }
+
+            $options = self::withoutOption($options, self::CONSTRUCT_OPTION);
+        }
 
         $scope->trackValueDependency(
             ServiceMapResultCacheValueExtension::class,
@@ -108,40 +151,144 @@ final class CreateObjectConfigurationResolver
             return null;
         }
 
-        foreach ($this->serviceMap->getDefinitionOptionNamesById($id) as $name) {
+        $definitionOptions = $this->serviceMap->getDefinitionOptionNamesById($id);
+
+        foreach ($definitionOptions as $name) {
             if (self::isPlainPublicProperty($classReflection, $name) === false) {
                 return null;
             }
         }
 
-        return new CreateObjectConfiguration($calledClass, $classReflection, $options);
-    }
+        $constructKeys = $callConstruct === null
+            ? $this->serviceMap->getDefinitionConstructKeysById($id) ?? []
+            : self::keys($callConstruct);
+        $definitionParamKeys = $this->serviceMap->getDefinitionParamKeysById($id);
+        $callParamKeys = $callParams === null ? [] : self::keys($callParams);
 
-    /**
-     * Returns the class value Yii selects: the `__class` value when the configuration contains that key, else the
-     * `class` value.
-     *
-     * @template T of Expr|Type
-     *
-     * @param list<array{string, int, T}> $options Name, line and effective value of each option.
-     *
-     * @return T|null Selected value, or `null` when no class key is present or `__construct()` supplies constructor
-     * arguments.
-     */
-    private static function classValue(array $options): Expr|Type|null
-    {
-        if (self::optionValue($options, '__construct()') !== null) {
+        $argumentKeys = [...$constructKeys, ...$definitionParamKeys, ...$callParamKeys];
+
+        if (self::isConfigArgumentOnly($argumentKeys) === false) {
             return null;
         }
 
-        return self::optionValue($options, '__class') ?? self::optionValue($options, 'class');
+        if ($argumentKeys === [] || $definitionOptions !== [] || self::hasAssignedOptions($options)) {
+            return new CreateObjectConfiguration($calledClass, $classReflection, $options);
+        }
+
+        $key = $argumentKeys[0];
+
+        [$argument, $argumentExpr] = match (true) {
+            in_array($key, $callParamKeys, true) => [$callParams, $params],
+            in_array($key, $definitionParamKeys, true) => [null, null],
+            $callConstruct !== null => [$callConstruct, $construct instanceof Expr ? $construct : null],
+            default => [null, null],
+        };
+
+        $argumentOptions = $argument === null
+            ? null
+            : self::argumentConfiguration($argument, $key, $argumentExpr, $line, $scope);
+
+        return $argumentOptions === null
+            ? null
+            : new CreateObjectConfiguration($calledClass, $classReflection, $argumentOptions);
     }
 
     /**
-     * Returns the `$type` argument when the arguments are positional or named `type`/`params`, without unpacking, and
-     * `$params` is absent or natively known to be an empty array.
+     * Returns the options of the constructor argument that Yii passes as the configuration of the object, located at
+     * their keys when the argument is an array literal item of the literal arguments, otherwise at the call line.
+     *
+     * {@see BaseYii::configure()} assigns every key of that argument, `class` and `__class` included.
+     *
+     * @param ConstantArrayType $arguments Constructor arguments that hold the configuration.
+     * @param int|string $key Key of the argument: `0` or `config`.
+     * @param Expr|null $argumentsExpr Expression of the arguments, if written in the call.
+     *
+     * @return list<array{string, int, Type}>|null Name, line and value type of each option, or `null` when the
+     * argument isn't one constant array with string keys.
      */
-    private static function configurationArgument(StaticCall $node, Scope $scope): Expr|null
+    private static function argumentConfiguration(
+        ConstantArrayType $arguments,
+        int|string $key,
+        Expr|null $argumentsExpr,
+        int $callLine,
+        Scope $scope,
+    ): array|null {
+        $argument = null;
+
+        foreach ($arguments->getKeyTypes() as $keyType) {
+            if ($keyType->getValue() === $key) {
+                $argument = self::constantArray($arguments->getOffsetValueType($keyType));
+            }
+        }
+
+        if ($argument === null) {
+            return null;
+        }
+
+        $argumentExpr = self::argumentExpr($argumentsExpr, $key);
+        $lines = $argumentExpr === null ? [] : self::keyLines($argumentExpr, $scope);
+        $options = [];
+
+        foreach ($argument->getKeyTypes() as $keyType) {
+            $name = self::constantString($keyType);
+
+            if ($name === null) {
+                return null;
+            }
+
+            $options[] = [$name, $lines[$name] ?? $callLine, $argument->getOffsetValueType($keyType)];
+        }
+
+        return $options;
+    }
+
+    /**
+     * Returns the value expression of the item of an array literal without unpacking that PHP stores under the key,
+     * keeping the last of duplicated keys, or `null` when the item can't be located.
+     */
+    private static function argumentExpr(Expr|null $arguments, int|string $key): Expr|null
+    {
+        if ($arguments instanceof Array_ === false) {
+            return null;
+        }
+
+        $found = null;
+        $next = 0;
+
+        foreach ($arguments->items as $item) {
+            $itemKey = match (true) {
+                $item->unpack => null,
+                $item->key === null => $next,
+                $item->key instanceof Int_ => $item->key->value,
+                $item->key instanceof String_ => (string) (int) $item->key->value === $item->key->value
+                    ? (int) $item->key->value
+                    : $item->key->value,
+                default => null,
+            };
+
+            if ($itemKey === null) {
+                return null;
+            }
+
+            if (is_int($itemKey)) {
+                $next = max($next, $itemKey + 1);
+            }
+
+            if ($itemKey === $key) {
+                $found = $item->value;
+            }
+        }
+
+        return $found;
+    }
+
+    /**
+     * Returns the `$type` and `$params` arguments when the arguments are positional or named `type`/`params`, without
+     * unpacking.
+     *
+     * @return array{Expr, Expr|null}|null Configuration and params expressions, or `null` without a `$type` argument.
+     */
+    private static function callArguments(StaticCall $node): array|null
     {
         $arguments = [];
 
@@ -159,17 +306,44 @@ final class CreateObjectConfigurationResolver
             $arguments[$name] = $arg->value;
         }
 
-        $params = $arguments['params'] ?? null;
+        $type = $arguments['type'] ?? null;
 
-        if ($params !== null) {
-            $paramsType = $scope->getNativeType($params);
+        return $type === null ? null : [$type, $arguments['params'] ?? null];
+    }
 
-            if ($paramsType->isArray()->yes() === false || $paramsType->isIterableAtLeastOnce()->no() === false) {
-                return null;
-            }
+    /**
+     * Returns the class ID of a `$type` argument that is one class name, with no options, when `$params` supplies
+     * constructor arguments; without them the call has no option to analyse.
+     *
+     * @return array{string, list<array{string, int, Expr|Type}>}|null
+     */
+    private static function classNameConfiguration(
+        Expr $type,
+        ConstantArrayType|null $callParams,
+        Scope $scope,
+    ): array|null {
+        if ($callParams === null || $callParams->getKeyTypes() === []) {
+            return null;
         }
 
-        return $arguments['type'] ?? null;
+        $id = self::literalClassName($type, $scope);
+
+        return $id === null ? null : [$id, []];
+    }
+
+    /**
+     * Returns the class value Yii selects: the `__class` value when the configuration contains that key, else the
+     * `class` value.
+     *
+     * @template T of Expr|Type
+     *
+     * @param list<array{string, int, T}> $options Name, line and effective value of each option.
+     *
+     * @return T|null Selected value, or `null` when no class key is present.
+     */
+    private static function classValue(array $options): Expr|Type|null
+    {
+        return self::optionValue($options, '__class') ?? self::optionValue($options, 'class');
     }
 
     /**
@@ -240,6 +414,42 @@ final class CreateObjectConfigurationResolver
         $strings = $type->getConstantStrings();
 
         return count($strings) === 1 && $strings[0]->isSuperTypeOf($type)->yes() ? $strings[0]->getValue() : null;
+    }
+
+    /**
+     * Returns whether the configuration keeps an option after {@see BaseYii::createObject()} removes its class keys.
+     *
+     * @param list<array{string, int, Expr|Type}> $options Name, line and effective value of each option.
+     */
+    private static function hasAssignedOptions(array $options): bool
+    {
+        foreach ($options as [$name]) {
+            if (in_array($name, self::RESERVED_OPTIONS, true) === false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Returns whether constructor argument keys, merged by {@see \yii\di\Container::build()}, address only the
+     * `$config` parameter of the {@see BaseObject} constructor: all `0` or all `config`.
+     *
+     * Mixed integer and string keys make Yii throw, and any other key adds a constructor argument after `$config`, so
+     * that Yii passes the configuration as that argument instead.
+     *
+     * @param list<int|string> $keys Keys of every source of constructor arguments.
+     */
+    private static function isConfigArgumentOnly(array $keys): bool
+    {
+        foreach ($keys as $key) {
+            if ($key !== 0 && $key !== self::CONFIG_PARAMETER) {
+                return false;
+            }
+        }
+
+        return in_array(0, $keys, true) === false || in_array(self::CONFIG_PARAMETER, $keys, true) === false;
     }
 
     /**
@@ -335,6 +545,22 @@ final class CreateObjectConfigurationResolver
     }
 
     /**
+     * Returns the keys of a constant array in order.
+     *
+     * @return list<int|string>
+     */
+    private static function keys(ConstantArrayType $array): array
+    {
+        $keys = [];
+
+        foreach ($array->getKeyTypes() as $keyType) {
+            $keys[] = $keyType->getValue();
+        }
+
+        return $keys;
+    }
+
+    /**
      * Returns the literal class name an expression holds, as written for a string and resolved for `::class`, or else
      * the one constant string of its native type.
      *
@@ -367,8 +593,8 @@ final class CreateObjectConfigurationResolver
      * array.
      *
      * @return array{string, list<array{string, int, Expr}>}|null Class name as written and the name, line and value
-     * expression of each option, or `null` when no class key is present, the selected class value isn't one class
-     * name, or `__construct()` supplies constructor arguments.
+     * expression of each option, or `null` when no class key is present or the selected class value isn't one class
+     * name.
      */
     private static function literalConfiguration(Array_ $type, Scope $scope): array|null
     {
@@ -463,5 +689,27 @@ final class CreateObjectConfigurationResolver
             && $classReflection->getNativeMethod('createObject')->getDeclaringClass()->getName() === BaseYii::class
             ? $classReflection->getDisplayName()
             : null;
+    }
+
+    /**
+     * Returns the options without the given one.
+     *
+     * @template T of Expr|Type
+     *
+     * @param list<array{string, int, T}> $options Name, line and effective value of each option.
+     *
+     * @return list<array{string, int, T}>
+     */
+    private static function withoutOption(array $options, string $name): array
+    {
+        $kept = [];
+
+        foreach ($options as $option) {
+            if ($option[0] !== $name) {
+                $kept[] = $option;
+            }
+        }
+
+        return $kept;
     }
 }

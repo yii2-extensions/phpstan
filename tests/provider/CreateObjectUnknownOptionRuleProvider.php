@@ -9,6 +9,7 @@ use RuntimeException;
 use yii2\extensions\phpstan\tests\data\rule\{
     CreateObjectComponentOption,
     CreateObjectConstantUnknownOption,
+    CreateObjectConstructorArgument,
     CreateObjectContainerBinding,
     CreateObjectStaticTarget,
     CreateObjectUnknownOption,
@@ -405,6 +406,305 @@ final class CreateObjectUnknownOptionRuleProvider
                     ],
                 ],
             ],
+            CreateObjectConstructorArgument::class => [
+                'aliasToDefinitionParams' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'aliasToDefinitionParamsReplaced' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'classIdDefinitionParams' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'ArgumentsTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'classIdDefinitionParamsReplaced' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'ArgumentsTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'componentParams' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'ComponentMembersTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'constantParams' => [
+                    [
+                        null,
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'construct' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'constructEmptyWithOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'constructIgnoredForOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'constructLegacyClass' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'constructNamed' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionConstructReplaced' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionConstructReplacedByParams' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionConstructTwoReplaced' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionConstructWithOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionNamedParamsReplaced' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionParamsReplaced' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionParamsWithOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'namedCallArguments' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsAndConstructNamed' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsBeforeConstruct' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsClassKeys' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsConstructKey' => [
+                    [
+                        "'__construct()'",
+                        self::message(
+                            'Target',
+                            '__construct()',
+                        ),
+                    ],
+                ],
+                'paramsDuplicateArgument' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsIgnoredForOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsLegacyClass' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsNamed' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsNamedIgnoredForOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsPositional' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsScalarIgnoredForOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsStringZeroKey' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsWithClassConfiguration' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'variableClassName' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+            ],
             CreateObjectContainerBinding::class => [
                 'arrayClassDefinition' => [
                     [
@@ -479,6 +779,15 @@ final class CreateObjectUnknownOptionRuleProvider
                     ],
                 ],
                 'definitionOptionsOnChain' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionOptionsWithParams' => [
                     [
                         "'colour'",
                         self::message(

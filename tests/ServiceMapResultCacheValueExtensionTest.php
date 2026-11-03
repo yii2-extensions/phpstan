@@ -121,6 +121,56 @@ final class ServiceMapResultCacheValueExtensionTest extends PHPStanTestCase
         );
     }
 
+    public function testGetValueDistinguishesConstructorArgumentKeys(): void
+    {
+        $extension = self::createExtension('construction-states');
+
+        $value = static fn(string $id): string => $extension->getValue(
+            ServiceMapResultCacheValueExtension::constructionKey($id),
+        );
+
+        self::assertStringStartsWith(
+            'SplStack ',
+            $value('params'),
+            'Param keys must follow the class after a space.',
+        );
+        self::assertNotSame(
+            $value('alias'),
+            $value('params'),
+            'Params must change the value of a class-only chain.',
+        );
+        self::assertSame(
+            $value('params'),
+            $value('paramsOtherValue'),
+            'Param values must not change the value.',
+        );
+        self::assertNotSame(
+            $value('params'),
+            $value('paramsTwo'),
+            'Another set of param keys must map to another value.',
+        );
+        self::assertNotSame(
+            $value('params'),
+            $value('construct'),
+            'Params and `__construct()` with the same keys must map to distinct values.',
+        );
+        self::assertSame(
+            $value('construct'),
+            $value('constructOtherValue'),
+            '`__construct()` values must not change the value.',
+        );
+        self::assertNotSame(
+            $value('construct'),
+            $value('constructNamed'),
+            'Positional and named `__construct()` keys must map to distinct values.',
+        );
+        self::assertNotSame(
+            $value('options'),
+            $value('optionsWithParams'),
+            'Params must change the value of a chain with options.',
+        );
+    }
+
     public function testGetValueDistinguishesParamsShapesWithSameDescription(): void
     {
         $joined = new ServiceMap(self::BASE_PATH . 'params-keys-joined.php');

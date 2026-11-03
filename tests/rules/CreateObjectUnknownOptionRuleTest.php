@@ -10,9 +10,14 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use yii\base\UnknownPropertyException;
 use yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\data\rule\{CreateObjectComponentOption, CreateObjectContainerBinding};
+use yii2\extensions\phpstan\tests\data\rule\{
+    CreateObjectComponentOption,
+    CreateObjectConstructorArgument,
+    CreateObjectContainerBinding,
+};
 use yii2\extensions\phpstan\tests\provider\{
     CreateObjectComponentOptionRuntimeProvider,
+    CreateObjectConstructorArgumentRuntimeProvider,
     CreateObjectContainerBindingRuntimeProvider,
     CreateObjectUnknownOptionRuleProvider,
 };
@@ -120,6 +125,38 @@ final class CreateObjectUnknownOptionRuleTest extends RuleTestCase
                 "unknown property {$class}::\$",
                 $error->getMessage(),
                 sprintf('Diagnostic of `%s()` must name the class Yii reports.', $method),
+            );
+        }
+    }
+
+    public function testReportConstructorArgumentOptionsOnlyForCallsThatThrowUnknownPropertyException(): void
+    {
+        $errors = $this->fixtureErrors(dirname(__DIR__) . '/data/rule/CreateObjectConstructorArgument.php');
+
+        self::assertNotSame(
+            [],
+            $errors,
+            'Fixture must produce diagnostics.',
+        );
+
+        foreach ($errors as $error) {
+            $method = FixtureMethod::at(CreateObjectConstructorArgument::class, $error->getLine());
+
+            [$outcome, $message] = CreateObjectConstructorArgumentRuntimeProvider::outcome($method);
+
+            self::assertSame(
+                UnknownPropertyException::class,
+                $outcome,
+                sprintf('Runtime outcome of `%s()` must be an unknown property.', $method),
+            );
+
+            $prefix = strlen(self::RUNTIME_PREFIX);
+            $class = substr($message, $prefix, (int) strrpos($message, '::') - $prefix);
+
+            self::assertStringContainsString(
+                "unknown property {$class}::\$",
+                $error->getMessage(),
+                sprintf('Diagnostic of `%s()` must name the class Yii builds.', $method),
             );
         }
     }

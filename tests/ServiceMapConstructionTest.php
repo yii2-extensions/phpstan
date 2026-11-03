@@ -80,4 +80,34 @@ final class ServiceMapConstructionTest extends TestCase
             'Option names must follow the merge order of the chain.',
         );
     }
+
+    /**
+     * @phpstan-param list<int|string> $paramKeys
+     * @phpstan-param list<int|string>|null $constructKeys
+     */
+    #[DataProviderExternal(ServiceMapConstructionProvider::class, 'constructorArgumentProvider')]
+    public function testReturnTheConstructorArgumentKeysTheDefinitionsPass(
+        string $id,
+        string|null $expected,
+        array $paramKeys,
+        array|null $constructKeys,
+    ): void {
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'construction-config.php');
+
+        self::assertSame(
+            $expected,
+            $serviceMap->getConfiguredClassById($id),
+            'Configured class must match the container chain.',
+        );
+        self::assertSame(
+            $paramKeys,
+            $serviceMap->getDefinitionParamKeysById($id),
+            'Param keys must merge every hop, nearest first.',
+        );
+        self::assertSame(
+            $constructKeys,
+            $serviceMap->getDefinitionConstructKeysById($id),
+            'Keys of the nearest `__construct()` option must win.',
+        );
+    }
 }

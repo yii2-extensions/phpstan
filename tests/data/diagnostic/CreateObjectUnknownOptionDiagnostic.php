@@ -174,4 +174,59 @@ final class CreateObjectUnknownOptionDiagnostic
             ]
         );
     }
+
+    public function createWithConstructOption(): void
+    {
+        Yii::createObject(
+            [
+                'class' => TypedTarget::class,
+                '__construct()' => [
+                    [
+                        'count' => 'abc',
+                    ],
+                ],
+            ],
+        );
+    }
+
+    public function createWithDuplicateArgumentKey(): void
+    {
+        Yii::createObject(
+            Target::class,
+            [
+                [
+                    'colour' => 'red',
+                    'colour' => 'blue',
+                ],
+            ],
+        );
+    }
+
+    public function createWithExtraArgument(): void
+    {
+        Yii::createObject(
+            Target::class,
+            [
+                ['colour' => 'red'],
+            ],
+            'extra',
+        );
+    }
+
+    public function createWithParamsNotArray(): void
+    {
+        Yii::createObject(
+            Target::class,
+            'params',
+        );
+    }
+
+    public function createWithUnknownNamedArgument(): void
+    {
+        Yii::createObject(
+            params: [['colour' => 'red']],
+            type: Target::class,
+            extra: true,
+        );
+    }
 }

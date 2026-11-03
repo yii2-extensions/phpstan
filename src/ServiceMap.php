@@ -97,10 +97,10 @@ final class ServiceMap
     private array $componentsWithoutClass = [];
     /**
      * Class each container ID names, as written, with the names of the options its definition merges into the
-     * configuration it receives, when the definition names a class without constructor params; `null` for any other
-     * definition and for every singleton.
+     * configuration it receives, the keys of its constructor params and the keys of its `__construct()` option, or
+     * `null` when it has none; `null` for any other definition and for every singleton.
      *
-     * @phpstan-var array<string, array{string, list<string>}|null>
+     * @phpstan-var array<string, array{string, list<string>, list<int|string>, list<int|string>|null}|null>
      */
     private array $constructionTargets = [];
     /**
@@ -251,9 +251,11 @@ final class ServiceMap
      *
      * Follows the chain of {@see getConstructedClassById()} and also definitions with options: an array with a `class`
      * or `__class` key and other string keys, or, under an ID that contains a backslash, an array without either key,
-     * which Yii builds as the ID itself. {@see getDefinitionOptionNamesById()} lists the merged option names. The chain
-     * still ends without a class at a singleton, a factory, an object, constructor params, a `__construct()` option, an
-     * integer key, both class keys together and a cycle.
+     * which Yii builds as the ID itself, optionally with constructor params or an array `__construct()` option.
+     * {@see getDefinitionOptionNamesById()}, {@see getDefinitionParamKeysById()} and
+     * {@see getDefinitionConstructKeysById()} describe what the chain merges. The chain still ends without a class at a
+     * singleton, a factory, an object, a `__construct()` option that isn't an array, an integer key, both class keys
+     * together and a cycle.
      *
      * @param string $id Container ID or class name as written in the configuration.
      *
@@ -273,8 +275,9 @@ final class ServiceMap
      * {@see Instance} reference, or an array holding only `class` or `__class`, with no constructor params, is
      * followed to that class, which may be another container ID. IDs are compared as written, as Yii does, so
      * `'\app\Feed'` doesn't follow a definition of `app\Feed`. The chain ends without a class at a singleton, a
-     * factory, an object, a definition with options or constructor params, and a cycle: Yii then returns an existing
-     * instance, lets other code apply the configuration, merges it with other values, or never returns.
+     * factory, an object, a definition with options, constructor params or a `__construct()` option, and a cycle: Yii
+     * then returns an existing instance, lets other code apply the configuration, merges it with other values, or
+     * never returns.
      *
      * @param string $id Container ID or class name as written in the configuration.
      *
@@ -285,7 +288,27 @@ final class ServiceMap
     {
         $construction = $this->followConstruction($id);
 
-        return $construction !== null && $construction[1] === [] ? $construction[0] : null;
+        return $construction !== null && $construction[1] === [] && $construction[2] === [] && $construction[3] === null
+            ? $construction[0]
+            : null;
+    }
+
+    /**
+     * Returns the keys of the `__construct()` option that {@see \yii\di\Container::build()} receives from the
+     * definitions on the chain of {@see getConfiguredClassById()}.
+     *
+     * {@see \yii\di\Container::get()} merges the definitions with `array_merge()`, so the `__construct()` option of the
+     * definition nearest to the requested ID replaces those of later definitions, and one in the configuration passed
+     * to it replaces them all.
+     *
+     * @param string $id Container ID or class name as written in the configuration.
+     *
+     * @return list<int|string>|null Keys of the nearest `__construct()` option, or `null` when no definition on the
+     * chain has one or the chain doesn't prove a class.
+     */
+    public function getDefinitionConstructKeysById(string $id): array|null
+    {
+        return $this->followConstruction($id)[3] ?? null;
     }
 
     /**
@@ -304,6 +327,23 @@ final class ServiceMap
     public function getDefinitionOptionNamesById(string $id): array
     {
         return $this->followConstruction($id)[1] ?? [];
+    }
+
+    /**
+     * Returns the keys of the constructor params that the `[definition, params]` entries on the chain of
+     * {@see getConfiguredClassById()} pass to {@see \yii\di\Container::build()}.
+     *
+     * {@see \yii\di\Container::mergeParams()} merges the params of each definition by key, so the result holds the
+     * keys of every definition on the chain, in the order of the definition nearest to the requested ID first.
+     *
+     * @param string $id Container ID or class name as written in the configuration.
+     *
+     * @return list<int|string> Param keys, or an empty list when no definition on the chain has params or the chain
+     * doesn't prove a class.
+     */
+    public function getDefinitionParamKeysById(string $id): array
+    {
+        return $this->followConstruction($id)[2] ?? [];
     }
 
     /**
@@ -387,18 +427,22 @@ final class ServiceMap
 
     /**
      * Follows the construction targets of a container ID to the class Yii builds, merging the option names of every
-     * definition on the chain in the order {@see \yii\di\Container::get()} assigns them.
+     * definition on the chain in the order {@see \yii\di\Container::get()} assigns them, the keys of their constructor
+     * params, and the keys of the nearest `__construct()` option.
      *
      * Stops at an ID without an entry or whose target is itself, which Yii builds.
      *
      * @param string $id Container ID or class name as written in the configuration.
      *
-     * @return array{string, list<string>}|null Class name without a leading backslash and merged option names, or
-     * `null` at an opaque entry, a revisited ID or an empty class name.
+     * @return array{string, list<string>, list<int|string>, list<int|string>|null}|null Class name without a leading
+     * backslash, merged option names, merged param keys and nearest `__construct()` keys, or `null` at an opaque entry,
+     * a revisited ID or an empty class name.
      */
     private function followConstruction(string $id): array|null
     {
         $options = [];
+        $paramKeys = [];
+        $constructKeys = null;
         $visited = [];
 
         while (array_key_exists($id, $this->constructionTargets)) {
@@ -408,9 +452,17 @@ final class ServiceMap
                 return null;
             }
 
-            [$target, $definitionOptions] = $construction;
+            [$target, $definitionOptions, $definitionParamKeys, $definitionConstructKeys] = $construction;
 
             $options = [...$definitionOptions, ...array_values(array_diff($options, $definitionOptions))];
+
+            $constructKeys ??= $definitionConstructKeys;
+
+            foreach ($definitionParamKeys as $key) {
+                if (in_array($key, $paramKeys, true) === false) {
+                    $paramKeys[] = $key;
+                }
+            }
 
             if ($target === $id) {
                 break;
@@ -426,7 +478,7 @@ final class ServiceMap
 
         $class = ltrim($id, '\\');
 
-        return $class === '' ? null : [$class, $options];
+        return $class === '' ? null : [$class, $options, $paramKeys, $constructKeys];
     }
 
     /**
@@ -634,8 +686,8 @@ final class ServiceMap
      * skipped, and recorded as unresolved unless the definition is empty, since Yii then uses the ID itself as the
      * class. Services defined by an object other than an {@see Instance} reference are recorded as such, since Yii
      * returns the object, or calls it, instead of resolving a class through the container. The construction target of
-     * every ID and the option names of its definition are recorded separately, as written, for
-     * {@see getConstructedClassById()}, {@see getConfiguredClassById()} and {@see getDefinitionOptionNamesById()}.
+     * every ID, the option names of its definition and the keys of its constructor arguments are recorded separately,
+     * as written, for {@see getConstructedClassById()}, {@see getConfiguredClassById()} and the definition queries.
      *
      * @param array $services Service definitions indexed by service ID.
      * @param string $label Label used in error messages to identify the subsection (`'Definition'` or `'Singleton'`).
@@ -724,30 +776,35 @@ final class ServiceMap
      * {@see \yii\di\Container::get()} receives.
      *
      * Mirrors {@see \yii\di\Container::setDefinitions()} and {@see \yii\di\Container::normalizeDefinition()}: a
-     * `[definition, params]` pair qualifies only with empty params, `null` and `[]` name the ID itself, a string or an
+     * `[definition, params]` pair records the keys of its params, `null` and `[]` name the ID itself, a string or an
      * {@see Instance} ID names the class as written, and an array names its `class` key, else its `__class` key, else
-     * the ID when it contains a backslash, with its other keys as options. `'0'` is refused, since Yii treats it as
-     * empty, and so are arrays with both class keys, a class key that doesn't hold a non-empty string, an integer key
-     * or a `__construct()` key, which Yii passes to the constructor instead of assigning it.
+     * the ID when it contains a backslash, with its other keys as options, except `__construct()`, whose keys are
+     * recorded as the constructor arguments Yii passes from it. `'0'` is refused, since Yii treats it as empty, and so
+     * are arrays with both class keys, a class key that doesn't hold a non-empty string, an integer key or a
+     * `__construct()` key that doesn't hold an array.
      *
      * @param string $id Service ID.
      * @param mixed $definition Service definition as configured, before {@see unwrapServiceDefinition()}.
      *
-     * @return array{string, list<string>}|null Class name as written and option names in definition order, or `null`
-     * for a factory, an object, constructor params and any other definition.
+     * @return array{string, list<string>, list<int|string>, list<int|string>|null}|null Class name as written, option
+     * names in definition order, param keys and `__construct()` keys (`null` without that option), or `null` for a
+     * factory, an object and any other definition.
      */
     private static function resolveConstructionTarget(string $id, mixed $definition): array|null
     {
-        if (is_array($definition) && array_is_list($definition) && count($definition) === 2 && is_array($definition[1])) {
-            if ($definition[1] !== []) {
-                return null;
-            }
+        $paramKeys = [];
 
+        if (
+            is_array($definition)
+            && array_is_list($definition)
+            && count($definition) === 2 && is_array($definition[1])
+        ) {
+            $paramKeys = array_keys($definition[1]);
             $definition = $definition[0];
         }
 
         if ($definition === null || $definition === []) {
-            return [$id, []];
+            return [$id, [], $paramKeys, null];
         }
 
         if ($definition instanceof Instance) {
@@ -778,17 +835,29 @@ final class ServiceMap
             return null;
         }
 
+        $constructKeys = null;
+
+        if (array_key_exists('__construct()', $definition)) {
+            if (is_array($definition['__construct()']) === false) {
+                return null;
+            }
+
+            $constructKeys = array_keys($definition['__construct()']);
+
+            unset($definition['__construct()']);
+        }
+
         $options = [];
 
         foreach (array_keys($definition) as $name) {
-            if (is_string($name) === false || $name === '__construct()') {
+            if (is_string($name) === false) {
                 return null;
             }
 
             $options[] = $name;
         }
 
-        return [$class, $options];
+        return [$class, $options, $paramKeys, $constructKeys];
     }
 
     /**
@@ -851,7 +920,11 @@ final class ServiceMap
     {
         $returnType = $factory->getReturnType();
 
-        if ($returnType instanceof ReflectionNamedType === false || $returnType->isBuiltin() || $returnType->allowsNull()) {
+        if (
+            $returnType instanceof ReflectionNamedType === false
+            || $returnType->isBuiltin()
+            || $returnType->allowsNull()
+        ) {
             return null;
         }
 
