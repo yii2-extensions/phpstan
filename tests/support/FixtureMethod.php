@@ -79,6 +79,33 @@ final class FixtureMethod
     }
 
     /**
+     * Returns the first line of a fixture method that contains the given text, such as an argument that PHPStan reports
+     * at its own line, whether the call is written on one line or several.
+     *
+     * @phpstan-param class-string $fixture
+     */
+    public static function lineContaining(string $fixture, string $method, string $text): int
+    {
+        $reflection = new ReflectionMethod($fixture, $method);
+
+        $fileName = $reflection->getFileName();
+
+        $lines = $fileName === false ? false : file($fileName);
+
+        if ($lines !== false) {
+            for ($line = (int) $reflection->getStartLine(); $line <= (int) $reflection->getEndLine(); $line++) {
+                if (str_contains($lines[$line - 1] ?? '', $text)) {
+                    return $line;
+                }
+            }
+        }
+
+        throw new RuntimeException(
+            sprintf('Method "%s::%s()" has no line containing `%s`.', $fixture, $method, $text),
+        );
+    }
+
+    /**
      * Returns the public methods that the fixture declares itself.
      *
      * @phpstan-param class-string $fixture

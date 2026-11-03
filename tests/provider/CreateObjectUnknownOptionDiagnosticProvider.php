@@ -128,8 +128,8 @@ final class CreateObjectUnknownOptionDiagnosticProvider
             [$duplicate, 'array.duplicateKey'],
             ...($unknownOption ? [[$duplicate, 'yii2.createObject.unknownOption']] : []),
             [FixtureMethod::line($fixture, 'createWithExtraArgument'), 'arguments.count'],
-            [FixtureMethod::line($fixture, 'createWithParamsNotArray'), 'argument.type'],
-            [FixtureMethod::line($fixture, 'createWithUnknownNamedArgument'), 'argument.unknown'],
+            [FixtureMethod::lineContaining($fixture, 'createWithParamsNotArray', "'params'"), 'argument.type'],
+            [FixtureMethod::lineContaining($fixture, 'createWithUnknownNamedArgument', 'extra:'), 'argument.unknown'],
         ];
     }
 }
