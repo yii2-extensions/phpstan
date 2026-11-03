@@ -136,7 +136,7 @@ final class CreateObjectUnknownOptionDiagnostic
         Yii::createObject(
             [
                 'class' => Options::COMPONENT,
-                'colour' => 'red'
+                'colour' => 'red',
             ]
         );
         Yii::createObject(
