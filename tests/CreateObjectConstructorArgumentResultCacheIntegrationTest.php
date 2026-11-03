@@ -14,7 +14,6 @@ use function array_diff;
 use function array_values;
 use function dirname;
 use function implode;
-use function str_contains;
 use function time;
 
 use const DIRECTORY_SEPARATOR;
@@ -92,8 +91,8 @@ final class CreateObjectConstructorArgumentResultCacheIntegrationTest extends Te
 
                 $members = $changedMembers === '' ? '}' : "\n{$changedMembers}}";
 
-                self::assertTrue(
-                    str_contains($this->readFile('project/src/Target.php'), "public string \$name = '';\n{$members}"),
+                self::assertStringContainsString(
+                    "public string \$name = '';\n{$members}", $this->readFile('project/src/Target.php'),
                     'Target must hold exactly the changed members.',
                 );
             },
