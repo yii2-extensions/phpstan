@@ -12,7 +12,6 @@ use yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule;
 use yii2\extensions\phpstan\tests\provider\CreateObjectInvalidOptionTypeRuntimeProvider;
 use yii2\extensions\phpstan\tests\support\CreateObjectContainerTrait;
 
-use function is_callable;
 use function is_subclass_of;
 use function sprintf;
 
@@ -92,8 +91,7 @@ final class CreateObjectInvalidOptionTypeRuntimeTest extends TestCase
     {
         $callable = [new $fixture(), $method];
 
-        self::assertTrue(
-            is_callable($callable),
+        self::assertIsCallable($callable,
             'Fixture method must be callable.',
         );
 

@@ -12,7 +12,7 @@ final class TypedChildTarget extends TypedTarget
     public float $weight = 0.0;
 
     /**
-     * @param int|array<mixed> $limit
+     * @param array<mixed>|int $limit
      */
     public function setLimitTo(int|array $limit): void
     {
