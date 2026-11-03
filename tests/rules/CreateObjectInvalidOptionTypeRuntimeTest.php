@@ -91,7 +91,8 @@ final class CreateObjectInvalidOptionTypeRuntimeTest extends TestCase
     {
         $callable = [new $fixture(), $method];
 
-        self::assertIsCallable($callable,
+        self::assertIsCallable(
+            $callable,
             'Fixture method must be callable.',
         );
 
