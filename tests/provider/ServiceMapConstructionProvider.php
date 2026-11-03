@@ -34,6 +34,7 @@ final class ServiceMapConstructionProvider
         yield 'options before a factory' => ['options.toFactory', null, []];
         yield 'singleton with options' => ['singleton.options', null, []];
     }
+
     /**
      * @phpstan-return iterable<string, array{string, string|null}>
      */
