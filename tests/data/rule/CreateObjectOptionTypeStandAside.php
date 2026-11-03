@@ -6,10 +6,8 @@ namespace yii2\extensions\phpstan\tests\data\rule;
 
 use Yii;
 use yii2\extensions\phpstan\tests\support\createobject\{
-    AliasTarget,
     CustomConstructorTarget,
     CustomSetterTarget,
-    EmptyDefinitionTarget,
     FactoryTarget,
     InstanceTarget,
     SingletonTarget,
@@ -27,11 +25,6 @@ use const INF;
  */
 final class CreateObjectOptionTypeStandAside
 {
-    public function aliasBinding(): object
-    {
-        return Yii::createObject(['class' => AliasTarget::class, 'name' => []]);
-    }
-
     public function arrayForCallableSetter(): object
     {
         return Yii::createObject(['class' => TypedTarget::class, 'handler' => []]);
@@ -60,11 +53,6 @@ final class CreateObjectOptionTypeStandAside
     public function dynamicKey(): object
     {
         return Yii::createObject(['class' => TypedTarget::class, self::text() => []]);
-    }
-
-    public function emptyDefinitionBinding(): object
-    {
-        return Yii::createObject(['class' => EmptyDefinitionTarget::class, 'name' => []]);
     }
 
     public function emptyOptionName(): object

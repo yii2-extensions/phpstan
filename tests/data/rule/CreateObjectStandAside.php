@@ -8,11 +8,9 @@ use Yii;
 use yii\base\BaseObject;
 use yii2\extensions\phpstan\tests\support\createobject\{
     AbstractTarget,
-    AliasTarget,
     ChildTarget,
     CustomConstructorTarget,
     CustomSetterTarget,
-    EmptyDefinitionTarget,
     FactoryTarget,
     InstanceTarget,
     OverridingFactory,
@@ -45,9 +43,7 @@ final class CreateObjectStandAside
         Yii::createObject(['class' => FactoryTarget::class, 'colour' => 'factory']);
         Yii::createObject(['class' => InstanceTarget::class, 'colour' => 'object']);
         Yii::createObject(['class' => SingletonTarget::class, 'colour' => 'singleton']);
-        Yii::createObject(['class' => AliasTarget::class, 'colour' => 'alias']);
         Yii::createObject(['class' => UnresolvedTarget::class, 'colour' => 'unresolved']);
-        Yii::createObject(['class' => EmptyDefinitionTarget::class, 'colour' => 'empty definition']);
         Yii::createObject(['class' => CustomConstructorTarget::class, 'alias' => 'consumed']);
         Yii::createObject(['class' => CustomSetterTarget::class, 'colour' => 'magic']);
         Yii::createObject(['class' => AbstractTarget::class, 'colour' => 'abstract']);

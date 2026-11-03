@@ -10,9 +10,10 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, TestWith};
 use TypeError;
 use yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\data\rule\CreateObjectComponentOption;
+use yii2\extensions\phpstan\tests\data\rule\{CreateObjectComponentOption, CreateObjectContainerBinding};
 use yii2\extensions\phpstan\tests\provider\{
     CreateObjectComponentOptionRuntimeProvider,
+    CreateObjectContainerBindingRuntimeProvider,
     CreateObjectInvalidOptionTypeRuleProvider,
 };
 use yii2\extensions\phpstan\tests\support\{CreateObjectRuleTestTrait, FixtureMethod};
@@ -44,6 +45,29 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
     public function testAcceptValuesTheClassAssignsDirectlyOrThroughCoercion(): void
     {
         $this->assertNoDiagnostics('CreateObjectValidOptionType.php');
+    }
+
+    public function testReportBoundValuesOnlyForCallsThatThrowTypeError(): void
+    {
+        $errors = $this->fixtureErrors(dirname(__DIR__) . '/data/rule/CreateObjectContainerBinding.php');
+
+        self::assertNotSame(
+            [],
+            $errors,
+            'Fixture must produce diagnostics.',
+        );
+
+        foreach ($errors as $error) {
+            $method = FixtureMethod::at(CreateObjectContainerBinding::class, $error->getLine());
+
+            [$outcome] = CreateObjectContainerBindingRuntimeProvider::outcome($method);
+
+            self::assertSame(
+                TypeError::class,
+                $outcome,
+                sprintf('Runtime outcome of `%s()` must be a `TypeError`.', $method),
+            );
+        }
     }
 
     public function testReportComponentValuesOnlyForCallsThatThrowTypeError(): void

@@ -102,6 +102,14 @@ final class ServiceMap
     private array $componentsWithoutClass = [];
 
     /**
+     * Class each container ID names, as written, when its definition only names a class and Yii passes the
+     * configuration it receives on to that class unchanged; `null` for any other definition and for every singleton.
+     *
+     * @phpstan-var array<string, string|null>
+     */
+    private array $constructionTargets = [];
+
+    /**
      * IDs of components defined by an object, whose class Yii doesn't resolve through the container.
      *
      * @phpstan-var array<string, true>
@@ -246,6 +254,46 @@ final class ServiceMap
     public function getComponentDefinitionById(string $id): array
     {
         return $this->componentsDefinitions[$id] ?? [];
+    }
+
+    /**
+     * Returns the class that {@see \yii\di\Container::get()} builds for a container ID and configures with the
+     * configuration passed to it.
+     *
+     * An ID without a definition or singleton is built itself. A definition that only names a class, as a string, an
+     * {@see Instance} reference, or an array holding only `class` or `__class`, with no constructor params, is
+     * followed to that class, which may be another container ID. IDs are compared as written, as Yii does, so
+     * `'\app\Feed'` doesn't follow a definition of `app\Feed`. The chain ends without a class at a singleton, a
+     * factory, an object, a definition with options or constructor params, and a cycle: Yii then returns an existing
+     * instance, lets other code apply the configuration, merges it with other values, or never returns.
+     *
+     * @param string $id Container ID or class name as written in the configuration.
+     *
+     * @return string|null Class name without a leading backslash, or `null` when the chain doesn't prove that Yii
+     * builds one class with the configuration as given.
+     */
+    public function getConstructedClassById(string $id): string|null
+    {
+        $visited = [];
+
+        while (array_key_exists($id, $this->constructionTargets)) {
+            $target = $this->constructionTargets[$id];
+
+            if ($target === null || isset($visited[$target])) {
+                return null;
+            }
+
+            if ($target === $id) {
+                break;
+            }
+
+            $visited[$id] = true;
+            $id = $target;
+        }
+
+        $class = ltrim($id, '\\');
+
+        return $class === '' ? null : $class;
     }
 
     /**
@@ -531,7 +579,8 @@ final class ServiceMap
      * {@see \yii\di\Container::setSingleton()} replace the definition. Services whose class can't be determined are
      * skipped, and recorded as unresolved unless the definition is empty, since Yii then uses the ID itself as the
      * class. Services defined by an object other than an {@see Instance} reference are recorded as such, since Yii
-     * returns the object, or calls it, instead of resolving a class through the container.
+     * returns the object, or calls it, instead of resolving a class through the container. The construction target of
+     * every ID is recorded separately, as written, for {@see getConstructedClassById()}.
      *
      * @param array $services Service definitions indexed by service ID.
      * @param string $label Label used in error messages to identify the subsection (`'Definition'` or `'Singleton'`).
@@ -546,6 +595,10 @@ final class ServiceMap
             if (is_string($id) === false) {
                 $this->throwErrorWhenIsNotString($label, 'ID', gettype($id));
             }
+
+            $this->constructionTargets[$id] = $label === self::CONTAINER_SECTIONS['definitions']
+                ? self::resolveConstructionTarget($id, $definition)
+                : null;
 
             $definition = $this->unwrapServiceDefinition($definition);
             $className = $this->resolveServiceClass($id, $definition);
@@ -609,6 +662,46 @@ final class ServiceMap
         }
 
         return $this->resolveScalarOrObjectClass($id, $definition, $definition instanceof Closure);
+    }
+
+    /**
+     * Resolves the class a `container.definitions` entry names when {@see \yii\di\Container::get()} passes the
+     * configuration it receives on to that class unchanged.
+     *
+     * Mirrors {@see \yii\di\Container::setDefinitions()} and {@see \yii\di\Container::normalizeDefinition()}: a
+     * `[definition, params]` pair qualifies only with empty params, `null` and `[]` name the ID itself, and a string, an
+     * {@see Instance} ID or the only `class` or `__class` key of an array name the class as written. `'0'` is refused,
+     * since Yii treats it as empty.
+     *
+     * @param string $id Service ID.
+     * @param mixed $definition Service definition as configured, before {@see unwrapServiceDefinition()}.
+     *
+     * @return string|null Class name as written, or `null` for a factory, an object, a definition with options or
+     * constructor params, and any other definition.
+     */
+    private static function resolveConstructionTarget(string $id, mixed $definition): string|null
+    {
+        if (is_array($definition) && array_is_list($definition) && count($definition) === 2 && is_array($definition[1])) {
+            if ($definition[1] !== []) {
+                return null;
+            }
+
+            $definition = $definition[0];
+        }
+
+        if ($definition === null || $definition === []) {
+            return $id;
+        }
+
+        $class = match (true) {
+            $definition instanceof Instance => $definition->id,
+            is_array($definition) => count($definition) === 1
+                ? $definition['class'] ?? $definition['__class'] ?? null
+                : null,
+            default => $definition === '0' ? null : $definition,
+        };
+
+        return is_string($class) && $class !== '' ? $class : null;
     }
 
     /**

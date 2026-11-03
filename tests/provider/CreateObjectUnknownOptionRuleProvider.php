@@ -9,6 +9,7 @@ use RuntimeException;
 use yii2\extensions\phpstan\tests\data\rule\{
     CreateObjectComponentOption,
     CreateObjectConstantUnknownOption,
+    CreateObjectContainerBinding,
     CreateObjectStaticTarget,
     CreateObjectUnknownOption,
 };
@@ -22,9 +23,6 @@ use function str_contains;
 
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\rules\CreateObjectUnknownOptionRuleTest} test cases.
- *
- * Provides every public method of the reporting fixtures with its expected diagnostics, as the key they are reported
- * at, or `null` for the call, and the message.
  */
 final class CreateObjectUnknownOptionRuleProvider
 {
@@ -400,6 +398,107 @@ final class CreateObjectUnknownOptionRuleProvider
                 'unpackedConstantBeforeLiteral' => [
                     [
                         null,
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+            ],
+            CreateObjectContainerBinding::class => [
+                'arrayClassDefinition' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'arrayLegacyClassDefinition' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'classAlias' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'componentAlias' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'ComponentMembersTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'constantConfigurationThroughChain' => [
+                    [
+                        null,
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'emptyDefinition' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'EmptyDefinitionTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'emptyParamsDefinition' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'instanceDefinition' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'interfaceAlias' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'leadingBackslashTargetSkipsFactory' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'FactoryTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'threeHopChain' => [
+                    [
+                        "'colour'",
                         self::message(
                             'Target',
                             'colour',

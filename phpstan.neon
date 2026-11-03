@@ -20,6 +20,7 @@ parameters:
             - tests/data/diagnostic/DeclaredPropertyDiagnostic.php
             - tests/data/rule/CreateObjectComponentOption.php
             - tests/data/rule/CreateObjectConstantStandAside.php
+            - tests/data/rule/CreateObjectContainerBinding.php
             - tests/data/rule/CreateObjectConstantUnknownOption.php
             - tests/data/rule/CreateObjectInvalidOptionType.php
             - tests/data/rule/CreateObjectOptionTypeStandAside.php

@@ -71,6 +71,16 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
     private const COMPONENT_WITHOUT_CLASS = 'without-class';
 
     /**
+     * Key prefix for the class the container builds and configures for an ID.
+     */
+    private const CONSTRUCTION = 'construction';
+
+    /**
+     * Cache state for a container ID whose definitions don't prove the class built with the configuration given.
+     */
+    private const CONSTRUCTION_NOT_PROVEN = 'not-proven';
+
+    /**
      * Key prefix for DI container definitions and singletons.
      */
     private const SERVICE = 'service';
@@ -113,6 +123,16 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
     }
 
     /**
+     * Returns the key for the class that the DI container builds and configures for the given id.
+     *
+     * @param string $id Container id or class name as written.
+     */
+    public static function constructionKey(string $id): string
+    {
+        return self::CONSTRUCTION . ':' . $id;
+    }
+
+    /**
      * Returns the current configuration value for the given key.
      *
      * Each value covers exactly what the extensions derive types from:
@@ -124,6 +144,8 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      *   component is defined with a class that can't be determined, or {@see MISSING}.
      * - `service:<id>`: the configured service class, {@see UNRESOLVED} when the service is defined with a class that
      *   can't be determined, or {@see MISSING}.
+     * - `construction:<id>`: the class {@see ServiceMap::getConstructedClassById()} returns, or `not-proven`, which no
+     *   class name can equal.
      * - `behaviors:<class>`: a hash of the ordered behavior classes, or {@see MISSING} when none are attached.
      *
      * Any other key yields {@see UNSUPPORTED}, so a result cache written by another version of the extension
@@ -144,6 +166,7 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
             self::PARAMS_KEY => $this->getParamsValue(),
             self::COMPONENT => $this->getComponentValue($id),
             self::SERVICE => $this->getServiceValue($id),
+            self::CONSTRUCTION => $this->serviceMap->getConstructedClassById($id) ?? self::CONSTRUCTION_NOT_PROVEN,
             self::BEHAVIORS => $this->getBehaviorsValue($id),
             default => self::UNSUPPORTED,
         };

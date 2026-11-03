@@ -24,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: extend `yii2.createObject.unknownOption` to configurations proven by native types, such as constants, local variables and unpacked arrays.
 - feat: add opt-in `yii2.createObject.invalidOptionType` rule for `Yii::createObject()` option values a property or setter never accepts.
 - feat: extend both `Yii::createObject()` option rules to `yii\base\Component` subclasses, standing aside when a behavior may receive the option.
+- feat: follow container aliases and class-only definitions in both `Yii::createObject()` option rules, standing aside on factories and singletons.
 
 ## 0.5.2 October 23, 2026
 
