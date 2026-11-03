@@ -11,7 +11,7 @@ use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use RuntimeException;
 use SplFileInfo;
-use yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule;
+use yii2\extensions\phpstan\rules\{CreateObjectInvalidOptionTypeRule, CreateObjectUnknownOptionRule};
 use yii2\extensions\phpstan\tests\provider\CreateObjectUnknownOptionDiagnosticProvider;
 
 use function array_keys;
@@ -43,7 +43,8 @@ use const JSON_THROW_ON_ERROR;
 use const PHP_BINARY;
 
 /**
- * Integration tests for {@see CreateObjectUnknownOptionRule} beside native diagnostics in a real PHPStan run.
+ * Integration tests for {@see CreateObjectUnknownOptionRule} and {@see CreateObjectInvalidOptionTypeRule} beside
+ * native diagnostics in a real PHPStan run.
  *
  * {@see CreateObjectUnknownOptionDiagnosticProvider} for test case data providers.
  */
@@ -65,11 +66,12 @@ final class CreateObjectUnknownOptionDiagnosticTest extends TestCase
     private string $workDirectory = '';
 
     /**
+     * @phpstan-param list<string> $rules
      * @phpstan-param list<array{int, string}> $expected
      */
     #[DataProviderExternal(CreateObjectUnknownOptionDiagnosticProvider::class, 'ruleSwitchProvider')]
     public function testReportRuleDiagnosticsOnlyWhenEnabledAndOnceBesideNativeOnes(
-        bool $enabled,
+        array $rules,
         array $expected,
     ): void {
         $fixture = realpath(__DIR__ . DIRECTORY_SEPARATOR . self::FIXTURE);
@@ -80,7 +82,13 @@ final class CreateObjectUnknownOptionDiagnosticTest extends TestCase
         );
 
         $config = __DIR__ . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'create-object-config.php';
-        $rule = $enabled ? "\n        rules:\n            createObjectUnknownOption: true" : '';
+        $switches = '';
+
+        foreach ($rules as $rule) {
+            $switches .= "\n            {$rule}: true";
+        }
+
+        $switches = $switches === '' ? '' : "\n        rules:{$switches}";
         $support = __DIR__ . DIRECTORY_SEPARATOR . 'support' . DIRECTORY_SEPARATOR;
 
         $this->writeFile(
@@ -99,7 +107,7 @@ final class CreateObjectUnknownOptionDiagnosticTest extends TestCase
                 stubFiles:
                     - {$this->neonPath($support . 'application-classes.stub')}
                 yii2:
-                    config_path: {$this->neonPath($config)}{$rule}
+                    config_path: {$this->neonPath($config)}{$switches}
 
             NEON,
         );

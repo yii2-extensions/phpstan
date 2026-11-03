@@ -20,6 +20,8 @@ parameters:
             - tests/data/diagnostic/DeclaredPropertyDiagnostic.php
             - tests/data/rule/CreateObjectConstantStandAside.php
             - tests/data/rule/CreateObjectConstantUnknownOption.php
+            - tests/data/rule/CreateObjectInvalidOptionType.php
+            - tests/data/rule/CreateObjectOptionTypeStandAside.php
             - tests/data/rule/CreateObjectStandAside.php
             - tests/data/rule/CreateObjectUnknownOption.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
@@ -56,6 +58,9 @@ parameters:
         - '#Creating new PHPStan\\Reflection\\Dummy\\DummyPropertyReflection is not covered.+#'
 
     level: max
+
+    additionalConstructors:
+        - yii\base\BaseObject::init
 
     paths:
         - src

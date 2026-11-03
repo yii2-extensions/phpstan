@@ -14,6 +14,7 @@ parameters:
         component_generics:
             user: identityClass
         rules:
+            createObjectInvalidOptionType: false
             createObjectUnknownOption: false
 
 parametersSchema:
@@ -23,6 +24,7 @@ parametersSchema:
             component_generics: schema(arrayOf(string(), string())),
             rules: structure(
                 [
+                    createObjectInvalidOptionType: bool(),
                     createObjectUnknownOption: bool()
                 ]
             )
@@ -30,6 +32,8 @@ parametersSchema:
     )
 
 conditionalTags:
+    yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule:
+        phpstan.rules.rule: %yii2.rules.createObjectInvalidOptionType%
     yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule:
         phpstan.rules.rule: %yii2.rules.createObjectUnknownOption%
 
@@ -45,6 +49,8 @@ services:
     -
         class: yii2\extensions\phpstan\property\BehaviorPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
+        class: yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule
     -
         class: yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule
     -
