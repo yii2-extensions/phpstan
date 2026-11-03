@@ -218,10 +218,11 @@ $config['timeoutSeconds'] = 5;
 Yii::createObject($config); // reported at this line
 ```
 
-An option written as a key in the call is reported at that key, including a constant key such as `self::OPTION`. An
-option that comes from a variable, a constant or unpacking has no single key to point at and is reported at the call
-line. PHPDoc types such as `@param array{...}`, `@var` or `@return` never prove a configuration; only native types,
-which PHPStan derives from literal values, constants and assignments, do.
+An option written as a key in the call is reported at that key, including a constant key such as `self::OPTION`, when
+the configuration is an array literal without unpacking and every key has one constant string value. Otherwise, every
+option is reported at the call line: this includes a configuration that comes from a variable or a constant, and an
+array literal that unpacks another array. PHPDoc types such as `@param array{...}`, `@var` or `@return` never prove a
+configuration; only native types, which PHPStan derives from literal values, constants and assignments, do.
 
 The rule reports only when Yii's assignment path is certain:
 
