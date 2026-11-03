@@ -56,6 +56,99 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
      */
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-create-object-binding-result-cache-';
 
+    #[DataProviderExternal(CreateObjectContainerBindingResultCacheIntegrationProvider::class, 'classProvider')]
+    public function testFollowClassChangeOfDefinitionWithOptions(
+        string $definition,
+        string $initialMembers,
+        string $changedMembers,
+        int $reanalysed,
+        bool $initialReported,
+        bool $changedReported,
+    ): void {
+        $this->writeContainer([$definition], []);
+        $this->writeTarget(false, $initialMembers);
+
+        $stableInputs = $this->inputHashes(
+            [
+                'project/phpstan.neon',
+                'project/config.php',
+                'project/container.php',
+                'project/src/BindingConsumer.php',
+                'project/src/Contract.php',
+                'project/src/Control.php',
+                'project/src/Other.php',
+                'project/src/StableConsumer.php',
+            ],
+        );
+
+        $before = self::results($initialReported);
+        $after = self::results($changedReported);
+
+        $initialTarget = $this->readFile('project/src/Target.php');
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeTarget(false, $changedMembers);
+
+        self::assertSame(
+            str_replace($initialMembers, $changedMembers, $initialTarget),
+            $this->readFile('project/src/Target.php'),
+            'Only the given members may differ.',
+        );
+
+        $changeStartedAt = time();
+
+        $changed = $this->analyse();
+
+        self::assertRestored(
+            $reanalysed,
+            $changed['stderr'],
+            'Changed warm run',
+        );
+        self::assertSame(
+            $after,
+            $changed['results'],
+            'Binding consumer must report only while every definition option is a plain public property.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $after,
+            $changeStartedAt,
+            'Unchanged changed warm run',
+        );
+
+        $this->assertFinalColdRun($changed['results']);
+
+        self::assertSame(
+            $stableInputs,
+            $this->inputHashes(
+                [
+                    'project/phpstan.neon',
+                    'project/config.php',
+                    'project/container.php',
+                    'project/src/BindingConsumer.php',
+                    'project/src/Contract.php',
+                    'project/src/Control.php',
+                    'project/src/Other.php',
+                    'project/src/StableConsumer.php',
+                ],
+            ),
+            'Only the target class may change during the sequence.',
+        );
+    }
+
     public function testReanalyseConsumerWhenClassBuiltThroughAliasGainsSetter(): void
     {
         $this->writeContainer(["'Probe\\Contract' => 'probe.hop',", "'probe.hop' => 'Probe\\Target',"], []);
@@ -74,6 +167,7 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
         );
 
         $before = self::results(true);
+
         $after = [
             ['src/BindingConsumer.php', 11, 'yii2.createObject.invalidOptionType', null],
             ...self::CONTROL,
@@ -486,11 +580,12 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
     }
 
     /**
-     * Writes `Probe\Target`, optionally with a setter for the `colour` option.
+     * Writes `Probe\Target`, optionally with a setter for the `colour` option and with extra members.
      */
-    private function writeTarget(bool $withSetter): void
+    private function writeTarget(bool $withSetter, string $members = ''): void
     {
         $setter = $withSetter ? "\n    public function setColour(string \$colour): void {}\n" : '';
+        $setter .= $members === '' ? '' : "\n{$members}";
 
         $this->writeFile(
             'project/src/Target.php',

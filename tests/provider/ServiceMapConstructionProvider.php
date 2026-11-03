@@ -4,11 +4,36 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\provider;
 
+use SplObjectStorage;
+
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\ServiceMapConstructionTest} test cases.
  */
 final class ServiceMapConstructionProvider
 {
+    /**
+     * @phpstan-return iterable<string, array{string, string|null, list<string>}>
+     */
+    public static function configurationProvider(): iterable
+    {
+        yield 'unbound class' => ['\Unbound\Target', 'Unbound\Target', []];
+        yield 'class-only chain' => ['alias.first', 'SplStack', []];
+        yield 'array with class and options' => ['options.class', 'SplStack', ['flags', 'mode']];
+        yield 'array with __class and options' => ['options.legacy', 'SplStack', ['flags']];
+        yield 'options under the class ID' => [SplObjectStorage::class, SplObjectStorage::class, ['flags']];
+        yield 'options without class under a namespaced ID' => ['Probe\Options', 'Probe\Options', ['flags']];
+        yield 'options without class under an ID without namespace' => ['options.noNamespace', null, []];
+        yield 'pair of options with empty params' => ['options.wrapped', 'SplStack', ['flags']];
+        yield 'options of the last hop first' => ['options.chain', 'SplStack', ['flags', 'mode', 'size']];
+        yield 'options with __construct()' => ['options.construct', null, []];
+        yield 'options with an integer key' => ['options.integer', null, []];
+        yield 'options with class and __class' => ['opaque.classes', null, []];
+        yield 'options with params' => ['options.params', null, []];
+        yield 'options with null class' => ['opaque.classNull', null, []];
+        yield 'options on a cycle' => ['options.cycle', null, []];
+        yield 'options before a factory' => ['options.toFactory', null, []];
+        yield 'singleton with options' => ['singleton.options', null, []];
+    }
     /**
      * @phpstan-return iterable<string, array{string, string|null}>
      */
@@ -48,5 +73,7 @@ final class ServiceMapConstructionProvider
         yield 'definition replaced by singleton' => ['replaced', null];
         yield 'two-ID cycle' => ['cycle.first', null];
         yield 'cycle after one hop' => ['cycle.a', null];
+        yield 'definition with options' => ['options.class', null];
+        yield 'chain through a definition with options' => ['options.chain', null];
     }
 }

@@ -232,8 +232,8 @@ The rule reports only when Yii's assignment path is certain:
   doesn't override it, with no `$params` or with `$params` whose native type is an empty array;
 - the native type of the configuration is exactly one array shape with string keys and no optional key, and its
   `__class` value, or else its `class` value, is one class name;
-- the class name has no container binding, or only bindings that pass the configuration on unchanged, as described
-  below;
+- the class name has no container binding, or only bindings that build one class and assign the configuration to it, as
+  described below;
 - the class Yii builds is instantiable, inherits the constructor of `yii\base\BaseObject` and inherits `__set()` from
   `yii\base\BaseObject` or `yii\base\Component`.
 
@@ -249,18 +249,24 @@ another constructor argument.
 
 `Yii::createObject()` passes the configuration to `Yii::$container`, so a container binding of the class name can
 replace the class or ignore the configuration. The rule follows a `container.definitions` entry for the class name only
-when Yii then builds one class and assigns the configuration to it as given:
+when Yii then builds one class and assigns the configuration to it:
 
-- a class name string, a `yii\di\Instance` reference, or an array whose only key is `class` or `__class`, which makes
-  Yii build that class instead; the class can itself be a bound ID, so chains of several entries are followed;
-- `[]` or `null`, which makes Yii build the class name itself;
+- a class name string, a `yii\di\Instance` reference, or an array with a `class` or `__class` key, which makes Yii build
+  that class instead; the class can itself be a bound ID, so chains of several entries are followed;
+- `[]` or `null`, or an array without `class` and `__class` under a namespaced class name, which makes Yii build the
+  class name itself;
 - either form in a `[definition, params]` pair whose params are `[]`.
+
+The other keys of an array are options that Yii assigns before the options of the call; an option of the call with the
+same name replaces the definition's value. The rule follows such an entry only when each of its options, on every entry
+of the chain, is a public instance property of the class Yii builds that isn't read-only, hooked or of asymmetric
+visibility, because Yii then assigns them without running code of the class.
 
 ```php
 'container' => [
     'definitions' => [
         FeedInterface::class => 'feed.default',
-        'feed.default' => ['class' => Feed::class],
+        'feed.default' => ['class' => Feed::class, 'url' => '/rss'],
     ],
 ],
 ```
@@ -272,9 +278,11 @@ Yii::createObject(['class' => FeedInterface::class, 'timeoutSeconds' => 5]); // 
 IDs are compared as written, as Yii does: `'\app\Feed'` doesn't match an entry for `app\Feed`, and a chain that names
 `'\app\Feed'` builds that class directly, bypassing such an entry. Every other binding on the chain stands aside, even
 when it resolves to the same class: a `container.singletons` entry, a later singleton for the same ID, a factory or an
-invocable object, which may ignore the configuration or apply it, an object, which Yii returns as is, an array with
-other keys, whose options Yii merges into the configuration and assigns first, a definition with non-empty params, which
-can move the configuration to another constructor argument, and a cycle, which Yii follows until the process fails.
+invocable object, which may ignore the configuration or apply it, an object, which Yii returns as is, an array with any
+other option, such as a setter, an `on ...` or `as ...` key, or a name the class can't assign, whose code or failure
+runs before the call's options, an array with a `__construct()` or integer key, or with both `class` and `__class`, a
+definition with non-empty params, which can move the configuration to another constructor argument, and a cycle, which
+Yii follows until the process fails.
 
 The analysis configuration is treated as the complete list of container bindings: a binding registered at runtime
 outside it, for example in a bootstrap class, is not seen. Describe such bindings in the analysis configuration or keep

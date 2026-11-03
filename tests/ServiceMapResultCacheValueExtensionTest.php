@@ -101,6 +101,24 @@ final class ServiceMapResultCacheValueExtensionTest extends PHPStanTestCase
             $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('singleton')),
             'Singleton of the same class must map to the not proven value.',
         );
+
+        $options = $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('options'));
+
+        self::assertStringStartsWith(
+            'SplStack ',
+            $options,
+            'Definition options must follow the class after a space.',
+        );
+        self::assertNotSame(
+            $options,
+            $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('moreOptions')),
+            'Another set of option names must map to another value.',
+        );
+        self::assertSame(
+            $options,
+            $extension->getValue(ServiceMapResultCacheValueExtension::constructionKey('otherValue')),
+            'Option values must not change the value.',
+        );
     }
 
     public function testGetValueDistinguishesParamsShapesWithSameDescription(): void

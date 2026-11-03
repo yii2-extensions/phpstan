@@ -234,6 +234,39 @@ final class CreateObjectInvalidOptionTypeRuleProvider
                         ),
                     ],
                 ],
+                'componentDefinitionOptionsInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'ComponentMembersTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'definitionOptionsInvalidValue' => [
+                    [
+                        "'name'",
+                        self::property(
+                            'Target',
+                            'name',
+                            'array{}',
+                            'string',
+                        ),
+                    ],
+                ],
+                'definitionOptionsOnChainInvalidValue' => [
+                    [
+                        "'tag'",
+                        self::property(
+                            'Target',
+                            'tag',
+                            'array{}',
+                            'string',
+                        ),
+                    ],
+                ],
                 'emptyDefinitionInvalidValue' => [
                     [
                         "'name'",

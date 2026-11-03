@@ -13,7 +13,7 @@ use yii2\extensions\phpstan\tests\provider\ServiceMapConstructionProvider;
 use const DIRECTORY_SEPARATOR;
 
 /**
- * Unit tests for {@see ServiceMap::getConstructedClassById()}.
+ * Unit tests for the container construction queries of {@see ServiceMap}.
  *
  * {@see ServiceMapConstructionProvider} for test case data providers.
  */
@@ -55,6 +55,29 @@ final class ServiceMapConstructionTest extends TestCase
             $expected,
             (new ServiceMap(self::BASE_PATH . 'construction-config.php'))->getConstructedClassById($id),
             'Constructed class must match the container chain.',
+        );
+    }
+
+    /**
+     * @phpstan-param list<string> $options
+     */
+    #[DataProviderExternal(ServiceMapConstructionProvider::class, 'configurationProvider')]
+    public function testReturnTheClassYiiBuildsAndTheDefinitionOptionsItMerges(
+        string $id,
+        string|null $expected,
+        array $options,
+    ): void {
+        $serviceMap = new ServiceMap(self::BASE_PATH . 'construction-config.php');
+
+        self::assertSame(
+            $expected,
+            $serviceMap->getConfiguredClassById($id),
+            'Configured class must match the container chain.',
+        );
+        self::assertSame(
+            $options,
+            $serviceMap->getDefinitionOptionNamesById($id),
+            'Option names must follow the merge order of the chain.',
         );
     }
 }

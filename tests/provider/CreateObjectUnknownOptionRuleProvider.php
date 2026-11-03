@@ -433,7 +433,25 @@ final class CreateObjectUnknownOptionRuleProvider
                         ),
                     ],
                 ],
+                'classIdDefinitionOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'DefinitionOptionsTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
                 'componentAlias' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'ComponentMembersTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'componentDefinitionOptions' => [
                     [
                         "'colour'",
                         self::message(
@@ -445,6 +463,24 @@ final class CreateObjectUnknownOptionRuleProvider
                 'constantConfigurationThroughChain' => [
                     [
                         null,
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'definitionOptionsOnChain' => [
+                    [
+                        "'colour'",
                         self::message(
                             'Target',
                             'colour',
@@ -496,7 +532,25 @@ final class CreateObjectUnknownOptionRuleProvider
                         ),
                     ],
                 ],
+                'legacyClassDefinitionOptions' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
                 'threeHopChain' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'wrappedDefinitionOptions' => [
                     [
                         "'colour'",
                         self::message(

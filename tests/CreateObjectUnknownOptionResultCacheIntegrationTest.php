@@ -221,7 +221,7 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
         self::assertSame(
             [
                 6 => sprintf(
-                    "    '%s' => ['class' => 'Probe\\\\Target', 'name' => 'bound'],",
+                    "    '%s' => ['class' => 'Probe\\\\Target', 'label' => 'bound'],",
                     str_replace('\\', '\\\\', $changedId),
                 ),
             ],
@@ -556,8 +556,9 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Writes the container definitions with `Probe\Target` bound under the given ID by a definition with an option,
-     * which merges the option into the configuration, so that the binding doesn't prove the created class.
+     * Writes the container definitions with `Probe\Target` bound under the given ID by a definition whose option isn't a
+     * public property of the class, which Yii assigns before the configuration, so that the binding doesn't prove the
+     * assignment path.
      */
     private function writeDefinitions(string $boundId): void
     {
@@ -572,7 +573,7 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
 
             return [
                 'cache.stable' => 'yii\\\\caching\\\\DummyCache',
-                {$id} => ['class' => 'Probe\\\\Target', 'name' => 'bound'],
+                {$id} => ['class' => 'Probe\\\\Target', 'label' => 'bound'],
             ];
 
             PHP,

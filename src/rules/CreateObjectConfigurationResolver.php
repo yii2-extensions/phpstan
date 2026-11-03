@@ -22,8 +22,9 @@ use function in_array;
  * Resolves the class and options of a {@see BaseYii::createObject()} call whose assignment path Yii makes certain.
  *
  * Requires keys and class proven by literals or native types, a container ID that is unbound or bound only through
- * definitions that name a class ({@see ServiceMap::getConstructedClassById()}), and a created class that inherits the
- * constructor of {@see BaseObject} and the `__set()` of {@see BaseObject} or {@see Component}.
+ * definitions that name a class ({@see ServiceMap::getConfiguredClassById()}) and whose options, if any, are all plain
+ * public properties of the created class, and a created class that inherits the constructor of {@see BaseObject} and
+ * the `__set()` of {@see BaseObject} or {@see Component}.
  *
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
@@ -93,7 +94,7 @@ final class CreateObjectConfigurationResolver
             ServiceMapResultCacheValueExtension::constructionKey($id),
         );
 
-        $className = $this->serviceMap->getConstructedClassById($id);
+        $className = $this->serviceMap->getConfiguredClassById($id);
 
         if ($className === null) {
             return null;
@@ -103,9 +104,17 @@ final class CreateObjectConfigurationResolver
 
         $classReflection = $this->resolveConfigurableClass($className);
 
-        return $classReflection === null
-            ? null
-            : new CreateObjectConfiguration($calledClass, $classReflection, $options);
+        if ($classReflection === null) {
+            return null;
+        }
+
+        foreach ($this->serviceMap->getDefinitionOptionNamesById($id) as $name) {
+            if (self::isPlainPublicProperty($classReflection, $name) === false) {
+                return null;
+            }
+        }
+
+        return new CreateObjectConfiguration($calledClass, $classReflection, $options);
     }
 
     /**
@@ -269,6 +278,29 @@ final class CreateObjectConfigurationResolver
         }
 
         return true;
+    }
+
+    /**
+     * Returns whether Yii assigns the option directly to a native property without running application code: a public
+     * instance property that isn't read-only, hooked or of asymmetric visibility.
+     *
+     * Definition options are assigned before the options of the call, so only such options leave the assignment of the
+     * call's options to declarations, whatever the method bodies of the class do.
+     */
+    private static function isPlainPublicProperty(ClassReflection $classReflection, string $name): bool
+    {
+        if ($classReflection->hasNativeProperty($name) === false) {
+            return false;
+        }
+
+        $property = $classReflection->getNativeProperty($name);
+
+        return $property->isPublic()
+            && $property->isStatic() === false
+            && $property->isReadOnly() === false
+            && $property->isHooked() === false
+            && $property->isPrivateSet() === false
+            && $property->isProtectedSet() === false;
     }
 
     /**
