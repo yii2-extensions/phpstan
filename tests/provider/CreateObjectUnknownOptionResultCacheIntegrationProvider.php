@@ -8,7 +8,8 @@ namespace yii2\extensions\phpstan\tests\provider;
  * Data provider for {@see \yii2\extensions\phpstan\tests\CreateObjectUnknownOptionResultCacheIntegrationTest} test
  * cases.
  *
- * Provides the container ID bound before and after the change: the created class `Probe\Target` or an unrelated ID.
+ * Provides the container ID bound before and after the change, the created class `Probe\Target` or an unrelated ID,
+ * and the option name held by a constant of another class before and after its change.
  */
 final class CreateObjectUnknownOptionResultCacheIntegrationProvider
 {
@@ -19,5 +20,14 @@ final class CreateObjectUnknownOptionResultCacheIntegrationProvider
     {
         yield 'binding added' => ['Probe\Placeholder', 'Probe\Target'];
         yield 'binding removed' => ['Probe\Target', 'Probe\Placeholder'];
+    }
+
+    /**
+     * @phpstan-return iterable<string, array{string, string}>
+     */
+    public static function constantProvider(): iterable
+    {
+        yield 'valid to unknown' => ['name', 'colour'];
+        yield 'unknown to valid' => ['colour', 'name'];
     }
 }

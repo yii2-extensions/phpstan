@@ -36,6 +36,13 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
     ];
 
     /**
+     * Expected diagnostics of the consumer whose option name comes from `Probe\Options` while the option is unknown.
+     */
+    private const array CONSTANT_CONSUMER = [
+        ['src/ConstantConsumer.php', 13, 'yii2.createObject.unknownOption', null],
+    ];
+
+    /**
      * Expected diagnostics of the control file, which no change may alter.
      */
     private const array CONTROL = [
@@ -60,6 +67,117 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
      * Prefix of the temporary directory owned by each test.
      */
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-create-object-result-cache-';
+
+    #[DataProviderExternal(CreateObjectUnknownOptionResultCacheIntegrationProvider::class, 'constantProvider')]
+    public function testReanalyseConsumerWhenConstantOfAnotherClassChanges(
+        string $initialOption,
+        string $changedOption,
+    ): void {
+        $this->writeOptions($initialOption);
+        $this->writeFile(
+            'project/src/ConstantConsumer.php',
+            <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Probe;
+
+            final class ConstantConsumer
+            {
+                public function create(): void
+                {
+                    $config = ['class' => 'Probe\Other', Options::OPTION => 'red'];
+
+                    \yii\BaseYii::createObject($config);
+                }
+            }
+
+            PHP,
+        );
+
+        $stableInputs = $this->stableInputHashes(
+            ['project/definitions.php', 'project/src/ConstantConsumer.php', 'project/src/Target.php'],
+        );
+
+        $before = self::constantResults($initialOption);
+        $after = self::constantResults($changedOption);
+        $initialOptions = $this->readFile('project/src/Options.php');
+        $initialHash = self::hashFile($this->path('project/src/Options.php'));
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeOptions($changedOption);
+
+        $changedHash = self::hashFile($this->path('project/src/Options.php'));
+
+        self::assertNotSame(
+            $initialHash,
+            $changedHash,
+            'Options class must change its contents.',
+        );
+        self::assertSame(
+            [8 => sprintf("    public const OPTION = '%s';", $changedOption)],
+            array_diff_assoc(
+                explode("\n", $this->readFile('project/src/Options.php')),
+                explode("\n", $initialOptions),
+            ),
+            'Only the constant value may differ.',
+        );
+
+        $changeStartedAt = time();
+
+        $changed = $this->analyse();
+
+        self::assertRestored(
+            2,
+            $changed['stderr'],
+            'Changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $changed['stderr'],
+            'Changed warm run must save the new results.',
+        );
+        self::assertSame(
+            $after,
+            $changed['results'],
+            'Constant consumer must follow the constant: report the option while unknown, accept it while assignable.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $after,
+            $changeStartedAt,
+            'Unchanged changed warm run',
+        );
+
+        $this->assertFinalColdRun($changed['results']);
+
+        self::assertSame(
+            $changedHash,
+            self::hashFile($this->path('project/src/Options.php')),
+            'Final runs must use the changed constant.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes(
+                ['project/definitions.php', 'project/src/ConstantConsumer.php', 'project/src/Target.php'],
+            ),
+            'Only the options class may change during the sequence.',
+        );
+    }
 
     #[DataProviderExternal(CreateObjectUnknownOptionResultCacheIntegrationProvider::class, 'bindingProvider')]
     public function testReanalyseConsumerWhenContainerBindingOfCreatedClassChanges(
@@ -391,8 +509,23 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
         self::assertSame(
             $expected,
             $results,
-            'Initial run must report the unknown option of both consumers.',
+            'Initial run must report the initial results.',
         );
+    }
+
+    /**
+     * Returns the expected results while the constant consumer sets the given option on `Probe\Other`.
+     *
+     * @phpstan-return list<array{string, int, string, string|null}>
+     */
+    private static function constantResults(string $option): array
+    {
+        return [
+            ...self::CHANGING_CONSUMER,
+            ...($option === 'name' ? [] : self::CONSTANT_CONSUMER),
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMER,
+        ];
     }
 
     /**
@@ -435,6 +568,29 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
                 'cache.stable' => 'yii\\\\caching\\\\DummyCache',
                 {$id} => ['class' => 'Probe\\\\Target'],
             ];
+
+            PHP,
+        );
+    }
+
+    /**
+     * Writes `Probe\Options`, whose constant names the option set by the constant consumer.
+     */
+    private function writeOptions(string $option): void
+    {
+        $this->writeFile(
+            'project/src/Options.php',
+            <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Probe;
+
+            final class Options
+            {
+                public const OPTION = '{$option}';
+            }
 
             PHP,
         );
