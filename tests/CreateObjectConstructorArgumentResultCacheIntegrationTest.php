@@ -92,7 +92,8 @@ final class CreateObjectConstructorArgumentResultCacheIntegrationTest extends Te
                 $members = $changedMembers === '' ? '}' : "\n{$changedMembers}}";
 
                 self::assertStringContainsString(
-                    "public string \$name = '';\n{$members}", $this->readFile('project/src/Target.php'),
+                    "public string \$name = '';\n{$members}",
+                    $this->readFile('project/src/Target.php'),
                     'Target must hold exactly the changed members.',
                 );
             },
