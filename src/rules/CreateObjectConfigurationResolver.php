@@ -32,12 +32,17 @@ use function max;
  * that constructor, by position `0` or by name `config`. Yii then assigns the options of the configuration when there
  * are any, and otherwise uses that argument as the configuration, which is resolved only when the call supplies it.
  *
+ * The resolved options are the ones Yii assigns, in order: the options of the `$type` configuration without the `class`
+ * and `__class` keys that select the class, or every key of the argument used as the configuration, `class`, `__class`
+ * and `__construct()` included, which {@see BaseYii::configure()} assigns as ordinary properties.
+ *
  * {@see ServiceMap} for service and component map for Yii Application static analysis.
  */
 final class CreateObjectConfigurationResolver
 {
     /**
-     * Options that {@see BaseYii::createObject()} removes before configuring the object.
+     * Options that {@see BaseYii::createObject()} removes from its `$type` configuration to select the class, before
+     * configuring the object; a constructor argument used as the configuration keeps them.
      */
     public const array RESERVED_OPTIONS = ['__class', 'class'];
 
@@ -67,8 +72,8 @@ final class CreateObjectConfigurationResolver
 
     /**
      * Returns the configuration that Yii assigns to the created class through `BaseObject::__set()` or
-     * `Component::__set()` semantics: the options of the call, or the constructor argument that the call supplies as
-     * configuration when neither the call nor a definition has options.
+     * `Component::__set()` semantics: the options of the call without its class keys, or every key of the constructor
+     * argument that the call supplies as configuration when neither the call nor a definition has options.
      *
      * Records the construction dependency of the container ID before deciding, and the declaration dependency of the
      * created class once known, so that the result cache reanalyses the call when a definition on the chain or that
@@ -171,8 +176,10 @@ final class CreateObjectConfigurationResolver
             return null;
         }
 
-        if ($argumentKeys === [] || $definitionOptions !== [] || self::hasAssignedOptions($options)) {
-            return new CreateObjectConfiguration($calledClass, $classReflection, $options);
+        $assignedOptions = self::withoutClassKeys($options);
+
+        if ($argumentKeys === [] || $definitionOptions !== [] || $assignedOptions !== []) {
+            return new CreateObjectConfiguration($calledClass, $classReflection, $assignedOptions);
         }
 
         $key = $argumentKeys[0];
@@ -369,22 +376,6 @@ final class CreateObjectConfigurationResolver
     }
 
     /**
-     * Returns whether the configuration keeps an option after {@see BaseYii::createObject()} removes its class keys.
-     *
-     * @param list<array{string, int, Expr|Type}> $options Name, line and effective value of each option.
-     */
-    private static function hasAssignedOptions(array $options): bool
-    {
-        foreach ($options as [$name]) {
-            if (in_array($name, self::RESERVED_OPTIONS, true) === false) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Returns whether constructor argument keys, merged by {@see \yii\di\Container::build()}, address only the
      * `$config` parameter of the {@see BaseObject} constructor: all `0` or all `config`.
      *
@@ -533,6 +524,32 @@ final class CreateObjectConfigurationResolver
             && $classReflection->getNativeMethod('createObject')->getDeclaringClass()->getName() === BaseYii::class
             ? $classReflection->getDisplayName()
             : null;
+    }
+
+    /**
+     * Returns the options of the `$type` configuration that Yii assigns once {@see BaseYii::createObject()} has
+     * selected the class: every option except `class` and `__class`.
+     *
+     * A resolved configuration has a non-`null` `__class` value, which makes Yii remove both keys, or only a `class`
+     * key, which Yii removes.
+     *
+     * @template T of Expr|Type
+     *
+     * @param list<array{string, int, T}> $options Name, line and effective value of each option.
+     *
+     * @return list<array{string, int, T}>
+     */
+    private static function withoutClassKeys(array $options): array
+    {
+        $kept = [];
+
+        foreach ($options as $option) {
+            if (in_array($option[0], self::RESERVED_OPTIONS, true) === false) {
+                $kept[] = $option;
+            }
+        }
+
+        return $kept;
     }
 
     /**

@@ -279,6 +279,18 @@ final class CreateObjectInvalidOptionTypeRuleProvider
                         ),
                     ],
                 ],
+                'paramsClassKeyInvalidValue' => [
+                    [
+                        "'class'",
+                        self::setter(
+                            'TypedTarget',
+                            'class',
+                            "'abc'",
+                            'TypedTarget::setClass()',
+                            'int',
+                        ),
+                    ],
+                ],
                 'paramsIgnoredForOptionsInvalidValue' => [
                     [
                         "'count'",
@@ -296,6 +308,17 @@ final class CreateObjectInvalidOptionTypeRuleProvider
                         self::property(
                             'TypedTarget',
                             'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'paramsNamedLegacyClassKeyInvalidValue' => [
+                    [
+                        "'__class'",
+                        self::property(
+                            'TypedTarget',
+                            '__class',
                             "'abc'",
                             'int',
                         ),

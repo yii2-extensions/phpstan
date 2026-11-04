@@ -20,8 +20,9 @@ use function str_starts_with;
  * Decides how Yii assigns configuration options to a {@see BaseObject} or {@see Component} subclass through
  * {@see BaseYii::configure()} and `__set()`, independently of how the object is constructed.
  *
- * Callers pass only the options that Yii assigns: a construction API that removes keys before the assignment, such as
- * `class` and `__class` in {@see BaseYii::createObject()}, removes them first.
+ * Callers pass only the options that Yii assigns, in assignment order: a construction API that removes keys before the
+ * assignment, such as the `class` and `__class` keys that {@see BaseYii::createObject()} consumes from its `$type`
+ * configuration, removes them first, and keeps every key of a configuration that Yii assigns as is.
  */
 final class ObjectOptionAssignment
 {

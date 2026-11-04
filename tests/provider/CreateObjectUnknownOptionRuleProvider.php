@@ -443,12 +443,37 @@ final class CreateObjectUnknownOptionRuleProvider
                         ),
                     ],
                 ],
+                'componentClassSetterAfterOption' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'ComponentClassSetterTarget',
+                            'colour',
+                        ),
+                    ],
+                ],
                 'componentParams' => [
                     [
                         "'colour'",
                         self::message(
                             'ComponentMembersTarget',
                             'colour',
+                        ),
+                    ],
+                ],
+                'constantConstructClassKeys' => [
+                    [
+                        null,
+                        self::message(
+                            'Target',
+                            '__construct()',
+                        ),
+                    ],
+                    [
+                        null,
+                        self::message(
+                            'Target',
+                            'class',
                         ),
                     ],
                 ],
@@ -461,7 +486,39 @@ final class CreateObjectUnknownOptionRuleProvider
                         ),
                     ],
                 ],
+                'constantParamsClassKeys' => [
+                    [
+                        null,
+                        self::message(
+                            'Target',
+                            'class',
+                        ),
+                    ],
+                    [
+                        null,
+                        self::message(
+                            'Target',
+                            '__class',
+                        ),
+                    ],
+                ],
                 'construct' => [
+                    [
+                        "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'constructClassKeys' => [
+                    [
+                        "'class'",
+                        self::message(
+                            'Target',
+                            'class',
+                        ),
+                    ],
                     [
                         "'colour'",
                         self::message(
@@ -494,6 +551,15 @@ final class CreateObjectUnknownOptionRuleProvider
                         self::message(
                             'Target',
                             'colour',
+                        ),
+                    ],
+                ],
+                'constructLegacyClassKeyNamed' => [
+                    [
+                        "'__class'",
+                        self::message(
+                            'Target',
+                            '__class',
                         ),
                     ],
                 ],
@@ -598,6 +664,13 @@ final class CreateObjectUnknownOptionRuleProvider
                 ],
                 'paramsClassKeys' => [
                     [
+                        "'class'",
+                        self::message(
+                            'Target',
+                            'class',
+                        ),
+                    ],
+                    [
                         "'colour'",
                         self::message(
                             'Target',
@@ -650,12 +723,37 @@ final class CreateObjectUnknownOptionRuleProvider
                         ),
                     ],
                 ],
+                'paramsLegacyClassKey' => [
+                    [
+                        "'__class'",
+                        self::message(
+                            'Target',
+                            '__class',
+                        ),
+                    ],
+                ],
                 'paramsNamed' => [
                     [
                         "'colour'",
                         self::message(
                             'Target',
                             'colour',
+                        ),
+                    ],
+                ],
+                'paramsNamedClassKeys' => [
+                    [
+                        "'class'",
+                        self::message(
+                            'Target',
+                            'class',
+                        ),
+                    ],
+                    [
+                        "'__class'",
+                        self::message(
+                            'Target',
+                            '__class',
                         ),
                     ],
                 ],
