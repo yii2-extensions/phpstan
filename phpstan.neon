@@ -27,6 +27,8 @@ parameters:
             - tests/data/rule/CreateObjectOptionTypeStandAside.php
             - tests/data/rule/CreateObjectStandAside.php
             - tests/data/rule/CreateObjectUnknownOption.php
+            - tests/data/rule/NewObjectLateStaticReference.php
+            - tests/data/rule/NewObjectStandAside.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
             - tests/data/type/ServiceMapDefinitionType.php

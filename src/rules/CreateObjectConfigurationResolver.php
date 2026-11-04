@@ -15,7 +15,6 @@ use yii\base\{BaseObject, Component};
 use yii\BaseYii;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
-use function count;
 use function in_array;
 use function is_int;
 use function max;
@@ -97,7 +96,7 @@ final class CreateObjectConfigurationResolver
 
         [$type, $params] = $arguments;
 
-        $callParams = $params === null ? null : self::constantArray($scope->getNativeType($params));
+        $callParams = $params === null ? null : ObjectConfigurationReader::constantArray($scope->getNativeType($params));
 
         if ($params !== null && $callParams === null) {
             return null;
@@ -105,10 +104,11 @@ final class CreateObjectConfigurationResolver
 
         $line = $node->getStartLine();
 
-        $configuration = self::isLiteralConfiguration($type)
-            ? self::literalConfiguration($type, $scope)
-            : self::constantConfiguration($type, $line, $scope)
-                ?? self::classNameConfiguration($type, $callParams, $scope);
+        $typeOptions = ObjectConfigurationReader::options($type, $line, $scope);
+
+        $configuration = $typeOptions === null
+            ? self::classNameConfiguration($type, $callParams, $scope)
+            : self::classConfiguration($typeOptions, $scope);
 
         if ($configuration === null) {
             return null;
@@ -121,7 +121,7 @@ final class CreateObjectConfigurationResolver
         $callConstruct = null;
 
         if ($construct !== null) {
-            $callConstruct = self::constantArray(
+            $callConstruct = ObjectConfigurationReader::constantArray(
                 $construct instanceof Expr ? $scope->getNativeType($construct) : $construct,
             );
 
@@ -217,7 +217,7 @@ final class CreateObjectConfigurationResolver
 
         foreach ($arguments->getKeyTypes() as $keyType) {
             if ($keyType->getValue() === $key) {
-                $argument = self::constantArray($arguments->getOffsetValueType($keyType));
+                $argument = ObjectConfigurationReader::constantArray($arguments->getOffsetValueType($keyType));
             }
         }
 
@@ -226,11 +226,11 @@ final class CreateObjectConfigurationResolver
         }
 
         $argumentExpr = self::argumentExpr($argumentsExpr, $key);
-        $lines = $argumentExpr === null ? [] : self::keyLines($argumentExpr, $scope);
+        $lines = $argumentExpr === null ? [] : ObjectConfigurationReader::keyLines($argumentExpr, $scope);
         $options = [];
 
         foreach ($argument->getKeyTypes() as $keyType) {
-            $name = self::constantString($keyType);
+            $name = ObjectConfigurationReader::constantString($keyType);
 
             if ($name === null) {
                 return null;
@@ -312,6 +312,28 @@ final class CreateObjectConfigurationResolver
     }
 
     /**
+     * Returns the class ID of a configuration from the value Yii selects among its class keys: a literal class name or
+     * the one constant string of the value expression, or the one constant string of the value type.
+     *
+     * @param list<array{string, int, Expr|Type}> $options Name, line and effective value of each option.
+     *
+     * @return array{string, list<array{string, int, Expr|Type}>}|null Class name as written and the options, or `null`
+     * when no class key is present or the selected class value isn't one class name.
+     */
+    private static function classConfiguration(array $options, Scope $scope): array|null
+    {
+        $classValue = self::classValue($options);
+
+        $id = match (true) {
+            $classValue === null => null,
+            $classValue instanceof Expr => self::literalClassName($classValue, $scope),
+            default => ObjectConfigurationReader::constantString($classValue),
+        };
+
+        return $id === null || $id === '' ? null : [$id, $options];
+    }
+
+    /**
      * Returns the class ID of a `$type` argument that is one class name, with no options, when `$params` supplies
      * constructor arguments; without them the call has no option to analyse.
      *
@@ -344,76 +366,6 @@ final class CreateObjectConfigurationResolver
     private static function classValue(array $options): Expr|Type|null
     {
         return self::optionValue($options, '__class') ?? self::optionValue($options, 'class');
-    }
-
-    /**
-     * Returns the only constant array a native type can hold, without optional keys or an unsealed part.
-     *
-     * A single constant array doesn't prove the value on its own: an intersection can synthesize one for a callable
-     * array, so the array must also contain every value of the type.
-     */
-    private static function constantArray(Type $type): ConstantArrayType|null
-    {
-        $arrays = $type->getConstantArrays();
-
-        if (count($arrays) !== 1) {
-            return null;
-        }
-
-        $array = $arrays[0];
-
-        return $array->isSuperTypeOf($type)->yes()
-            && $array->getOptionalKeys() === []
-            && $array->isUnsealed()->yes() === false
-            ? $array
-            : null;
-    }
-
-    /**
-     * Returns the class ID and options of a configuration whose native type is one constant array with string keys.
-     *
-     * Each option is located at its first key when the configuration is an array literal without unpacking whose keys
-     * all have one constant string value; otherwise every option is located at the call line.
-     *
-     * @return array{string, list<array{string, int, Type}>}|null Class name as written and the name, line and value
-     * type of each option, or `null` when the native type holds more than one array, an optional key, an integer key,
-     * or no single class.
-     */
-    private static function constantConfiguration(Expr $type, int $callLine, Scope $scope): array|null
-    {
-        $array = self::constantArray($scope->getNativeType($type));
-
-        if ($array === null) {
-            return null;
-        }
-
-        $lines = self::keyLines($type, $scope);
-        $options = [];
-
-        foreach ($array->getKeyTypes() as $keyType) {
-            $name = self::constantString($keyType);
-
-            if ($name === null) {
-                return null;
-            }
-
-            $options[] = [$name, $lines[$name] ?? $callLine, $array->getOffsetValueType($keyType)];
-        }
-
-        $classType = self::classValue($options);
-        $id = $classType === null ? null : self::constantString($classType);
-
-        return $id === null || $id === '' ? null : [$id, $options];
-    }
-
-    /**
-     * Returns the value of a native type that holds exactly one constant string.
-     */
-    private static function constantString(Type $type): string|null
-    {
-        $strings = $type->getConstantStrings();
-
-        return count($strings) === 1 && $strings[0]->isSuperTypeOf($type)->yes() ? $strings[0]->getValue() : null;
     }
 
     /**
@@ -453,44 +405,6 @@ final class CreateObjectConfigurationResolver
     }
 
     /**
-     * Returns whether the native method of the class, possibly inherited, is declared by one of the given classes.
-     *
-     * @param list<string> $declaringClasses Fully qualified names of the accepted declaring classes.
-     */
-    private static function isDeclaredBy(
-        ClassReflection $classReflection,
-        string $methodName,
-        array $declaringClasses,
-    ): bool {
-        return $classReflection->hasNativeMethod($methodName)
-            && in_array(
-                $classReflection->getNativeMethod($methodName)->getDeclaringClass()->getName(),
-                $declaringClasses,
-                true,
-            );
-    }
-
-    /**
-     * Returns whether the configuration is an array literal without unpacking whose keys are all literal strings.
-     *
-     * @phpstan-assert-if-true Array_ $type
-     */
-    private static function isLiteralConfiguration(Expr $type): bool
-    {
-        if ($type instanceof Array_ === false) {
-            return false;
-        }
-
-        foreach ($type->items as $item) {
-            if ($item->unpack || $item->key instanceof String_ === false) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Returns whether Yii assigns the option directly to a native property without running application code: a public
      * instance property that isn't read-only, hooked or of asymmetric visibility.
      *
@@ -511,37 +425,6 @@ final class CreateObjectConfigurationResolver
             && $property->isHooked() === false
             && $property->isPrivateSet() === false
             && $property->isProtectedSet() === false;
-    }
-
-    /**
-     * Returns the first line of each key of an array literal without unpacking, by option name.
-     *
-     * @return array<int|string, int> Line by option name; empty when the expression isn't such a literal or a key
-     * doesn't have one constant string value, so that no option is located at an item it may not come from.
-     */
-    private static function keyLines(Expr $type, Scope $scope): array
-    {
-        if ($type instanceof Array_ === false) {
-            return [];
-        }
-
-        $lines = [];
-
-        foreach ($type->items as $item) {
-            $name = match (true) {
-                $item->key === null => null,
-                $item->key instanceof String_ => $item->key->value,
-                default => self::constantString($scope->getNativeType($item->key)),
-            };
-
-            if ($name === null) {
-                return [];
-            }
-
-            $lines[$name] ??= $item->getStartLine();
-        }
-
-        return $lines;
     }
 
     /**
@@ -582,41 +465,9 @@ final class CreateObjectConfigurationResolver
             }
         }
 
-        $className = self::constantString($scope->getNativeType($expr));
+        $className = ObjectConfigurationReader::constantString($scope->getNativeType($expr));
 
         return $className === '' ? null : $className;
-    }
-
-    /**
-     * Returns the class ID and the distinct options of an array literal whose keys are all literal strings, in
-     * first-occurrence order, each at the line of its first item with the value of its last item, as PHP builds the
-     * array.
-     *
-     * @return array{string, list<array{string, int, Expr}>}|null Class name as written and the name, line and value
-     * expression of each option, or `null` when no class key is present or the selected class value isn't one class
-     * name.
-     */
-    private static function literalConfiguration(Array_ $type, Scope $scope): array|null
-    {
-        $options = [];
-        $positions = [];
-
-        foreach ($type->items as $item) {
-            $name = $item->key instanceof String_ ? $item->key->value : '';
-            $position = $positions[$name] ?? null;
-
-            if ($position !== null && isset($options[$position])) {
-                $options[$position] = [$options[$position][0], $options[$position][1], $item->value];
-            } else {
-                $positions[$name] = count($options);
-                $options[] = [$name, $item->getStartLine(), $item->value];
-            }
-        }
-
-        $classExpr = self::classValue($options);
-        $id = $classExpr === null ? null : self::literalClassName($classExpr, $scope);
-
-        return $id === null ? null : [$id, $options];
     }
 
     /**
@@ -651,14 +502,7 @@ final class CreateObjectConfigurationResolver
 
         $classReflection = $this->reflectionProvider->getClass($className);
 
-        if ($classReflection->isClass() === false || $classReflection->isAbstract()) {
-            return null;
-        }
-
-        return self::isDeclaredBy($classReflection, '__construct', [BaseObject::class])
-            && self::isDeclaredBy($classReflection, '__set', [BaseObject::class, Component::class])
-            ? $classReflection
-            : null;
+        return ObjectOptionAssignment::isConfigurable($classReflection) ? $classReflection : null;
     }
 
     /**

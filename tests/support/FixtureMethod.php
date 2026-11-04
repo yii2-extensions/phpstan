@@ -42,14 +42,19 @@ final class FixtureMethod
 
     /**
      * Returns the first line of a fixture method with the given key followed by `=>`, on the same or the next line, or
-     * with its `createObject()` call when the key is `null`.
+     * with its call when the key is `null`.
      *
      * @param string|null $key Key as written in the fixture, such as `'colour'` or `Options::UNKNOWN`.
+     * @param string $call Text that starts the call, compared case-insensitively, such as `createObject(` or `new `.
      *
      * @phpstan-param class-string $fixture
      */
-    public static function line(string $fixture, string $method, string|null $key = null): int
-    {
+    public static function line(
+        string $fixture,
+        string $method,
+        string|null $key = null,
+        string $call = 'createObject(',
+    ): int {
         $reflection = new ReflectionMethod($fixture, $method);
 
         $fileName = $reflection->getFileName();
@@ -61,7 +66,7 @@ final class FixtureMethod
                 $source = $lines[$line - 1] ?? '';
 
                 $found = match (true) {
-                    $key === null => stripos($source, 'createObject(') !== false,
+                    $key === null => stripos($source, $call) !== false,
                     str_contains($source, "{$key} =>") => true,
                     default => str_ends_with(rtrim($source), $key)
                         && str_starts_with(ltrim($lines[$line] ?? ''), '=>'),

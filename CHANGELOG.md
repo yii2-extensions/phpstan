@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: follow container aliases and class-only definitions in both `Yii::createObject()` option rules, standing aside on factories and singletons.
 - feat: follow container definitions with plain public property options in both `Yii::createObject()` option rules, standing aside on setters.
 - feat: follow constructor arguments addressing only `$config` in both `Yii::createObject()` option rules; check `Instance` values as resolved.
+- feat: add opt-in `yii2.new.unknownOption` and `yii2.new.invalidOptionType` rules for the `$config` of direct `new` `BaseObject` constructions.
 
 ## 0.5.2 October 23, 2026
 

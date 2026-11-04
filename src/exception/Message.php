@@ -62,6 +62,17 @@ enum Message: string
         . 'property or setter with that name.';
 
     /**
+     * Error when a `new` configuration value is never accepted by the property or setter Yii assigns it to.
+     */
+    case NEW_OBJECT_INVALID_OPTION_TYPE = 'new %s() sets $%s to %s, but %s accepts only %s, even with type coercion.';
+
+    /**
+     * Error when a `new` configuration option names no public property or setter of the constructed class.
+     */
+    case NEW_OBJECT_UNKNOWN_OPTION = 'new %s() sets unknown property $%s: the class has no public property or setter '
+        . 'with that name.';
+
+    /**
      * Error when an application property is neither native, a component, nor annotation-based.
      */
     case PROPERTY_NOT_RESOLVED = 'Property %s::$%s is neither native, a component, nor annotation-based.';
