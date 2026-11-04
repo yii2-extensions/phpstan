@@ -13,6 +13,8 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `component_generics`                  | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
 | `rules.createObjectInvalidOptionType` | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).       |
 | `rules.createObjectUnknownOption`     | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).         |
+| `rules.newInvalidOptionType`          | `false`               | Enables the [`new` option type rule](#options-of-new-constructions).         |
+| `rules.newUnknownOption`              | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).      |
 
 PHPStan's `paths`, `level`, `bootstrapFiles`, `stubFiles` and `tmpDir` remain normal
 [PHPStan options](https://phpstan.org/config-reference).
@@ -405,6 +407,60 @@ The rule stands aside when the rejection isn't certain:
 
 The result cache reanalyses a call when the native type of the property or setter changes, including one inherited from
 a parent class or trait, and when a class named in that type changes.
+
+## Options of `new` constructions
+
+Two more opt-in rules check the configuration passed to the constructor of a `yii\base\BaseObject` subclass written with
+`new`. They are independent of each other and of the `Yii::createObject()` rules; enable either or both:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            newInvalidOptionType: true
+            newUnknownOption: true
+```
+
+```php
+final class Feed extends yii\base\BaseObject
+{
+    public int $limit = 10;
+}
+
+new Feed(['limit' => '20']);                         // valid
+new Feed(['limit' => 'all', 'timeoutSeconds' => 5]); // two reported
+new Feed(config: ['timeoutSeconds' => 5]);           // reported
+```
+
+`timeoutSeconds` is reported with the identifier `yii2.new.unknownOption` and `'all'` with `yii2.new.invalidOptionType`,
+at the line of each key; a configuration that comes from a constant or a variable is reported at the line of `new`.
+Names, values, `yii\base\Component` options and the proof of the configuration follow the
+[unknown option](#unknown-yiicreateobject-options) and [option type](#invalid-yiicreateobject-option-types) rules of
+`Yii::createObject()`, with these differences, which match what `new` does at runtime:
+
+- `new` doesn't use `Yii::$container`: a container binding of the class name, an alias, a factory, a singleton, and the
+  options or params of a definition change neither the constructed class nor the checks;
+- the inherited constructor passes every key to `Yii::configure()`, so `class`, `__class` and `__construct()` are
+  ordinary property names, reported when the class has no public property or setter for them;
+- a `yii\di\Instance` value is assigned as that object, not resolved, and is reported for a property or setter whose
+  native type can't hold it;
+- Yii assigns the options in files without `strict_types`, so weak coercion applies even when the file that writes `new`
+  declares `strict_types=1`.
+
+The rules analyse a construction only when:
+
+- the class is written as a name: a fully qualified or imported name, `self`, `parent`, or `static` in a final class;
+- the class is instantiable, inherits the constructor of `yii\base\BaseObject` and inherits `__set()` from
+  `yii\base\BaseObject` or `yii\base\Component`;
+- the configuration is the only argument, passed by position or by its name `config`, without unpacking.
+
+They stand aside for a class held in a variable or an expression, anonymous classes, `self`, `parent` and `static`
+inside a closure or an arrow function, `static` in a class that isn't final, and any custom constructor, even one that
+calls `parent::__construct($config)`. They also stand aside for unpacked arguments, extra arguments, named arguments
+other than `config`, and configurations whose native type isn't one array shape with string keys; PHPStan's own rules
+report malformed argument lists. Changing the constructed class, a parent class or a trait it uses, or the `behaviors`
+of the analysis configuration for a `yii\base\Component` subclass reanalyses the construction; changing a container
+binding doesn't.
 
 ## Constants and result cache
 

@@ -10,7 +10,8 @@ use ReflectionClass;
 use function dirname;
 
 /**
- * Provides the diagnostic assertions of the `Yii::createObject()` rule tests, analysing each fixture once per test class.
+ * Provides the diagnostic assertions of the `Yii::createObject()` and `new` rule tests, analysing each fixture once per
+ * test class.
  */
 trait CreateObjectRuleTestTrait
 {
@@ -26,11 +27,16 @@ trait CreateObjectRuleTestTrait
      *
      * @param list<array{string|null, string}> $expected Key each diagnostic is reported at, or `null` for the call
      * line, and its message.
+     * @param string $call Text that starts the call, such as `createObject(` or `new `.
      *
      * @phpstan-param class-string $fixture
      */
-    private function assertMethodDiagnostics(string $fixture, string $method, array $expected): void
-    {
+    private function assertMethodDiagnostics(
+        string $fixture,
+        string $method,
+        array $expected,
+        string $call = 'createObject(',
+    ): void {
         $actual = [];
 
         foreach ($this->fixtureErrors((string) (new ReflectionClass($fixture))->getFileName()) as $error) {
@@ -43,7 +49,7 @@ trait CreateObjectRuleTestTrait
 
         foreach ($expected as [$key, $message]) {
             $expectedDiagnostics[] = [
-                FixtureMethod::line($fixture, $method, $key),
+                FixtureMethod::line($fixture, $method, $key, $call),
                 self::IDENTIFIER,
                 $message,
             ];

@@ -8,27 +8,15 @@ use PhpParser\Node;
 use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\{DependencyTracker, Scope};
-use PHPStan\Reflection\{ClassReflection, ReflectionProvider};
+use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\{IdentifierRuleError, Rule, RuleErrorBuilder};
-use PHPStan\Type\{
-    NullType,
-    ObjectType,
-    ObjectWithoutClassType,
-    StringType,
-    Type,
-    TypeCombinator,
-    TypeUtils,
-    VerbosityLevel,
-};
-use yii\base\{BaseObject, Component};
+use PHPStan\Type\{NullType, ObjectType, ObjectWithoutClassType, StringType, Type, TypeCombinator, VerbosityLevel};
 use yii\BaseYii;
 use yii\di\Instance;
 use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 
-use function count;
 use function in_array;
-use function sprintf;
 
 /**
  * Reports {@see BaseYii::createObject()} option values that the property or setter Yii assigns them to never accepts.
@@ -39,6 +27,7 @@ use function sprintf;
  *
  * {@see Rule} for PHPStan rule contract.
  * {@see CreateObjectConfigurationResolver} for the configurations and classes the rule analyses.
+ * {@see ObjectOptionAssignment} for the assignment semantics.
  *
  * @implements Rule<StaticCall>
  */
@@ -90,7 +79,13 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         $errors = [];
 
         foreach ($configuration->options as [$name, $line, $value]) {
-            $target = self::assignmentTarget($classReflection, $name);
+            if (in_array($name, CreateObjectConfigurationResolver::RESERVED_OPTIONS, true)) {
+                continue;
+            }
+
+            $actualType = $value instanceof Expr ? $scope->getNativeType($value) : $value;
+
+            $target = ObjectOptionAssignment::rejectingTarget($classReflection, $name, $actualType, $scope);
 
             if ($target === null) {
                 continue;
@@ -98,16 +93,7 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
 
             [$expectedType, $member] = $target;
 
-            $actualType = $value instanceof Expr ? $scope->getNativeType($value) : $value;
-
-            foreach ([...$expectedType->getReferencedClasses(), ...$actualType->getReferencedClasses()] as $className) {
-                $scope->trackClassDependency($className);
-            }
-
-            if (
-                self::isIncompatible($expectedType, $actualType) === false
-                || self::mayResolveToAccepted($expectedType, $actualType)
-            ) {
+            if (self::mayResolveToAccepted($expectedType, $actualType)) {
                 continue;
             }
 
@@ -127,100 +113,6 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         }
 
         return $errors;
-    }
-
-    /**
-     * Returns whether a native type contains the `callable` type, whose acceptance of a string or array depends on the
-     * functions and methods that exist at runtime.
-     */
-    private static function acceptsCallable(Type $type): bool
-    {
-        foreach (TypeUtils::flattenTypes($type) as $member) {
-            if ($member->isCallable()->yes() && $member->isObject()->yes() === false) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Returns the native type that Yii checks the option value against and the member that declares it.
-     *
-     * {@see BaseYii::configure()} assigns a public instance property directly, so its type applies even when a setter
-     * exists. A protected, private or static property is inaccessible from there, and `__set()` calls the `set` method
-     * instead, which must be public or protected to be callable from {@see BaseObject} or {@see Component}. Read-only,
-     * hooked and asymmetric-visibility properties, private setters, setters without parameters and setters with more
-     * than one signature are left alone.
-     *
-     * @return array{Type, string}|null Native type and member description, or `null` when no assignment path with a
-     * type check is proven.
-     */
-    private static function assignmentTarget(ClassReflection $classReflection, string $name): array|null
-    {
-        if ($name === '' || in_array($name, CreateObjectConfigurationResolver::RESERVED_OPTIONS, true)) {
-            return null;
-        }
-
-        if ($classReflection->hasNativeProperty($name)) {
-            $property = $classReflection->getNativeProperty($name);
-
-            if ($property->isPublic() && $property->isStatic() === false) {
-                return $property->isReadOnly()
-                    || $property->isHooked()
-                    || $property->isPrivateSet()
-                    || $property->isProtectedSet()
-                    ? null
-                    : [$property->getNativeType(), 'the property'];
-            }
-        }
-
-        if ($classReflection->hasNativeMethod('set' . $name) === false) {
-            return null;
-        }
-
-        $setter = $classReflection->getNativeMethod('set' . $name);
-
-        if ($setter->isPrivate()) {
-            return null;
-        }
-
-        $variants = $setter->getVariants();
-
-        $parameter = count($variants) === 1 ? $variants[0]->getParameters()[0] ?? null : null;
-
-        return $parameter === null
-            ? null
-            : [
-                $parameter->getNativeType(),
-                sprintf('%s::%s()', $setter->getDeclaringClass()->getDisplayName(), $setter->getName()),
-            ];
-    }
-
-    /**
-     * Returns whether no value of the actual type converts to the expected type under weak type coercion.
-     *
-     * {@see Type::toCoercedArgumentType()} adds a string only for objects whose class declares `__toString()`; an
-     * object of any other non-final class or interface can still be a `Stringable` subclass, and internal classes can
-     * cast to string, so every object may become a string. A string or an array may name a callable that PHPStan
-     * doesn't know, so a `callable` type is never claimed for them.
-     */
-    private static function isIncompatible(Type $expectedType, Type $actualType): bool
-    {
-        if (
-            ($actualType->isString()->no() === false || $actualType->isArray()->no() === false)
-            && self::acceptsCallable($expectedType)
-        ) {
-            return false;
-        }
-
-        $coercedType = $actualType->toCoercedArgumentType(false);
-
-        if ($actualType->isObject()->no() === false) {
-            $coercedType = TypeCombinator::union($coercedType, new StringType());
-        }
-
-        return $expectedType->isSuperTypeOf($coercedType)->no();
     }
 
     /**
