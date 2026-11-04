@@ -15,6 +15,7 @@ final class ComponentClassSetterTarget extends Component
     {
         $this->attachBehavior($class, new ComponentBehavior());
     }
+
     public function setClass(string $class): void
     {
         $this->attachBehavior($class, new ComponentBehavior());
