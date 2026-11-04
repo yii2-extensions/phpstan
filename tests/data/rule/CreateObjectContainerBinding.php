@@ -315,6 +315,15 @@ final class CreateObjectContainerBinding
             [
                 'class' => 'binding.optionsWithParams',
                 'colour' => 'red',
+            ],
+        );
+    }
+
+    public function definitionOptionsWithParamsInvalidValue(): object
+    {
+        return Yii::createObject(
+            [
+                'class' => 'binding.optionsWithParams',
                 'name' => [],
             ],
         );

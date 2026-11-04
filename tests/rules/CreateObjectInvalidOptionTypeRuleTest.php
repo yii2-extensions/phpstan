@@ -10,9 +10,14 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, TestWith};
 use TypeError;
 use yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\data\rule\{CreateObjectComponentOption, CreateObjectContainerBinding};
+use yii2\extensions\phpstan\tests\data\rule\{
+    CreateObjectComponentOption,
+    CreateObjectConstructorArgument,
+    CreateObjectContainerBinding,
+};
 use yii2\extensions\phpstan\tests\provider\{
     CreateObjectComponentOptionRuntimeProvider,
+    CreateObjectConstructorArgumentRuntimeProvider,
     CreateObjectContainerBindingRuntimeProvider,
     CreateObjectInvalidOptionTypeRuleProvider,
 };
@@ -84,6 +89,29 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
             $method = FixtureMethod::at(CreateObjectComponentOption::class, $error->getLine());
 
             [$outcome] = CreateObjectComponentOptionRuntimeProvider::outcome($method);
+
+            self::assertSame(
+                TypeError::class,
+                $outcome,
+                sprintf('Runtime outcome of `%s()` must be a `TypeError`.', $method),
+            );
+        }
+    }
+
+    public function testReportConstructorArgumentValuesOnlyForCallsThatThrowTypeError(): void
+    {
+        $errors = $this->fixtureErrors(dirname(__DIR__) . '/data/rule/CreateObjectConstructorArgument.php');
+
+        self::assertNotSame(
+            [],
+            $errors,
+            'Fixture must produce diagnostics.',
+        );
+
+        foreach ($errors as $error) {
+            $method = FixtureMethod::at(CreateObjectConstructorArgument::class, $error->getLine());
+
+            [$outcome] = CreateObjectConstructorArgumentRuntimeProvider::outcome($method);
 
             self::assertSame(
                 TypeError::class,

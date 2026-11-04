@@ -142,6 +142,10 @@ final class CreateObjectContainerBindingRuntimeProvider
             '',
         ],
         'definitionOptionsWithParams' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
+        ],
+        'definitionOptionsWithParamsInvalidValue' => [
             TypeError::class,
             'Cannot assign array to property %sTarget::$name',
         ],

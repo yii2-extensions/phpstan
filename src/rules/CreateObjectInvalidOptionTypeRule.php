@@ -10,9 +10,19 @@ use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{ClassReflection, ReflectionProvider};
 use PHPStan\Rules\{IdentifierRuleError, Rule, RuleErrorBuilder};
-use PHPStan\Type\{StringType, Type, TypeCombinator, TypeUtils, VerbosityLevel};
+use PHPStan\Type\{
+    NullType,
+    ObjectType,
+    ObjectWithoutClassType,
+    StringType,
+    Type,
+    TypeCombinator,
+    TypeUtils,
+    VerbosityLevel,
+};
 use yii\base\{BaseObject, Component};
 use yii\BaseYii;
+use yii\di\Instance;
 use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 
@@ -24,7 +34,8 @@ use function sprintf;
  * Reports {@see BaseYii::createObject()} option values that the property or setter Yii assigns them to never accepts.
  *
  * A value is reported only when PHP's weak type coercion can't convert it to the native type of the public property or
- * of the first setter parameter. PHPDoc types are not consulted.
+ * of the first setter parameter. PHPDoc types are not consulted. A value that may be an {@see Instance} reference is
+ * also checked as the object or `null` that the container may resolve it to before the assignment.
  *
  * {@see Rule} for PHPStan rule contract.
  * {@see CreateObjectConfigurationResolver} for the configurations and classes the rule analyses.
@@ -37,7 +48,6 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
      * Error identifier reported by this rule.
      */
     private const string IDENTIFIER = 'yii2.createObject.invalidOptionType';
-
     /**
      * Resolves the configurations whose assignment path is certain.
      */
@@ -94,7 +104,10 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
                 $scope->trackClassDependency($className);
             }
 
-            if (self::isIncompatible($expectedType, $actualType) === false) {
+            if (
+                self::isIncompatible($expectedType, $actualType) === false
+                || self::mayResolveToAccepted($expectedType, $actualType)
+            ) {
                 continue;
             }
 
@@ -208,5 +221,23 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         }
 
         return $expectedType->isSuperTypeOf($coercedType)->no();
+    }
+
+    /**
+     * Returns whether the value may be an {@see Instance} reference that the container resolves, before the assignment,
+     * to an object or `null` ({@see Instance::get()}) that the expected type may accept.
+     *
+     * `Container::build()` resolves references among the options of the configuration, and nested in a constructor
+     * argument only when the container resolves arrays, a runtime setting. Any object may also be a `Stringable`.
+     */
+    private static function mayResolveToAccepted(Type $expectedType, Type $actualType): bool
+    {
+        if ((new ObjectType(Instance::class))->isSuperTypeOf($actualType)->no()) {
+            return false;
+        }
+
+        $resolvedType = TypeCombinator::union(new ObjectWithoutClassType(), new StringType(), new NullType());
+
+        return $expectedType->isSuperTypeOf($resolvedType)->no() === false;
     }
 }

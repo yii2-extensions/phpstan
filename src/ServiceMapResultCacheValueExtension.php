@@ -135,8 +135,10 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
      * - `service:<id>`: the configured service class, {@see UNRESOLVED} when the service is defined with a class that
      *   can't be determined, or {@see MISSING}.
      * - `construction:<id>`: the class {@see ServiceMap::getConfiguredClassById()} returns, followed by a space and a
-     *   hash of the names {@see ServiceMap::getDefinitionOptionNamesById()} returns when there are any, or
-     *   `not-proven`; no class name can equal the last two forms.
+     *   hash of the names {@see ServiceMap::getDefinitionOptionNamesById()} returns when there are any, or of those
+     *   names together with the keys {@see ServiceMap::getDefinitionParamKeysById()} and
+     *   {@see ServiceMap::getDefinitionConstructKeysById()} return when the definitions pass constructor arguments,
+     *   or `not-proven`; no class name can equal the last three forms.
      * - `behaviors:<class>`: a hash of the ordered behavior classes, or {@see MISSING} when none are attached.
      *
      * Any other key yields {@see UNSUPPORTED}, so a result cache written by another version of the extension
@@ -256,7 +258,11 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
     }
 
     /**
-     * Returns the value for the class the container builds for the given id and the definition options it merges.
+     * Returns the value for the class the container builds for the given id, the definition options it merges and the
+     * keys of the constructor arguments the definitions pass.
+     *
+     * A chain without constructor arguments keeps the value of a chain with options only, so that its result cache
+     * entries stay valid.
      */
     private function getConstructionValue(string $id): string
     {
@@ -267,6 +273,12 @@ final class ServiceMapResultCacheValueExtension implements ResultCacheValueExten
         }
 
         $options = $this->serviceMap->getDefinitionOptionNamesById($id);
+        $paramKeys = $this->serviceMap->getDefinitionParamKeysById($id);
+        $constructKeys = $this->serviceMap->getDefinitionConstructKeysById($id);
+
+        if ($paramKeys !== [] || $constructKeys !== null) {
+            return "{$className} " . hash('sha256', serialize([$options, $paramKeys, $constructKeys]));
+        }
 
         return $options === [] ? $className : "{$className} " . hash('sha256', serialize($options));
     }

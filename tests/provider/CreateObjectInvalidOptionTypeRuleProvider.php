@@ -9,6 +9,7 @@ use RuntimeException;
 use yii2\extensions\phpstan\tests\data\rule\{
     CreateObjectComponentOption,
     CreateObjectConstantInvalidOptionType,
+    CreateObjectConstructorArgument,
     CreateObjectContainerBinding,
     CreateObjectInvalidOptionType,
 };
@@ -222,6 +223,85 @@ final class CreateObjectInvalidOptionTypeRuleProvider
                     ],
                 ],
             ],
+            CreateObjectConstructorArgument::class => [
+                'componentParamsInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'ComponentMembersTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'constructInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'TypedTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'definitionParamsInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'TypedTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'definitionParamsWithOptionsInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'TypedTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'optionsInstanceInvalidValue' => [
+                    [
+                        "'items'",
+                        self::property(
+                            'TypedTarget',
+                            'items',
+                            'yii\\di\\Instance',
+                            'array',
+                        ),
+                    ],
+                ],
+                'paramsIgnoredForOptionsInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'TypedTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+                'paramsInvalidValue' => [
+                    [
+                        "'count'",
+                        self::property(
+                            'TypedTarget',
+                            'count',
+                            "'abc'",
+                            'int',
+                        ),
+                    ],
+                ],
+            ],
             CreateObjectContainerBinding::class => [
                 'componentAliasInvalidValue' => [
                     [
@@ -262,6 +342,17 @@ final class CreateObjectInvalidOptionTypeRuleProvider
                         self::property(
                             'Target',
                             'tag',
+                            'array{}',
+                            'string',
+                        ),
+                    ],
+                ],
+                'definitionOptionsWithParamsInvalidValue' => [
+                    [
+                        "'name'",
+                        self::property(
+                            'Target',
+                            'name',
                             'array{}',
                             'string',
                         ),

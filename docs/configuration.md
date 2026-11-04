@@ -229,9 +229,10 @@ configuration; only native types, which PHPStan derives from literal values, con
 The rule reports only when Yii's assignment path is certain:
 
 - the call is `createObject()` declared by `yii\BaseYii`, through `Yii`, `BaseYii`, an imported alias or a subclass that
-  doesn't override it, with no `$params` or with `$params` whose native type is an empty array;
+  doesn't override it, with no `$params` or with `$params` whose native type is one array shape;
 - the native type of the configuration is exactly one array shape with string keys and no optional key, and its
-  `__class` value, or else its `class` value, is one class name;
+  `__class` value, or else its `class` value, is one class name; with [constructor arguments](#constructor-arguments),
+  the configuration can also be one class name;
 - the class name has no container binding, or only bindings that build one class and assign the configuration to it, as
   described below;
 - the class Yii builds is instantiable, inherits the constructor of `yii\base\BaseObject` and inherits `__set()` from
@@ -244,8 +245,8 @@ option assignable, since Yii assigns through native members.
 
 The rule stands aside for custom constructors or `__set()` methods; abstract or unknown classes; configurations whose
 native type allows more than one array shape, an optional or integer key, or unknown unpacked data; class values that
-aren't one known name; and a `__construct()` key or `$params` that may be non-empty, which can move the configuration to
-another constructor argument.
+aren't one known name; and constructor arguments that may address another parameter, as described under
+[constructor arguments](#constructor-arguments).
 
 `Yii::createObject()` passes the configuration to `Yii::$container`, so a container binding of the class name can
 replace the class or ignore the configuration. The rule follows a `container.definitions` entry for the class name only
@@ -255,7 +256,8 @@ when Yii then builds one class and assigns the configuration to it:
   that class instead; the class can itself be a bound ID, so chains of several entries are followed;
 - `[]` or `null`, or an array without `class` and `__class` under a namespaced class name, which makes Yii build the
   class name itself;
-- either form in a `[definition, params]` pair whose params are `[]`.
+- either form in a `[definition, params]` pair, and an array with a `__construct()` key that holds an array, whose
+  [constructor arguments](#constructor-arguments) are merged with those of the call.
 
 The other keys of an array are options that Yii assigns before the options of the call; an option of the call with the
 same name replaces the definition's value. The rule follows such an entry only when each of its options, on every entry
@@ -280,15 +282,15 @@ IDs are compared as written, as Yii does: `'\app\Feed'` doesn't match an entry f
 when it resolves to the same class: a `container.singletons` entry, a later singleton for the same ID, a factory or an
 invocable object, which may ignore the configuration or apply it, an object, which Yii returns as is, an array with any
 other option, such as a setter, an `on ...` or `as ...` key, or a name the class can't assign, whose code or failure
-runs before the call's options, an array with a `__construct()` or integer key, or with both `class` and `__class`, a
-definition with non-empty params, which can move the configuration to another constructor argument, and a cycle, which
-Yii follows until the process fails.
+runs before the call's options, an array with an integer key, a `__construct()` key that doesn't hold an array, or both
+`class` and `__class`, and a cycle, which Yii follows until the process fails.
 
 The analysis configuration is treated as the complete list of container bindings: a binding registered at runtime
 outside it, for example in a bootstrap class, is not seen. Describe such bindings in the analysis configuration or keep
 the rule disabled for that code. Changing a binding on the chain, whether its target or its form, adding or removing a
-behavior in the analysis configuration, changing the class Yii builds or one of its parents, or changing a constant the
-configuration reads reanalyses the affected calls without clearing the result cache.
+behavior in the analysis configuration, changing the keys of the constructor arguments of a definition, changing the
+class Yii builds or one of its parents, or changing a constant the configuration or `$params` reads reanalyses the
+affected calls without clearing the result cache.
 
 For a `yii\base\Component` subclass, `__set()` also attaches `on ...` event handlers and `as ...` behaviors, and passes
 a name without a public property or setter to the attached behaviors. `on ...` and `as ...` options are never reported.
@@ -321,6 +323,30 @@ doesn't receive configuration options and doesn't affect the rule.
 PHPStan doesn't follow every way a local variable can change. `extract()`, `include`, `eval()`, a `foreach` loop by
 reference, or a called function that writes a `global` variable can replace a configuration whose native type still
 describes the earlier value. Pass the configuration directly or keep the rule disabled for such code.
+
+### Constructor arguments
+
+`$params`, a `__construct()` key of the configuration, and the params or `__construct()` key of the definitions on the
+chain pass constructor arguments. Yii merges them by key: `$params` of the call over the params of the definitions,
+nearest first, over the `__construct()` array of the call or, without one, of the nearest definition that has one. The
+inherited constructor of `yii\base\BaseObject` has one parameter, `$config`, so the rule follows these arguments only
+when every key names it, as position `0` or as the name `config`:
+
+- when the call or a definition has options, Yii assigns them and ignores the argument, so the call's options are
+  checked as usual;
+- otherwise Yii passes the argument as the configuration. It is checked when the call supplies it, in `$params` or in
+  `__construct()`, as one array shape with string keys; Yii assigns every key, including `class` and `__class`.
+
+```php
+Yii::createObject(Feed::class, [['timeoutSeconds' => 5]]);                                // reported
+Yii::createObject(['class' => Feed::class, '__construct()' => [['timeoutSeconds' => 5]]]); // reported
+Yii::createObject(['class' => Feed::class, 'url' => '/rss'], [['timeoutSeconds' => 5]]);  // valid
+```
+
+In the last call Yii assigns `url` and ignores the argument. The rule stands aside when the keys mix positions and
+names, which makes Yii throw; when a key addresses another parameter, such as position `1` or another name, which makes
+Yii pass the configuration to that parameter instead; when `$params` or `__construct()` isn't one array shape; and when
+the argument Yii uses as configuration comes from a definition.
 
 ## Invalid `Yii::createObject()` option types
 
@@ -372,7 +398,10 @@ The rule stands aside when the rejection isn't certain:
 - read-only, hooked and asymmetric-visibility properties, private setters, setters without parameters and options with
   an empty name are not checked;
 - some values that PHP rejects are not reported either: `INF` or `NAN` for `int`, and scalar values for a `true` or
-  `false` type, which PHP doesn't coerce.
+  `false` type, which PHP doesn't coerce;
+- a value that may be a `yii\di\Instance` reference is also checked as the object or `null` that the container may
+  resolve it to before the assignment: Yii resolves references among the options of the configuration, and in a
+  constructor argument only when the container's `resolveArrays` is enabled at runtime.
 
 The result cache reanalyses a call when the native type of the property or setter changes, including one inherited from
 a parent class or trait, and when a class named in that type changes.

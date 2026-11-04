@@ -6,6 +6,7 @@ use yii\di\Instance;
 use yii2\extensions\phpstan\tests\support\createobject\{
     AbstractTarget,
     AliasTarget,
+    ArgumentsTarget,
     BindingContract,
     ComponentBehavior,
     ComponentBoundTarget,
@@ -32,6 +33,7 @@ return [
     'container' => [
         'definitions' => [
             AliasTarget::class => Target::class,
+            ArgumentsTarget::class => [[], [['name' => 'definition']]],
             BindingContract::class => Target::class,
             ComponentBoundTarget::class => static fn(): ComponentBoundTarget => new ComponentBoundTarget(),
             DefinitionOptionsTarget::class => ['name' => 'definition'],
@@ -39,6 +41,17 @@ return [
             FactoryTarget::class => static fn(): FactoryTarget => new FactoryTarget(),
             InstanceTarget::class => new InstanceTarget(),
             UnresolvedTarget::class => static fn() => new UnresolvedTarget(),
+            'arguments.alias' => 'arguments.params',
+            'arguments.construct' => ['class' => Target::class, '__construct()' => [['name' => 'definition']]],
+            'arguments.constructNull' => ['class' => Target::class, '__construct()' => null],
+            'arguments.constructTwo' => ['class' => Target::class, '__construct()' => [['name' => 'definition'], 'second']],
+            'arguments.customConstructor' => [['class' => CustomConstructorTarget::class], [['name' => 'definition']]],
+            'arguments.hop' => [['class' => 'arguments.params'], [1 => 'second']],
+            'arguments.hopNamed' => [['class' => 'arguments.params'], ['config' => ['name' => 'hop']]],
+            'arguments.named' => [['class' => Target::class], ['config' => ['name' => 'definition']]],
+            'arguments.params' => [['class' => Target::class], [['name' => 'definition']]],
+            'arguments.paramsTwo' => [['class' => Target::class], [['name' => 'definition'], 'second']],
+            'arguments.typed' => [['class' => TypedTarget::class], [['title' => 'definition']]],
             'binding.abstract' => AbstractTarget::class,
             'binding.annotatedOption' => ['class' => Target::class, 'documented' => 'definition'],
             'binding.array' => ['class' => Target::class],
@@ -85,6 +98,7 @@ return [
         ],
         'singletons' => [
             SingletonTarget::class => [],
+            'arguments.singleton' => [['class' => Target::class], [['name' => 'definition']]],
             'binding.optionsSingleton' => ['class' => Target::class, 'name' => 'definition'],
             'binding.replaced' => Target::class,
             'binding.singleton' => Target::class,

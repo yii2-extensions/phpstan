@@ -25,10 +25,10 @@ final class ServiceMapConstructionProvider
         yield 'options without class under an ID without namespace' => ['options.noNamespace', null, []];
         yield 'pair of options with empty params' => ['options.wrapped', 'SplStack', ['flags']];
         yield 'options of the last hop first' => ['options.chain', 'SplStack', ['flags', 'mode', 'size']];
-        yield 'options with __construct()' => ['options.construct', null, []];
+        yield 'options with __construct()' => ['options.construct', 'SplStack', []];
         yield 'options with an integer key' => ['options.integer', null, []];
         yield 'options with class and __class' => ['opaque.classes', null, []];
-        yield 'options with params' => ['options.params', null, []];
+        yield 'options with params' => ['options.params', 'SplStack', ['flags']];
         yield 'options with null class' => ['opaque.classNull', null, []];
         yield 'options on a cycle' => ['options.cycle', null, []];
         yield 'options before a factory' => ['options.toFactory', null, []];
@@ -76,5 +76,30 @@ final class ServiceMapConstructionProvider
         yield 'cycle after one hop' => ['cycle.a', null];
         yield 'definition with options' => ['options.class', null];
         yield 'chain through a definition with options' => ['options.chain', null];
+        yield 'definition with params' => ['args.params', null];
+        yield 'definition with __construct()' => ['args.construct', null];
+    }
+
+    /**
+     * @phpstan-return iterable<string, array{string, string|null, list<int|string>, list<int|string>|null}>
+     */
+    public static function constructorArgumentProvider(): iterable
+    {
+        yield 'unbound class' => ['\Unbound\Target', 'Unbound\Target', [], null];
+        yield 'class-only chain' => ['alias.first', 'SplStack', [], null];
+        yield 'positional param' => ['args.params', 'SplStack', [0], null];
+        yield 'named param' => ['args.named', 'SplStack', ['config'], null];
+        yield 'params under a namespaced ID without class' => ['Probe\Args', 'Probe\Args', [0], null];
+        yield 'class string with params' => ['opaque.params', 'SplStack', [0], null];
+        yield 'positional __construct()' => ['args.construct', 'SplStack', [], [0]];
+        yield 'named __construct()' => ['args.constructNamed', 'SplStack', [], ['config']];
+        yield 'empty __construct()' => ['options.construct', 'SplStack', [], []];
+        yield 'params and __construct()' => ['args.both', 'SplStack', [1], [0]];
+        yield 'params of every hop, nearest first' => ['args.hop', 'SplStack', [1, 0], null];
+        yield 'same param key on two hops' => ['args.hopOverride', 'SplStack', [0], null];
+        yield 'nearest __construct() replaces a later one' => ['args.hopConstruct', 'SplStack', [], ['config']];
+        yield '__construct() null' => ['args.constructNull', null, [], null];
+        yield '__construct() string' => ['args.constructString', null, [], null];
+        yield 'singleton with params' => ['singleton.params', null, [], null];
     }
 }
