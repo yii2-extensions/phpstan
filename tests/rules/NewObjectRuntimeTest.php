@@ -60,6 +60,7 @@ final class NewObjectRuntimeTest extends TestCase
     /**
      * @phpstan-param class-string $fixture
      * @phpstan-param class-string $outcome
+     * @phpstan-param non-empty-string|null $message
      */
     #[DataProviderExternal(NewObjectRuntimeProvider::class, 'methodProvider')]
     public function testRunConstructionWithRecordedOutcome(
@@ -83,8 +84,13 @@ final class NewObjectRuntimeTest extends TestCase
                 $exception::class,
                 sprintf('Outcome must be `%s`, got: %s', $outcome, $exception->getMessage()),
             );
+            self::assertNotNull(
+                $message,
+                'A recorded failure must name the start of its message.',
+            );
             self::assertStringStartsWith(
-                (string) $message, $exception->getMessage(),
+                $message,
+                $exception->getMessage(),
                 sprintf('Exception must name the rejected member, got: %s', $exception->getMessage()),
             );
 

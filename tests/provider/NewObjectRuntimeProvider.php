@@ -41,7 +41,7 @@ final class NewObjectRuntimeProvider
     /**
      * Outcome of each fixture method, by fixture class and method name.
      *
-     * @phpstan-var array<class-string, array<string, array{class-string, string|null}>>
+     * @phpstan-var array<class-string, array<string, array{class-string, non-empty-string|null}>>
      */
     private const array OUTCOMES = [
         NewObjectInvalidOptionType::class => [
@@ -334,7 +334,7 @@ final class NewObjectRuntimeProvider
     }
 
     /**
-     * @phpstan-return iterable<string, array{class-string, string, class-string, string|null}>
+     * @phpstan-return iterable<string, array{class-string, string, class-string, non-empty-string|null}>
      */
     public static function methodProvider(): iterable
     {
@@ -368,7 +368,7 @@ final class NewObjectRuntimeProvider
      *
      * @phpstan-param class-string $fixture
      *
-     * @phpstan-return array{class-string, string|null}
+     * @phpstan-return array{class-string, non-empty-string|null}
      */
     public static function outcome(string $fixture, string $method): array
     {
