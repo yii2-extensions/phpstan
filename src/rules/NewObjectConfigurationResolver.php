@@ -79,14 +79,15 @@ final class NewObjectConfigurationResolver
     }
 
     /**
-     * Returns the name of the class that the expression constructs, when it is written as a name.
+     * Returns the name of the class that the expression constructs, when it is written as a name and isn't a
+     * first-class callable such as `new Target(...)`, which PHP rejects at compile time.
      *
      * `static` is accepted only in a final class, where late static binding can't select a subclass. Scope-relative
      * names are refused inside a closure or an arrow function, since `Closure::bind()` can change their class.
      */
     private static function className(New_ $node, Scope $scope): string|null
     {
-        if ($node->class instanceof Name === false) {
+        if ($node->class instanceof Name === false || $node->isFirstClassCallable()) {
             return null;
         }
 
@@ -110,28 +111,20 @@ final class NewObjectConfigurationResolver
      * first positional argument or the named argument with the parameter's name.
      *
      * @return Expr|null Configuration expression, or `null` without such an argument, or with an unpacked argument,
-     * another named or positional argument, or the parameter passed twice.
+     * another named or positional argument, the parameter passed twice, or a constructor without exactly one
+     * parameter.
      */
     private static function configArgument(New_ $node, ClassReflection $classReflection): Expr|null
     {
-        if ($node->isFirstClassCallable()) {
-            return null;
-        }
-
         $variants = $classReflection->getNativeMethod('__construct')->getVariants();
         $parameters = count($variants) === 1 ? $variants[0]->getParameters() : [];
-
-        if (count($parameters) !== 1) {
-            return null;
-        }
-
-        $parameterName = $parameters[0]->getName();
+        $parameterName = count($parameters) === 1 ? $parameters[0]->getName() : null;
         $config = null;
 
         foreach ($node->getArgs() as $position => $arg) {
             $isConfig = $arg->name === null ? $position === 0 : $arg->name->toString() === $parameterName;
 
-            if ($arg->unpack || $isConfig === false || $config !== null) {
+            if ($parameterName === null || $arg->unpack || $isConfig === false || $config !== null) {
                 return null;
             }
 

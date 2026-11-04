@@ -108,6 +108,7 @@ final class NewObjectInvalidOptionTypeRuleTest extends RuleTestCase
     {
         $this->assertNoDiagnostics('NewObjectStandAside.php');
         $this->assertNoDiagnostics('NewObjectLateStaticReference.php');
+        $this->assertNoDiagnostics('NewObjectFirstClassCallable.php');
     }
 
     protected function getRule(): Rule
