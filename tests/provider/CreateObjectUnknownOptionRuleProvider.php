@@ -605,6 +605,15 @@ final class CreateObjectUnknownOptionRuleProvider
                         ),
                     ],
                 ],
+                'paramsConstantKey' => [
+                    [
+                        null,
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
                 'paramsConstructKey' => [
                     [
                         "'__construct()'",
@@ -680,6 +689,15 @@ final class CreateObjectUnknownOptionRuleProvider
                 'paramsStringZeroKey' => [
                     [
                         "'colour'",
+                        self::message(
+                            'Target',
+                            'colour',
+                        ),
+                    ],
+                ],
+                'paramsUnpackedArgument' => [
+                    [
+                        null,
                         self::message(
                             'Target',
                             'colour',

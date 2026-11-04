@@ -216,6 +216,10 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::class',
         ],
+        'paramsConstantKey' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
+        ],
         'paramsConstructKey' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::__construct()',
@@ -291,6 +295,10 @@ final class CreateObjectConstructorArgumentRuntimeProvider
         'paramsTwoArgumentsDropOptions' => [
             Target::class,
             '',
+        ],
+        'paramsUnpackedArgument' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::colour',
         ],
         'paramsUnpackedArguments' => [
             UnknownPropertyException::class,

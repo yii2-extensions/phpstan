@@ -21,6 +21,11 @@ use yii2\extensions\phpstan\tests\support\createobject\{
  */
 final class CreateObjectConstructorArgument
 {
+    /**
+     * Name of the `$config` parameter, used as a constant key of the constructor arguments.
+     */
+    private const string CONFIG = 'config';
+
     public function aliasToDefinitionParams(): object
     {
         return Yii::createObject(
@@ -583,6 +588,18 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function paramsConstantKey(): object
+    {
+        return Yii::createObject(
+            Target::class,
+            [
+                self::CONFIG => [
+                    'colour' => 'red',
+                ],
+            ],
+        );
+    }
+
     public function paramsConstructKey(): object
     {
         return Yii::createObject(
@@ -827,6 +844,20 @@ final class CreateObjectConstructorArgument
                     'name' => 'param',
                 ],
                 'second',
+            ],
+        );
+    }
+
+    public function paramsUnpackedArgument(): object
+    {
+        return Yii::createObject(
+            Target::class,
+            [
+                ...[
+                    [
+                        'colour' => 'red',
+                    ],
+                ],
             ],
         );
     }
