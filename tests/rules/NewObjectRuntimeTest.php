@@ -15,7 +15,6 @@ use yii2\extensions\phpstan\tests\support\createobject\{AliasTarget, Target};
 use yii2\extensions\phpstan\tests\support\{CreateObjectContainerTrait, FixtureMethod};
 
 use function sprintf;
-use function str_starts_with;
 
 /**
  * Runtime tests for the direct `new` outcomes of the {@see NewObjectUnknownOptionRule} and
@@ -84,8 +83,8 @@ final class NewObjectRuntimeTest extends TestCase
                 $exception::class,
                 sprintf('Outcome must be `%s`, got: %s', $outcome, $exception->getMessage()),
             );
-            self::assertTrue(
-                str_starts_with($exception->getMessage(), (string) $message),
+            self::assertStringStartsWith(
+                (string) $message, $exception->getMessage(),
                 sprintf('Exception must name the rejected member, got: %s', $exception->getMessage()),
             );
 
