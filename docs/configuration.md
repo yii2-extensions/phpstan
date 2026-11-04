@@ -242,8 +242,9 @@ The rule reports only when Yii's assignment path is certain:
 
 An option is accepted when it names a public property or a public or protected `set` method, inherited or from a trait.
 Options that fail differently at runtime are not reported either: a private `set` method, a name with only a `get`
-method, and static or read-only properties. `class` and `__class` are reserved. A `@property` tag alone does not make an
-option assignable, since Yii assigns through native members.
+method, and static or read-only properties. The `class` and `__class` keys with which `Yii::createObject()` selects the
+class are never reported. A `@property` tag alone does not make an option assignable, since Yii assigns through native
+members.
 
 The rule stands aside for custom constructors or `__set()` methods; abstract or unknown classes; configurations whose
 native type allows more than one array shape, an optional or integer key, or unknown unpacked data; class values that
@@ -337,7 +338,8 @@ when every key names it, as position `0` or as the name `config`:
 - when the call or a definition has options, Yii assigns them and ignores the argument, so the call's options are
   checked as usual;
 - otherwise Yii passes the argument as the configuration. It is checked when the call supplies it, in `$params` or in
-  `__construct()`, as one array shape with string keys; Yii assigns every key, including `class` and `__class`.
+  `__construct()`, as one array shape with string keys. Yii assigns each key as a property, in order, `class`, `__class`
+  and `__construct()` included, so these keys are checked like any other option.
 
 ```php
 Yii::createObject(Feed::class, [['timeoutSeconds' => 5]]);                                // reported

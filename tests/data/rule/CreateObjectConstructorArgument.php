@@ -9,6 +9,7 @@ use yii\di\Instance;
 use yii2\extensions\phpstan\tests\support\createobject\{
     ArgumentsTarget,
     ComponentBehavior,
+    ComponentClassSetterTarget,
     ComponentMembersTarget,
     CustomConstructorTarget,
     Target,
@@ -25,6 +26,18 @@ final class CreateObjectConstructorArgument
      * Name of the `$config` parameter, used as a constant key of the constructor arguments.
      */
     private const string CONFIG = 'config';
+    /**
+     * Constructor arguments whose configuration holds a nested `__construct()` key and a `class` key.
+     */
+    private const array CONSTRUCT_CLASS_KEYS = [['__construct()' => [], 'class' => Target::class]];
+    /**
+     * Configuration that selects the class through both keys and assigns one valid option.
+     */
+    private const array OUTER_SELECTORS = ['__class' => TypedTarget::class, 'class' => TypedTarget::class, 'count' => 1];
+    /**
+     * Constructor arguments whose configuration holds the `class` and `__class` keys.
+     */
+    private const array PARAMS_CLASS_KEYS = [['class' => Target::class, '__class' => Target::class]];
 
     public function aliasToDefinitionParams(): object
     {
@@ -83,6 +96,45 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function componentClassSetterAfterOption(): object
+    {
+        return Yii::createObject(
+            ComponentClassSetterTarget::class,
+            [
+                [
+                    'colour' => 'red',
+                    'class' => 'colouring',
+                ],
+            ],
+        );
+    }
+
+    public function componentClassSetterBeforeOption(): object
+    {
+        return Yii::createObject(
+            ComponentClassSetterTarget::class,
+            [
+                [
+                    'class' => 'colouring',
+                    'colour' => 'red',
+                ],
+            ],
+        );
+    }
+
+    public function componentLegacyClassSetterBeforeOption(): object
+    {
+        return Yii::createObject(
+            ComponentClassSetterTarget::class,
+            [
+                'config' => [
+                    '__class' => 'colouring',
+                    'colour' => 'red',
+                ],
+            ],
+        );
+    }
+
     public function componentParams(): object
     {
         return Yii::createObject(
@@ -107,11 +159,31 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function constantConstructClassKeys(): object
+    {
+        return Yii::createObject(
+            [
+                '__class' => Target::class,
+                '__construct()' => self::CONSTRUCT_CLASS_KEYS,
+            ],
+        );
+    }
+
+    public function constantOuterSelectors(): object
+    {
+        return Yii::createObject(self::OUTER_SELECTORS);
+    }
+
     public function constantParams(): object
     {
         $params = [['colour' => 'red']];
 
         return Yii::createObject(Target::class, $params);
+    }
+
+    public function constantParamsClassKeys(): object
+    {
+        return Yii::createObject(Target::class, self::PARAMS_CLASS_KEYS);
     }
 
     public function construct(): object
@@ -142,6 +214,21 @@ final class CreateObjectConstructorArgument
             [
                 [
                     'name' => 'param',
+                ],
+            ],
+        );
+    }
+
+    public function constructClassKeys(): object
+    {
+        return Yii::createObject(
+            [
+                '__class' => Target::class,
+                '__construct()' => [
+                    [
+                        'class' => Target::class,
+                        'colour' => 'red',
+                    ],
                 ],
             ],
         );
@@ -201,6 +288,20 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function constructLegacyClassKeyNamed(): object
+    {
+        return Yii::createObject(
+            [
+                'class' => Target::class,
+                '__construct()' => [
+                    'config' => [
+                        '__class' => Target::class,
+                    ],
+                ],
+            ],
+        );
+    }
+
     public function constructNamed(): object
     {
         return Yii::createObject(
@@ -222,6 +323,22 @@ final class CreateObjectConstructorArgument
                 'class' => Target::class,
                 '__construct()' => null,
                 'colour' => 'red',
+            ],
+        );
+    }
+
+    public function constructOptionsDropClassKeys(): object
+    {
+        return Yii::createObject(
+            [
+                'class' => Target::class,
+                '__construct()' => [
+                    [
+                        'class' => 'Missing\Target',
+                        '__class' => 'Missing\Target',
+                    ],
+                ],
+                'name' => 'kept',
             ],
         );
     }
@@ -537,6 +654,17 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function outerSelectorsValid(): object
+    {
+        return Yii::createObject(
+            [
+                '__class' => TypedTarget::class,
+                'class' => TypedTarget::class,
+                'count' => 1,
+            ],
+        );
+    }
+
     public function paramsAndConstructNamed(): object
     {
         return Yii::createObject(
@@ -575,6 +703,18 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function paramsClassKeyInvalidValue(): object
+    {
+        return Yii::createObject(
+            TypedTarget::class,
+            [
+                [
+                    'class' => 'abc',
+                ],
+            ],
+        );
+    }
+
     public function paramsClassKeys(): object
     {
         return Yii::createObject(
@@ -583,6 +723,19 @@ final class CreateObjectConstructorArgument
                 [
                     'class' => Target::class,
                     'colour' => 'red',
+                ],
+            ],
+        );
+    }
+
+    public function paramsClassKeysValid(): object
+    {
+        return Yii::createObject(
+            TypedTarget::class,
+            [
+                [
+                    'class' => 5,
+                    '__class' => 7,
                 ],
             ],
         );
@@ -708,6 +861,18 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function paramsLegacyClassKey(): object
+    {
+        return Yii::createObject(
+            Target::class,
+            [
+                [
+                    '__class' => Target::class,
+                ],
+            ],
+        );
+    }
+
     public function paramsMixedKeys(): object
     {
         return Yii::createObject(
@@ -735,6 +900,19 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function paramsNamedClassKeys(): object
+    {
+        return Yii::createObject(
+            Target::class,
+            [
+                'config' => [
+                    'class' => Target::class,
+                    '__class' => Target::class,
+                ],
+            ],
+        );
+    }
+
     public function paramsNamedIgnoredForOptions(): object
     {
         return Yii::createObject(
@@ -748,12 +926,40 @@ final class CreateObjectConstructorArgument
         );
     }
 
+    public function paramsNamedLegacyClassKeyInvalidValue(): object
+    {
+        return Yii::createObject(
+            TypedTarget::class,
+            [
+                'config' => [
+                    '__class' => 'abc',
+                ],
+            ],
+        );
+    }
+
     public function paramsNull(): object
     {
         return Yii::createObject(
             Target::class,
             [
                 null,
+            ],
+        );
+    }
+
+    public function paramsOptionsDropClassKeys(): object
+    {
+        return Yii::createObject(
+            [
+                'class' => Target::class,
+                'name' => 'kept',
+            ],
+            [
+                [
+                    'class' => 'Missing\Target',
+                    '__class' => 'Missing\Target',
+                ],
             ],
         );
     }

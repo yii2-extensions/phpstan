@@ -14,47 +14,32 @@ class TypedTarget extends BaseObject
 {
     use TypedSetterTrait;
 
+    public int $__class = 0;
     public int $both = 0;
-
     public TypedContract|null $contract = null;
-
     public int $count = 0;
-
     /**
      * @var non-empty-string
      */
     public string $documented = 'documented';
-
     public bool $enabled = false;
-
     public readonly int $frozen;
-
     public mixed $got = null;
-
     /**
      * @var array<mixed>
      */
     public array $items = [];
-
     public int|string $key = 0;
-
     public int|null $limit = null;
-
     public float $ratio = 0.0;
-
     /**
      * @var iterable<mixed>
      */
     public iterable $rows = [];
-
     public static int $shared = 0;
-
     public TypedSuit $suit = TypedSuit::Hearts;
-
     public string $title = '';
-
     public mixed $untyped = null;
-
     public TypedValue|null $value = null;
 
     protected int $guardedCount = 0;

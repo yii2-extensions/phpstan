@@ -16,14 +16,14 @@ use yii\di\Instance;
 use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 
-use function in_array;
-
 /**
  * Reports {@see BaseYii::createObject()} option values that the property or setter Yii assigns them to never accepts.
  *
  * A value is reported only when PHP's weak type coercion can't convert it to the native type of the public property or
  * of the first setter parameter. PHPDoc types are not consulted. A value that may be an {@see Instance} reference is
- * also checked as the object or `null` that the container may resolve it to before the assignment.
+ * also checked as the object or `null` that the container may resolve it to before the assignment. The `class` and
+ * `__class` keys with which {@see BaseYii::createObject()} selects the class are never checked; inside a constructor
+ * argument used as the configuration they are checked like any other option.
  *
  * {@see Rule} for PHPStan rule contract.
  * {@see CreateObjectConfigurationResolver} for the configurations and classes the rule analyses.
@@ -79,10 +79,6 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         $errors = [];
 
         foreach ($configuration->options as [$name, $line, $value]) {
-            if (in_array($name, CreateObjectConfigurationResolver::RESERVED_OPTIONS, true)) {
-                continue;
-            }
-
             $actualType = $value instanceof Expr ? $scope->getNativeType($value) : $value;
 
             $target = ObjectOptionAssignment::rejectingTarget($classReflection, $name, $actualType, $scope);

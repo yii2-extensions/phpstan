@@ -10,7 +10,12 @@ use RuntimeException;
 use TypeError;
 use yii\base\{InvalidConfigException, UnknownPropertyException};
 use yii2\extensions\phpstan\tests\data\rule\CreateObjectConstructorArgument;
-use yii2\extensions\phpstan\tests\support\createobject\{ComponentMembersTarget, Target, TypedTarget};
+use yii2\extensions\phpstan\tests\support\createobject\{
+    ComponentClassSetterTarget,
+    ComponentMembersTarget,
+    Target,
+    TypedTarget,
+};
 
 use function array_diff;
 use function array_keys;
@@ -48,6 +53,18 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             ComponentMembersTarget::class,
             '',
         ],
+        'componentClassSetterAfterOption' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sComponentClassSetterTarget::colour',
+        ],
+        'componentClassSetterBeforeOption' => [
+            ComponentClassSetterTarget::class,
+            '',
+        ],
+        'componentLegacyClassSetterBeforeOption' => [
+            ComponentClassSetterTarget::class,
+            '',
+        ],
         'componentParams' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sComponentMembersTarget::colour',
@@ -56,9 +73,21 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             TypeError::class,
             'Cannot assign string to property %sComponentMembersTarget::$count of type int',
         ],
+        'constantConstructClassKeys' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::__construct()',
+        ],
+        'constantOuterSelectors' => [
+            TypedTarget::class,
+            '',
+        ],
         'constantParams' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
+        ],
+        'constantParamsClassKeys' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::class',
         ],
         'construct' => [
             UnknownPropertyException::class,
@@ -67,6 +96,10 @@ final class CreateObjectConstructorArgumentRuntimeProvider
         'constructAndParamsMixed' => [
             InvalidConfigException::class,
             'Dependencies indexed by name and by position in the same array are not allowed.',
+        ],
+        'constructClassKeys' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::class',
         ],
         'constructEmptyWithOptions' => [
             UnknownPropertyException::class,
@@ -84,6 +117,10 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
         ],
+        'constructLegacyClassKeyNamed' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::__class',
+        ],
         'constructNamed' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
@@ -91,6 +128,10 @@ final class CreateObjectConstructorArgumentRuntimeProvider
         'constructNull' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::__construct()',
+        ],
+        'constructOptionsDropClassKeys' => [
+            Target::class,
+            '',
         ],
         'constructTwoArguments' => [
             UnknownPropertyException::class,
@@ -204,6 +245,10 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             TypedTarget::class,
             '',
         ],
+        'outerSelectorsValid' => [
+            TypedTarget::class,
+            '',
+        ],
         'paramsAndConstructNamed' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
@@ -212,9 +257,17 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
         ],
+        'paramsClassKeyInvalidValue' => [
+            TypeError::class,
+            '%sTypedTarget::setClass(): Argument #1 ($class) must be of type int, string given',
+        ],
         'paramsClassKeys' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::class',
+        ],
+        'paramsClassKeysValid' => [
+            TypedTarget::class,
+            '',
         ],
         'paramsConstantKey' => [
             UnknownPropertyException::class,
@@ -252,6 +305,10 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
         ],
+        'paramsLegacyClassKey' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::__class',
+        ],
         'paramsMixedKeys' => [
             InvalidConfigException::class,
             'Dependencies indexed by name and by position in the same array are not allowed.',
@@ -260,11 +317,23 @@ final class CreateObjectConstructorArgumentRuntimeProvider
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
         ],
+        'paramsNamedClassKeys' => [
+            UnknownPropertyException::class,
+            'Setting unknown property: %sTarget::class',
+        ],
         'paramsNamedIgnoredForOptions' => [
             UnknownPropertyException::class,
             'Setting unknown property: %sTarget::colour',
         ],
+        'paramsNamedLegacyClassKeyInvalidValue' => [
+            TypeError::class,
+            'Cannot assign string to property %sTypedTarget::$__class of type int',
+        ],
         'paramsNull' => [
+            Target::class,
+            '',
+        ],
+        'paramsOptionsDropClassKeys' => [
             Target::class,
             '',
         ],

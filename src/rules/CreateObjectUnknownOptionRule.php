@@ -14,13 +14,12 @@ use yii\BaseYii;
 use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\ServiceMap;
 
-use function in_array;
-
 /**
  * Reports {@see BaseYii::createObject()} options that Yii can't assign to the created object.
  *
  * For a {@see Component} subclass, `on ...` and `as ...` options are never reported, and other options only when no
- * behavior can receive them. `class` and `__class` are removed by {@see BaseYii::createObject()} and never reported.
+ * behavior can receive them. The `class` and `__class` keys with which {@see BaseYii::createObject()} selects the class
+ * are never reported; inside a constructor argument used as the configuration they are options like any other.
  *
  * {@see Rule} for PHPStan rule contract.
  * {@see CreateObjectConfigurationResolver} for the configurations and classes the rule analyses.
@@ -75,19 +74,11 @@ final class CreateObjectUnknownOptionRule implements Rule
 
         $classReflection = $configuration->classReflection;
 
-        $assignedOptions = [];
-
-        foreach ($configuration->options as $option) {
-            if (in_array($option[0], CreateObjectConfigurationResolver::RESERVED_OPTIONS, true) === false) {
-                $assignedOptions[] = $option;
-            }
-        }
-
         $errors = [];
 
         $unknownOptions = ObjectOptionAssignment::unknownOptions(
             $classReflection,
-            $assignedOptions,
+            $configuration->options,
             $this->serviceMap,
             $scope,
         );

@@ -20,8 +20,9 @@ final readonly class CreateObjectConfiguration
      * @param string $calledClass Class through which `createObject()` is called, as PHPStan displays it.
      * @param ClassReflection $classReflection Class Yii creates and configures.
      * @param list<array{string, int, Expr|Type}> $options Name, reported line and effective value of each distinct
-     * option, in first-occurrence order: the value expression of an array literal whose keys are all literal strings,
-     * otherwise the value type of the constant native array.
+     * option that Yii assigns, in first-occurrence order: the value expression of an array literal whose keys are all
+     * literal strings, otherwise the value type of the constant native array. `class` and `__class` are present only
+     * when they come from a constructor argument used as the configuration.
      */
     public function __construct(
         public string $calledClass,
