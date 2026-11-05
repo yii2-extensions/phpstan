@@ -25,13 +25,14 @@ use function max;
  *
  * Requires keys and class proven by literals or native types, a container ID that is unbound or bound only through
  * definitions that name a class ({@see ServiceMap::getConfiguredClassById()}) and whose options, if any, are all plain
- * public properties of the created class, and a created class that inherits the constructor of {@see BaseObject} and
- * the `__set()` of {@see BaseObject} or {@see Component}.
+ * public properties of the created class, and a created class that inherits the constructor of the
+ * {@see CreateObjectConstructionContract} and the `__set()` of {@see BaseObject} or {@see Component}.
  *
- * Constructor arguments from `$params`, a `__construct()` option and the definitions on the chain are accepted when
- * their keys, merged as {@see \yii\di\Container::build()} merges them, name at most the one `$config` parameter of
- * that constructor, by position `0` or by name `config`. Yii then assigns the options of the configuration when there
- * are any, and otherwise uses that argument as the configuration, which is resolved only when the call supplies it.
+ * Constructor arguments from `$params`, a `__construct()` option and the definitions on the chain are accepted, when
+ * the contract follows them, if their keys, merged as {@see \yii\di\Container::build()} merges them, name at most
+ * the configuration parameter (`0` or `config` for {@see BaseObject}). Yii then assigns the options of the
+ * configuration when there are any, and otherwise uses that argument as the configuration, which is resolved only when
+ * the call supplies it.
  *
  * The resolved options are the ones Yii assigns, in order: the options of the `$type` configuration without the `class`
  * and `__class` keys that select the class, or every key of the argument used as the configuration, `class`, `__class`
@@ -47,10 +48,6 @@ final class CreateObjectConfigurationResolver
      */
     public const array RESERVED_OPTIONS = ['__class', 'class'];
 
-    /**
-     * Name of the only parameter of the constructor of {@see BaseObject}.
-     */
-    private const string CONFIG_PARAMETER = 'config';
     /**
      * Option whose array {@see \yii\di\Container::build()} passes as constructor arguments instead of assigning it.
      */
@@ -160,20 +157,31 @@ final class CreateObjectConfigurationResolver
 
         return $configuration === null
             ? null
-            : $this->resolveConstruction($calledClass, $configuration, $callParams, $params, $line, $scope);
+            : $this->resolveConstruction(
+                $calledClass,
+                $configuration,
+                $callParams,
+                $params,
+                $line,
+                $scope,
+                CreateObjectConstructionContract::baseObject(),
+            );
     }
 
     /**
      * Returns the configuration that Yii assigns for a `$type` configuration array that an API passes to
-     * {@see BaseYii::createObject()} without `$params`, under the conditions of {@see resolve()}.
+     * {@see BaseYii::createObject()} with no `$params` besides the contract's fixed arguments, under the conditions of
+     * {@see resolve()}.
      *
      * Records the same construction and declaration dependencies as {@see resolve()}.
      *
-     * @param string $calledClass Class through which the API is called, as PHPStan displays it.
+     * @param string $calledClass Class through which `createObject()` is called, as PHPStan displays it.
      * @param list<array{string, int, Expr|Type}> $typeOptions Name, reported line and effective value of each option of
      * the `$type` configuration, in the order Yii receives them.
      * @param int $line Line of the call, for options the configuration doesn't locate.
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     * @param CreateObjectConstructionContract|null $contract Construction contract of the API, or `null` for
+     * {@see CreateObjectConstructionContract::baseObject()}.
      *
      * @return CreateObjectConfiguration|null Resolved configuration, or `null` when the class value, the constructor
      * arguments or the created class isn't proven, or a definition supplies the configuration.
@@ -183,12 +191,21 @@ final class CreateObjectConfigurationResolver
         array $typeOptions,
         int $line,
         Scope $scope,
+        CreateObjectConstructionContract|null $contract = null,
     ): CreateObjectConfiguration|null {
         $configuration = self::classConfiguration($typeOptions, $scope);
 
         return $configuration === null
             ? null
-            : $this->resolveConstruction($calledClass, $configuration, null, null, $line, $scope);
+            : $this->resolveConstruction(
+                $calledClass,
+                $configuration,
+                null,
+                null,
+                $line,
+                $scope,
+                $contract ?? CreateObjectConstructionContract::baseObject(),
+            );
     }
 
     /**
@@ -198,7 +215,7 @@ final class CreateObjectConfigurationResolver
      * {@see BaseYii::configure()} assigns every key of that argument, `class` and `__class` included.
      *
      * @param ConstantArrayType $arguments Constructor arguments that hold the configuration.
-     * @param int|string $key Key of the argument: `0` or `config`.
+     * @param int|string $key Key of the argument: the position or the name of the configuration parameter.
      * @param Expr|null $argumentsExpr Expression of the arguments, if written in the call.
      *
      * @return list<array{string, int, Type}>|null Name, line and value type of each option, or `null` when the
@@ -368,22 +385,47 @@ final class CreateObjectConfigurationResolver
 
     /**
      * Returns whether constructor argument keys, merged by {@see \yii\di\Container::build()}, address only the
-     * `$config` parameter of the {@see BaseObject} constructor: all `0` or all `config`.
+     * configuration parameter: all its position or all its name.
      *
      * Mixed integer and string keys make Yii throw, and any other key adds a constructor argument after `$config`, so
      * that Yii passes the configuration as that argument instead.
      *
      * @param list<int|string> $keys Keys of every source of constructor arguments.
      */
-    private static function isConfigArgumentOnly(array $keys): bool
+    private static function isConfigArgumentOnly(array $keys, CreateObjectConstructionContract $contract): bool
     {
+        $position = $contract->configurationPosition;
+        $name = $contract->configurationName;
+
         foreach ($keys as $key) {
-            if ($key !== 0 && $key !== self::CONFIG_PARAMETER) {
+            if ($key !== $position && $key !== $name) {
                 return false;
             }
         }
 
-        return in_array(0, $keys, true) === false || in_array(self::CONFIG_PARAMETER, $keys, true) === false;
+        return in_array($position, $keys, true) === false || in_array($name, $keys, true) === false;
+    }
+
+    /**
+     * Returns whether the property is plain and no trait of the class or a parent declares it.
+     *
+     * A trait that redeclares an inherited property may add hooks while PHPStan reports the inherited declaration, so
+     * any trait declaration counts as unproven.
+     */
+    private static function isPlainConstructionProperty(ClassReflection $classReflection, string $name): bool
+    {
+        if (self::isPlainPublicProperty($classReflection, $name) === false) {
+            return false;
+        }
+
+        // traits of the class, of their traits and of the parent classes
+        foreach ($classReflection->getTraits(true) as $trait) {
+            if ($trait->hasNativeProperty($name)) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -491,18 +533,30 @@ final class CreateObjectConfigurationResolver
     }
 
     /**
-     * Returns the class when it is instantiable and inherits the constructor of {@see BaseObject} and the `__set()` of
-     * {@see BaseObject} or {@see Component}.
+     * Returns the class when it is configurable under the contract and the properties its constructor writes before
+     * the configuration are plain public properties, so that no application code runs before the assignment.
      */
-    private function resolveConfigurableClass(string $className): ClassReflection|null
-    {
+    private function resolveConfigurableClass(
+        string $className,
+        CreateObjectConstructionContract $contract,
+    ): ClassReflection|null {
         if ($this->reflectionProvider->hasClass($className) === false) {
             return null;
         }
 
         $classReflection = $this->reflectionProvider->getClass($className);
 
-        return ObjectOptionAssignment::isConfigurable($classReflection) ? $classReflection : null;
+        if (ObjectOptionAssignment::isConfigurable($classReflection, $contract) === false) {
+            return null;
+        }
+
+        foreach ($contract->propertiesWrittenBeforeConfiguration as $name) {
+            if (self::isPlainConstructionProperty($classReflection, $name) === false) {
+                return null;
+            }
+        }
+
+        return $classReflection;
     }
 
     /**
@@ -514,6 +568,7 @@ final class CreateObjectConfigurationResolver
      * @param ConstantArrayType|null $callParams Constant `$params` of the call, if any.
      * @param Expr|null $params Expression of `$params`, if written in the call.
      * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     * @param CreateObjectConstructionContract $contract Construction contract of the API.
      */
     private function resolveConstruction(
         string $calledClass,
@@ -522,6 +577,7 @@ final class CreateObjectConfigurationResolver
         Expr|null $params,
         int $line,
         Scope $scope,
+        CreateObjectConstructionContract $contract,
     ): CreateObjectConfiguration|null {
         [$id, $options] = $configuration;
 
@@ -530,6 +586,10 @@ final class CreateObjectConfigurationResolver
         $callConstruct = null;
 
         if ($construct !== null) {
+            if ($contract->followsConstructorArguments === false) {
+                return null;
+            }
+
             $callConstruct = ObjectConfigurationReader::constantArray(
                 $construct instanceof Expr ? $scope->getNativeType($construct) : $construct,
             );
@@ -554,7 +614,7 @@ final class CreateObjectConfigurationResolver
 
         $scope->trackClassDependency($className);
 
-        $classReflection = $this->resolveConfigurableClass($className);
+        $classReflection = $this->resolveConfigurableClass($className, $contract);
 
         if ($classReflection === null) {
             return null;
@@ -566,6 +626,13 @@ final class CreateObjectConfigurationResolver
             if (self::isPlainPublicProperty($classReflection, $name) === false) {
                 return null;
             }
+        }
+
+        if ($contract->followsConstructorArguments === false) {
+            return $this->serviceMap->getDefinitionConstructKeysById($id) === null
+                && $this->serviceMap->getDefinitionParamKeysById($id) === []
+                ? new CreateObjectConfiguration($calledClass, $classReflection, self::withoutClassKeys($options))
+                : null;
         }
 
         $constructKeys = $callConstruct === null
@@ -580,7 +647,7 @@ final class CreateObjectConfigurationResolver
             ...$callParamKeys,
         ];
 
-        if (self::isConfigArgumentOnly($argumentKeys) === false) {
+        if (self::isConfigArgumentOnly($argumentKeys, $contract) === false) {
             return null;
         }
 

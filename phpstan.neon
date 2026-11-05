@@ -31,9 +31,17 @@ parameters:
             - tests/data/rule/NewObjectLateStaticReference.php
             - tests/data/rule/NewObjectStandAside.php
             - tests/data/rule/WidgetStandAside.php
+            - tests/data/rule/action/hook/
+            - tests/data/rule/action/CreateActionOverrideController.php
+            - tests/data/rule/action/InvalidOptionTypeActionController.php
+            - tests/data/rule/action/OpenMapActionController.php
+            - tests/data/rule/action/StandAsideActionController.php
+            - tests/data/rule/action/UnknownOptionActionController.php
+            - tests/data/rule/action/ValidActionController.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
             - tests/data/type/ServiceMapDefinitionType.php
+            - tests/support/action/hook/
             - tests/support/stub/DerivedModelBaseRecordQuery.php
             - tests/support/stub/DerivedModelDocQuery.php
             - tests/support/stub/DerivedModelFalseAllQuery.php

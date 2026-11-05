@@ -36,14 +36,21 @@ final class ObjectOptionAssignment
     private const string EVENT_PREFIX = 'on ';
 
     /**
-     * Returns whether the class is instantiable and inherits the constructor of {@see BaseObject} and the `__set()` of
+     * Returns whether the class is instantiable and inherits the constructor of the contract and the `__set()` of
      * {@see BaseObject} or {@see Component}, so that its configuration is assigned by {@see BaseYii::configure()}.
+     *
+     * @param CreateObjectConstructionContract|null $contract Construction contract, `null` for
+     * {@see CreateObjectConstructionContract::baseObject()}.
      */
-    public static function isConfigurable(ClassReflection $classReflection): bool
-    {
+    public static function isConfigurable(
+        ClassReflection $classReflection,
+        CreateObjectConstructionContract|null $contract = null,
+    ): bool {
+        $contract ??= CreateObjectConstructionContract::baseObject();
+
         return $classReflection->isClass()
             && $classReflection->isAbstract() === false
-            && self::isDeclaredBy($classReflection, '__construct', [BaseObject::class])
+            && $contract->isInheritedConstructor($classReflection)
             && self::isDeclaredBy($classReflection, '__set', [BaseObject::class, Component::class]);
     }
 

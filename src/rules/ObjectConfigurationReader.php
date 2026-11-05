@@ -109,19 +109,23 @@ final class ObjectConfigurationReader
     }
 
     /**
-     * Returns the options of a configuration whose native type is one constant array with string keys.
+     * Returns the options of a configuration known only as a native type, all located at the given line, since a type
+     * keeps no source positions.
      *
-     * @return list<array{string, int, Type}>|null
+     * @param Type $type Native type of the configuration, one constant array as {@see constantArray()} describes.
+     * @param int $line Line every option is reported at.
+     *
+     * @return list<array{string, int, Type}>|null Name, line and value type of each option, or `null` when the type
+     * isn't one such array or has an integer key.
      */
-    private static function constantOptions(Expr $config, int $callLine, Scope $scope): array|null
+    public static function optionsFromType(Type $type, int $line): array|null
     {
-        $array = self::constantArray($scope->getNativeType($config));
+        $array = self::constantArray($type);
 
         if ($array === null) {
             return null;
         }
 
-        $lines = self::keyLines($config, $scope);
         $options = [];
 
         foreach ($array->getKeyTypes() as $keyType) {
@@ -131,7 +135,29 @@ final class ObjectConfigurationReader
                 return null;
             }
 
-            $options[] = [$name, $lines[$name] ?? $callLine, $array->getOffsetValueType($keyType)];
+            $options[] = [$name, $line, $array->getOffsetValueType($keyType)];
+        }
+
+        return $options;
+    }
+
+    /**
+     * Returns the options of a configuration whose native type is one constant array with string keys.
+     *
+     * @return list<array{string, int, Type}>|null
+     */
+    private static function constantOptions(Expr $config, int $callLine, Scope $scope): array|null
+    {
+        $options = self::optionsFromType($scope->getNativeType($config), $callLine);
+
+        if ($options === null) {
+            return null;
+        }
+
+        $lines = self::keyLines($config, $scope);
+
+        foreach ($options as $position => [$name, $line, $value]) {
+            $options[$position] = [$name, $lines[$name] ?? $line, $value];
         }
 
         return $options;
