@@ -31,21 +31,19 @@ final class ExternalActionRuntimeTest extends TestCase
     #[RequiresPhp('>= 8.4')]
     public function testAssignOptionToBehaviorAttachedByIdOrControllerHook(): void
     {
-        $controller = self::controller('yii2\extensions\phpstan\tests\data\rule\action\hook\HookActionController');
+        $this->assertBehaviorReceivesOption(
+            'yii2\extensions\phpstan\tests\data\rule\action\hook\HookActionController',
+            ['hookedId', 'hookedController'],
+        );
+    }
 
-        foreach (['hookedId', 'hookedController', 'traitHookedId', 'traitHookedChild'] as $actionId) {
-            $action = $controller->createAction($actionId);
-
-            self::assertNotNull(
-                $action,
-                'Hooked action must be created.',
-            );
-            self::assertSame(
-                'blue',
-                $action->__get('colour'),
-                sprintf('Behavior of `%s` must receive the option.', $actionId),
-            );
-        }
+    #[RequiresPhp('>= 8.5')]
+    public function testAssignOptionToBehaviorAttachedByTraitHook(): void
+    {
+        $this->assertBehaviorReceivesOption(
+            'yii2\extensions\phpstan\tests\data\rule\action\hook\TraitHookActionController',
+            ['traitHookedId', 'traitHookedChild'],
+        );
     }
 
     /**
@@ -71,6 +69,22 @@ final class ExternalActionRuntimeTest extends TestCase
     #[DataProviderExternal(ExternalActionRuntimeProvider::class, 'hookProvider')]
     #[RequiresPhp('>= 8.4')]
     public function testCreateHookedActionWithRecordedOutcome(
+        string $controller,
+        string $actionId,
+        string $outcome,
+        string|null $message,
+    ): void {
+        $this->assertCreateAction($controller, $actionId, $outcome, $message);
+    }
+
+    /**
+     * @phpstan-param class-string $controller
+     * @phpstan-param class-string $outcome
+     * @phpstan-param non-empty-string|null $message
+     */
+    #[DataProviderExternal(ExternalActionRuntimeProvider::class, 'traitHookProvider')]
+    #[RequiresPhp('>= 8.5')]
+    public function testCreateTraitHookedActionWithRecordedOutcome(
         string $controller,
         string $actionId,
         string $outcome,
@@ -106,6 +120,32 @@ final class ExternalActionRuntimeTest extends TestCase
                 array_map(static fn(int|string $id): string => (string) $id, array_keys($controller->actions())),
                 ExternalActionRuntimeProvider::actionIds($fixture),
                 sprintf('Every action ID of `%s` must have a recorded outcome.', $fixture),
+            );
+        }
+    }
+
+    /**
+     * Asserts that the behavior a hook attaches before the configuration receives the `colour` option.
+     *
+     * @param list<string> $actionIds
+     *
+     * @phpstan-param class-string $fixture
+     */
+    private function assertBehaviorReceivesOption(string $fixture, array $actionIds): void
+    {
+        $controller = self::controller($fixture);
+
+        foreach ($actionIds as $actionId) {
+            $action = $controller->createAction($actionId);
+
+            self::assertNotNull(
+                $action,
+                'Hooked action must be created.',
+            );
+            self::assertSame(
+                'blue',
+                $action->__get('colour'),
+                sprintf('Behavior of `%s` must receive the option.', $actionId),
             );
         }
     }

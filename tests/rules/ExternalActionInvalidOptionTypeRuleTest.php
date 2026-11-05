@@ -105,6 +105,16 @@ final class ExternalActionInvalidOptionTypeRuleTest extends RuleTestCase
         );
     }
 
+    #[RequiresPhp('>= 8.5')]
+    public function testStandAsideWhenIdIsHookedThroughTrait(): void
+    {
+        self::assertSame(
+            [],
+            $this->fileErrors(self::fixtureFile('hook/TraitHookActionController.php')),
+            'Trait-hooked construction properties must leave every definition unreported.',
+        );
+    }
+
     #[RequiresPhp('>= 8.4')]
     public function testStandAsideWhenIdOrControllerIsHooked(): void
     {

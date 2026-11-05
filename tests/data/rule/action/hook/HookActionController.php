@@ -19,8 +19,6 @@ final class HookActionController extends Controller
             'hookedIdType' => ['class' => HookedIdAction::class, 'count' => 'all'],
             'hookedController' => ['class' => HookedControllerAction::class, 'colour' => 'blue'],
             'passThroughHook' => ['class' => PassThroughHookAction::class, 'colour' => 'blue'],
-            'traitHookedId' => ['class' => TraitHookedIdAction::class, 'colour' => 'blue'],
-            'traitHookedChild' => ['class' => TraitHookedChildAction::class, 'colour' => 'blue'],
         ];
     }
 }

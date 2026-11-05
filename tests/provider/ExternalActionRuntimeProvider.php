@@ -40,6 +40,7 @@ use yii2\extensions\phpstan\tests\data\rule\action\hook\{
     HookedControllerAction,
     HookedIdAction,
     PassThroughHookAction,
+    TraitHookActionController,
     TraitHookedChildAction,
     TraitHookedIdAction,
 };
@@ -95,14 +96,6 @@ final class ExternalActionRuntimeProvider
         'passThroughHook' => [
             UnknownPropertyException::class,
             'Setting unknown property: ' . PassThroughHookAction::class . '::colour',
-        ],
-        'traitHookedId' => [
-            TraitHookedIdAction::class,
-            null,
-        ],
-        'traitHookedChild' => [
-            TraitHookedChildAction::class,
-            null,
         ],
     ];
 
@@ -506,6 +499,21 @@ final class ExternalActionRuntimeProvider
     ];
 
     /**
+     * Outcome of the fixtures hooked through a trait, which need PHP 8.5 or later.
+     *
+     * @phpstan-var array<string, array{class-string, non-empty-string|null}>
+     */
+    private const array TRAIT_HOOK_OUTCOMES = [
+        'traitHookedId' => [
+            TraitHookedIdAction::class,
+            null,
+        ],
+        'traitHookedChild' => [
+            TraitHookedChildAction::class,
+            null,
+        ],
+    ];
+    /**
      * Message start of the rejected `colour` option of {@see TargetAction}.
      */
     private const string UNKNOWN_COLOUR = 'Setting unknown property: ' . TargetAction::class . '::colour';
@@ -571,9 +579,23 @@ final class ExternalActionRuntimeProvider
      */
     public static function outcome(string $controller, string $actionId): array
     {
-        $outcomes = $controller === HookActionController::class ? self::HOOK_OUTCOMES : self::outcomes()[$controller] ?? [];
+        $outcomes = match ($controller) {
+            HookActionController::class => self::HOOK_OUTCOMES,
+            TraitHookActionController::class => self::TRAIT_HOOK_OUTCOMES,
+            default => self::outcomes()[$controller] ?? [],
+        };
 
         return $outcomes[$actionId] ?? [null, 'unrecorded'];
+    }
+
+    /**
+     * @phpstan-return iterable<string, array{class-string, string, class-string, non-empty-string|null}>
+     */
+    public static function traitHookProvider(): iterable
+    {
+        foreach (self::TRAIT_HOOK_OUTCOMES as $actionId => [$outcome, $message]) {
+            yield $actionId => [TraitHookActionController::class, $actionId, $outcome, $message];
+        }
     }
 
     /**
