@@ -11,6 +11,8 @@ use yii2\extensions\phpstan\tests\data\rule\traitproperty\{
     CountObject,
     CountTraitObject,
     CountWidget,
+    PublicCountObject,
+    PublicTriggerComponent,
     SecretAction,
     SecretObject,
     SecretWidget,
@@ -55,8 +57,12 @@ final class TraitPropertyOptionProvider
         'inheritedWideCount',
         'nestedWideCount',
         'paintTrigger',
+        'publicCount',
         'publicSecret',
+        'publicTrigger',
         'secret',
+        'shadowedPaintTrigger',
+        'shadowedWideCount',
         'trigger',
         'wideCount',
     ];
@@ -82,6 +88,7 @@ final class TraitPropertyOptionProvider
             [
                 'count' => [["'count'", $message(CountObject::class)]],
                 'countTrait' => [["'count'", $message(CountTraitObject::class)]],
+                'publicCount' => [["'count'", $message(PublicCountObject::class)]],
             ],
         );
     }
@@ -102,6 +109,7 @@ final class TraitPropertyOptionProvider
             TraitPropertyCreateObject::class,
             self::OBJECT_METHODS,
             [
+                'publicTrigger' => [["'colour'", $message(PublicTriggerComponent::class, 'colour')]],
                 'secret' => [["'secret'", $message(SecretObject::class, 'secret')]],
                 'trigger' => [["'colour'", $message(TriggerComponent::class, 'colour')]],
             ],
@@ -175,6 +183,7 @@ final class TraitPropertyOptionProvider
             [
                 'count' => [["'count'", $message(CountObject::class)]],
                 'countTrait' => [["'count'", $message(CountTraitObject::class)]],
+                'publicCount' => [["'count'", $message(PublicCountObject::class)]],
             ],
         );
     }
@@ -194,6 +203,7 @@ final class TraitPropertyOptionProvider
             TraitPropertyNewObject::class,
             self::OBJECT_METHODS,
             [
+                'publicTrigger' => [["'colour'", $message(PublicTriggerComponent::class, 'colour')]],
                 'secret' => [["'secret'", $message(SecretObject::class, 'secret')]],
                 'trigger' => [["'colour'", $message(TriggerComponent::class, 'colour')]],
             ],
@@ -218,6 +228,8 @@ final class TraitPropertyOptionProvider
             'createObject' => [
                 'count' => $typeError(CountObject::class),
                 'countTrait' => $typeError(CountTraitObject::class),
+                'publicCount' => $typeError(PublicCountObject::class),
+                'publicTrigger' => $unknown(PublicTriggerComponent::class, 'colour'),
                 'secret' => $unknown(SecretObject::class, 'secret'),
                 'trigger' => $unknown(TriggerComponent::class, 'colour'),
             ],

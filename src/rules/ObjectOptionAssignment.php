@@ -246,32 +246,44 @@ final class ObjectOptionAssignment
     }
 
     /**
-     * Returns whether a trait of the class, of its traits or of its parent classes declares the native property with
-     * other visibility, hook, `static` or `readonly` modifiers than the declaration PHPStan reports, as a PHP 8.5 trait
-     * that redeclares an inherited property may do.
+     * Returns whether a trait of the class or of a parent class up to the declaring class of the native property, or a
+     * trait of those traits, declares the property with other visibility, hook, `static` or `readonly` modifiers than
+     * the declaration PHPStan reports, as a PHP 8.5 trait that redeclares an inherited property may do.
+     *
+     * The declaring class shadows the traits of its ancestors except for their hooks, which a redeclaration without
+     * hooks inherits, so only the hooks of those traits are compared.
      */
     private static function isRedeclaredByTrait(ClassReflection $classReflection, string $name): bool
     {
         $property = $classReflection->getNativeProperty($name);
+        $declaringClass = $property->getDeclaringClass()->getName();
+        $shadowed = false;
 
-        foreach ($classReflection->getTraits(true) as $trait) {
-            if ($trait->hasNativeProperty($name) === false) {
-                continue;
+        for ($class = $classReflection; $class !== null; $class = $class->getParentClass()) {
+            // a trait also declares the properties of the traits it uses
+            foreach ($class->getTraits() as $trait) {
+                if ($trait->hasNativeProperty($name) === false) {
+                    continue;
+                }
+
+                $declaration = $trait->getNativeProperty($name);
+
+                if (
+                    $declaration->isHooked() !== $property->isHooked()
+                    || $shadowed === false && (
+                        $declaration->isPublic() !== $property->isPublic()
+                        || $declaration->isPrivate() !== $property->isPrivate()
+                        || $declaration->isStatic() !== $property->isStatic()
+                        || $declaration->isReadOnly() !== $property->isReadOnly()
+                        || $declaration->isPrivateSet() !== $property->isPrivateSet()
+                        || $declaration->isProtectedSet() !== $property->isProtectedSet()
+                    )
+                ) {
+                    return true;
+                }
             }
 
-            $declaration = $trait->getNativeProperty($name);
-
-            if (
-                $declaration->isPublic() !== $property->isPublic()
-                || $declaration->isPrivate() !== $property->isPrivate()
-                || $declaration->isStatic() !== $property->isStatic()
-                || $declaration->isReadOnly() !== $property->isReadOnly()
-                || $declaration->isHooked() !== $property->isHooked()
-                || $declaration->isPrivateSet() !== $property->isPrivateSet()
-                || $declaration->isProtectedSet() !== $property->isProtectedSet()
-            ) {
-                return true;
-            }
+            $shadowed = $shadowed || $class->getName() === $declaringClass;
         }
 
         return false;

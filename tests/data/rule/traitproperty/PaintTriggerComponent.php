@@ -7,7 +7,7 @@ namespace yii2\extensions\phpstan\tests\data\rule\traitproperty;
 /**
  * Subclass of {@see TriggerComponent} whose `$trigger` set hook comes from {@see PaintTriggerTrait}.
  */
-final class PaintTriggerComponent extends TriggerComponent
+class PaintTriggerComponent extends TriggerComponent
 {
     use PaintTriggerTrait;
 }

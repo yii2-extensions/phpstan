@@ -36,14 +36,34 @@ final class TraitPropertyCreateObject
         return Yii::createObject(['class' => PaintTriggerComponent::class, 'trigger' => 1, 'colour' => 'blue']);
     }
 
+    public function publicCount(): object
+    {
+        return Yii::createObject(['class' => PublicCountObject::class, 'count' => [1, 2]]);
+    }
+
     public function publicSecret(): object
     {
         return Yii::createObject(['class' => PublicSecretObject::class, 'secret' => 'open']);
     }
 
+    public function publicTrigger(): object
+    {
+        return Yii::createObject(['class' => PublicTriggerComponent::class, 'trigger' => 1, 'colour' => 'blue']);
+    }
+
     public function secret(): object
     {
         return Yii::createObject(['class' => SecretObject::class, 'secret' => 'open']);
+    }
+
+    public function shadowedPaintTrigger(): object
+    {
+        return Yii::createObject(['class' => ShadowedPaintTriggerComponent::class, 'trigger' => 1, 'colour' => 'blue']);
+    }
+
+    public function shadowedWideCount(): object
+    {
+        return Yii::createObject(['class' => ShadowedWideCountObject::class, 'count' => [1, 2]]);
     }
 
     public function trigger(): object

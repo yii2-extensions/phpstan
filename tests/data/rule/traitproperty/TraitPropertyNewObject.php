@@ -34,14 +34,34 @@ final class TraitPropertyNewObject
         return new PaintTriggerComponent(['trigger' => 1, 'colour' => 'blue']);
     }
 
+    public function publicCount(): object
+    {
+        return new PublicCountObject(['count' => [1, 2]]);
+    }
+
     public function publicSecret(): object
     {
         return new PublicSecretObject(['secret' => 'open']);
     }
 
+    public function publicTrigger(): object
+    {
+        return new PublicTriggerComponent(['trigger' => 1, 'colour' => 'blue']);
+    }
+
     public function secret(): object
     {
         return new SecretObject(['secret' => 'open']);
+    }
+
+    public function shadowedPaintTrigger(): object
+    {
+        return new ShadowedPaintTriggerComponent(['trigger' => 1, 'colour' => 'blue']);
+    }
+
+    public function shadowedWideCount(): object
+    {
+        return new ShadowedWideCountObject(['count' => [1, 2]]);
     }
 
     public function trigger(): object
