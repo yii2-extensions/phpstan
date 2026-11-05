@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: follow constructor arguments addressing only `$config` in both `Yii::createObject()` option rules; check `Instance` values as resolved.
 - feat: add opt-in `yii2.new.unknownOption` and `yii2.new.invalidOptionType` rules for the `$config` of direct `new` `BaseObject` constructions.
 - fix: check `class` and `__class` of a `$config` constructor argument in both `Yii::createObject()` option rules, as Yii assigns them.
+- feat: add opt-in `yii2.widget.unknownOption` and `yii2.widget.invalidOptionType` rules for `Widget::widget()` and `begin()` options.
 
 ## 0.5.2 October 23, 2026
 

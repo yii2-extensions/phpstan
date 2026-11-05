@@ -18,6 +18,8 @@ parameters:
             createObjectUnknownOption: false
             newInvalidOptionType: false
             newUnknownOption: false
+            widgetInvalidOptionType: false
+            widgetUnknownOption: false
 
 parametersSchema:
     yii2: structure(
@@ -29,7 +31,9 @@ parametersSchema:
                     createObjectInvalidOptionType: bool(),
                     createObjectUnknownOption: bool(),
                     newInvalidOptionType: bool(),
-                    newUnknownOption: bool()
+                    newUnknownOption: bool(),
+                    widgetInvalidOptionType: bool(),
+                    widgetUnknownOption: bool()
                 ]
             )
         ]
@@ -44,6 +48,10 @@ conditionalTags:
         phpstan.rules.rule: %yii2.rules.newInvalidOptionType%
     yii2\extensions\phpstan\rules\NewObjectUnknownOptionRule:
         phpstan.rules.rule: %yii2.rules.newUnknownOption%
+    yii2\extensions\phpstan\rules\WidgetInvalidOptionTypeRule:
+        phpstan.rules.rule: %yii2.rules.widgetInvalidOptionType%
+    yii2\extensions\phpstan\rules\WidgetUnknownOptionRule:
+        phpstan.rules.rule: %yii2.rules.widgetUnknownOption%
 
 services:
     -
@@ -65,6 +73,10 @@ services:
         class: yii2\extensions\phpstan\rules\NewObjectInvalidOptionTypeRule
     -
         class: yii2\extensions\phpstan\rules\NewObjectUnknownOptionRule
+    -
+        class: yii2\extensions\phpstan\rules\WidgetInvalidOptionTypeRule
+    -
+        class: yii2\extensions\phpstan\rules\WidgetUnknownOptionRule
     -
         class: yii2\extensions\phpstan\type\ActiveQueryDynamicMethodReturnTypeExtension
         tags: [phpstan.broker.dynamicMethodReturnTypeExtension]

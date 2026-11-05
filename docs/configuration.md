@@ -15,6 +15,8 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `rules.createObjectUnknownOption`     | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).         |
 | `rules.newInvalidOptionType`          | `false`               | Enables the [`new` option type rule](#options-of-new-constructions).         |
 | `rules.newUnknownOption`              | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).      |
+| `rules.widgetInvalidOptionType`       | `false`               | Enables the [widget option type rule](#options-of-widget-calls).             |
+| `rules.widgetUnknownOption`           | `false`               | Enables the [widget unknown option rule](#options-of-widget-calls).          |
 
 PHPStan's `paths`, `level`, `bootstrapFiles`, `stubFiles` and `tmpDir` remain normal
 [PHPStan options](https://phpstan.org/config-reference).
@@ -463,6 +465,62 @@ other than `config`, and configurations whose native type isn't one array shape 
 report malformed argument lists. Changing the constructed class, a parent class or a trait it uses, or the `behaviors`
 of the analysis configuration for a `yii\base\Component` subclass reanalyses the construction; changing a container
 binding doesn't.
+
+## Options of widget calls
+
+Two more opt-in rules check the configuration passed to `widget()` and `begin()` of a `yii\base\Widget` subclass. They
+are independent of each other and of the `Yii::createObject()` and `new` rules; enable either or both:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            widgetInvalidOptionType: true
+            widgetUnknownOption: true
+```
+
+```php
+class Feed extends yii\base\Widget
+{
+    public int $limit = 10;
+}
+
+Feed::widget(['limit' => '20']);                         // valid
+Feed::widget(['limit' => 'all', 'timeoutSeconds' => 5]); // two reported
+Feed::begin(config: ['timeoutSeconds' => 5]);            // reported
+```
+
+`timeoutSeconds` is reported with the identifier `yii2.widget.unknownOption` and `'all'` with
+`yii2.widget.invalidOptionType`, at the same lines as for `Yii::createObject()`. The message names the called class and
+method and the class Yii creates.
+
+Both methods set the `class` key of the configuration to the called class and pass it to `Yii::createObject()`, so the
+rules check it as the [unknown option](#unknown-yiicreateobject-options) and
+[option type](#invalid-yiicreateobject-option-types) rules check that array:
+
+- a `class` key written in the configuration is replaced and never changes the created class;
+- a `__class` key that names one class selects that class instead;
+- a container definition of the called class is followed as for `Yii::createObject()`, so the options are checked
+  against the class the container builds, and the rules stand aside on the definitions it stands aside on;
+- `__construct()` passes constructor arguments, and a `yii\di\Instance` value is checked as the object or `null` it may
+  resolve to.
+
+The rules analyse a call only when:
+
+- the class is written as a fully qualified or imported name of `yii\base\Widget` or a subclass, and the method is
+  written as `widget` or `begin`;
+- the class inherits that method from `yii\base\Widget`;
+- the configuration is the only argument, passed by position or by its name `config`, without unpacking;
+- the class Yii creates is an instantiable `yii\base\Widget` subclass that inherits the constructor of
+  `yii\base\BaseObject` and `__set()` from `yii\base\Component`.
+
+They stand aside for `self::`, `parent::` and `static::` calls, a class or method name held in a variable or an
+expression, calls through an object, first-class callables such as `Feed::widget(...)`, and a class that overrides the
+method, directly or through a trait, even one that calls the parent method. They also stand aside for a `__class` key
+that is `null` or not one class name, a created class that isn't a widget, and configurations whose native type isn't
+one array shape with string keys. Calls without a configuration report nothing. PHPStan's own rules report malformed
+argument lists. Changing the called or created class, or a container definition of the called class, reanalyses the
+call.
 
 ## Constants and result cache
 

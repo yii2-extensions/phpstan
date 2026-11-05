@@ -30,6 +30,7 @@ parameters:
             - tests/data/rule/NewObjectFirstClassCallable.php
             - tests/data/rule/NewObjectLateStaticReference.php
             - tests/data/rule/NewObjectStandAside.php
+            - tests/data/rule/WidgetStandAside.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
             - tests/data/type/ServiceMapDefinitionType.php
