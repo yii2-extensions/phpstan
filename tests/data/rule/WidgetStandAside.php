@@ -132,6 +132,11 @@ final class WidgetStandAside extends Widget
         return ObjectBoundWidget::widget(['colour' => 'red']);
     }
 
+    public function nonWidgetClass(): object
+    {
+        return PlainObject::begin(['name' => 'value']);
+    }
+
     public function nonWidgetLegacyClass(): string
     {
         return TargetWidget::widget(
@@ -140,11 +145,6 @@ final class WidgetStandAside extends Widget
                 'colour' => 'red',
             ],
         );
-    }
-
-    public function nonWidgetClass(): object
-    {
-        return PlainObject::begin(['name' => 'value']);
     }
 
     public function nullLegacyClass(): string
