@@ -19,7 +19,7 @@ final readonly class CreateObjectConstructionContract
 {
     /**
      * @param string $constructorClass Class that must declare the inherited constructor.
-     * @param list<int> $fixedArgumentPositions Positions of the arguments the API supplies, before the configuration.
+     * @param list<int> $fixedArgumentPositions Positions of the arguments the API supplies, `0` up to the configuration.
      * @param int $configurationPosition Position of the configuration parameter, the last one.
      * @param string $configurationName Name of the configuration parameter.
      * @param bool $followsConstructorArguments Whether a `__construct()` option and definition params that address only
@@ -73,22 +73,8 @@ final readonly class CreateObjectConstructionContract
 
         $parameters = count($variants) === 1 ? $variants[0]->getParameters() : [];
 
-        $configuration = $parameters[$this->configurationPosition] ?? null;
-
-        if (
-            count($parameters) !== $this->configurationPosition + 1
-            || $configuration?->getName() !== $this->configurationName
-            || count($this->fixedArgumentPositions) !== $this->configurationPosition
-        ) {
-            return false;
-        }
-
-        foreach ($this->fixedArgumentPositions as $index => $position) {
-            if ($position !== $index) {
-                return false;
-            }
-        }
-
-        return true;
+        // the supplied arguments fill every position before the configuration, the last parameter
+        return count($parameters) === $this->configurationPosition + 1
+            && ($parameters[$this->configurationPosition] ?? null)?->getName() === $this->configurationName;
     }
 }
