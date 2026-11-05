@@ -41,7 +41,6 @@ parameters:
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
             - tests/data/type/ServiceMapDefinitionType.php
-            - tests/support/action/hook/
             - tests/support/stub/DerivedModelBaseRecordQuery.php
             - tests/support/stub/DerivedModelDocQuery.php
             - tests/support/stub/DerivedModelFalseAllQuery.php

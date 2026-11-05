@@ -35,7 +35,14 @@ use yii2\extensions\phpstan\tests\data\rule\action\{
     UnpackedMapActionController,
     ValidActionController,
 };
-use yii2\extensions\phpstan\tests\data\rule\action\hook\HookActionController;
+use yii2\extensions\phpstan\tests\data\rule\action\hook\{
+    HookActionController,
+    HookedControllerAction,
+    HookedIdAction,
+    PassThroughHookAction,
+    TraitHookedChildAction,
+    TraitHookedIdAction,
+};
 use yii2\extensions\phpstan\tests\support\action\{
     AbstractAction,
     BehaviorsAction,
@@ -49,13 +56,6 @@ use yii2\extensions\phpstan\tests\support\action\{
     PlainObject,
     SingletonAction,
     TargetAction,
-};
-use yii2\extensions\phpstan\tests\support\action\hook\{
-    HookedControllerAction,
-    HookedIdAction,
-    PassThroughHookAction,
-    TraitHookedChildAction,
-    TraitHookedIdAction,
 };
 
 use function array_keys;

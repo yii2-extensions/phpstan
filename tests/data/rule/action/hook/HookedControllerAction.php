@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace yii2\extensions\phpstan\tests\support\action\hook;
+namespace yii2\extensions\phpstan\tests\data\rule\action\hook;
 
 use yii\base\Action;
 use yii2\extensions\phpstan\tests\support\action\PaintBehavior;
