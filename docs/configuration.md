@@ -7,16 +7,18 @@ split between PHPStan's NEON parameters and a PHP file describing the applicatio
 
 The extension registers `parameters.yii2` in `extension.neon`:
 
-| Key                                   | Default               | Meaning                                                                      |
-| ------------------------------------- | --------------------- | ---------------------------------------------------------------------------- |
-| `config_path`                         | `''`                  | PHP file to execute, relative to the process working directory or absolute.  |
-| `component_generics`                  | `user: identityClass` | Component ID to configuration key holding its single generic class argument. |
-| `rules.createObjectInvalidOptionType` | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).       |
-| `rules.createObjectUnknownOption`     | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).         |
-| `rules.newInvalidOptionType`          | `false`               | Enables the [`new` option type rule](#options-of-new-constructions).         |
-| `rules.newUnknownOption`              | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).      |
-| `rules.widgetInvalidOptionType`       | `false`               | Enables the [widget option type rule](#options-of-widget-calls).             |
-| `rules.widgetUnknownOption`           | `false`               | Enables the [widget unknown option rule](#options-of-widget-calls).          |
+| Key                                     | Default               | Meaning                                                                          |
+| --------------------------------------- | --------------------- | -------------------------------------------------------------------------------- |
+| `config_path`                           | `''`                  | PHP file to execute, relative to the process working directory or absolute.      |
+| `component_generics`                    | `user: identityClass` | Component ID to configuration key holding its single generic class argument.     |
+| `rules.createObjectInvalidOptionType`   | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).           |
+| `rules.createObjectUnknownOption`       | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).             |
+| `rules.externalActionInvalidOptionType` | `false`               | Enables the [external action option type rule](#options-of-external-actions).    |
+| `rules.externalActionUnknownOption`     | `false`               | Enables the [external action unknown option rule](#options-of-external-actions). |
+| `rules.newInvalidOptionType`            | `false`               | Enables the [`new` option type rule](#options-of-new-constructions).             |
+| `rules.newUnknownOption`                | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).          |
+| `rules.widgetInvalidOptionType`         | `false`               | Enables the [widget option type rule](#options-of-widget-calls).                 |
+| `rules.widgetUnknownOption`             | `false`               | Enables the [widget unknown option rule](#options-of-widget-calls).              |
 
 PHPStan's `paths`, `level`, `bootstrapFiles`, `stubFiles` and `tmpDir` remain normal
 [PHPStan options](https://phpstan.org/config-reference).
@@ -521,6 +523,75 @@ that is `null` or not one class name, a created class that isn't a widget, and c
 one array shape with string keys. Calls without a configuration report nothing. PHPStan's own rules report malformed
 argument lists. Changing the called or created class, or a container definition of the called class, reanalyses the
 call.
+
+## Options of external actions
+
+Two more opt-in rules check the array definitions that a controller's `actions()` method returns, which
+`yii\base\Controller::createAction()` passes to `Yii::createObject($definition, [$id, $this])`. They are independent of
+each other and of the other option rules; enable either or both:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            externalActionInvalidOptionType: true
+            externalActionUnknownOption: true
+```
+
+```php
+final class FeedAction extends yii\base\Action
+{
+    public int $limit = 10;
+
+    public function run(): string
+    {
+        return '';
+    }
+}
+
+final class SiteController extends yii\web\Controller
+{
+    public function actions(): array
+    {
+        return [
+            'feed' => ['class' => FeedAction::class, 'limit' => '20'],                          // valid
+            'all' => ['class' => FeedAction::class, 'limit' => 'all', 'timeoutSeconds' => 5], // two reported
+        ];
+    }
+}
+```
+
+`timeoutSeconds` is reported with the identifier `yii2.externalAction.unknownOption` and `'all'` with
+`yii2.externalAction.invalidOptionType`, at the line of each key; a definition that comes from a constant or a variable
+is reported at the line of its action ID, and a whole map that comes from one at the line of `return`. The message names
+the action ID, the controller and the class Yii creates.
+
+Names, values and `yii\base\Component` options follow the [unknown option](#unknown-yiicreateobject-options) and
+[option type](#invalid-yiicreateobject-option-types) rules of `Yii::createObject()`, including the selection by
+`__class` or `class` and the container definitions they follow, with these differences, which match what
+`createAction()` does at runtime:
+
+- the class Yii creates must be an instantiable `yii\base\Action` subclass that inherits the constructor of
+  `yii\base\Action` and `__set()` from `yii\base\Component`;
+- that constructor assigns `id` and `controller` before the configuration, so both must be plain public properties,
+  without property hooks or a trait that declares them;
+- the controller supplies the constructor arguments, so a `__construct()` key, or a container definition with params or
+  a `__construct()` key, makes the rules stand aside.
+
+The rules analyse a `return` statement only when:
+
+- it belongs to the `actions()` method of a concrete, non-anonymous `yii\base\Controller` subclass, outside a trait, a
+  closure or an arrow function;
+- the controller inherits `createAction()` from `yii\base\Controller`;
+- the map is an array literal or has a native type that is exactly one array shape, and the action ID is a non-empty
+  string.
+
+They stand aside for abstract controllers and for controllers that only inherit their `actions()` method, an override of
+`createAction()` in the controller or a parent, dynamic or integer action IDs, maps that are merged, unpacked,
+conditional or documented only by PHPDoc, and definitions that are class names, callables or `null`. A concrete
+controller is checked even when a subclass could replace its map. The limits of native types described for
+`Yii::createObject()` apply to maps and definitions held in variables. Changing the created class, a container
+definition, the `behaviors` of the analysis configuration, the controller or a parent controller reanalyses the method.
 
 ## Constants and result cache
 
