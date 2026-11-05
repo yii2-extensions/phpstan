@@ -11,6 +11,7 @@
         "PHPStan\\Reflection\\Annotations\\AnnotationsPropertiesClassReflectionExtension",
         "PHPStan\\Reflection\\ClassReflection",
         "PHPStan\\Reflection\\Dummy\\DummyPropertyReflection",
+        "PHPStan\\Reflection\\ExtendedMethodReflection",
         "PHPStan\\Reflection\\MethodReflection",
         "PHPStan\\Reflection\\MethodsClassReflectionExtension",
         "PHPStan\\Reflection\\ParametersAcceptorSelector",

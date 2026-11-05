@@ -93,6 +93,17 @@ enum Message: string
     case VALUE_NOT_STRING = "'%s': '%s' must be a 'string', got '%s'.";
 
     /**
+     * Error when a `widget()` or `begin()` option value is never accepted by the property or setter Yii assigns it to.
+     */
+    case WIDGET_INVALID_OPTION_TYPE = '%s::%s() sets %s::$%s to %s, but %s accepts only %s, even with type coercion.';
+
+    /**
+     * Error when a `widget()` or `begin()` option names no public property or setter of the created widget.
+     */
+    case WIDGET_UNKNOWN_OPTION = '%s::%s() sets unknown property %s::$%s: the class has no public property or setter '
+        . 'with that name.';
+
+    /**
      * Returns the formatted message string for the error case.
      *
      * @param int|string ...$argument Values to insert into the message template.

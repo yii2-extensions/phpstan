@@ -5,12 +5,11 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\rules;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
 use PhpParser\Node\Expr\StaticCall;
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\ReflectionProvider;
 use PHPStan\Rules\{IdentifierRuleError, Rule, RuleErrorBuilder};
-use PHPStan\Type\{NullType, ObjectType, ObjectWithoutClassType, StringType, Type, TypeCombinator, VerbosityLevel};
+use PHPStan\Type\VerbosityLevel;
 use yii\BaseYii;
 use yii\di\Instance;
 use yii2\extensions\phpstan\exception\Message;
@@ -78,21 +77,9 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         $classReflection = $configuration->classReflection;
         $errors = [];
 
-        foreach ($configuration->options as [$name, $line, $value]) {
-            $actualType = $value instanceof Expr ? $scope->getNativeType($value) : $value;
+        $rejectedOptions = CreateObjectConfigurationResolver::rejectedOptions($configuration, $scope);
 
-            $target = ObjectOptionAssignment::rejectingTarget($classReflection, $name, $actualType, $scope);
-
-            if ($target === null) {
-                continue;
-            }
-
-            [$expectedType, $member] = $target;
-
-            if (self::mayResolveToAccepted($expectedType, $actualType)) {
-                continue;
-            }
-
+        foreach ($rejectedOptions as [$name, $line, $actualType, $expectedType, $member]) {
             $errors[] = RuleErrorBuilder::message(
                 Message::CREATE_OBJECT_INVALID_OPTION_TYPE->getMessage(
                     $configuration->calledClass,
@@ -109,23 +96,5 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         }
 
         return $errors;
-    }
-
-    /**
-     * Returns whether the value may be an {@see Instance} reference that the container resolves, before the assignment,
-     * to an object or `null` ({@see Instance::get()}) that the expected type may accept.
-     *
-     * `Container::build()` resolves references among the options of the configuration, and nested in a constructor
-     * argument only when the container resolves arrays, a runtime setting. Any object may also be a `Stringable`.
-     */
-    private static function mayResolveToAccepted(Type $expectedType, Type $actualType): bool
-    {
-        if ((new ObjectType(Instance::class))->isSuperTypeOf($actualType)->no()) {
-            return false;
-        }
-
-        $resolvedType = TypeCombinator::union(new ObjectWithoutClassType(), new StringType(), new NullType());
-
-        return $expectedType->isSuperTypeOf($resolvedType)->no() === false;
     }
 }
