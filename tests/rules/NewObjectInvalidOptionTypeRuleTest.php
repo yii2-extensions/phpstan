@@ -6,11 +6,15 @@ namespace yii2\extensions\phpstan\tests\rules;
 
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
-use PHPUnit\Framework\Attributes\DataProviderExternal;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, RequiresPhp};
 use ReflectionClass;
 use TypeError;
 use yii2\extensions\phpstan\rules\NewObjectInvalidOptionTypeRule;
-use yii2\extensions\phpstan\tests\provider\{NewObjectInvalidOptionTypeRuleProvider, NewObjectRuntimeProvider};
+use yii2\extensions\phpstan\tests\provider\{
+    NewObjectInvalidOptionTypeRuleProvider,
+    NewObjectRuntimeProvider,
+    TraitPropertyOptionProvider,
+};
 use yii2\extensions\phpstan\tests\support\{CreateObjectRuleTestTrait, FixtureMethod};
 
 use function dirname;
@@ -89,6 +93,20 @@ final class NewObjectInvalidOptionTypeRuleTest extends RuleTestCase
             $reported,
             'Every reported construction must be checked.',
         );
+    }
+
+    /**
+     * @phpstan-param class-string $fixture
+     * @phpstan-param list<array{string|null, string}> $expected
+     */
+    #[DataProviderExternal(TraitPropertyOptionProvider::class, 'newObjectInvalidOptionTypeProvider')]
+    #[RequiresPhp('>= 8.5')]
+    public function testReportOnlyControlsWhenTraitRedeclaresInheritedProperty(
+        string $fixture,
+        string $method,
+        array $expected,
+    ): void {
+        $this->assertMethodDiagnostics($fixture, $method, $expected, 'new ');
     }
 
     /**

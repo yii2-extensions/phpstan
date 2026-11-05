@@ -150,8 +150,8 @@ final class ObjectOptionAssignment
      * {@see BaseYii::configure()} assigns a public instance property directly, so its type applies even when a setter
      * exists. A protected, private or static property is inaccessible from there, and `__set()` calls the `set` method
      * instead, which must be public or protected to be callable from {@see BaseObject} or {@see Component}. Read-only,
-     * hooked and asymmetric-visibility properties, private setters, setters without parameters and setters with more
-     * than one signature are left alone.
+     * hooked and asymmetric-visibility properties, properties that a trait redeclares differently, private setters,
+     * setters without parameters and setters with more than one signature are left alone.
      *
      * @return array{Type, string}|null Native type and member description, or `null` when no assignment path with a
      * type check is proven.
@@ -163,6 +163,10 @@ final class ObjectOptionAssignment
         }
 
         if ($classReflection->hasNativeProperty($name)) {
+            if (self::isRedeclaredByTrait($classReflection, $name)) {
+                return null;
+            }
+
             $property = $classReflection->getNativeProperty($name);
 
             if ($property->isPublic() && $property->isStatic() === false) {
@@ -242,6 +246,38 @@ final class ObjectOptionAssignment
     }
 
     /**
+     * Returns whether a trait of the class, of its traits or of its parent classes declares the native property with
+     * other visibility, hook, `static` or `readonly` modifiers than the declaration PHPStan reports, as a PHP 8.5 trait
+     * that redeclares an inherited property may do.
+     */
+    private static function isRedeclaredByTrait(ClassReflection $classReflection, string $name): bool
+    {
+        $property = $classReflection->getNativeProperty($name);
+
+        foreach ($classReflection->getTraits(true) as $trait) {
+            if ($trait->hasNativeProperty($name) === false) {
+                continue;
+            }
+
+            $declaration = $trait->getNativeProperty($name);
+
+            if (
+                $declaration->isPublic() !== $property->isPublic()
+                || $declaration->isPrivate() !== $property->isPrivate()
+                || $declaration->isStatic() !== $property->isStatic()
+                || $declaration->isReadOnly() !== $property->isReadOnly()
+                || $declaration->isHooked() !== $property->isHooked()
+                || $declaration->isPrivateSet() !== $property->isPrivateSet()
+                || $declaration->isProtectedSet() !== $property->isProtectedSet()
+            ) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Returns whether {@see isUnknownOption()} holds for a name that isn't an `on ...` event, compared case-sensitively
      * as Yii does.
      */
@@ -257,7 +293,7 @@ final class ObjectOptionAssignment
      * A public property is assigned directly. A protected or private property is inaccessible from
      * {@see BaseYii::configure()}, so `__set()` handles it like an absent one. `__set()` calls any `set` method,
      * whatever its visibility, and rejects a name with only a `get` method as read-only; both are left alone, as are
-     * empty names and static, read-only and hooked properties.
+     * empty names, static, read-only and hooked properties, and properties that a trait redeclares differently.
      */
     private static function isUnknownOption(ClassReflection $classReflection, string $name): bool
     {
@@ -266,6 +302,10 @@ final class ObjectOptionAssignment
         }
 
         if ($classReflection->hasNativeProperty($name)) {
+            if (self::isRedeclaredByTrait($classReflection, $name)) {
+                return false;
+            }
+
             $property = $classReflection->getNativeProperty($name);
 
             if ($property->isPublic() || $property->isStatic() || $property->isReadOnly() || $property->isHooked()) {
@@ -323,11 +363,16 @@ final class ObjectOptionAssignment
 
     /**
      * Returns whether assigning the option may run application code that attaches a behavior for a later option: a set
-     * hook, a `set` method of any visibility, or an `on ...` event with an overridden `on()`.
+     * hook, a `set` method of any visibility, an `on ...` event with an overridden `on()`, or a property that a trait
+     * redeclares differently, which may add a set hook.
      */
     private static function mayRunCode(ClassReflection $classReflection, string $name): bool
     {
         if ($classReflection->hasNativeProperty($name)) {
+            if (self::isRedeclaredByTrait($classReflection, $name)) {
+                return true;
+            }
+
             $property = $classReflection->getNativeProperty($name);
 
             if ($property->isPublic() && $property->isStatic() === false) {
