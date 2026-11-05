@@ -16,6 +16,8 @@ parameters:
         rules:
             createObjectInvalidOptionType: false
             createObjectUnknownOption: false
+            externalActionInvalidOptionType: false
+            externalActionUnknownOption: false
             newInvalidOptionType: false
             newUnknownOption: false
             widgetInvalidOptionType: false
@@ -30,6 +32,8 @@ parametersSchema:
                 [
                     createObjectInvalidOptionType: bool(),
                     createObjectUnknownOption: bool(),
+                    externalActionInvalidOptionType: bool(),
+                    externalActionUnknownOption: bool(),
                     newInvalidOptionType: bool(),
                     newUnknownOption: bool(),
                     widgetInvalidOptionType: bool(),
@@ -44,6 +48,10 @@ conditionalTags:
         phpstan.rules.rule: %yii2.rules.createObjectInvalidOptionType%
     yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule:
         phpstan.rules.rule: %yii2.rules.createObjectUnknownOption%
+    yii2\extensions\phpstan\rules\ExternalActionInvalidOptionTypeRule:
+        phpstan.rules.rule: %yii2.rules.externalActionInvalidOptionType%
+    yii2\extensions\phpstan\rules\ExternalActionUnknownOptionRule:
+        phpstan.rules.rule: %yii2.rules.externalActionUnknownOption%
     yii2\extensions\phpstan\rules\NewObjectInvalidOptionTypeRule:
         phpstan.rules.rule: %yii2.rules.newInvalidOptionType%
     yii2\extensions\phpstan\rules\NewObjectUnknownOptionRule:
@@ -69,6 +77,10 @@ services:
         class: yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule
     -
         class: yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule
+    -
+        class: yii2\extensions\phpstan\rules\ExternalActionInvalidOptionTypeRule
+    -
+        class: yii2\extensions\phpstan\rules\ExternalActionUnknownOptionRule
     -
         class: yii2\extensions\phpstan\rules\NewObjectInvalidOptionTypeRule
     -

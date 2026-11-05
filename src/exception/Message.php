@@ -62,6 +62,18 @@ enum Message: string
         . 'property or setter with that name.';
 
     /**
+     * Error when an external action option value is never accepted by the property or setter Yii assigns it to.
+     */
+    case EXTERNAL_ACTION_INVALID_OPTION_TYPE = "External action '%s' in %s::actions() sets %s::\$%s to %s, but %s accepts "
+        . 'only %s, even with type coercion.';
+
+    /**
+     * Error when an external action option names no public property or setter of the created action.
+     */
+    case EXTERNAL_ACTION_UNKNOWN_OPTION = "External action '%s' in %s::actions() sets unknown property %s::\$%s: the "
+        . 'class has no public property or setter with that name.';
+
+    /**
      * Error when a `new` configuration value is never accepted by the property or setter Yii assigns it to.
      */
     case NEW_OBJECT_INVALID_OPTION_TYPE = 'new %s() sets $%s to %s, but %s accepts only %s, even with type coercion.';
