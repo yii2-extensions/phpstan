@@ -20,7 +20,7 @@ final class TraitPropertyDefinitionResultCacheIntegrationProvider
      */
     private const string PAINT_TRIGGER = "    public mixed \$trigger = null {\n"
         . "        set {\n"
-        . "            \$this->attachBehavior('paint', new Paint());\n\n"
+        . "            \$this->attachBehavior('paint', Paint::class);\n\n"
         . "            \$this->trigger = \$value;\n"
         . "        }\n"
         . "    }\n";
