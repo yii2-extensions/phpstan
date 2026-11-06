@@ -14,7 +14,13 @@ use yii2\extensions\phpstan\tests\support\action\{
     PlainObject,
     TargetAction,
 };
-use yii2\extensions\phpstan\tests\support\createobject\{CustomConstructorTarget, Target};
+use yii2\extensions\phpstan\tests\support\createobject\{
+    ComponentCustomSetterTarget,
+    CustomConstructorTarget,
+    CustomSetterTarget,
+    SetterTrait,
+    Target,
+};
 
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\rules\CreateObjectConstructionContractTest} test cases.
@@ -88,6 +94,21 @@ final class CreateObjectConstructionContractProvider
         ];
         yield 'interface' => [
             Configurable::class,
+            false,
+            false,
+        ];
+        yield 'trait' => [
+            SetterTrait::class,
+            false,
+            false,
+        ];
+        yield 'BaseObject subclass with its own __set()' => [
+            CustomSetterTarget::class,
+            false,
+            false,
+        ];
+        yield 'Component subclass with its own __set()' => [
+            ComponentCustomSetterTarget::class,
             false,
             false,
         ];
