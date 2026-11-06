@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add opt-in `yii2.widget.unknownOption` and `yii2.widget.invalidOptionType` rules for `Widget::widget()` and `begin()` options.
 - feat: add opt-in `yii2.externalAction.unknownOption` and `yii2.externalAction.invalidOptionType` rules for `Controller::actions()` definitions.
 - fix: stand aside in the eight option rules when a trait redeclares an inherited option property, such as with a PHP `8.5` set hook.
+- fix: stand aside in `createObject`, widget and external action option rules when a container definition sets a trait-redeclared property.
 
 ## 0.5.2 October 23, 2026
 

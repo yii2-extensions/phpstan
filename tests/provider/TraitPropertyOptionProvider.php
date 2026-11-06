@@ -11,6 +11,9 @@ use yii2\extensions\phpstan\tests\data\rule\traitproperty\{
     CountObject,
     CountTraitObject,
     CountWidget,
+    DefinitionCountWidget,
+    DefinitionTriggerTraitWidget,
+    DefinitionTriggerWidget,
     PublicCountObject,
     PublicTriggerComponent,
     SecretAction,
@@ -22,6 +25,8 @@ use yii2\extensions\phpstan\tests\data\rule\traitproperty\{
     TraitPropertyWidget,
     TriggerAction,
     TriggerComponent,
+    TriggerTraitAction,
+    TriggerTraitComponent,
     TriggerWidget,
 };
 
@@ -37,6 +42,10 @@ final class TraitPropertyOptionProvider
      * Action IDs of the controller fixture.
      */
     private const array ACTION_IDS = [
+        'definitionCount',
+        'definitionPaintTrigger',
+        'definitionTrigger',
+        'definitionTriggerTrait',
         'paintTrigger',
         'plainCount',
         'plainTrigger',
@@ -48,6 +57,20 @@ final class TraitPropertyOptionProvider
      * Value that every `$count` case assigns, as PHPStan describes it.
      */
     private const string COUNT_VALUE = 'array{1, 2}';
+    /**
+     * Methods of the `Yii::createObject()` fixture whose container definition sets an option first.
+     */
+    private const array DEFINITION_METHODS = [
+        'definitionCount',
+        'definitionCountTrait',
+        'definitionInheritedPaintTrigger',
+        'definitionNestedPaintTrigger',
+        'definitionPaintTrigger',
+        'definitionPublicTrigger',
+        'definitionShadowedPaintTrigger',
+        'definitionTrigger',
+        'definitionTriggerTrait',
+    ];
     /**
      * Methods of the `Yii::createObject()` and `new` fixtures.
      */
@@ -69,7 +92,18 @@ final class TraitPropertyOptionProvider
     /**
      * Methods of the widget fixture.
      */
-    private const array WIDGET_METHODS = ['count', 'paintTrigger', 'publicSecret', 'secret', 'trigger', 'wideCount'];
+    private const array WIDGET_METHODS = [
+        'count',
+        'definitionCount',
+        'definitionPaintTrigger',
+        'definitionTrigger',
+        'definitionTriggerTrait',
+        'paintTrigger',
+        'publicSecret',
+        'secret',
+        'trigger',
+        'wideCount',
+    ];
 
     /**
      * @phpstan-return iterable<string, array{class-string, string, list<array{string|null, string}>}>
@@ -84,10 +118,12 @@ final class TraitPropertyOptionProvider
 
         yield from self::methodCases(
             TraitPropertyCreateObject::class,
-            self::OBJECT_METHODS,
+            [...self::OBJECT_METHODS, ...self::DEFINITION_METHODS],
             [
                 'count' => [["'count'", $message(CountObject::class)]],
                 'countTrait' => [["'count'", $message(CountTraitObject::class)]],
+                'definitionCount' => [["'count'", $message(CountObject::class)]],
+                'definitionCountTrait' => [["'count'", $message(CountTraitObject::class)]],
                 'publicCount' => [["'count'", $message(PublicCountObject::class)]],
             ],
         );
@@ -107,8 +143,11 @@ final class TraitPropertyOptionProvider
 
         yield from self::methodCases(
             TraitPropertyCreateObject::class,
-            self::OBJECT_METHODS,
+            [...self::OBJECT_METHODS, ...self::DEFINITION_METHODS],
             [
+                'definitionPublicTrigger' => [["'colour'", $message(PublicTriggerComponent::class, 'colour')]],
+                'definitionTrigger' => [["'colour'", $message(TriggerComponent::class, 'colour')]],
+                'definitionTriggerTrait' => [["'colour'", $message(TriggerTraitComponent::class, 'colour')]],
                 'publicTrigger' => [["'colour'", $message(PublicTriggerComponent::class, 'colour')]],
                 'secret' => [["'secret'", $message(SecretObject::class, 'secret')]],
                 'trigger' => [["'colour'", $message(TriggerComponent::class, 'colour')]],
@@ -131,6 +170,17 @@ final class TraitPropertyOptionProvider
                     "'count'",
                     sprintf(
                         "External action 'plainCount' in %s::actions() sets %s::\$count to %s, but the property "
+                            . 'accepts only int, even with type coercion.',
+                        $controller,
+                        CountAction::class,
+                        self::COUNT_VALUE,
+                    ),
+                ],
+                [
+                    'definitionCount',
+                    "'count'",
+                    sprintf(
+                        "External action 'definitionCount' in %s::actions() sets %s::\$count to %s, but the property "
                             . 'accepts only int, even with type coercion.',
                         $controller,
                         CountAction::class,
@@ -162,6 +212,12 @@ final class TraitPropertyOptionProvider
             [
                 ['protectedSecret', "'secret'", $message('protectedSecret', SecretAction::class, 'secret')],
                 ['plainTrigger', "'colour'", $message('plainTrigger', TriggerAction::class, 'colour')],
+                ['definitionTrigger', "'colour'", $message('definitionTrigger', TriggerAction::class, 'colour')],
+                [
+                    'definitionTriggerTrait',
+                    "'colour'",
+                    $message('definitionTriggerTrait', TriggerTraitAction::class, 'colour'),
+                ],
             ],
         ];
     }
@@ -228,18 +284,29 @@ final class TraitPropertyOptionProvider
             'createObject' => [
                 'count' => $typeError(CountObject::class),
                 'countTrait' => $typeError(CountTraitObject::class),
+                'definitionCount' => $typeError(CountObject::class),
+                'definitionCountTrait' => $typeError(CountTraitObject::class),
+                'definitionPublicTrigger' => $unknown(PublicTriggerComponent::class, 'colour'),
+                'definitionTrigger' => $unknown(TriggerComponent::class, 'colour'),
+                'definitionTriggerTrait' => $unknown(TriggerTraitComponent::class, 'colour'),
                 'publicCount' => $typeError(PublicCountObject::class),
                 'publicTrigger' => $unknown(PublicTriggerComponent::class, 'colour'),
                 'secret' => $unknown(SecretObject::class, 'secret'),
                 'trigger' => $unknown(TriggerComponent::class, 'colour'),
             ],
             'externalAction' => [
+                'definitionCount' => $typeError(CountAction::class),
+                'definitionTrigger' => $unknown(TriggerAction::class, 'colour'),
+                'definitionTriggerTrait' => $unknown(TriggerTraitAction::class, 'colour'),
                 'plainCount' => $typeError(CountAction::class),
                 'plainTrigger' => $unknown(TriggerAction::class, 'colour'),
                 'protectedSecret' => $unknown(SecretAction::class, 'secret'),
             ],
             'widget' => [
                 'count' => $typeError(CountWidget::class),
+                'definitionCount' => $typeError(CountWidget::class),
+                'definitionTrigger' => $unknown(DefinitionTriggerWidget::class, 'colour'),
+                'definitionTriggerTrait' => $unknown(DefinitionTriggerTraitWidget::class, 'colour'),
                 'secret' => $unknown(SecretWidget::class, 'secret'),
                 'trigger' => $unknown(TriggerWidget::class, 'colour'),
             ],
@@ -247,7 +314,7 @@ final class TraitPropertyOptionProvider
         $rejected['new'] = $rejected['createObject'];
 
         $cases = [
-            'createObject' => self::OBJECT_METHODS,
+            'createObject' => [...self::OBJECT_METHODS, ...self::DEFINITION_METHODS],
             'externalAction' => self::ACTION_IDS,
             'new' => self::OBJECT_METHODS,
             'widget' => self::WIDGET_METHODS,
@@ -265,21 +332,18 @@ final class TraitPropertyOptionProvider
      */
     public static function widgetInvalidOptionTypeProvider(): iterable
     {
+        $message = static fn(string $class): string => sprintf(
+            '%1$s::widget() sets %1$s::$count to %2$s, but the property accepts only int, even with type coercion.',
+            $class,
+            self::COUNT_VALUE,
+        );
+
         yield from self::methodCases(
             TraitPropertyWidget::class,
             self::WIDGET_METHODS,
             [
-                'count' => [
-                    [
-                        "'count'",
-                        sprintf(
-                            '%1$s::widget() sets %1$s::$count to %2$s, but the property accepts only int, even with '
-                                . 'type coercion.',
-                            CountWidget::class,
-                            self::COUNT_VALUE,
-                        ),
-                    ],
-                ],
+                'count' => [["'count'", $message(CountWidget::class)]],
+                'definitionCount' => [["'count'", $message(DefinitionCountWidget::class)]],
             ],
         );
     }
@@ -300,6 +364,8 @@ final class TraitPropertyOptionProvider
             TraitPropertyWidget::class,
             self::WIDGET_METHODS,
             [
+                'definitionTrigger' => [["'colour'", $message(DefinitionTriggerWidget::class, 'colour')]],
+                'definitionTriggerTrait' => [["'colour'", $message(DefinitionTriggerTraitWidget::class, 'colour')]],
                 'secret' => [["'secret'", $message(SecretWidget::class, 'secret')]],
                 'trigger' => [["'colour'", $message(TriggerWidget::class, 'colour')]],
             ],

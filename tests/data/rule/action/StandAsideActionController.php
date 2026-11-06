@@ -16,6 +16,7 @@ use yii2\extensions\phpstan\tests\support\action\{
     ForwardingConstructorAction,
     MappedAction,
     ParamsBoundAction,
+    PlainIdAction,
     PlainObject,
     SetterBoundAction,
     SingletonAction,
@@ -105,6 +106,10 @@ final class StandAsideActionController extends Controller
             ],
             'abstractAction' => [
                 'class' => AbstractAction::class,
+                'colour' => 'red',
+            ],
+            'plainIdTrait' => [
+                'class' => PlainIdAction::class,
                 'colour' => 'red',
             ],
             'nonAction' => [

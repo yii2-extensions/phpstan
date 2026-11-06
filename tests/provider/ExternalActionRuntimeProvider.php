@@ -54,6 +54,7 @@ use yii2\extensions\phpstan\tests\support\action\{
     ForwardingConstructorAction,
     MappedAction,
     OtherAction,
+    PlainIdAction,
     PlainObject,
     SingletonAction,
     TargetAction,
@@ -316,6 +317,10 @@ final class ExternalActionRuntimeProvider
             'abstractAction' => [
                 NotInstantiableException::class,
                 'Can not instantiate ' . AbstractAction::class . '.',
+            ],
+            'plainIdTrait' => [
+                UnknownPropertyException::class,
+                'Setting unknown property: ' . PlainIdAction::class . '::colour',
             ],
             'nonAction' => [
                 ReflectionException::class,

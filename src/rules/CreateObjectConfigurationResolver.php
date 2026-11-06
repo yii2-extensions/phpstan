@@ -430,7 +430,8 @@ final class CreateObjectConfigurationResolver
 
     /**
      * Returns whether Yii assigns the option directly to a native property without running application code: a public
-     * instance property that isn't read-only, hooked or of asymmetric visibility.
+     * instance property that isn't read-only, hooked or of asymmetric visibility, and that no trait redeclares
+     * differently ({@see ObjectOptionAssignment::isRedeclaredByTrait()}).
      *
      * Definition options are assigned before the options of the call, so only such options leave the assignment of the
      * call's options to declarations, whatever the method bodies of the class do.
@@ -448,7 +449,8 @@ final class CreateObjectConfigurationResolver
             && $property->isReadOnly() === false
             && $property->isHooked() === false
             && $property->isPrivateSet() === false
-            && $property->isProtectedSet() === false;
+            && $property->isProtectedSet() === false
+            && ObjectOptionAssignment::isRedeclaredByTrait($classReflection, $name) === false;
     }
 
     /**

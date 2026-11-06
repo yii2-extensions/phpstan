@@ -7,7 +7,8 @@ namespace yii2\extensions\phpstan\tests\data\rule\traitproperty;
 use yii\base\Controller;
 
 /**
- * Controller whose external actions target properties that a trait redeclares, and their controls.
+ * Controller whose external actions, or their container definitions, target properties that a trait redeclares, and
+ * their controls.
  */
 final class TraitPropertyActionController extends Controller
 {
@@ -20,6 +21,10 @@ final class TraitPropertyActionController extends Controller
             'protectedSecret' => ['class' => SecretAction::class, 'secret' => 'open'],
             'plainTrigger' => ['class' => TriggerAction::class, 'trigger' => 1, 'colour' => 'blue'],
             'wideCount' => ['class' => WideCountAction::class, 'count' => [1, 2]],
+            'definitionCount' => ['class' => 'traitproperty.count', 'count' => [1, 2]],
+            'definitionPaintTrigger' => ['class' => 'traitproperty.paintTrigger', 'colour' => 'blue'],
+            'definitionTrigger' => ['class' => 'traitproperty.trigger', 'colour' => 'blue'],
+            'definitionTriggerTrait' => ['class' => 'traitproperty.triggerTrait', 'colour' => 'blue'],
         ];
     }
 }
