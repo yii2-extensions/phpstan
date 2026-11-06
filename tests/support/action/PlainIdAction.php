@@ -15,6 +15,6 @@ final class PlainIdAction extends Action
 
     public function run(): string
     {
-        return static::class;
+        return self::class;
     }
 }
