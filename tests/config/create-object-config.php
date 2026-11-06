@@ -3,6 +3,17 @@
 declare(strict_types=1);
 
 use yii\di\Instance;
+use yii2\extensions\phpstan\tests\data\rule\traitproperty\{
+    CountObject,
+    CountTraitObject,
+    InheritedPaintTriggerComponent,
+    NestedPaintTriggerComponent,
+    PaintTriggerComponent,
+    PublicTriggerComponent,
+    ShadowedPaintTriggerComponent,
+    TriggerComponent,
+    TriggerTraitComponent,
+};
 use yii2\extensions\phpstan\tests\support\createobject\{
     AbstractTarget,
     AliasTarget,
@@ -95,6 +106,15 @@ return [
             'binding.wrapped' => [Target::class, []],
             'binding.wrappedOptions' => [['class' => Target::class, 'name' => 'definition'], []],
             'binding.zero' => '0',
+            'traitproperty.count' => ['class' => CountObject::class, 'count' => 1],
+            'traitproperty.countTrait' => ['class' => CountTraitObject::class, 'count' => 1],
+            'traitproperty.inheritedPaintTrigger' => ['class' => InheritedPaintTriggerComponent::class, 'trigger' => 1],
+            'traitproperty.nestedPaintTrigger' => ['class' => NestedPaintTriggerComponent::class, 'trigger' => 1],
+            'traitproperty.paintTrigger' => ['class' => PaintTriggerComponent::class, 'trigger' => 1],
+            'traitproperty.publicTrigger' => ['class' => PublicTriggerComponent::class, 'trigger' => 1],
+            'traitproperty.shadowedPaintTrigger' => ['class' => ShadowedPaintTriggerComponent::class, 'trigger' => 1],
+            'traitproperty.trigger' => ['class' => TriggerComponent::class, 'trigger' => 1],
+            'traitproperty.triggerTrait' => ['class' => TriggerTraitComponent::class, 'trigger' => 1],
         ],
         'singletons' => [
             SingletonTarget::class => [],

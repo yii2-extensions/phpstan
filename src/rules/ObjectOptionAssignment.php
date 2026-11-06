@@ -55,6 +55,50 @@ final class ObjectOptionAssignment
     }
 
     /**
+     * Returns whether a trait of the class or of a parent class up to the declaring class of the native property, or a
+     * trait of those traits, declares the property with other visibility, hook, `static` or `readonly` modifiers than
+     * the declaration PHPStan reports, as a PHP 8.5 trait that redeclares an inherited property may do.
+     *
+     * The declaring class shadows the traits of its ancestors except for their hooks, which a redeclaration without
+     * hooks inherits, so only the hooks of those traits are compared. The class must have the native property.
+     */
+    public static function isRedeclaredByTrait(ClassReflection $classReflection, string $name): bool
+    {
+        $property = $classReflection->getNativeProperty($name);
+        $declaringClass = $property->getDeclaringClass()->getName();
+        $shadowed = false;
+
+        for ($class = $classReflection; $class !== null; $class = $class->getParentClass()) {
+            // a trait also declares the properties of the traits it uses
+            foreach ($class->getTraits() as $trait) {
+                if ($trait->hasNativeProperty($name) === false) {
+                    continue;
+                }
+
+                $declaration = $trait->getNativeProperty($name);
+
+                if (
+                    $declaration->isHooked() !== $property->isHooked()
+                    || $shadowed === false && (
+                        $declaration->isPublic() !== $property->isPublic()
+                        || $declaration->isPrivate() !== $property->isPrivate()
+                        || $declaration->isStatic() !== $property->isStatic()
+                        || $declaration->isReadOnly() !== $property->isReadOnly()
+                        || $declaration->isPrivateSet() !== $property->isPrivateSet()
+                        || $declaration->isProtectedSet() !== $property->isProtectedSet()
+                    )
+                ) {
+                    return true;
+                }
+            }
+
+            $shadowed = $shadowed || $class->getName() === $declaringClass;
+        }
+
+        return false;
+    }
+
+    /**
      * Returns the native type that rejects every value of the actual type and the member that declares it, or `null`
      * when Yii assigns the option to no member with a type check or the member may accept a value of that type.
      *
@@ -243,50 +287,6 @@ final class ObjectOptionAssignment
         }
 
         return $expectedType->isSuperTypeOf($coercedType)->no();
-    }
-
-    /**
-     * Returns whether a trait of the class or of a parent class up to the declaring class of the native property, or a
-     * trait of those traits, declares the property with other visibility, hook, `static` or `readonly` modifiers than
-     * the declaration PHPStan reports, as a PHP 8.5 trait that redeclares an inherited property may do.
-     *
-     * The declaring class shadows the traits of its ancestors except for their hooks, which a redeclaration without
-     * hooks inherits, so only the hooks of those traits are compared.
-     */
-    private static function isRedeclaredByTrait(ClassReflection $classReflection, string $name): bool
-    {
-        $property = $classReflection->getNativeProperty($name);
-        $declaringClass = $property->getDeclaringClass()->getName();
-        $shadowed = false;
-
-        for ($class = $classReflection; $class !== null; $class = $class->getParentClass()) {
-            // a trait also declares the properties of the traits it uses
-            foreach ($class->getTraits() as $trait) {
-                if ($trait->hasNativeProperty($name) === false) {
-                    continue;
-                }
-
-                $declaration = $trait->getNativeProperty($name);
-
-                if (
-                    $declaration->isHooked() !== $property->isHooked()
-                    || $shadowed === false && (
-                        $declaration->isPublic() !== $property->isPublic()
-                        || $declaration->isPrivate() !== $property->isPrivate()
-                        || $declaration->isStatic() !== $property->isStatic()
-                        || $declaration->isReadOnly() !== $property->isReadOnly()
-                        || $declaration->isPrivateSet() !== $property->isPrivateSet()
-                        || $declaration->isProtectedSet() !== $property->isProtectedSet()
-                    )
-                ) {
-                    return true;
-                }
-            }
-
-            $shadowed = $shadowed || $class->getName() === $declaringClass;
-        }
-
-        return false;
     }
 
     /**

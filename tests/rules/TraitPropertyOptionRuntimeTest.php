@@ -7,8 +7,10 @@ namespace yii2\extensions\phpstan\tests\rules;
 use PHPUnit\Framework\Attributes\{DataProviderExternal, RequiresPhp};
 use PHPUnit\Framework\TestCase;
 use Throwable;
+use Yii;
 use yii\base\{Controller, Module};
 use yii\console\{Request, Response};
+use yii\di\Container;
 use yii2\extensions\phpstan\rules\ObjectOptionAssignment;
 use yii2\extensions\phpstan\tests\data\rule\traitproperty\{
     TraitPropertyActionController,
@@ -20,11 +22,13 @@ use yii2\extensions\phpstan\tests\provider\TraitPropertyOptionProvider;
 use yii2\extensions\phpstan\tests\support\{FixtureMethod, WidgetRuntimeTrait};
 
 use function array_keys;
+use function dirname;
+use function is_array;
 use function sprintf;
 
 /**
  * Runtime tests for the Yii outcomes of the trait-redeclared property fixtures that {@see ObjectOptionAssignment}
- * decides for the eight option rules.
+ * decides for the eight option rules, with the container definitions of each family's analysis configuration.
  *
  * {@see TraitPropertyOptionProvider} for test case data providers.
  */
@@ -33,6 +37,13 @@ final class TraitPropertyOptionRuntimeTest extends TestCase
 {
     use WidgetRuntimeTrait;
 
+    /**
+     * Analysis configuration whose container definitions each family uses instead of the widget configuration.
+     */
+    private const array CONFIGS = [
+        'createObject' => 'create-object-config.php',
+        'externalAction' => 'external-action-config.php',
+    ];
     /**
      * Fixture class of each family whose cases are public methods.
      */
@@ -52,6 +63,10 @@ final class TraitPropertyOptionRuntimeTest extends TestCase
         array|null $expected,
     ): void {
         $outcome = null;
+
+        if (isset(self::CONFIGS[$family])) {
+            Yii::$container = self::container(self::CONFIGS[$family]);
+        }
 
         try {
             if ($family === 'externalAction') {
@@ -98,6 +113,34 @@ final class TraitPropertyOptionRuntimeTest extends TestCase
             $recorded['externalAction'] ?? [],
             'Every action ID must have a recorded outcome.',
         );
+    }
+
+    /**
+     * Returns a container holding the definitions and singletons of an analysis configuration in `tests/config/`.
+     */
+    private static function container(string $config): Container
+    {
+        $config = require dirname(__DIR__) . "/config/{$config}";
+
+        self::assertTrue(
+            is_array($config) && is_array($config['container'] ?? null),
+            'Analysis configuration must hold a container section.',
+        );
+
+        $definitions = $config['container']['definitions'] ?? [];
+        $singletons = $config['container']['singletons'] ?? [];
+
+        self::assertTrue(
+            is_array($definitions) && is_array($singletons),
+            'Container definitions and singletons must be arrays.',
+        );
+
+        $container = new Container();
+
+        $container->setDefinitions($definitions);
+        $container->setSingletons($singletons);
+
+        return $container;
     }
 
     /**
