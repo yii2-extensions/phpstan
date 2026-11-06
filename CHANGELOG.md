@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: check `class` and `__class` of a `$config` constructor argument in both `Yii::createObject()` option rules, as Yii assigns them.
 - feat: add opt-in `yii2.widget.unknownOption` and `yii2.widget.invalidOptionType` rules for `Widget::widget()` and `begin()` options.
 - feat: add opt-in `yii2.externalAction.unknownOption` and `yii2.externalAction.invalidOptionType` rules for `Controller::actions()` definitions.
+- fix: stand aside in the eight option rules when a trait redeclares an inherited option property, such as with a PHP `8.5` set hook.
 
 ## 0.5.2 October 23, 2026
 

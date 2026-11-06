@@ -10,7 +10,11 @@ use PHPUnit\Framework\Attributes\{DataProviderExternal, RequiresPhp};
 use TypeError;
 use yii2\extensions\phpstan\rules\ExternalActionInvalidOptionTypeRule;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\provider\{ExternalActionInvalidOptionTypeRuleProvider, ExternalActionRuntimeProvider};
+use yii2\extensions\phpstan\tests\provider\{
+    ExternalActionInvalidOptionTypeRuleProvider,
+    ExternalActionRuntimeProvider,
+    TraitPropertyOptionProvider,
+};
 use yii2\extensions\phpstan\tests\support\ExternalActionRuleTestTrait;
 
 use function dirname;
@@ -45,6 +49,17 @@ final class ExternalActionInvalidOptionTypeRuleTest extends RuleTestCase
      */
     #[DataProviderExternal(ExternalActionInvalidOptionTypeRuleProvider::class, 'reportedProvider')]
     public function testReportAtTheKeyDefinitionOrReturnLine(string $controller, array $expected): void
+    {
+        $this->assertControllerDiagnostics($controller, $expected);
+    }
+
+    /**
+     * @phpstan-param class-string $controller
+     * @phpstan-param list<array{string|null, string|null, string}> $expected
+     */
+    #[DataProviderExternal(TraitPropertyOptionProvider::class, 'externalActionInvalidOptionTypeProvider')]
+    #[RequiresPhp('>= 8.5')]
+    public function testReportOnlyControlsWhenTraitRedeclaresInheritedProperty(string $controller, array $expected): void
     {
         $this->assertControllerDiagnostics($controller, $expected);
     }

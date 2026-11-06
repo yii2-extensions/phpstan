@@ -6,7 +6,7 @@ namespace yii2\extensions\phpstan\tests\rules;
 
 use PHPStan\Rules\Rule;
 use PHPStan\Testing\RuleTestCase;
-use PHPUnit\Framework\Attributes\DataProviderExternal;
+use PHPUnit\Framework\Attributes\{DataProviderExternal, RequiresPhp};
 use yii\base\UnknownPropertyException;
 use yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule;
 use yii2\extensions\phpstan\ServiceMap;
@@ -20,6 +20,7 @@ use yii2\extensions\phpstan\tests\provider\{
     CreateObjectConstructorArgumentRuntimeProvider,
     CreateObjectContainerBindingRuntimeProvider,
     CreateObjectUnknownOptionRuleProvider,
+    TraitPropertyOptionProvider,
 };
 use yii2\extensions\phpstan\tests\support\{CreateObjectRuleTestTrait, FixtureMethod};
 
@@ -159,6 +160,20 @@ final class CreateObjectUnknownOptionRuleTest extends RuleTestCase
                 sprintf('Diagnostic of `%s()` must name the class Yii builds.', $method),
             );
         }
+    }
+
+    /**
+     * @phpstan-param class-string $fixture
+     * @phpstan-param list<array{string|null, string}> $expected
+     */
+    #[DataProviderExternal(TraitPropertyOptionProvider::class, 'createObjectUnknownOptionProvider')]
+    #[RequiresPhp('>= 8.5')]
+    public function testReportOnlyControlsWhenTraitRedeclaresInheritedProperty(
+        string $fixture,
+        string $method,
+        array $expected,
+    ): void {
+        $this->assertMethodDiagnostics($fixture, $method, $expected, 'createObject(');
     }
 
     /**

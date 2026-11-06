@@ -12,7 +12,11 @@ use yii\base\Action;
 use yii\base\UnknownPropertyException;
 use yii2\extensions\phpstan\rules\ExternalActionUnknownOptionRule;
 use yii2\extensions\phpstan\ServiceMap;
-use yii2\extensions\phpstan\tests\provider\{ExternalActionRuntimeProvider, ExternalActionUnknownOptionRuleProvider};
+use yii2\extensions\phpstan\tests\provider\{
+    ExternalActionRuntimeProvider,
+    ExternalActionUnknownOptionRuleProvider,
+    TraitPropertyOptionProvider,
+};
 use yii2\extensions\phpstan\tests\support\ExternalActionRuleTestTrait;
 
 use function dirname;
@@ -46,6 +50,17 @@ final class ExternalActionUnknownOptionRuleTest extends RuleTestCase
      */
     #[DataProviderExternal(ExternalActionUnknownOptionRuleProvider::class, 'reportedProvider')]
     public function testReportAtTheKeyDefinitionOrReturnLine(string $controller, array $expected): void
+    {
+        $this->assertControllerDiagnostics($controller, $expected);
+    }
+
+    /**
+     * @phpstan-param class-string $controller
+     * @phpstan-param list<array{string|null, string|null, string}> $expected
+     */
+    #[DataProviderExternal(TraitPropertyOptionProvider::class, 'externalActionUnknownOptionProvider')]
+    #[RequiresPhp('>= 8.5')]
+    public function testReportOnlyControlsWhenTraitRedeclaresInheritedProperty(string $controller, array $expected): void
     {
         $this->assertControllerDiagnostics($controller, $expected);
     }
