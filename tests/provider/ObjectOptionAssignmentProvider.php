@@ -401,7 +401,7 @@ final class ObjectOptionAssignmentProvider
         yield 'plain protected property control' => [
             SecretObject::class,
             ['secret'],
-            ['secret']
+            ['secret'],
         ];
         yield 'option after a trait set hook' => [
             PaintTriggerComponent::class,
@@ -503,7 +503,7 @@ final class ObjectOptionAssignmentProvider
         yield 'Component, option after a private setter' => [
             ComponentMembersTarget::class,
             ['hidden', 'colour'],
-            []
+            [],
         ];
         yield 'Component, option after a plain property' => [
             ComponentMembersTarget::class,
