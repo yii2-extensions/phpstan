@@ -46,12 +46,28 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
     ];
 
     /**
+     * Expected diagnostics of the consumers of the changing component while it resolves to `FileCache`.
+     */
+    private const array FILE_CACHE_CONSUMERS = [
+        ['src/ChangingLocatorConsumer.php', 11, 'phpstan.dumpType', 'yii\caching\FileCache'],
+        ['src/ChangingLocatorConsumer.php', 12, 'phpstan.dumpType', 'string'],
+        ['src/ChangingPropertyConsumer.php', 11, 'phpstan.dumpType', 'yii\caching\FileCache'],
+        ['src/ChangingPropertyConsumer.php', 12, 'phpstan.dumpType', 'string'],
+    ];
+
+    /**
      * Files each unchanged warm run before the component is added may reanalyse: none, or the two application property
      * readers, whose class dependency on the configured application PHPStan 2.3.4 hashes with a file path that the
      * autoloader registered by Yii 2.0.55's `Yii.php` spells differently; forked workers reuse it after one warm run,
      * while spawned workers, the only kind on Windows, resolve it again on every run.
      */
     private const array INITIAL_WARM_REANALYSED = [0, 2];
+
+    /**
+     * Readers of the core component plus the two other application property consumers, which share the application
+     * class dependency that PHPStan tracks per class.
+     */
+    private const int MAXIMUM_CORE_REANALYSED = 4;
 
     /**
      * Readers of the changing component plus the stable property consumer, which shares the application class
@@ -80,9 +96,109 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-component-state-result-cache-';
 
     /**
+     * Definition line that replaces the changing component class with a factory declaring the same class.
+     */
+    private const string TYPED_FACTORY_DEFINITION = "    'changing' => static fn(): \\yii\\caching\\FileCache => new \\yii\\caching\\FileCache(),";
+
+    /**
      * Definition line that replaces the changing component class with a factory whose class can't be determined.
      */
     private const string UNRESOLVED_DEFINITION = "    'changing' => static fn() => new \\yii\\caching\\FileCache(),";
+
+    public function testKeepComponentReadersWhenTypedFactoryKeepsClass(): void
+    {
+        $stableInputs = $this->stableInputHashes();
+
+        $results = [
+            ...self::FILE_CACHE_CONSUMERS,
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+        ];
+
+        $this->writeComponents(self::ADDED_DEFINITION);
+
+        $initialLines = explode("\n", $this->readFile('project/components.php'));
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertSame(
+            $results,
+            $initialCold['results'],
+            'Initial run must resolve the configured class on both routes.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $results,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeComponents(self::TYPED_FACTORY_DEFINITION);
+
+        $changedLines = explode("\n", $this->readFile('project/components.php'));
+
+        self::assertSame(
+            [self::ADDED_DEFINITION],
+            array_values(array_diff($initialLines, $changedLines)),
+            'Only the class definition line may be replaced.',
+        );
+        self::assertSame(
+            [self::TYPED_FACTORY_DEFINITION],
+            array_values(array_diff($changedLines, $initialLines)),
+            'Only the typed factory line may be added.',
+        );
+
+        $changed = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $changed['stderr'],
+            'Changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changed['stderr'],
+            'An unchanged component class must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $results,
+            $changed['results'],
+            'Readers must keep the class the typed factory declares.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $results,
+            $finalCold['results'],
+            'Final cold run must infer the typed factory class on both routes.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes(),
+            'Only the components file may change during the sequence.',
+        );
+    }
 
     /**
      * @phpstan-param list<string> $changed Definition lines of the changing component after the change.
@@ -593,6 +709,170 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
         self::assertSame(
             $stableInputs,
             $this->stableInputHashes(),
+            'Only the components file may change during the sequence.',
+        );
+    }
+
+    /**
+     * @phpstan-param list<array{string, int, string, string|null}> $before Core reader diagnostics before the change.
+     * @phpstan-param list<array{string, int, string, string|null}> $after Core reader diagnostics after the change.
+     */
+    #[DataProviderExternal(
+        ApplicationComponentStateResultCacheIntegrationProvider::class,
+        'classlessCoreDefinitionChangeProvider',
+    )]
+    public function testReanalyseCoreComponentReadersWhenClasslessDefinitionChangesState(
+        string $initial,
+        string $changed,
+        array $before,
+        array $after,
+    ): void {
+        $this->writeConsumer(
+            'RequestLocatorConsumer',
+            '\yii\di\ServiceLocator $locator',
+            "\$locator->get('request')",
+            'cookieValidationKey',
+        );
+        $this->writeConsumer(
+            'RequestPropertyConsumer',
+            '',
+            '\Yii::$app->request',
+            'cookieValidationKey',
+        );
+
+        $stableInputs = [
+            ...$this->stableInputHashes(),
+            ...$this->inputHashes(['project/src/RequestLocatorConsumer.php', 'project/src/RequestPropertyConsumer.php']),
+        ];
+
+        $before = [
+            ...self::FILE_CACHE_CONSUMERS,
+            ...self::CONTROL,
+            ...$before,
+            ...self::STABLE_CONSUMERS,
+        ];
+        $after = [
+            ...self::FILE_CACHE_CONSUMERS,
+            ...self::CONTROL,
+            ...$after,
+            ...self::STABLE_CONSUMERS,
+        ];
+
+        $this->writeComponents(self::ADDED_DEFINITION, $initial);
+
+        $initialLines = explode("\n", $this->readFile('project/components.php'));
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertSame(
+            $before,
+            $initialCold['results'],
+            'Initial run must infer the initial core definition on both routes.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeComponents(self::ADDED_DEFINITION, $changed);
+
+        $changedLines = explode("\n", $this->readFile('project/components.php'));
+
+        self::assertSame(
+            [$initial],
+            array_values(array_diff($initialLines, $changedLines)),
+            'Only the initial core component line may be replaced.',
+        );
+        self::assertSame(
+            [$changed],
+            array_values(array_diff($changedLines, $initialLines)),
+            'Only the changed core component line may be added.',
+        );
+
+        $changedRun = $this->analyse();
+        $reanalysed = self::reanalysedFiles($changedRun['stderr'], 'Changed warm run');
+
+        self::assertGreaterThanOrEqual(
+            self::MINIMUM_REANALYSED,
+            $reanalysed,
+            'Both readers of the changed core component must be reanalysed.',
+        );
+        self::assertLessThanOrEqual(
+            self::MAXIMUM_CORE_REANALYSED,
+            $reanalysed,
+            'Only files depending on the core component or on the application class may be reanalysed.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $changedRun['stderr'],
+            'Changed warm run must save the new results.',
+        );
+        self::assertSame(
+            $after,
+            $changedRun['results'],
+            'Locator reader must follow the class key while the other readers keep their results.',
+        );
+        self::assertSame(
+            self::resultsOf('src/RequestPropertyConsumer.php', $before),
+            self::resultsOf('src/RequestPropertyConsumer.php', $changedRun['results']),
+            'Property route must keep the annotated core type in both states.',
+        );
+
+        $changedWarm = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $changedWarm['stderr'],
+            'Unchanged changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changedWarm['stderr'],
+            'Unchanged changed warm run must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $after,
+            $changedWarm['results'],
+            'Unchanged changed warm run must restore the changed results.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $after,
+            $finalCold['results'],
+            'Final cold results must match the results after detecting the change.',
+        );
+        self::assertSame(
+            $stableInputs,
+            [
+                ...$this->stableInputHashes(),
+                ...$this->inputHashes(
+                    ['project/src/RequestLocatorConsumer.php', 'project/src/RequestPropertyConsumer.php'],
+                ),
+            ],
             'Only the components file may change during the sequence.',
         );
     }
