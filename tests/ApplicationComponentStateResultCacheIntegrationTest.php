@@ -4,20 +4,27 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests;
 
+use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 use yii2\extensions\phpstan\ServiceMapResultCacheValueExtension;
+use yii2\extensions\phpstan\tests\provider\ApplicationComponentStateResultCacheIntegrationProvider;
 use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
+use function array_diff;
 use function array_splice;
+use function array_values;
 use function dirname;
 use function explode;
 use function implode;
+use function time;
 
 use const DIRECTORY_SEPARATOR;
 
 /**
  * Integration tests for the application component state transitions that {@see ServiceMapResultCacheValueExtension}
  * exposes to the PHPStan result cache across cold and warm runs.
+ *
+ * {@see ApplicationComponentStateResultCacheIntegrationProvider} for test case data providers.
  */
 final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
 {
@@ -77,6 +84,138 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
      */
     private const string UNRESOLVED_DEFINITION = "    'changing' => static fn() => new \\yii\\caching\\FileCache(),";
 
+    /**
+     * @phpstan-param list<string> $changed Definition lines of the changing component after the change.
+     * @phpstan-param list<array{string, int, string, string|null}> $before Reader diagnostics before the change.
+     * @phpstan-param list<array{string, int, string, string|null}> $after Reader diagnostics after the change.
+     * @phpstan-param list<int> $warmReanalysed Files the unchanged warm run after the change may reanalyse.
+     */
+    #[DataProviderExternal(ApplicationComponentStateResultCacheIntegrationProvider::class, 'definitionChangeProvider')]
+    public function testReanalyseComponentReadersWhenDefinitionChangesState(
+        string $initial,
+        array $changed,
+        array $before,
+        array $after,
+        array $warmReanalysed,
+    ): void {
+        $stableInputs = $this->stableInputHashes();
+        $before = [...$before, ...self::CONTROL, ...self::STABLE_CONSUMERS];
+        $after = [...$after, ...self::CONTROL, ...self::STABLE_CONSUMERS];
+
+        $this->writeComponents($initial);
+
+        $initialLines = explode("\n", $this->readFile('project/components.php'));
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertSame(
+            $before,
+            $initialCold['results'],
+            'Initial run must infer the initial definition state on both routes.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeComponents(...$changed);
+
+        $changedLines = explode("\n", $this->readFile('project/components.php'));
+
+        self::assertSame(
+            [$initial],
+            array_values(array_diff($initialLines, $changedLines)),
+            'Only the initial changing component line may be replaced or removed.',
+        );
+        self::assertSame(
+            $changed,
+            array_values(array_diff($changedLines, $initialLines)),
+            'Only the changed component line may be added.',
+        );
+
+        $changedRun = $this->analyse();
+        $reanalysed = self::reanalysedFiles($changedRun['stderr'], 'Changed warm run');
+
+        self::assertGreaterThanOrEqual(
+            self::MINIMUM_REANALYSED,
+            $reanalysed,
+            'Both readers of the changed component must be reanalysed.',
+        );
+        self::assertLessThanOrEqual(
+            self::MAXIMUM_REANALYSED,
+            $reanalysed,
+            'Only files depending on the changed component or on the application class may be reanalysed.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $changedRun['stderr'],
+            'Changed warm run must save the new results.',
+        );
+        self::assertSame(
+            $after,
+            $changedRun['results'],
+            'Readers must see the changed state while stable readers and the control keep their results.',
+        );
+
+        $changedWarm = $this->analyse();
+        $changedWarmReanalysed = self::reanalysedFiles($changedWarm['stderr'], 'Unchanged changed warm run');
+
+        self::assertContains(
+            $changedWarmReanalysed,
+            $warmReanalysed,
+            'Unchanged changed warm run may only reanalyse the accepted application property readers.',
+        );
+
+        if ($changedWarmReanalysed === 0) {
+            self::assertStringContainsString(
+                'Result cache was not rewritten because it is unchanged.',
+                $changedWarm['stderr'],
+                'Unchanged changed warm run must keep the result cache as it is.',
+            );
+        }
+
+        self::assertSame(
+            $after,
+            $changedWarm['results'],
+            'Unchanged changed warm run must restore the changed results.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $after,
+            $finalCold['results'],
+            'Final cold results must match the results after detecting the change.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes(),
+            'Only the components file may change during the sequence.',
+        );
+    }
+
     public function testReanalyseComponentReadersWhenMissingComponentIsDefinedWithClass(): void
     {
         $stableInputs = $this->stableInputHashes();
@@ -102,7 +241,7 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             ...self::STABLE_CONSUMERS,
         ];
 
-        $this->writeComponents(false);
+        $this->writeComponents();
 
         $initialComponents = $this->readFile('project/components.php');
         $initialHash = self::hashFile($this->path('project/components.php'));
@@ -164,7 +303,7 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Unchanged initial warm run must restore the initial results.',
         );
 
-        $this->writeComponents(true);
+        $this->writeComponents(self::ADDED_DEFINITION);
 
         $changedHash = self::hashFile($this->path('project/components.php'));
         $expectedLines = explode("\n", $initialComponents);
@@ -296,7 +435,7 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             ...self::STABLE_CONSUMERS,
         ];
 
-        $this->writeComponents(true);
+        $this->writeComponents(self::ADDED_DEFINITION);
 
         $initialLines = explode("\n", $this->readFile('project/components.php'));
         $initialHash = self::hashFile($this->path('project/components.php'));
@@ -571,11 +710,11 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Writes the component definitions, the only file that changes, with or without the changing component.
+     * Writes the component definitions, the only file that changes, with the given changing component lines.
      */
-    private function writeComponents(bool $withChanging): void
+    private function writeComponents(string ...$changing): void
     {
-        $changing = $withChanging ? self::ADDED_DEFINITION . "\n" : '';
+        $definitions = implode("\n", [...$changing, "    'stable' => ['class' => 'yii\\\\caching\\\\DummyCache'],"]);
 
         $this->writeFile(
             'project/components.php',
@@ -585,7 +724,7 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             declare(strict_types=1);
 
             return [
-            {$changing}    'stable' => ['class' => 'yii\\caching\\DummyCache'],
+            {$definitions}
             ];
 
             PHP,
