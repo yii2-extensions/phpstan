@@ -37,6 +37,16 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
     private const string ADDED_DEFINITION = "    'changing' => ['class' => 'yii\\\\caching\\\\FileCache'],";
 
     /**
+     * Definition line that names the container ID building the changing component.
+     */
+    private const string ALIAS_DEFINITION = "    'changing' => 'cache.target',";
+
+    /**
+     * Container definition line of the alias target while it builds `FileCache`.
+     */
+    private const string ALIAS_TARGET_DEFINITION = "    'cache.target' => ['class' => 'yii\\\\caching\\\\FileCache'],";
+
+    /**
      * Expected diagnostics of the control file, which no component change may alter.
      */
     private const array CONTROL = [
@@ -104,6 +114,111 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
      * Definition line that replaces the changing component class with a factory whose class can't be determined.
      */
     private const string UNRESOLVED_DEFINITION = "    'changing' => static fn() => new \\yii\\caching\\FileCache(),";
+
+    /**
+     * Expected diagnostics of the `user` locator consumer, whose return type carries no generic argument.
+     */
+    private const array USER_LOCATOR_CONSUMER = [
+        ['src/UserLocatorConsumer.php', 11, 'phpstan.dumpType', 'yii\web\User'],
+        ['src/UserLocatorConsumer.php', 12, 'phpstan.dumpType', 'yii\web\IdentityInterface|null'],
+    ];
+
+    public function testKeepAliasedComponentReadersWhenAliasTargetKeepsClass(): void
+    {
+        $results = [
+            ...self::FILE_CACHE_CONSUMERS,
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+        ];
+        $optionsDefinition = "    'cache.target' => ['class' => 'yii\\\\caching\\\\FileCache', "
+            . "'cachePath' => '@runtime/probe'],";
+
+        $this->writeComponents(self::ALIAS_DEFINITION);
+        $this->writeDefinitions(self::ALIAS_TARGET_DEFINITION);
+
+        $stableInputs = $this->stableInputHashes('project/definitions.php');
+        $initialLines = explode("\n", $this->readFile('project/definitions.php'));
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertSame(
+            $results,
+            $initialCold['results'],
+            'Initial run must resolve the alias target class on both routes.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $results,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeDefinitions($optionsDefinition);
+
+        $changedLines = explode("\n", $this->readFile('project/definitions.php'));
+
+        self::assertSame(
+            [self::ALIAS_TARGET_DEFINITION],
+            array_values(array_diff($initialLines, $changedLines)),
+            'Only the alias target line may be replaced.',
+        );
+        self::assertSame(
+            [$optionsDefinition],
+            array_values(array_diff($changedLines, $initialLines)),
+            'Only the alias target line with an added option may be added.',
+        );
+
+        $changed = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $changed['stderr'],
+            'Changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changed['stderr'],
+            'An unchanged alias target class must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $results,
+            $changed['results'],
+            'Readers must keep the class the alias target builds.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $results,
+            $finalCold['results'],
+            'Final cold run must resolve the alias target class on both routes.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes('project/definitions.php'),
+            'Only the container definitions file may change during the sequence.',
+        );
+    }
 
     public function testKeepComponentReadersWhenTypedFactoryKeepsClass(): void
     {
@@ -197,6 +312,134 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             $stableInputs,
             $this->stableInputHashes(),
             'Only the components file may change during the sequence.',
+        );
+    }
+
+    /**
+     * @phpstan-param list<array{string, int, string, string|null}> $after Reader diagnostics after the change.
+     */
+    #[DataProviderExternal(ApplicationComponentStateResultCacheIntegrationProvider::class, 'aliasTargetChangeProvider')]
+    public function testReanalyseAliasedComponentReadersWhenAliasTargetChangesState(string $changed, array $after): void
+    {
+        $before = [
+            ...self::FILE_CACHE_CONSUMERS,
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+        ];
+        $after = [
+            ...$after,
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+        ];
+
+        $this->writeComponents(self::ALIAS_DEFINITION);
+        $this->writeDefinitions(self::ALIAS_TARGET_DEFINITION);
+
+        $stableInputs = $this->stableInputHashes('project/definitions.php');
+        $initialLines = explode("\n", $this->readFile('project/definitions.php'));
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertSame(
+            $before,
+            $initialCold['results'],
+            'Initial run must resolve the alias target class on both routes.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeDefinitions($changed);
+
+        $changedLines = explode("\n", $this->readFile('project/definitions.php'));
+
+        self::assertSame(
+            [self::ALIAS_TARGET_DEFINITION],
+            array_values(array_diff($initialLines, $changedLines)),
+            'Only the initial alias target line may be replaced.',
+        );
+        self::assertSame(
+            [$changed],
+            array_values(array_diff($changedLines, $initialLines)),
+            'Only the changed alias target line may be added.',
+        );
+
+        $changedRun = $this->analyse();
+        $reanalysed = self::reanalysedFiles($changedRun['stderr'], 'Changed warm run');
+
+        self::assertGreaterThanOrEqual(
+            self::MINIMUM_REANALYSED,
+            $reanalysed,
+            'Both readers of the aliased component must be reanalysed.',
+        );
+        self::assertLessThanOrEqual(
+            self::MAXIMUM_REANALYSED,
+            $reanalysed,
+            'Only files depending on the aliased component or on the application class may be reanalysed.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $changedRun['stderr'],
+            'Changed warm run must save the new results.',
+        );
+        self::assertSame(
+            $after,
+            $changedRun['results'],
+            'Readers must follow the alias target while stable readers and the control keep their results.',
+        );
+
+        $changedWarm = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $changedWarm['stderr'],
+            'Unchanged changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changedWarm['stderr'],
+            'Unchanged changed warm run must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $after,
+            $changedWarm['results'],
+            'Unchanged changed warm run must restore the changed results.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $after,
+            $finalCold['results'],
+            'Final cold results must match the results after detecting the change.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes('project/definitions.php'),
+            'Only the container definitions file may change during the sequence.',
         );
     }
 
@@ -877,6 +1120,203 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
         );
     }
 
+    public function testReanalyseUserReadersWhenIdentityClassChanges(): void
+    {
+        $userFiles = [
+            'project/src/FirstIdentity.php',
+            'project/src/SecondIdentity.php',
+            'project/src/UserLocatorConsumer.php',
+            'project/src/UserPropertyConsumer.php',
+        ];
+        $userClass = "    'user' => ['class' => 'yii\\\\web\\\\User', ";
+        $initialDefinition = "{$userClass}'identityClass' => 'Probe\\\\FirstIdentity'],";
+        $optionDefinition = "{$userClass}'identityClass' => 'Probe\\\\FirstIdentity', 'enableSession' => false],";
+        $genericDefinition = "{$userClass}'identityClass' => 'Probe\\\\SecondIdentity', 'enableSession' => false],";
+
+        $this->writeIdentity('FirstIdentity');
+        $this->writeIdentity('SecondIdentity');
+        $this->writeConsumer(
+            'UserLocatorConsumer',
+            '\yii\di\ServiceLocator $locator',
+            "\$locator->get('user')",
+            'identity',
+        );
+        $this->writeConsumer(
+            'UserPropertyConsumer',
+            '',
+            '\Yii::$app->user',
+            'identity',
+        );
+
+        $stableInputs = [
+            ...$this->stableInputHashes(),
+            ...$this->inputHashes($userFiles),
+        ];
+
+        $before = [
+            ...self::FILE_CACHE_CONSUMERS,
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+            ...self::USER_LOCATOR_CONSUMER,
+            ['src/UserPropertyConsumer.php', 11, 'phpstan.dumpType', 'yii\web\User<Probe\FirstIdentity>'],
+            ['src/UserPropertyConsumer.php', 12, 'phpstan.dumpType', 'Probe\FirstIdentity|null'],
+        ];
+        $after = [
+            ...self::FILE_CACHE_CONSUMERS,
+            ...self::CONTROL,
+            ...self::STABLE_CONSUMERS,
+            ...self::USER_LOCATOR_CONSUMER,
+            ['src/UserPropertyConsumer.php', 11, 'phpstan.dumpType', 'yii\web\User<Probe\SecondIdentity>'],
+            ['src/UserPropertyConsumer.php', 12, 'phpstan.dumpType', 'Probe\SecondIdentity|null'],
+        ];
+
+        $this->writeComponents(self::ADDED_DEFINITION, $initialDefinition);
+
+        $initialLines = explode("\n", $this->readFile('project/components.php'));
+
+        $coldStartedAt = time();
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertSame(
+            $before,
+            $initialCold['results'],
+            'Initial run must bind the configured identity class on the property route.',
+        );
+
+        $this->assertFirstWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            $coldStartedAt,
+            'Unchanged initial warm run',
+        );
+
+        $this->writeComponents(self::ADDED_DEFINITION, $optionDefinition);
+
+        $optionLines = explode("\n", $this->readFile('project/components.php'));
+
+        self::assertSame(
+            [$initialDefinition],
+            array_values(array_diff($initialLines, $optionLines)),
+            'Only the initial `user` line may be replaced by the option change.',
+        );
+        self::assertSame(
+            [$optionDefinition],
+            array_values(array_diff($optionLines, $initialLines)),
+            'Only the `user` line with an added option may be added.',
+        );
+
+        $optionRun = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $optionRun['stderr'],
+            'Option warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $optionRun['stderr'],
+            'An option outside the generic key must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $before,
+            $optionRun['results'],
+            'Readers must keep the identity class after an option outside the generic key changes.',
+        );
+
+        $this->writeComponents(self::ADDED_DEFINITION, $genericDefinition);
+
+        $genericLines = explode("\n", $this->readFile('project/components.php'));
+
+        self::assertSame(
+            [$optionDefinition],
+            array_values(array_diff($optionLines, $genericLines)),
+            'Only the `user` line may be replaced by the identity class change.',
+        );
+        self::assertSame(
+            [$genericDefinition],
+            array_values(array_diff($genericLines, $optionLines)),
+            'Only the `user` line with the new identity class may be added.',
+        );
+
+        $changedRun = $this->analyse();
+        $reanalysed = self::reanalysedFiles($changedRun['stderr'], 'Changed warm run');
+
+        self::assertGreaterThanOrEqual(
+            self::MINIMUM_REANALYSED,
+            $reanalysed,
+            'Both readers of the `user` component must be reanalysed.',
+        );
+        self::assertLessThanOrEqual(
+            self::MAXIMUM_CORE_REANALYSED,
+            $reanalysed,
+            'Only files depending on the `user` component or on the application class may be reanalysed.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $changedRun['stderr'],
+            'Changed warm run must save the new results.',
+        );
+        self::assertSame(
+            $after,
+            $changedRun['results'],
+            'Property reader must bind the new identity class while the other readers keep their results.',
+        );
+        self::assertSame(
+            self::USER_LOCATOR_CONSUMER,
+            self::resultsOf('src/UserLocatorConsumer.php', $changedRun['results']),
+            'Locator route must keep the `user` class without a generic argument.',
+        );
+
+        $changedWarm = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $changedWarm['stderr'],
+            'Unchanged changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changedWarm['stderr'],
+            'Unchanged changed warm run must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $after,
+            $changedWarm['results'],
+            'Unchanged changed warm run must restore the changed results.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $after,
+            $finalCold['results'],
+            'Final cold results must match the results after detecting the change.',
+        );
+        self::assertSame(
+            $stableInputs,
+            [...$this->stableInputHashes(), ...$this->inputHashes($userFiles)],
+            'Only the components file may change during the sequence.',
+        );
+    }
+
     protected function setUp(): void
     {
         $this->createWorkDirectory();
@@ -911,12 +1351,14 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
 
             return [
                 'components' => require __DIR__ . '/components.php',
+                'container' => ['definitions' => require __DIR__ . '/definitions.php'],
                 'params' => ['mode' => 'alpha'],
                 'phpstan' => ['application_type' => 'yii\web\Application'],
             ];
 
             PHP,
         );
+        $this->writeDefinitions();
         $this->writeConsumer(
             'ChangingLocatorConsumer',
             '\yii\di\ServiceLocator $locator',
@@ -967,24 +1409,26 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Returns the hashes of every analysis input except the components file.
+     * Returns the hashes of every analysis input except the given changing configuration file.
      *
      * @phpstan-return array<string, string>
      */
-    private function stableInputHashes(): array
+    private function stableInputHashes(string $changing = 'project/components.php'): array
     {
+        $inputs = [
+            'project/phpstan.neon',
+            'project/config.php',
+            'project/components.php',
+            'project/definitions.php',
+            'project/src/ChangingLocatorConsumer.php',
+            'project/src/ChangingPropertyConsumer.php',
+            'project/src/Control.php',
+            'project/src/StableLocatorConsumer.php',
+            'project/src/StablePropertyConsumer.php',
+        ];
+
         return [
-            ...$this->inputHashes(
-                [
-                    'project/phpstan.neon',
-                    'project/config.php',
-                    'project/src/ChangingLocatorConsumer.php',
-                    'project/src/ChangingPropertyConsumer.php',
-                    'project/src/Control.php',
-                    'project/src/StableLocatorConsumer.php',
-                    'project/src/StablePropertyConsumer.php',
-                ],
-            ),
+            ...$this->inputHashes(array_values(array_diff($inputs, [$changing]))),
             'vendor/yiisoft/yii2/Yii.php' => self::hashFile(self::yiiBootstrapFile()),
         ];
     }
@@ -1031,6 +1475,83 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
                 {
                     \\PHPStan\\dumpType({$read});
                     \\PHPStan\\dumpType({$read}->{$property});
+                }
+            }
+
+            PHP,
+        );
+    }
+
+    /**
+     * Writes the container definitions, which the changing component may name as its alias target.
+     */
+    private function writeDefinitions(string ...$definitions): void
+    {
+        $lines = $definitions === [] ? '' : implode("\n", $definitions) . "\n";
+
+        $this->writeFile(
+            'project/definitions.php',
+            <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            return [
+            {$lines}];
+
+            PHP,
+        );
+    }
+
+    /**
+     * Writes an identity class whose instances the `user` component may hold.
+     */
+    private function writeIdentity(string $className): void
+    {
+        $this->writeFile(
+            "project/src/{$className}.php",
+            <<<PHP
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Probe;
+
+            final class {$className} implements \\yii\\web\\IdentityInterface
+            {
+                /**
+                 * @param int|string \$id
+                 */
+                public static function findIdentity(\$id): self|null
+                {
+                    return null;
+                }
+
+                /**
+                 * @param mixed \$token
+                 * @param mixed \$type
+                 */
+                public static function findIdentityByAccessToken(\$token, \$type = null): self|null
+                {
+                    return null;
+                }
+
+                public function getAuthKey(): string|null
+                {
+                    return null;
+                }
+
+                public function getId(): int
+                {
+                    return 1;
+                }
+
+                /**
+                 * @param string \$authKey
+                 */
+                public function validateAuthKey(\$authKey): bool
+                {
+                    return false;
                 }
             }
 
