@@ -37,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: pin real result cache runs for an application component removal and an unresolved definition gaining its class.
 - test: pin real result cache runs for classless core components gaining or losing their class and typed component factories.
 - test: pin real result cache runs for a generic `user` identity class change and component alias target transitions.
+- test: pin real result cache runs for owner behavior lists that reverse, gain a first behavior or lose their first behavior.
 
 ## 0.5.2 October 23, 2026
 

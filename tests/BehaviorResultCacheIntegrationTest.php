@@ -11,8 +11,10 @@ use yii2\extensions\phpstan\tests\provider\BehaviorResultCacheIntegrationProvide
 use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
 use function array_diff_assoc;
+use function array_map;
 use function dirname;
 use function explode;
+use function implode;
 use function mkdir;
 use function sort;
 use function sprintf;
@@ -76,202 +78,54 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-behavior-result-cache-';
 
     #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testReanalyseBehaviorReadersWhenABehaviorIsPrependedToTheOwnerList(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerBehaviorChange(
+            ['Probe\FirstBehavior'],
+            ['Probe\SecondBehavior', 'Probe\FirstBehavior'],
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
+
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
     public function testReanalyseBehaviorReadersWhenOnlyTheOwnerBehaviorChanges(
         string $methodDirectory,
         string $propertyDirectory,
     ): void {
-        $methodConsumer = "src/{$methodDirectory}/MethodConsumer.php";
-        $propertyConsumer = "src/{$propertyDirectory}/PropertyConsumer.php";
+        $this->assertReadersFollowOwnerBehaviorChange(
+            ['Probe\FirstBehavior'],
+            ['Probe\SecondBehavior'],
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
 
-        $this->writeConsumer($methodConsumer, 'MethodConsumer', '$owner->mark()');
-        $this->writeConsumer($propertyConsumer, 'PropertyConsumer', '$owner->label');
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testReanalyseBehaviorReadersWhenTheFirstOwnerBehaviorIsRemoved(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerBehaviorChange(
+            ['Probe\FirstBehavior', 'Probe\SecondBehavior'],
+            ['Probe\SecondBehavior'],
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
 
-        $stableInputs = $this->stableInputHashes($methodConsumer, $propertyConsumer);
-        $before = self::expectedResults(
-            [
-                'src/AttributeConsumer.php',
-                $methodConsumer,
-                $propertyConsumer,
-            ],
-            'int',
-            'int<1, max>',
-            true,
-        );
-        $after = self::expectedResults(
-            [
-                'src/AttributeConsumer.php',
-                $methodConsumer,
-                $propertyConsumer,
-            ],
-            'string',
-            'int<0, max>',
-            false,
-        );
-
-        $this->writeBehaviors('Probe\FirstBehavior');
-
-        $initialBehaviors = $this->readFile('project/behaviors.php');
-        $initialHash = self::hashFile($this->path('project/behaviors.php'));
-        $initialCold = $this->analyse();
-
-        self::assertStringContainsString(
-            'Result cache not used because the cache file does not exist.',
-            $initialCold['stderr'],
-            'Initial run must start without a result cache.',
-        );
-        self::assertStringContainsString(
-            'Result cache is saved.',
-            $initialCold['stderr'],
-            'Initial run must write the result cache.',
-        );
-        self::assertFileExists(
-            $this->path('tmp/resultCache.php'),
-            'Result cache file must be created in the owned `tmpDir`.',
-        );
-        self::assertSame(
-            $before,
-            $initialCold['results'],
-            'Initial run must infer the first behavior on every route and keep the stable owner and control.',
-        );
-
-        $initialWarm = $this->analyse();
-
-        self::assertContains(
-            self::reanalysedFiles($initialWarm['stderr'], 'First unchanged warm run'),
-            self::INITIAL_WARM_REANALYSED,
-            'First unchanged warm run may only reanalyse the `getAttribute()` readers.',
-        );
-        self::assertSame(
-            $before,
-            $initialWarm['results'],
-            'First unchanged warm run must keep the initial results.',
-        );
-
-        $stableWarm = $this->analyse();
-
-        self::assertRestored(
-            0,
-            $stableWarm['stderr'],
-            'Unchanged initial warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $stableWarm['stderr'],
-            'Unchanged initial warm run must keep the result cache as it is.',
-        );
-        self::assertSame(
-            $before,
-            $stableWarm['results'],
-            'Unchanged initial warm run must restore the initial results.',
-        );
-
-        $this->writeBehaviors('Probe\SecondBehavior');
-
-        $changedHash = self::hashFile($this->path('project/behaviors.php'));
-
-        self::assertNotSame(
-            $initialHash,
-            $changedHash,
-            'Behaviors file must change its contents.',
-        );
-        self::assertSame(
-            [5 => "    'Probe\\\\Owner' => ['Probe\\\\SecondBehavior'],"],
-            array_diff_assoc(
-                explode("\n", $this->readFile('project/behaviors.php')),
-                explode("\n", $initialBehaviors),
-            ),
-            'Only the changing owner line may differ.',
-        );
-
-        $changed = $this->analyse();
-        $reanalysed = self::reanalysedFiles($changed['stderr'], 'Changed warm run');
-
-        self::assertGreaterThanOrEqual(
-            self::MINIMUM_REANALYSED,
-            $reanalysed,
-            'Every reader of the changing behaviors must be reanalysed.',
-        );
-        self::assertLessThanOrEqual(
-            self::MAXIMUM_REANALYSED,
-            $reanalysed,
-            'Only files depending on the changing behaviors or on the owner class may be reanalysed.',
-        );
-        self::assertStringContainsString(
-            'Result cache is saved.',
-            $changed['stderr'],
-            'Changed warm run must save the new results.',
-        );
-        self::assertSame(
-            $after,
-            $changed['results'],
-            'Behavior readers must see the replacement behavior and lose their stale diagnostics.',
-        );
-
-        foreach (['src/AttributeConsumer.php', $methodConsumer, $propertyConsumer] as $consumer) {
-            self::assertNotSame(
-                self::resultsOf($consumer, $before),
-                self::resultsOf($consumer, $changed['results']),
-                sprintf('Results of "%s" must come from a new analysis.', $consumer),
-            );
-        }
-
-        self::assertSame(
-            self::NATIVE_CONSUMER,
-            self::resultsOf('src/late/NativeConsumer.php', $changed['results']),
-            'Native owner consumer results must be unaffected by the behaviors.',
-        );
-        self::assertSame(
-            self::OTHER_OWNER_CONSUMER,
-            self::resultsOf('src/OtherOwnerConsumer.php', $changed['results']),
-            'Stable owner results must be unaffected by another owner behavior list.',
-        );
-        self::assertSame(
-            self::CONTROL,
-            self::resultsOf('src/Control.php', $changed['results']),
-            'Control results must be unaffected by the behaviors.',
-        );
-
-        $changedWarm = $this->analyse();
-
-        self::assertRestored(
-            0,
-            $changedWarm['stderr'],
-            'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
-        );
-        self::assertSame(
-            $after,
-            $changedWarm['results'],
-            'Unchanged changed warm run must restore the changed results.',
-        );
-
-        $this->removeTemporaryCacheDirectory();
-
-        $finalCold = $this->analyse();
-
-        self::assertStringContainsString(
-            'Result cache not used because the cache file does not exist.',
-            $finalCold['stderr'],
-            'Final run must start without a result cache.',
-        );
-        self::assertSame(
-            $changed['results'],
-            $finalCold['results'],
-            'Final cold results must match the results after detecting the change.',
-        );
-        self::assertSame(
-            $changedHash,
-            self::hashFile($this->path('project/behaviors.php')),
-            'Final runs must use the changed behaviors.',
-        );
-        self::assertSame(
-            $stableInputs,
-            $this->stableInputHashes($methodConsumer, $propertyConsumer),
-            'Only the behaviors file may change during the sequence.',
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testReanalyseBehaviorReadersWhenTheOwnerBehaviorOrderIsReversed(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerBehaviorChange(
+            ['Probe\FirstBehavior', 'Probe\SecondBehavior'],
+            ['Probe\SecondBehavior', 'Probe\FirstBehavior'],
+            $methodDirectory,
+            $propertyDirectory,
         );
     }
 
@@ -423,6 +277,226 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     }
 
     /**
+     * Runs the cold, warm, changed and final cold analyses for one change of the changing owner's behavior list, in
+     * which the first listed behavior moves from `FirstBehavior` to `SecondBehavior`.
+     *
+     * @phpstan-param list<string> $initialBehaviors
+     * @phpstan-param list<string> $changedBehaviors
+     */
+    private function assertReadersFollowOwnerBehaviorChange(
+        array $initialBehaviors,
+        array $changedBehaviors,
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $methodConsumer = "src/{$methodDirectory}/MethodConsumer.php";
+        $propertyConsumer = "src/{$propertyDirectory}/PropertyConsumer.php";
+
+        $this->writeConsumer($methodConsumer, 'MethodConsumer', '$owner->mark()');
+        $this->writeConsumer($propertyConsumer, 'PropertyConsumer', '$owner->label');
+
+        $stableInputs = $this->stableInputHashes($methodConsumer, $propertyConsumer);
+
+        $before = self::expectedResults(
+            [
+                'src/AttributeConsumer.php',
+                $methodConsumer,
+                $propertyConsumer,
+            ],
+            'int',
+            'int<1, max>',
+            true,
+        );
+        $after = self::expectedResults(
+            [
+                'src/AttributeConsumer.php',
+                $methodConsumer,
+                $propertyConsumer,
+            ],
+            'string',
+            'int<0, max>',
+            false,
+        );
+
+        $this->writeBehaviors($initialBehaviors);
+
+        $initialContents = $this->readFile('project/behaviors.php');
+
+        $initialHash = self::hashFile($this->path('project/behaviors.php'));
+
+        $initialCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $initialCold['stderr'],
+            'Initial run must write the result cache.',
+        );
+        self::assertFileExists(
+            $this->path('tmp/resultCache.php'),
+            'Result cache file must be created in the owned `tmpDir`.',
+        );
+        self::assertSame(
+            $before,
+            $initialCold['results'],
+            'Initial run must infer the first behavior on every route and keep the stable owner and control.',
+        );
+
+        $initialWarm = $this->analyse();
+
+        self::assertContains(
+            self::reanalysedFiles($initialWarm['stderr'], 'First unchanged warm run'),
+            self::INITIAL_WARM_REANALYSED,
+            'First unchanged warm run may only reanalyse the `getAttribute()` readers.',
+        );
+        self::assertSame(
+            $before,
+            $initialWarm['results'],
+            'First unchanged warm run must keep the initial results.',
+        );
+
+        $stableWarm = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $stableWarm['stderr'],
+            'Unchanged initial warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $stableWarm['stderr'],
+            'Unchanged initial warm run must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $before,
+            $stableWarm['results'],
+            'Unchanged initial warm run must restore the initial results.',
+        );
+
+        $this->writeBehaviors($changedBehaviors);
+
+        $changedHash = self::hashFile($this->path('project/behaviors.php'));
+
+        self::assertNotSame(
+            $initialHash,
+            $changedHash,
+            'Behaviors file must change its contents.',
+        );
+        self::assertSame(
+            [5 => self::ownerBehaviorsLine($changedBehaviors)],
+            array_diff_assoc(
+                explode("\n", $this->readFile('project/behaviors.php')),
+                explode("\n", $initialContents),
+            ),
+            'Only the changing owner line may differ.',
+        );
+        self::assertSame(
+            [5 => self::ownerBehaviorsLine($initialBehaviors)],
+            array_diff_assoc(
+                explode("\n", $initialContents),
+                explode("\n", $this->readFile('project/behaviors.php')),
+            ),
+            'Only the initial owner line may be replaced.',
+        );
+
+        $changed = $this->analyse();
+
+        $reanalysed = self::reanalysedFiles($changed['stderr'], 'Changed warm run');
+
+        self::assertGreaterThanOrEqual(
+            self::MINIMUM_REANALYSED,
+            $reanalysed,
+            'Every reader of the changing behaviors must be reanalysed.',
+        );
+        self::assertLessThanOrEqual(
+            self::MAXIMUM_REANALYSED,
+            $reanalysed,
+            'Only files depending on the changing behaviors or on the owner class may be reanalysed.',
+        );
+        self::assertStringContainsString(
+            'Result cache is saved.',
+            $changed['stderr'],
+            'Changed warm run must save the new results.',
+        );
+        self::assertSame(
+            $after,
+            $changed['results'],
+            'Behavior readers must see the new first behavior and lose their stale diagnostics.',
+        );
+
+        foreach (['src/AttributeConsumer.php', $methodConsumer, $propertyConsumer] as $consumer) {
+            self::assertNotSame(
+                self::resultsOf($consumer, $before),
+                self::resultsOf($consumer, $changed['results']),
+                sprintf('Results of "%s" must come from a new analysis.', $consumer),
+            );
+        }
+
+        self::assertSame(
+            self::NATIVE_CONSUMER,
+            self::resultsOf('src/late/NativeConsumer.php', $changed['results']),
+            'Native owner consumer results must be unaffected by the behaviors.',
+        );
+        self::assertSame(
+            self::OTHER_OWNER_CONSUMER,
+            self::resultsOf('src/OtherOwnerConsumer.php', $changed['results']),
+            'Stable owner results must be unaffected by another owner behavior list.',
+        );
+        self::assertSame(
+            self::CONTROL,
+            self::resultsOf('src/Control.php', $changed['results']),
+            'Control results must be unaffected by the behaviors.',
+        );
+
+        $changedWarm = $this->analyse();
+
+        self::assertRestored(
+            0,
+            $changedWarm['stderr'],
+            'Unchanged changed warm run',
+        );
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changedWarm['stderr'],
+            'Unchanged changed warm run must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $after,
+            $changedWarm['results'],
+            'Unchanged changed warm run must restore the changed results.',
+        );
+
+        $this->removeTemporaryCacheDirectory();
+
+        $finalCold = $this->analyse();
+
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $changed['results'],
+            $finalCold['results'],
+            'Final cold results must match the results after detecting the change.',
+        );
+        self::assertSame(
+            $changedHash,
+            self::hashFile($this->path('project/behaviors.php')),
+            'Final runs must use the changed behaviors.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes($methodConsumer, $propertyConsumer),
+            'Only the behaviors file may change during the sequence.',
+        );
+    }
+
+    /**
      * Returns the sorted results of every file for the given types of the changing owner's behavior members and of
      * their length.
      *
@@ -450,6 +524,18 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
         sort($results);
 
         return $results;
+    }
+
+    /**
+     * Returns the line of the behaviors file that lists the changing owner's behaviors.
+     *
+     * @phpstan-param list<string> $behaviors
+     */
+    private static function ownerBehaviorsLine(array $behaviors): string
+    {
+        $values = array_map(static fn(string $behavior): string => var_export($behavior, true), $behaviors);
+
+        return "    'Probe\\\\Owner' => [" . implode(', ', $values) . '],';
     }
 
     /**
@@ -510,11 +596,13 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Writes the behavior lists, the only file that changes.
+     * Writes the behavior lists, the only file that changes, with the changing owner's list on line index 5.
+     *
+     * @phpstan-param list<string> $ownerBehaviors
      */
-    private function writeBehaviors(string $ownerBehavior): void
+    private function writeBehaviors(array $ownerBehaviors): void
     {
-        $value = var_export($ownerBehavior, true);
+        $ownerLine = self::ownerBehaviorsLine($ownerBehaviors);
 
         $this->writeFile(
             'project/behaviors.php',
@@ -524,7 +612,7 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             declare(strict_types=1);
 
             return [
-                'Probe\\\\Owner' => [{$value}],
+            {$ownerLine}
                 'Probe\\\\OtherOwner' => ['Probe\\\\StableBehavior'],
             ];
 
