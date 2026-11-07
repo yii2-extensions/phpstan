@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - fix: stand aside in the eight option rules when a trait redeclares an inherited option property, such as with a PHP `8.5` set hook.
 - fix: stand aside in `createObject`, widget and external action option rules when a container definition sets a trait-redeclared property.
 - test: pin the shared option semantics of `ObjectOptionAssignment` and `CreateObjectConfigurationResolver` with direct tests, hooks and traits.
+- test: pin real result cache runs for an application component removal and an unresolved definition gaining its class.
 
 ## 0.5.2 October 23, 2026
 
