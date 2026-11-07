@@ -11,6 +11,35 @@ namespace yii2\extensions\phpstan\tests\provider;
 final class ApplicationComponentStateResultCacheIntegrationProvider
 {
     /**
+     * @phpstan-return iterable<string, array{string, list<array{string, int, string, string|null}>}>
+     */
+    public static function aliasTargetChangeProvider(): iterable
+    {
+        yield 'alias target changes class' => [
+            "    'cache.target' => ['class' => 'yii\\\\caching\\\\ArrayCache'],",
+            [
+                ['src/ChangingLocatorConsumer.php', 11, 'phpstan.dumpType', 'yii\caching\ArrayCache'],
+                ['src/ChangingLocatorConsumer.php', 12, 'phpstan.dumpType', '*ERROR*'],
+                ['src/ChangingLocatorConsumer.php', 12, 'property.notFound', null],
+                ['src/ChangingPropertyConsumer.php', 11, 'phpstan.dumpType', 'yii\caching\ArrayCache'],
+                ['src/ChangingPropertyConsumer.php', 12, 'phpstan.dumpType', '*ERROR*'],
+                ['src/ChangingPropertyConsumer.php', 12, 'property.notFound', null],
+            ],
+        ];
+        yield 'alias target becomes unresolved' => [
+            "    'cache.target' => static fn() => new \\yii\\caching\\FileCache(),",
+            [
+                ['src/ChangingLocatorConsumer.php', 11, 'phpstan.dumpType', 'object'],
+                ['src/ChangingLocatorConsumer.php', 12, 'phpstan.dumpType', '*ERROR*'],
+                ['src/ChangingLocatorConsumer.php', 12, 'property.notFound', null],
+                ['src/ChangingPropertyConsumer.php', 11, 'phpstan.dumpType', 'object'],
+                ['src/ChangingPropertyConsumer.php', 12, 'phpstan.dumpType', '*ERROR*'],
+                ['src/ChangingPropertyConsumer.php', 12, 'property.notFound', null],
+            ],
+        ];
+    }
+
+    /**
      * @phpstan-return iterable<
      *   string,
      *   array{
