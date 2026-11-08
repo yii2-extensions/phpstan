@@ -86,9 +86,11 @@ trait ResultCacheIntegrationTrait
      * Each result is the path relative to the project, the line, the identifier and, for `phpstan.dumpType`, the dumped
      * type, sorted for a stable comparison.
      *
+     * @param string ...$options Extra command line options, such as `--debug`.
+     *
      * @phpstan-return array{stderr: string, results: list<array{string, int, string, string|null}>}
      */
-    private function analyse(): array
+    private function analyse(string ...$options): array
     {
         $pipes = [];
 
@@ -104,6 +106,7 @@ trait ResultCacheIntegrationTrait
                 '--memory-limit=-1',
                 '--no-progress',
                 '-vvv',
+                ...array_values($options),
             ],
             [
                 0 => ['pipe', 'r'],
