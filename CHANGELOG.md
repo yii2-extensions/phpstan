@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: pin real result cache runs for a generic `user` identity class change and component alias target transitions.
 - test: pin real result cache runs for owner behavior lists that reverse, gain a first behavior or lose their first behavior.
 - test: pin real result cache runs for a missing or empty owner behavior list gaining or losing a behavior, or switching form.
+- test: pin real cold and warm runs for a container service ID whose class only `bootstrapFiles` load, with a wrapper control.
 
 ## 0.5.2 October 23, 2026
 
