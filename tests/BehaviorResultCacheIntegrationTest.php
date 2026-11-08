@@ -10,8 +10,9 @@ use yii2\extensions\phpstan\ServiceMapResultCacheValueExtension;
 use yii2\extensions\phpstan\tests\provider\BehaviorResultCacheIntegrationProvider;
 use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
-use function array_diff_assoc;
 use function array_map;
+use function array_splice;
+use function count;
 use function dirname;
 use function explode;
 use function implode;
@@ -64,6 +65,11 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     ];
 
     /**
+     * Owner entry of a behaviors file that leaves the changing owner out, unlike an entry with an empty list.
+     */
+    private const array NO_OWNER_ENTRY = [];
+
+    /**
      * Expected diagnostics of the consumer of the owner whose behaviors never change.
      */
     private const array OTHER_OWNER_CONSUMER = [
@@ -78,6 +84,32 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-behavior-result-cache-';
 
     #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testKeepBehaviorReaderResultsWhenAnEmptyOwnerListReplacesTheMissingEntry(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersKeepResultsWhenOnlyTheOwnerEntryFormChanges(
+            self::NO_OWNER_ENTRY,
+            self::ownerEntry([]),
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
+
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testKeepBehaviorReaderResultsWhenTheEmptyOwnerListIsRemoved(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersKeepResultsWhenOnlyTheOwnerEntryFormChanges(
+            self::ownerEntry([]),
+            self::NO_OWNER_ENTRY,
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
+
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
     public function testReanalyseBehaviorReadersWhenABehaviorIsPrependedToTheOwnerList(
         string $methodDirectory,
         string $propertyDirectory,
@@ -85,6 +117,36 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
         $this->assertReadersFollowOwnerBehaviorChange(
             ['Probe\FirstBehavior'],
             ['Probe\SecondBehavior', 'Probe\FirstBehavior'],
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
+
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testReanalyseBehaviorReadersWhenAnEmptyOwnerListGainsABehavior(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerEntryChange(
+            self::ownerEntry([]),
+            self::ownerEntry(['Probe\FirstBehavior']),
+            self::resultsWithoutBehaviors($methodDirectory, $propertyDirectory),
+            self::resultsWithFirstBehavior($methodDirectory, $propertyDirectory),
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
+
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testReanalyseBehaviorReadersWhenAnOwnerEntryIsAdded(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerEntryChange(
+            self::NO_OWNER_ENTRY,
+            self::ownerEntry(['Probe\FirstBehavior']),
+            self::resultsWithoutBehaviors($methodDirectory, $propertyDirectory),
+            self::resultsWithFirstBehavior($methodDirectory, $propertyDirectory),
             $methodDirectory,
             $propertyDirectory,
         );
@@ -124,6 +186,36 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
         $this->assertReadersFollowOwnerBehaviorChange(
             ['Probe\FirstBehavior', 'Probe\SecondBehavior'],
             ['Probe\SecondBehavior', 'Probe\FirstBehavior'],
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
+
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testReanalyseBehaviorReadersWhenTheOwnerEntryIsRemoved(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerEntryChange(
+            self::ownerEntry(['Probe\FirstBehavior']),
+            self::NO_OWNER_ENTRY,
+            self::resultsWithFirstBehavior($methodDirectory, $propertyDirectory),
+            self::resultsWithoutBehaviors($methodDirectory, $propertyDirectory),
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
+
+    #[DataProviderExternal(BehaviorResultCacheIntegrationProvider::class, 'readerOrderProvider')]
+    public function testReanalyseBehaviorReadersWhenTheOwnerListIsEmptied(
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerEntryChange(
+            self::ownerEntry(['Probe\FirstBehavior']),
+            self::ownerEntry([]),
+            self::resultsWithFirstBehavior($methodDirectory, $propertyDirectory),
+            self::resultsWithoutBehaviors($methodDirectory, $propertyDirectory),
             $methodDirectory,
             $propertyDirectory,
         );
@@ -277,53 +369,70 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Runs the cold, warm, changed and final cold analyses for one change of the changing owner's behavior list, in
-     * which the first listed behavior moves from `FirstBehavior` to `SecondBehavior`.
+     * Runs the unchanged warm analysis after the change and the final cold analysis, and asserts that both keep the
+     * changed results and that only the behaviors file changed during the sequence.
      *
-     * @phpstan-param list<string> $initialBehaviors
-     * @phpstan-param list<string> $changedBehaviors
+     * @phpstan-param list<array{string, int, string, string|null}> $changedResults
+     * @phpstan-param array<string, string> $stableInputs
      */
-    private function assertReadersFollowOwnerBehaviorChange(
-        array $initialBehaviors,
-        array $changedBehaviors,
-        string $methodDirectory,
-        string $propertyDirectory,
+    private function assertFinalRuns(
+        array $changedResults,
+        string $changedHash,
+        array $stableInputs,
+        string $methodConsumer,
+        string $propertyConsumer,
     ): void {
-        $methodConsumer = "src/{$methodDirectory}/MethodConsumer.php";
-        $propertyConsumer = "src/{$propertyDirectory}/PropertyConsumer.php";
+        $changedWarm = $this->analyse();
 
-        $this->writeConsumer($methodConsumer, 'MethodConsumer', '$owner->mark()');
-        $this->writeConsumer($propertyConsumer, 'PropertyConsumer', '$owner->label');
-
-        $stableInputs = $this->stableInputHashes($methodConsumer, $propertyConsumer);
-
-        $before = self::expectedResults(
-            [
-                'src/AttributeConsumer.php',
-                $methodConsumer,
-                $propertyConsumer,
-            ],
-            'int',
-            'int<1, max>',
-            true,
+        self::assertRestored(
+            0,
+            $changedWarm['stderr'],
+            'Unchanged changed warm run',
         );
-        $after = self::expectedResults(
-            [
-                'src/AttributeConsumer.php',
-                $methodConsumer,
-                $propertyConsumer,
-            ],
-            'string',
-            'int<0, max>',
-            false,
+        self::assertStringContainsString(
+            'Result cache was not rewritten because it is unchanged.',
+            $changedWarm['stderr'],
+            'Unchanged changed warm run must keep the result cache as it is.',
+        );
+        self::assertSame(
+            $changedResults,
+            $changedWarm['results'],
+            'Unchanged changed warm run must restore the changed results.',
         );
 
-        $this->writeBehaviors($initialBehaviors);
+        $this->removeTemporaryCacheDirectory();
 
-        $initialContents = $this->readFile('project/behaviors.php');
+        $finalCold = $this->analyse();
 
-        $initialHash = self::hashFile($this->path('project/behaviors.php'));
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $finalCold['stderr'],
+            'Final run must start without a result cache.',
+        );
+        self::assertSame(
+            $changedResults,
+            $finalCold['results'],
+            'Final cold results must match the results after detecting the change.',
+        );
+        self::assertSame(
+            $changedHash,
+            self::hashFile($this->path('project/behaviors.php')),
+            'Final runs must use the changed behaviors.',
+        );
+        self::assertSame(
+            $stableInputs,
+            $this->stableInputHashes($methodConsumer, $propertyConsumer),
+            'Only the behaviors file may change during the sequence.',
+        );
+    }
 
+    /**
+     * Runs the cold and both unchanged warm analyses before the change, and asserts that they keep the given results.
+     *
+     * @phpstan-param list<array{string, int, string, string|null}> $expected
+     */
+    private function assertInitialRuns(array $expected): void
+    {
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -341,9 +450,9 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             'Result cache file must be created in the owned `tmpDir`.',
         );
         self::assertSame(
-            $before,
+            $expected,
             $initialCold['results'],
-            'Initial run must infer the first behavior on every route and keep the stable owner and control.',
+            'Initial run must infer the initial behaviors on every route and keep the stable owner and control.',
         );
 
         $initialWarm = $this->analyse();
@@ -354,7 +463,7 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             'First unchanged warm run may only reanalyse the `getAttribute()` readers.',
         );
         self::assertSame(
-            $before,
+            $expected,
             $initialWarm['results'],
             'First unchanged warm run must keep the initial results.',
         );
@@ -372,36 +481,65 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             'Unchanged initial warm run must keep the result cache as it is.',
         );
         self::assertSame(
-            $before,
+            $expected,
             $stableWarm['results'],
             'Unchanged initial warm run must restore the initial results.',
         );
+    }
 
-        $this->writeBehaviors($changedBehaviors);
+    /**
+     * Runs the full sequence for one change of the changing owner's behavior list, in which the first listed behavior
+     * moves from `FirstBehavior` to `SecondBehavior`.
+     *
+     * @phpstan-param list<string> $initialBehaviors
+     * @phpstan-param list<string> $changedBehaviors
+     */
+    private function assertReadersFollowOwnerBehaviorChange(
+        array $initialBehaviors,
+        array $changedBehaviors,
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $this->assertReadersFollowOwnerEntryChange(
+            self::ownerEntry($initialBehaviors),
+            self::ownerEntry($changedBehaviors),
+            self::resultsWithFirstBehavior($methodDirectory, $propertyDirectory),
+            self::resultsWithSecondBehavior($methodDirectory, $propertyDirectory),
+            $methodDirectory,
+            $propertyDirectory,
+        );
+    }
 
-        $changedHash = self::hashFile($this->path('project/behaviors.php'));
+    /**
+     * Runs the cold, warm, changed and final cold analyses for one change of the changing owner's entry that changes
+     * what its readers see.
+     *
+     * @phpstan-param list<string> $initialEntry
+     * @phpstan-param list<string> $changedEntry
+     * @phpstan-param list<array{string, int, string, string|null}> $before
+     * @phpstan-param list<array{string, int, string, string|null}> $after
+     */
+    private function assertReadersFollowOwnerEntryChange(
+        array $initialEntry,
+        array $changedEntry,
+        array $before,
+        array $after,
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $methodConsumer = self::methodConsumer($methodDirectory);
+        $propertyConsumer = self::propertyConsumer($propertyDirectory);
 
-        self::assertNotSame(
-            $initialHash,
-            $changedHash,
-            'Behaviors file must change its contents.',
-        );
-        self::assertSame(
-            [5 => self::ownerBehaviorsLine($changedBehaviors)],
-            array_diff_assoc(
-                explode("\n", $this->readFile('project/behaviors.php')),
-                explode("\n", $initialContents),
-            ),
-            'Only the changing owner line may differ.',
-        );
-        self::assertSame(
-            [5 => self::ownerBehaviorsLine($initialBehaviors)],
-            array_diff_assoc(
-                explode("\n", $initialContents),
-                explode("\n", $this->readFile('project/behaviors.php')),
-            ),
-            'Only the initial owner line may be replaced.',
-        );
+        $this->writeConsumer($methodConsumer, 'MethodConsumer', '$owner->mark()');
+        $this->writeConsumer($propertyConsumer, 'PropertyConsumer', '$owner->label');
+
+        $stableInputs = $this->stableInputHashes($methodConsumer, $propertyConsumer);
+
+        $this->writeBehaviors($initialEntry);
+
+        $this->assertInitialRuns($before);
+
+        $changedHash = $this->changeOwnerEntry($initialEntry, $changedEntry);
 
         $changed = $this->analyse();
 
@@ -425,10 +563,10 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
         self::assertSame(
             $after,
             $changed['results'],
-            'Behavior readers must see the new first behavior and lose their stale diagnostics.',
+            'Behavior readers must see the new behaviors and lose their stale diagnostics.',
         );
 
-        foreach (['src/AttributeConsumer.php', $methodConsumer, $propertyConsumer] as $consumer) {
+        foreach (self::readers($methodConsumer, $propertyConsumer) as $consumer) {
             self::assertNotSame(
                 self::resultsOf($consumer, $before),
                 self::resultsOf($consumer, $changed['results']),
@@ -452,48 +590,103 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             'Control results must be unaffected by the behaviors.',
         );
 
-        $changedWarm = $this->analyse();
+        $this->assertFinalRuns($after, $changedHash, $stableInputs, $methodConsumer, $propertyConsumer);
+    }
+
+    /**
+     * Runs the cold, warm, changed and final cold analyses for a change between the missing owner entry and an empty
+     * owner list, which share the `missing` value, and asserts that the change reanalyses no file.
+     *
+     * @phpstan-param list<string> $initialEntry
+     * @phpstan-param list<string> $changedEntry
+     */
+    private function assertReadersKeepResultsWhenOnlyTheOwnerEntryFormChanges(
+        array $initialEntry,
+        array $changedEntry,
+        string $methodDirectory,
+        string $propertyDirectory,
+    ): void {
+        $methodConsumer = self::methodConsumer($methodDirectory);
+        $propertyConsumer = self::propertyConsumer($propertyDirectory);
+
+        $expected = self::resultsWithoutBehaviors($methodDirectory, $propertyDirectory);
+
+        $this->writeConsumer($methodConsumer, 'MethodConsumer', '$owner->mark()');
+        $this->writeConsumer($propertyConsumer, 'PropertyConsumer', '$owner->label');
+
+        $stableInputs = $this->stableInputHashes($methodConsumer, $propertyConsumer);
+
+        $this->writeBehaviors($initialEntry);
+        $this->assertInitialRuns($expected);
+
+        $changedHash = $this->changeOwnerEntry($initialEntry, $changedEntry);
+
+        $changed = $this->analyse();
 
         self::assertRestored(
             0,
-            $changedWarm['stderr'],
-            'Unchanged changed warm run',
+            $changed['stderr'],
+            'Changed warm run',
         );
         self::assertStringContainsString(
             'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
+            $changed['stderr'],
+            'Changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
-            $after,
-            $changedWarm['results'],
-            'Unchanged changed warm run must restore the changed results.',
-        );
-
-        $this->removeTemporaryCacheDirectory();
-
-        $finalCold = $this->analyse();
-
-        self::assertStringContainsString(
-            'Result cache not used because the cache file does not exist.',
-            $finalCold['stderr'],
-            'Final run must start without a result cache.',
-        );
-        self::assertSame(
+            $expected,
             $changed['results'],
-            $finalCold['results'],
-            'Final cold results must match the results after detecting the change.',
+            'Behavior readers must keep their results when the owner has no behaviors in either form.',
         );
-        self::assertSame(
+
+        $this->assertFinalRuns(
+            $expected,
             $changedHash,
-            self::hashFile($this->path('project/behaviors.php')),
-            'Final runs must use the changed behaviors.',
+            $stableInputs,
+            $methodConsumer,
+            $propertyConsumer,
+        );
+    }
+
+    /**
+     * Replaces the changing owner's entry, asserts that no other line of the behaviors file changes and returns the
+     * hash of the changed file.
+     *
+     * @phpstan-param list<string> $initialEntry
+     * @phpstan-param list<string> $changedEntry
+     */
+    private function changeOwnerEntry(array $initialEntry, array $changedEntry): string
+    {
+        $initialHash = self::hashFile($this->path('project/behaviors.php'));
+        $initialLines = explode("\n", $this->readFile('project/behaviors.php'));
+
+        $this->writeBehaviors($changedEntry);
+
+        $changedHash = self::hashFile($this->path('project/behaviors.php'));
+        $changedLines = explode("\n", $this->readFile('project/behaviors.php'));
+
+        self::assertNotSame(
+            $initialHash,
+            $changedHash,
+            'Behaviors file must change its contents.',
         );
         self::assertSame(
-            $stableInputs,
-            $this->stableInputHashes($methodConsumer, $propertyConsumer),
-            'Only the behaviors file may change during the sequence.',
+            $initialEntry,
+            array_splice($initialLines, 5, count($initialEntry)),
+            'Initial owner entry must start on line index 5.',
         );
+        self::assertSame(
+            $changedEntry,
+            array_splice($changedLines, 5, count($changedEntry)),
+            'Changed owner entry must start on line index 5.',
+        );
+        self::assertSame(
+            $initialLines,
+            $changedLines,
+            'Only the changing owner entry may differ.',
+        );
+
+        return $changedHash;
     }
 
     /**
@@ -527,15 +720,108 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Returns the line of the behaviors file that lists the changing owner's behaviors.
+     * Returns the path of the behavior method reader in the given directory.
+     */
+    private static function methodConsumer(string $directory): string
+    {
+        return "src/{$directory}/MethodConsumer.php";
+    }
+
+    /**
+     * Returns the behaviors file entry that attaches the given list to the changing owner.
      *
      * @phpstan-param list<string> $behaviors
+     *
+     * @phpstan-return list<string>
      */
-    private static function ownerBehaviorsLine(array $behaviors): string
+    private static function ownerEntry(array $behaviors): array
     {
         $values = array_map(static fn(string $behavior): string => var_export($behavior, true), $behaviors);
 
-        return "    'Probe\\\\Owner' => [" . implode(', ', $values) . '],';
+        return ["    'Probe\\\\Owner' => [" . implode(', ', $values) . '],'];
+    }
+
+    /**
+     * Returns the path of the behavior property reader in the given directory.
+     */
+    private static function propertyConsumer(string $directory): string
+    {
+        return "src/{$directory}/PropertyConsumer.php";
+    }
+
+    /**
+     * Returns the readers of the changing owner's behaviors: the `getAttribute()`, method and property consumers.
+     *
+     * @phpstan-return list<string>
+     */
+    private static function readers(string $methodConsumer, string $propertyConsumer): array
+    {
+        return ['src/AttributeConsumer.php', $methodConsumer, $propertyConsumer];
+    }
+
+    /**
+     * Returns the expected results while `FirstBehavior` is the first behavior of the changing owner.
+     *
+     * @phpstan-return list<array{string, int, string, string|null}>
+     */
+    private static function resultsWithFirstBehavior(string $methodDirectory, string $propertyDirectory): array
+    {
+        return self::expectedResults(
+            self::readers(self::methodConsumer($methodDirectory), self::propertyConsumer($propertyDirectory)),
+            'int',
+            'int<1, max>',
+            true,
+        );
+    }
+
+    /**
+     * Returns the expected results while the changing owner has no behaviors: the method and property reads are
+     * undefined, and `getAttribute()` falls back to `mixed`.
+     *
+     * @phpstan-return list<array{string, int, string, string|null}>
+     */
+    private static function resultsWithoutBehaviors(string $methodDirectory, string $propertyDirectory): array
+    {
+        $methodConsumer = self::methodConsumer($methodDirectory);
+        $propertyConsumer = self::propertyConsumer($propertyDirectory);
+
+        $results = [
+            ...self::CONTROL,
+            ...self::NATIVE_CONSUMER,
+            ...self::OTHER_OWNER_CONSUMER,
+            ['src/AttributeConsumer.php', 11, 'phpstan.dumpType', 'mixed'],
+            ['src/AttributeConsumer.php', 12, 'argument.type', null],
+            ['src/AttributeConsumer.php', 12, 'phpstan.dumpType', 'int<0, max>'],
+            [$methodConsumer, 11, 'method.notFound', null],
+            [$methodConsumer, 11, 'phpstan.dumpType', '*ERROR*'],
+            [$methodConsumer, 12, 'argument.type', null],
+            [$methodConsumer, 12, 'method.notFound', null],
+            [$methodConsumer, 12, 'phpstan.dumpType', 'int<0, max>'],
+            [$propertyConsumer, 11, 'phpstan.dumpType', '*ERROR*'],
+            [$propertyConsumer, 11, 'property.notFound', null],
+            [$propertyConsumer, 12, 'argument.type', null],
+            [$propertyConsumer, 12, 'phpstan.dumpType', 'int<0, max>'],
+            [$propertyConsumer, 12, 'property.notFound', null],
+        ];
+
+        sort($results);
+
+        return $results;
+    }
+
+    /**
+     * Returns the expected results while `SecondBehavior` is the first behavior of the changing owner.
+     *
+     * @phpstan-return list<array{string, int, string, string|null}>
+     */
+    private static function resultsWithSecondBehavior(string $methodDirectory, string $propertyDirectory): array
+    {
+        return self::expectedResults(
+            self::readers(self::methodConsumer($methodDirectory), self::propertyConsumer($propertyDirectory)),
+            'string',
+            'int<0, max>',
+            false,
+        );
     }
 
     /**
@@ -596,13 +882,14 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
     }
 
     /**
-     * Writes the behavior lists, the only file that changes, with the changing owner's list on line index 5.
+     * Writes the behavior lists, the only file that changes: the changing owner's entry from line index 5, then the
+     * stable owner's list.
      *
-     * @phpstan-param list<string> $ownerBehaviors
+     * @phpstan-param list<string> $ownerEntry
      */
-    private function writeBehaviors(array $ownerBehaviors): void
+    private function writeBehaviors(array $ownerEntry): void
     {
-        $ownerLine = self::ownerBehaviorsLine($ownerBehaviors);
+        $ownerLines = implode('', array_map(static fn(string $line): string => "{$line}\n", $ownerEntry));
 
         $this->writeFile(
             'project/behaviors.php',
@@ -612,8 +899,7 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             declare(strict_types=1);
 
             return [
-            {$ownerLine}
-                'Probe\\\\OtherOwner' => ['Probe\\\\StableBehavior'],
+            {$ownerLines}    'Probe\\\\OtherOwner' => ['Probe\\\\StableBehavior'],
             ];
 
             PHP,
