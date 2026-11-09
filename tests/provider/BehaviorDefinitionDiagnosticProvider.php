@@ -18,24 +18,32 @@ final class BehaviorDefinitionDiagnosticProvider
     {
         yield 'disabled by default' => [
             [],
-            self::results(false),
+            self::results(false, false),
         ];
-        yield 'enabled' => [
+        yield 'definition rule enabled' => [
             ['behaviorInvalidDefinition'],
-            self::results(true),
+            self::results(true, false),
+        ];
+        yield 'as definition rule enabled' => [
+            ['behaviorInvalidAsDefinition'],
+            self::results(false, true),
+        ];
+        yield 'both enabled' => [
+            ['behaviorInvalidAsDefinition', 'behaviorInvalidDefinition'],
+            self::results(true, true),
         ];
         yield 'only the createObject() rules enabled' => [
             ['createObjectInvalidOptionType', 'createObjectUnknownOption'],
-            self::results(false),
+            self::results(false, false),
         ];
     }
 
     /**
-     * Returns the sorted results of the owner: native diagnostics, plus the rule's when it is enabled.
+     * Returns the sorted results of the owner and the factory: native diagnostics, plus those of each enabled rule.
      *
      * @phpstan-return list<array{string, int, string, null}>
      */
-    private static function results(bool $enabled): array
+    private static function results(bool $definition, bool $asDefinition): array
     {
         $results = [
             // Yii's declared `behaviors()` element type rejects the array without class; the rule doesn't repeat it
@@ -54,7 +62,16 @@ final class BehaviorDefinitionDiagnosticProvider
             ],
         ];
 
-        if ($enabled) {
+        if ($asDefinition) {
+            $results[] = [
+                'src/Factory.php',
+                11,
+                'yii2.behavior.invalidAsDefinition',
+                null,
+            ];
+        }
+
+        if ($definition) {
             $results[] = [
                 'src/Owner.php',
                 12,

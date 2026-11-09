@@ -11,6 +11,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | --------------------------------------- | --------------------- | -------------------------------------------------------------------------------- |
 | `config_path`                           | `''`                  | PHP file to execute, relative to the process working directory or absolute.      |
 | `component_generics`                    | `user: identityClass` | Component ID to configuration key holding its single generic class argument.     |
+| `rules.behaviorInvalidAsDefinition`     | `false`               | Enables the [`as` behavior option rule](#invalid-as-behavior-options).           |
 | `rules.behaviorInvalidDefinition`       | `false`               | Enables the [behavior definition rule](#invalid-behavior-definitions).           |
 | `rules.createObjectInvalidOptionType`   | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).           |
 | `rules.createObjectUnknownOption`       | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).             |
@@ -651,6 +652,55 @@ unknown to the analysis, abstract classes and interfaces without a binding, `yii
 other values that are not one constant, unpacked, merged or dynamic lists, `behaviors()` declared in a trait or returned
 from a closure, owners that override `ensureBehaviors()`, and receivers that override the attach method. Changing a
 container definition or the declaration of the resolved class or one of its parents reanalyses the affected file.
+
+## Invalid `as` behavior options
+
+An opt-in rule reports the `as name` options of `Yii::createObject()` configurations that the created component rejects
+or can't attach:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            behaviorInvalidAsDefinition: true
+```
+
+With the classes of the previous example:
+
+```php
+$article = Yii::createObject([
+    'class' => Article::class,
+    'as timestamp' => yii\behaviors\TimestampBehavior::class, // valid
+    'as formatter' => Formatter::class,                       // reported: not a behavior subclass
+    'as settings' => ['enabled' => true],                     // reported: no class element
+]);
+```
+
+`yii\base\Component::__set()` checks the supplied value before the container resolves it. It accepts a
+`yii\base\Behavior` instance, a closure, or a class name or configuration class that is a strict subclass of
+`yii\base\Behavior`, and throws for anything else, even when the container binds that class to a behavior. The rule
+reports, with the identifier `yii2.behavior.invalidAsDefinition`:
+
+- a class name, or the class of a configuration array, that the analysis knows and that is not a strict subclass of
+  `yii\base\Behavior`, including `yii\base\Behavior` itself, interfaces and classes with a public `attach()` method;
+- a configuration array without a non-null `__class` or `class` element, including callable arrays;
+- a value that is neither a string nor an array and can't be a behavior, a closure or an `ArrayAccess` object, such as
+  `null`, an integer or `new Formatter()`;
+- an accepted class that the container definitions of the analysis configuration resolve to a concrete class that is
+  neither a behavior nor invocable, since `attachBehavior()` then rejects the created object.
+
+`__class` takes precedence over `class`, and an element whose value is `null` doesn't count, as in `Component::__set()`.
+Options are reported at their key, and configurations that native types prove constant at the line of the call. The
+message names the option, the component, and the defined and resolved classes.
+
+The rule analyses only the `Yii::createObject()` configurations whose created class and options the
+[unknown option rule](#unknown-yiicreateobject-options) can prove, on components that inherit `__set()` from
+`yii\base\Component`; `new`, widget, action, application configuration and direct assignments are not analysed. It
+stands aside for class names unknown to the analysis, container IDs included, abstract behaviors, unions and other
+values that are not one constant, closures, possible `ArrayAccess` objects, container factories, singletons, alias
+cycles, abstract or invocable container results and, for container results only, components that override
+`attachBehavior()`. Changing a container definition, the declaration of a named or resolved class or one of its parents,
+or an `attachBehavior()` override of the component reanalyses the affected file.
 
 ## Constants and result cache
 

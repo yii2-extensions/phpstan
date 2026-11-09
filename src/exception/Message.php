@@ -25,6 +25,31 @@ enum Message: string
     case BEHAVIOR_DEFINITION_NOT_ARRAY = "Behavior definition for '%s' must be an array.";
 
     /**
+     * Error when an `as` option holds a configuration array that `Component::__set()` rejects for lack of a class.
+     */
+    case BEHAVIOR_INVALID_AS_DEFINITION_ARRAY = "%s::createObject() option '%s' of %s is a configuration array "
+        . "without a non-null '__class' or 'class' element, which yii\\base\\Component::__set() rejects.";
+
+    /**
+     * Error when an `as` option names a class that isn't a strict subclass of `yii\base\Behavior`.
+     */
+    case BEHAVIOR_INVALID_AS_DEFINITION_CLASS = "%s::createObject() option '%s' of %s uses %s, which "
+        . 'yii\base\Component::__set() rejects: it is not a subclass of yii\base\Behavior.';
+
+    /**
+     * Error when the container resolves the behavior class of an `as` option to an object Yii can't attach.
+     */
+    case BEHAVIOR_INVALID_AS_DEFINITION_RESOLVED_CLASS = "%s::createObject() option '%s' of %s uses %s, which the "
+        . 'container resolves to %s; Yii cannot attach it: it is not a yii\base\Behavior or an invocable object.';
+
+    /**
+     * Error when an `as` option holds a value that `Component::__set()` never accepts.
+     */
+    case BEHAVIOR_INVALID_AS_DEFINITION_VALUE = "%s::createObject() option '%s' of %s is %s, which "
+        . 'yii\base\Component::__set() rejects: it is not a yii\base\Behavior, a Closure, a class name or a '
+        . 'configuration array.';
+
+    /**
      * Error when a behavior configuration array has no class element that `Yii::createObject()` can read.
      */
     case BEHAVIOR_INVALID_DEFINITION_ARRAY = 'Behavior %s in %s::%s() is a configuration array without a non-null '
