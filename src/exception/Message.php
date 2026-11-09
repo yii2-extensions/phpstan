@@ -25,6 +25,24 @@ enum Message: string
     case BEHAVIOR_DEFINITION_NOT_ARRAY = "Behavior definition for '%s' must be an array.";
 
     /**
+     * Error when a behavior configuration array has no class element that `Yii::createObject()` can read.
+     */
+    case BEHAVIOR_INVALID_DEFINITION_ARRAY = 'Behavior %s in %s::%s() is a configuration array without a non-null '
+        . "'__class' or 'class' element, which Yii::createObject() rejects.";
+
+    /**
+     * Error when a behavior definition names a class that Yii can't attach.
+     */
+    case BEHAVIOR_INVALID_DEFINITION_CLASS = 'Behavior %s in %s::%s() uses %s, which Yii cannot attach: it is not a '
+        . 'yii\base\Behavior and has no public attach() method.';
+
+    /**
+     * Error when the container resolves a behavior definition to a class that Yii can't attach.
+     */
+    case BEHAVIOR_INVALID_DEFINITION_RESOLVED_CLASS = 'Behavior %s in %s::%s() uses %s, which the container resolves '
+        . 'to %s; Yii cannot attach it: it is not a yii\base\Behavior and has no public attach() method.';
+
+    /**
      * Error when no attached behavior provides the requested method.
      */
     case BEHAVIOR_METHOD_NOT_FOUND = 'Method %s::%s() is not provided by any behavior attached to the class.';
