@@ -239,10 +239,7 @@ final class BehaviorDefinitionResolver
                 continue;
             }
 
-            if ($value->isNull()->no() === false) {
-                return null;
-            }
-
+            // a possibly null value is no single constant string either
             $class = ObjectConfigurationReader::constantString($value);
 
             return $class === null || $class === '' ? null : $class;

@@ -82,6 +82,7 @@ final class AttachCalls
         OverridingAttachOwner $overriding,
         object $unknown,
         string $class,
+        string $method,
         array $definitions,
         array $arguments,
     ): void {
@@ -108,6 +109,15 @@ final class AttachCalls
             'unknownReceiver',
             NotAttachableObject::class,
         );
+
+        $owner->{$method}('dynamicMethod', NotAttachableObject::class);
+
+        $attach = $owner->attachBehavior(...);
+
+        $attach('firstClassCallable', NotAttachableObject::class);
+
+        $owner->detachBehavior('otherMethod');
+        $owner->attachBehaviors([$class => NotAttachableObject::class]);
 
         $plainClass = new PlainClass();
 

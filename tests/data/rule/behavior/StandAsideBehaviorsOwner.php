@@ -31,7 +31,10 @@ final class StandAsideBehaviorsOwner extends Component
             'abstractPlain' => AbstractPlainObject::class,
             'closureClassName' => static fn(): string => NotAttachableObject::class,
             'component' => NotBehaviorComponent::class,
+            'emptyClass' => ['class' => ''],
+            'emptyId' => '',
             'factory' => 'factoryId',
+            'maybeNullClass' => ['class' => $this->flag ? NotAttachableObject::class : null],
             'nullDunder' => [
                 '__class' => null,
                 'class' => AttachableBehavior::class,
