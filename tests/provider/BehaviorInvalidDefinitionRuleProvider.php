@@ -182,6 +182,16 @@ final class BehaviorInvalidDefinitionRuleProvider
                     NotAttachableObject::class,
                 ),
             ],
+            [
+                'ProtectedAttachObject::class,',
+                '-5 =>',
+                self::classMessage(
+                    '#-4',
+                    $owner,
+                    'attachBehaviors',
+                    ProtectedAttachObject::class,
+                ),
+            ],
         ];
     }
 

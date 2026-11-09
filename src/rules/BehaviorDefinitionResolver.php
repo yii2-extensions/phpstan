@@ -20,7 +20,6 @@ use function in_array;
 use function is_int;
 use function is_string;
 use function ltrim;
-use function max;
 use function strtolower;
 
 /**
@@ -256,8 +255,8 @@ final class BehaviorDefinitionResolver
      * Returns the entries of a definition list as `[name, line, definition]`, in list order, or `null` when the list
      * isn't certain.
      *
-     * Literal items keep their lines, with PHP's key normalization and last-duplicate semantics; other lists must be
-     * one constant array and use the given line.
+     * Literal items keep their lines, with PHP's key normalization, implicit keys (after a negative key, its successor)
+     * and last-duplicate semantics; other lists must be one constant array and use the given line.
      *
      * @return list<array{int|string, int, Expr|Type}>|null
      */
@@ -269,17 +268,18 @@ final class BehaviorDefinitionResolver
 
         $entries = [];
         $positions = [];
-        $next = 0;
+        $next = null;
 
         foreach ($list->items as $item) {
-            $key = $item->key === null ? $next : self::literalKey($scope->getNativeType($item->key));
+            $key = $item->key === null ? $next ?? 0 : self::literalKey($scope->getNativeType($item->key));
 
             if ($item->unpack || $key === null) {
                 return self::typeEntries($scope->getNativeType($list), $line);
             }
 
-            if (is_int($key)) {
-                $next = max($next, $key + 1);
+            // since PHP 8.3 the next implicit key follows the first integer key, even a negative one
+            if (is_int($key) && ($next === null || $key >= $next)) {
+                $next = $key + 1;
             }
 
             $entry = [$key, $item->getStartLine(), $item->value];

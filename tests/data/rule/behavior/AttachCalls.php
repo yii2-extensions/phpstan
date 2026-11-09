@@ -65,6 +65,12 @@ final class AttachCalls
                 NotAttachableObject::class,
             ],
         );
+        $owner->attachBehaviors(
+            [
+                -5 => AttachableBehavior::class,
+                ProtectedAttachObject::class,
+            ],
+        );
     }
 
     /**
@@ -137,6 +143,14 @@ final class AttachCalls
             [
                 'attachable' => AttachableBehavior::class,
                 'static' => StaticAttachObject::class,
+            ],
+        );
+        // since PHP 8.3 the implicit key after `-5` is `-4`, so the last item replaces the plain class
+        $owner->attachBehaviors(
+            [
+                -5 => AttachableBehavior::class,
+                PlainClass::class,
+                -4 => AttachableBehavior::class,
             ],
         );
     }

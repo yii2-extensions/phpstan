@@ -12,7 +12,14 @@ use yii\base\{Component, UnknownMethodException};
 use yii\di\Container;
 use yii2\extensions\phpstan\rules\{AttachBehaviorInvalidDefinitionRule, BehaviorsInvalidDefinitionRule};
 use yii2\extensions\phpstan\tests\provider\BehaviorDefinitionRuntimeProvider;
-use yii2\extensions\phpstan\tests\support\behavior\{BehaviorOwner, StaticAttachObject, StaticAttachOnly};
+use yii2\extensions\phpstan\tests\support\behavior\{
+    AttachableBehavior,
+    BehaviorOwner,
+    PlainClass,
+    ProtectedAttachObject,
+    StaticAttachObject,
+    StaticAttachOnly,
+};
 
 use function array_intersect_key;
 use function array_keys;
@@ -62,6 +69,38 @@ final class BehaviorDefinitionRuntimeTest extends TestCase
             $outcome,
             $actual,
             sprintf('Outcome of `%s` must match the recorded one.', $name),
+        );
+    }
+
+    public function testAttachListWhoseImplicitKeyFollowsNegativeKey(): void
+    {
+        $owner = new BehaviorOwner();
+
+        $definitions = [-5 => AttachableBehavior::class, PlainClass::class];
+
+        self::assertSame(
+            [-5, -4],
+            array_keys($definitions),
+            'Implicit key must follow the negative key.',
+        );
+
+        $definitions[-4] = AttachableBehavior::class;
+
+        $owner->attachBehaviors($definitions);
+
+        self::assertCount(
+            2,
+            $owner->getBehaviors(),
+            'Later `-4` key must replace the implicit one.',
+        );
+
+        $this->expectException(UnknownMethodException::class);
+
+        $owner->attachBehaviors(
+            [
+                -5 => AttachableBehavior::class,
+                ProtectedAttachObject::class,
+            ],
         );
     }
 
