@@ -14,6 +14,7 @@ parameters:
         component_generics:
             user: identityClass
         rules:
+            behaviorInvalidDefinition: false
             createObjectInvalidOptionType: false
             createObjectUnknownOption: false
             externalActionInvalidOptionType: false
@@ -30,6 +31,7 @@ parametersSchema:
             component_generics: schema(arrayOf(string(), string())),
             rules: structure(
                 [
+                    behaviorInvalidDefinition: bool(),
                     createObjectInvalidOptionType: bool(),
                     createObjectUnknownOption: bool(),
                     externalActionInvalidOptionType: bool(),
@@ -44,6 +46,10 @@ parametersSchema:
     )
 
 conditionalTags:
+    yii2\extensions\phpstan\rules\AttachBehaviorInvalidDefinitionRule:
+        phpstan.rules.rule: %yii2.rules.behaviorInvalidDefinition%
+    yii2\extensions\phpstan\rules\BehaviorsInvalidDefinitionRule:
+        phpstan.rules.rule: %yii2.rules.behaviorInvalidDefinition%
     yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule:
         phpstan.rules.rule: %yii2.rules.createObjectInvalidOptionType%
     yii2\extensions\phpstan\rules\CreateObjectUnknownOptionRule:
@@ -73,6 +79,10 @@ services:
     -
         class: yii2\extensions\phpstan\property\BehaviorPropertiesClassReflectionExtension
         tags: [phpstan.broker.propertiesClassReflectionExtension]
+    -
+        class: yii2\extensions\phpstan\rules\AttachBehaviorInvalidDefinitionRule
+    -
+        class: yii2\extensions\phpstan\rules\BehaviorsInvalidDefinitionRule
     -
         class: yii2\extensions\phpstan\rules\CreateObjectInvalidOptionTypeRule
     -

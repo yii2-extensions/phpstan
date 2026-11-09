@@ -34,6 +34,7 @@ parameters:
             - tests/data/rule/assignment/
             - tests/data/rule/traitproperty/
             - tests/data/rule/action/hook/
+            - tests/data/rule/behavior/
             - tests/data/rule/action/CreateActionOverrideController.php
             - tests/data/rule/action/InvalidOptionTypeActionController.php
             - tests/data/rule/action/OpenMapActionController.php
@@ -43,6 +44,7 @@ parameters:
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodNameType.php
             - tests/data/type/ActiveRecordQueryDynamicStaticMethodUnionBatchType.php
             - tests/data/type/ServiceMapDefinitionType.php
+            - tests/support/behavior/PrivateStaticAttachClass.php
             - tests/support/stub/DerivedModelBaseRecordQuery.php
             - tests/support/stub/DerivedModelDocQuery.php
             - tests/support/stub/DerivedModelFalseAllQuery.php

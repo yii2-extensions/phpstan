@@ -11,6 +11,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | --------------------------------------- | --------------------- | -------------------------------------------------------------------------------- |
 | `config_path`                           | `''`                  | PHP file to execute, relative to the process working directory or absolute.      |
 | `component_generics`                    | `user: identityClass` | Component ID to configuration key holding its single generic class argument.     |
+| `rules.behaviorInvalidDefinition`       | `false`               | Enables the [behavior definition rule](#invalid-behavior-definitions).           |
 | `rules.createObjectInvalidOptionType`   | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).           |
 | `rules.createObjectUnknownOption`       | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).             |
 | `rules.externalActionInvalidOptionType` | `false`               | Enables the [external action option type rule](#options-of-external-actions).    |
@@ -592,6 +593,64 @@ conditional or documented only by PHPDoc, and definitions that are class names, 
 controller is checked even when a subclass could replace its map. The limits of native types described for
 `Yii::createObject()` apply to maps and definitions held in variables. Changing the created class, a container
 definition, the `behaviors` of the analysis configuration, the controller or a parent controller reanalyses the method.
+
+## Invalid behavior definitions
+
+An opt-in rule reports behavior definitions that Yii can't attach, in the lists `yii\base\Component::behaviors()`
+returns and in the arguments of `attachBehavior()` and `attachBehaviors()`:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            behaviorInvalidDefinition: true
+```
+
+```php
+final class Formatter extends yii\base\BaseObject {}
+
+final class Article extends yii\base\Component
+{
+    public function behaviors(): array
+    {
+        return [
+            'timestamp' => yii\behaviors\TimestampBehavior::class, // valid
+            'formatter' => Formatter::class,                        // reported
+        ];
+    }
+
+    public function init(): void
+    {
+        parent::init();
+
+        $this->attachBehavior('settings', ['enabled' => true]); // reported: no class element
+    }
+}
+```
+
+Yii passes each definition that isn't a `yii\base\Behavior` instance to `Yii::createObject()` and calls `attach()` on
+the result without checking its type. The rule reports, with the identifier `yii2.behavior.invalidDefinition`:
+
+- a class name or configuration array whose class, after the container definitions, aliases and `Instance` references of
+  the analysis configuration, is a concrete class that is not a `yii\base\Behavior`, has no public `attach()` method and
+  no `__call()` other than the one `yii\base\BaseObject` declares, which always throws;
+- a configuration array without a non-null `__class` or `class` element that Yii can't call as a callable. In
+  `behaviors()` this is reported only when the method's declared return type accepts the array, since Yii's own
+  declaration already makes PHPStan report it.
+
+`__class` takes precedence over `class`, as in `Yii::createObject()`. A class that isn't a behavior but declares a
+public `attach()`, static or not, is attached by Yii and is not reported; a missing `detach()` fails only on a later
+replacement or detach.
+
+Literal list items are reported at their own line, `attachBehavior()` definitions at the argument line, and lists that
+native types prove constant at the line of `return` or of the call. The message names the behavior, the owner or
+receiver, the method, and the defined and resolved classes.
+
+The rule stands aside for container factories, singletons, closures, invocable objects, callable arrays, class names
+unknown to the analysis, abstract classes and interfaces without a binding, `yii\base\Component` results, unions and
+other values that are not one constant, unpacked, merged or dynamic lists, `behaviors()` declared in a trait or returned
+from a closure, owners that override `ensureBehaviors()`, and receivers that override the attach method. Changing a
+container definition or the declaration of the resolved class or one of its parents reanalyses the affected file.
 
 ## Constants and result cache
 
