@@ -75,7 +75,6 @@ final class BehaviorDefinitionRuntimeTest extends TestCase
         );
         $owner->attachBehavior(
             'staticOnly',
-            'staticOnly',
             StaticAttachOnly::class,
         );
 

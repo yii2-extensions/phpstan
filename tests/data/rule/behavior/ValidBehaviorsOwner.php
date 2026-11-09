@@ -47,8 +47,9 @@ final class ValidBehaviorsOwner extends Component
             'containerId' => 'attachableBehaviorId',
             'contract' => BehaviorContract::class,
             'dunder' => ['__class' => StaticAttachObject::class],
-            'duplicate' => AttachableBehavior::class,
+            // PHP keeps the last value of a duplicate key: the attachable class must come last
             'duplicate' => NotAttachableObject::class,
+            'duplicate' => AttachableBehavior::class,
             'instance' => new AttachableBehavior(),
             'instanceAlias' => 'instanceAlias',
             'invokable' => new InvokableFactory(),

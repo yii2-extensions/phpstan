@@ -29,6 +29,7 @@ use yii2\extensions\phpstan\tests\support\behavior\{
     ProtectedStaticAttachObject,
 };
 
+use function array_slice;
 use function sprintf;
 
 /**
@@ -62,8 +63,8 @@ final class BehaviorInvalidDefinitionRuleProvider
 
         return [
             [
-                "'notAttachable'",
-                null,
+                'NotAttachableObject::class,',
+                "'notAttachable',",
                 self::classMessage(
                     "'notAttachable'",
                     $owner,
@@ -72,8 +73,8 @@ final class BehaviorInvalidDefinitionRuleProvider
                 ),
             ],
             [
-                "'mappedAway'",
-                null,
+                'MappedAwayBehavior::class,',
+                "'mappedAway',",
                 self::resolvedMessage(
                     "'mappedAway'",
                     $owner,
@@ -83,8 +84,8 @@ final class BehaviorInvalidDefinitionRuleProvider
                 ),
             ],
             [
-                "'noClass'",
-                null,
+                "['label' => 'value'],",
+                "'noClass',",
                 self::arrayMessage(
                     "'noClass'",
                     $owner,
@@ -92,8 +93,8 @@ final class BehaviorInvalidDefinitionRuleProvider
                 ),
             ],
             [
-                '$name, PlainClass::class',
-                null,
+                'PlainClass::class,',
+                '$name,',
                 self::classMessage(
                     'with a non-constant name',
                     $owner,
@@ -102,7 +103,7 @@ final class BehaviorInvalidDefinitionRuleProvider
                 ),
             ],
             [
-                "name: 'named'",
+                'behavior: ProtectedAttachObject::class,',
                 null,
                 self::classMessage(
                     "'named'",
@@ -112,8 +113,8 @@ final class BehaviorInvalidDefinitionRuleProvider
                 ),
             ],
             [
-                "'onComponent'",
-                null,
+                'PlainClass::class,',
+                "'onComponent',",
                 self::classMessage(
                     "'onComponent'",
                     Component::class,
@@ -162,7 +163,7 @@ final class BehaviorInvalidDefinitionRuleProvider
                 ),
             ],
             [
-                "['7' =>",
+                "'7' =>",
                 null,
                 self::classMessage(
                     '#7',
@@ -172,8 +173,8 @@ final class BehaviorInvalidDefinitionRuleProvider
                 ),
             ],
             [
-                "['7' =>",
-                null,
+                'NotAttachableObject::class,',
+                "'7' =>",
                 self::classMessage(
                     '#8',
                     $owner,
@@ -209,16 +210,16 @@ final class BehaviorInvalidDefinitionRuleProvider
         $classes = [
             'notAttachable' => NotAttachableObject::class,
             'plainClass' => PlainClass::class,
-            'protectedAttach' => ProtectedAttachObject::class,
-            'protectedStaticAttach' => ProtectedStaticAttachObject::class,
             'privateStaticAttach' => PrivateStaticAttachClass::class,
+            'protectedAttach' => ProtectedAttachObject::class,
             'protectedAttachClass' => ProtectedAttachClass::class,
+            'protectedStaticAttach' => ProtectedStaticAttachObject::class,
         ];
 
-        $expected = [];
+        $named = [];
 
         foreach ($classes as $name => $class) {
-            $expected[] = [
+            $named[] = [
                 "'{$name}' =>",
                 null,
                 self::classMessage(
@@ -230,21 +231,10 @@ final class BehaviorInvalidDefinitionRuleProvider
             ];
         }
 
+        // in the fixture's list order, which is the report order
         yield 'literal list with item lines' => [
             $owner,
             [
-                ...$expected,
-                [
-                    "'mappedAway' =>",
-                    null,
-                    self::resolvedMessage(
-                        "'mappedAway'",
-                        $owner,
-                        'behaviors',
-                        MappedAwayBehavior::class,
-                        NotAttachableObject::class,
-                    ),
-                ],
                 [
                     "'aliasChain' =>",
                     null,
@@ -254,16 +244,6 @@ final class BehaviorInvalidDefinitionRuleProvider
                         'behaviors',
                         'notAttachableAlias',
                         PlainClass::class,
-                    ),
-                ],
-                [
-                    "'leadingSlash' =>",
-                    null,
-                    self::classMessage(
-                        "'leadingSlash'",
-                        $owner,
-                        'behaviors',
-                        NotAttachableObject::class,
                     ),
                 ],
                 [
@@ -287,10 +267,51 @@ final class BehaviorInvalidDefinitionRuleProvider
                     ),
                 ],
                 [
+                    "'duplicate' => NotAttachableObject::class",
+                    null,
+                    self::classMessage(
+                        "'duplicate'",
+                        $owner,
+                        'behaviors',
+                        NotAttachableObject::class,
+                    ),
+                ],
+                [
                     "'emptyArray' =>",
                     null,
                     self::arrayMessage(
                         "'emptyArray'",
+                        $owner,
+                        'behaviors',
+                    ),
+                ],
+                [
+                    "'leadingSlash' =>",
+                    null,
+                    self::classMessage(
+                        "'leadingSlash'",
+                        $owner,
+                        'behaviors',
+                        NotAttachableObject::class,
+                    ),
+                ],
+                [
+                    "'mappedAway' =>",
+                    null,
+                    self::resolvedMessage(
+                        "'mappedAway'",
+                        $owner,
+                        'behaviors',
+                        MappedAwayBehavior::class,
+                        NotAttachableObject::class,
+                    ),
+                ],
+                $named[0],
+                [
+                    "'notCallable' =>",
+                    null,
+                    self::arrayMessage(
+                        "'notCallable'",
                         $owner,
                         'behaviors',
                     ),
@@ -304,25 +325,7 @@ final class BehaviorInvalidDefinitionRuleProvider
                         'behaviors',
                     ),
                 ],
-                [
-                    "'notCallable' =>",
-                    null,
-                    self::arrayMessage(
-                        "'notCallable'",
-                        $owner,
-                        'behaviors',
-                    ),
-                ],
-                [
-                    "'duplicate' => NotAttachableObject::class",
-                    null,
-                    self::classMessage(
-                        "'duplicate'",
-                        $owner,
-                        'behaviors',
-                        NotAttachableObject::class,
-                    ),
-                ],
+                ...array_slice($named, 1),
                 [
                     '            PlainClass::class,',
                     null,

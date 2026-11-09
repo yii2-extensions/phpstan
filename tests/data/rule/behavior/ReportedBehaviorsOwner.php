@@ -30,6 +30,7 @@ final class ReportedBehaviorsOwner extends Component
             'aliasChain' => 'notAttachableAlias',
             'configured' => ['class' => NotAttachableObject::class],
             'dunderWins' => ['__class' => PlainClass::class, 'class' => AttachableBehavior::class],
+            // PHP keeps the last value of a duplicate key: the class that Yii can't attach must come last
             'duplicate' => AttachableBehavior::class,
             'duplicate' => NotAttachableObject::class,
             'emptyArray' => [],
