@@ -22,7 +22,7 @@ use const DIRECTORY_SEPARATOR;
  *
  * {@see TraitPropertyDefinitionResultCacheIntegrationProvider} for test case data providers.
  */
-#[RequiresPhp('>= 8.5')]
+#[RequiresPhp('>= 8.5.0')]
 final class TraitPropertyDefinitionResultCacheIntegrationTest extends TestCase
 {
     use ResultCacheIntegrationTrait;

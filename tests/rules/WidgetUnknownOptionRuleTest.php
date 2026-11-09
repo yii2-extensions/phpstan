@@ -93,7 +93,7 @@ final class WidgetUnknownOptionRuleTest extends RuleTestCase
      * @phpstan-param list<array{string|null, string}> $expected
      */
     #[DataProviderExternal(TraitPropertyOptionProvider::class, 'widgetUnknownOptionProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testReportOnlyControlsWhenTraitRedeclaresInheritedProperty(
         string $fixture,
         string $method,

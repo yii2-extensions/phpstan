@@ -32,7 +32,7 @@ use function sprintf;
  *
  * {@see TraitPropertyOptionProvider} for test case data providers.
  */
-#[RequiresPhp('>= 8.5')]
+#[RequiresPhp('>= 8.5.0')]
 final class TraitPropertyOptionRuntimeTest extends TestCase
 {
     use WidgetRuntimeTrait;

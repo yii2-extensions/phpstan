@@ -11,6 +11,7 @@ Tool references:
 - [EditorConfig Checker](https://github.com/editorconfig-checker/editorconfig-checker) for EditorConfig compliance.
 - [Gitleaks](https://github.com/gitleaks/gitleaks) for secret scanning.
 - [Markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) for Markdown linting.
+- [ParaTest](https://github.com/paratestphp/paratest) for parallel PHPUnit execution.
 - [PHPStan](https://phpstan.org/) for static analysis.
 - [PHPUnit](https://phpunit.de/) for unit tests.
 - [Prettier](https://prettier.io/) for Markdown and YAML formatting checks.
@@ -98,10 +99,23 @@ Static analysis targets PHP 8.3 and runs on PHP 8.3 and 8.5 in CI, with both con
 
 ## Unit tests (PHPUnit)
 
-Run the full type inference suite. The script runs PHPUnit without a PHP memory limit.
+Run the full type inference suite. The script runs PHPUnit through ParaTest, one worker process per CPU core, without a
+PHP memory limit.
 
 ```bash
 composer tests
+```
+
+Limit the number of worker processes when needed.
+
+```bash
+composer tests -- --processes=4
+```
+
+Run a single test file with PHPUnit directly.
+
+```bash
+vendor/bin/phpunit tests/ServiceMapTest.php
 ```
 
 ## Workflow security checks
@@ -139,7 +153,7 @@ Report hosted CI execution and its PHP/OS matrix separately from these local com
 
 Composer scripts support forwarding additional arguments using `--`.
 
-Run PHPUnit with code coverage report generation.
+Run the suite with code coverage report generation.
 
 ```bash
 composer tests -- --coverage-html internal/coverage

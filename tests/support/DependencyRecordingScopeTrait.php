@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\tests\support;
 
 use PHPStan\Analyser\{DependencyTracker, Scope};
-use PHPUnit\Framework\MockObject\MockObject;
+use PHPUnit\Framework\MockObject\Stub;
 
 /**
  * Provides a {@see Scope} double whose {@see DependencyTracker} calls are recorded in call order.
@@ -25,10 +25,10 @@ trait DependencyRecordingScopeTrait
      */
     private array $trackedValues = [];
 
-    private function recordingScope(): DependencyTracker&MockObject&Scope
+    private function recordingScope(): DependencyTracker&Scope&Stub
     {
-        /** @var DependencyTracker&MockObject&Scope $scope */
-        $scope = $this->createMockForIntersectionOfInterfaces([Scope::class, DependencyTracker::class]);
+        /** @var DependencyTracker&Scope&Stub $scope */
+        $scope = self::createStubForIntersectionOfInterfaces([Scope::class, DependencyTracker::class]);
 
         $scope
             ->method('trackClassDependency')

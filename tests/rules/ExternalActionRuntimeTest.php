@@ -28,7 +28,7 @@ final class ExternalActionRuntimeTest extends TestCase
 {
     use ExternalActionRuntimeTrait;
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testAssignOptionToBehaviorAttachedByIdOrControllerHook(): void
     {
         $this->assertBehaviorReceivesOption(
@@ -37,7 +37,7 @@ final class ExternalActionRuntimeTest extends TestCase
         );
     }
 
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testAssignOptionToBehaviorAttachedByTraitHook(): void
     {
         $this->assertBehaviorReceivesOption(
@@ -67,7 +67,7 @@ final class ExternalActionRuntimeTest extends TestCase
      * @phpstan-param non-empty-string|null $message
      */
     #[DataProviderExternal(ExternalActionRuntimeProvider::class, 'hookProvider')]
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testCreateHookedActionWithRecordedOutcome(
         string $controller,
         string $actionId,
@@ -83,7 +83,7 @@ final class ExternalActionRuntimeTest extends TestCase
      * @phpstan-param non-empty-string|null $message
      */
     #[DataProviderExternal(ExternalActionRuntimeProvider::class, 'traitHookProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testCreateTraitHookedActionWithRecordedOutcome(
         string $controller,
         string $actionId,

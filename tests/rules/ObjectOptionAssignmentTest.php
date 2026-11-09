@@ -61,7 +61,7 @@ final class ObjectOptionAssignmentTest extends PHPStanTestCase
      * @phpstan-param class-string $className
      */
     #[DataProviderExternal(ObjectOptionAssignmentProvider::class, 'traitRedeclarationProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testDetectTraitRedeclarationWithOtherModifiers(string $className, string $name, bool $expected): void
     {
         self::assertRedeclaration(
@@ -75,7 +75,7 @@ final class ObjectOptionAssignmentTest extends PHPStanTestCase
      * @phpstan-param array{string, string}|null $expected
      */
     #[DataProviderExternal(ObjectOptionAssignmentProvider::class, 'hookedTargetProvider')]
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testReturnNoTypeTargetForHookedOrAsymmetricVisibilityProperties(
         string $className,
         string $name,
@@ -95,7 +95,7 @@ final class ObjectOptionAssignmentTest extends PHPStanTestCase
      * @phpstan-param array{string, string}|null $expected
      */
     #[DataProviderExternal(ObjectOptionAssignmentProvider::class, 'traitTargetProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testReturnNoTypeTargetForPropertiesTraitsRedeclareDifferently(
         string $className,
         string $name,
@@ -130,7 +130,7 @@ final class ObjectOptionAssignmentTest extends PHPStanTestCase
      * @phpstan-param list<string> $expected
      */
     #[DataProviderExternal(ObjectOptionAssignmentProvider::class, 'hookedUnknownOptionProvider')]
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testReturnOnlyOptionsTheClassCannotAssignWithHooksOrAsymmetricVisibility(
         string $className,
         array $names,
@@ -149,7 +149,7 @@ final class ObjectOptionAssignmentTest extends PHPStanTestCase
      * @phpstan-param list<string> $expected
      */
     #[DataProviderExternal(ObjectOptionAssignmentProvider::class, 'traitUnknownOptionProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testReturnOnlyOptionsTheClassCannotAssignWithTraitRedeclarations(
         string $className,
         array $names,
