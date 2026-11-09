@@ -34,6 +34,7 @@ final class BehaviorDefinitionRuntimeProvider
             }
         }
     }
+
     /**
      * Recorded outcomes by fixture owner and behavior name.
      *

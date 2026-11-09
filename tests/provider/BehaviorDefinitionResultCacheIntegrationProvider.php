@@ -27,6 +27,7 @@ final class BehaviorDefinitionResultCacheIntegrationProvider
             [],
         ];
     }
+
     /**
      * @phpstan-return iterable<string, array{string, string, list<'bound'|'duck'|'leaf'>, list<'bound'|'duck'|'leaf'>}>
      */
