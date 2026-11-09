@@ -24,6 +24,7 @@ jobs:
       composer-command: require yiisoft/yii2:22.0.x-dev
       concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
       php-version: '["8.3","8.4","8.5"]'
+      phpunit-path: vendor/bin/paratest
 
   phpunit-compatibility:
     uses: yii2-framework/actions/.github/workflows/phpunit.yml@f0e06ea5cc965cff4431177d448add7b7c98668b # v2.0.1
@@ -35,3 +36,4 @@ jobs:
         phpunit-compatibility-${{ github.workflow }}-${{ github.ref }}
       extensions: intl
       php-version: '["8.3","8.4","8.5"]'
+      phpunit-path: vendor/bin/paratest

@@ -10,6 +10,10 @@
   failOnWarning="true"
   stopOnFailure="false"
 >
+  <php>
+    <ini name="memory_limit" value="-1" />
+  </php>
+
   <testsuites>
     <testsuite name="PHPStan">
       <directory>tests</directory>

@@ -123,7 +123,7 @@ final class ExternalActionResultCacheIntegrationTest extends TestCase
         );
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testStandAsideWhenActionStartsHookingId(): void
     {
         $this->writeFile(

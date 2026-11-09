@@ -58,7 +58,7 @@ final class ExternalActionInvalidOptionTypeRuleTest extends RuleTestCase
      * @phpstan-param list<array{string|null, string|null, string}> $expected
      */
     #[DataProviderExternal(TraitPropertyOptionProvider::class, 'externalActionInvalidOptionTypeProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testReportOnlyControlsWhenTraitRedeclaresInheritedProperty(string $controller, array $expected): void
     {
         $this->assertControllerDiagnostics($controller, $expected);
@@ -120,7 +120,7 @@ final class ExternalActionInvalidOptionTypeRuleTest extends RuleTestCase
         );
     }
 
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testStandAsideWhenIdIsHookedThroughTrait(): void
     {
         self::assertSame(
@@ -130,7 +130,7 @@ final class ExternalActionInvalidOptionTypeRuleTest extends RuleTestCase
         );
     }
 
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testStandAsideWhenIdOrControllerIsHooked(): void
     {
         self::assertSame(

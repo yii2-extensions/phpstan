@@ -139,7 +139,7 @@ final class CreateObjectInvalidOptionTypeRuleTest extends RuleTestCase
      * @phpstan-param list<array{string|null, string}> $expected
      */
     #[DataProviderExternal(TraitPropertyOptionProvider::class, 'createObjectInvalidOptionTypeProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testReportOnlyControlsWhenTraitRedeclaresInheritedProperty(
         string $fixture,
         string $method,

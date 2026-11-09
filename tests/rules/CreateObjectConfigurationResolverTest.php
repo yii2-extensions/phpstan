@@ -177,7 +177,7 @@ final class CreateObjectConfigurationResolverTest extends PHPStanTestCase
      * @phpstan-param array{string, list<array{string, int, string}>}|null $expected
      */
     #[DataProviderExternal(CreateObjectConfigurationResolverProvider::class, 'traitActionProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testResolveExternalActionDefinitionsOnTraitRedeclaredProperties(
         array $options,
         array|null $expected,
@@ -195,7 +195,7 @@ final class CreateObjectConfigurationResolverTest extends PHPStanTestCase
      * @phpstan-param array{string, list<array{string, int, string}>}|null $expected
      */
     #[DataProviderExternal(CreateObjectConfigurationResolverProvider::class, 'traitDefinitionProvider')]
-    #[RequiresPhp('>= 8.5')]
+    #[RequiresPhp('>= 8.5.0')]
     public function testResolveNoDefinitionThatSetsATraitRedeclaredProperty(array $options, array|null $expected): void
     {
         $this->assertResolved(
@@ -210,7 +210,7 @@ final class CreateObjectConfigurationResolverTest extends PHPStanTestCase
      * @phpstan-param array{string, list<array{string, int, string}>}|null $expected
      */
     #[DataProviderExternal(CreateObjectConfigurationResolverProvider::class, 'hookedActionProvider')]
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testResolveNoExternalActionWithHookedIdOrController(array $options, array|null $expected): void
     {
         $this->assertResolved(
@@ -226,7 +226,7 @@ final class CreateObjectConfigurationResolverTest extends PHPStanTestCase
      * @phpstan-param array{string, list<array{string, int, string}>}|null $expected
      */
     #[DataProviderExternal(CreateObjectConfigurationResolverProvider::class, 'hookedDefinitionProvider')]
-    #[RequiresPhp('>= 8.4')]
+    #[RequiresPhp('>= 8.4.0')]
     public function testResolveOnlyDefinitionsWhoseOptionsAreTrulyPlainProperties(
         array $options,
         array|null $expected,
