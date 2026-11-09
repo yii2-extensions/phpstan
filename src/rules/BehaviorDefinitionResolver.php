@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\rules;
 
+use ArrayAccess;
+use Closure;
 use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\{Array_, MethodCall};
+use PhpParser\Node\Expr\{Array_, MethodCall, StaticCall};
 use PhpParser\Node\Identifier;
 use PhpParser\Node\Stmt\Return_;
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{ClassReflection, MethodReflection, ReflectionProvider};
 use PHPStan\Type\Constant\ConstantArrayType;
-use PHPStan\Type\{Type, VerbosityLevel};
+use PHPStan\Type\{ObjectType, Type, VerbosityLevel};
 use yii\base\{BaseObject, Behavior, Component};
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 
@@ -20,11 +22,12 @@ use function in_array;
 use function is_int;
 use function is_string;
 use function ltrim;
+use function str_starts_with;
 use function strtolower;
 
 /**
- * Finds behavior definitions that {@see Component} can't attach, in `behaviors()` returns and in `attachBehavior()` and
- * `attachBehaviors()` arguments.
+ * Finds behavior definitions that {@see Component} can't attach, in `behaviors()` returns, in `attachBehavior()` and
+ * `attachBehaviors()` arguments, and in the `as` options of `Yii::createObject()` configurations.
  *
  * Yii passes each definition that isn't a {@see Behavior} instance to `Yii::createObject()` and calls `attach()` on the
  * result without a type check. A definition is reported only when that is certain to fail:
@@ -39,6 +42,14 @@ use function strtolower;
  * types, at the return or argument line. Container factories, singletons, unknown classes, closures, invocable objects,
  * callable arrays, unions, unpacked or dynamic lists, abstract classes, interfaces and {@see Component} results stand
  * aside, as do owners overriding `ensureBehaviors()` and receivers overriding the attach method.
+ *
+ * `as` options reach `Component::__set()`, which checks the supplied value before the container resolves it: it accepts
+ * only a {@see Behavior} instance, a `Closure`, or a class name or configuration class (a non-null `__class` wins over
+ * `class`) that is a strict subclass of {@see Behavior}. An option is reported only for a configuration that
+ * {@see CreateObjectConfigurationResolver::resolve()} proves, on a component that inherits `__set()` from
+ * {@see Component}, when that check certainly fails for a class known to the analysis, a configuration array or a
+ * value that is neither, or when the container resolves an accepted class to a concrete class that is neither a
+ * {@see Behavior} nor invocable and the component inherits `attachBehavior()` from {@see Component}.
  */
 final class BehaviorDefinitionResolver
 {
@@ -46,6 +57,15 @@ final class BehaviorDefinitionResolver
      * Methods whose arguments the resolver reads, in lower case, with the parameter that holds the definitions.
      */
     private const array ATTACH_METHODS = ['attachbehavior' => 'behavior', 'attachbehaviors' => 'behaviors'];
+    /**
+     * Option name prefix with which `Component::__set()` attaches a behavior.
+     */
+    private const string BEHAVIOR_PREFIX = 'as ';
+
+    /**
+     * Resolves the `Yii::createObject()` configurations whose assignment path is certain.
+     */
+    private readonly CreateObjectConfigurationResolver $configurationResolver;
 
     /**
      * @param ReflectionProvider $reflectionProvider Provides class reflection for owners and resolved classes.
@@ -54,7 +74,9 @@ final class BehaviorDefinitionResolver
     public function __construct(
         private readonly ReflectionProvider $reflectionProvider,
         private readonly ServiceMap $serviceMap,
-    ) {}
+    ) {
+        $this->configurationResolver = new CreateObjectConfigurationResolver($reflectionProvider, $serviceMap);
+    }
 
     /**
      * Returns the definitions of an `attachBehavior()` or `attachBehaviors()` call that can't be attached.
@@ -176,6 +198,58 @@ final class BehaviorDefinitionResolver
     }
 
     /**
+     * Returns the `as` options of a `Yii::createObject()` call that the created component rejects or can't attach, in
+     * configuration order.
+     *
+     * Records the dependencies of {@see CreateObjectConfigurationResolver::resolve()}, the class dependency of each
+     * named class and, for an accepted class, the `construction:<id>` value dependency and the class dependency of its
+     * container result.
+     *
+     * @param StaticCall $node Static call to inspect.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return list<InvalidBehaviorAsDefinition>
+     */
+    public function resolveCreateObjectAsOptions(StaticCall $node, Scope $scope): array
+    {
+        $configuration = $this->configurationResolver->resolve($node, $scope);
+
+        if ($configuration === null) {
+            return [];
+        }
+
+        $owner = $configuration->classReflection;
+
+        if (self::isDeclaredByComponent($owner, '__set') === false) {
+            return [];
+        }
+
+        $invalid = [];
+
+        foreach ($configuration->options as [$option, $line, $value]) {
+            if (str_starts_with($option, self::BEHAVIOR_PREFIX) === false) {
+                continue;
+            }
+
+            $type = $value instanceof Expr ? $scope->getNativeType($value) : $value;
+
+            $rejection = $this->asRejection($type, $owner, $scope);
+
+            if ($rejection !== null) {
+                $invalid[] = new InvalidBehaviorAsDefinition(
+                    $configuration->calledClass,
+                    $owner->getDisplayName(),
+                    $option,
+                    $line,
+                    ...$rejection,
+                );
+            }
+        }
+
+        return $invalid;
+    }
+
+    /**
      * Returns the named arguments of a call by parameter name, or `null` when an argument is unpacked or unknown.
      *
      * @param list<string> $parameters Parameter names in declaration order.
@@ -197,6 +271,102 @@ final class BehaviorDefinitionResolver
         }
 
         return $arguments;
+    }
+
+    /**
+     * Returns the defined and resolved classes of an `as` class name or configuration class that the component
+     * rejects or can't attach, or `null` when it is accepted or not certain.
+     *
+     * `Component::__set()` rejects a class that isn't a strict subclass of {@see Behavior}, whatever the container
+     * binds it to. It passes an accepted class to `Yii::createObject()` and the result to `attachBehavior()`, which
+     * can't attach a concrete non-{@see Behavior} object without `__invoke()`.
+     *
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return array{string, string|null, null}|null
+     */
+    private function asClassRejection(string $id, ClassReflection $owner, Scope $scope): array|null
+    {
+        $className = ltrim($id, '\\');
+
+        if ($className === '') {
+            return null;
+        }
+
+        $scope->trackClassDependency($className);
+
+        // a class unknown to the analysis may still exist at runtime
+        if ($this->reflectionProvider->hasClass($className) === false) {
+            return null;
+        }
+
+        $class = $this->reflectionProvider->getClass($className);
+
+        if ($class->getName() === Behavior::class || $class->is(Behavior::class) === false) {
+            return [$class->getDisplayName(), null, null];
+        }
+
+        if (self::isDeclaredByComponent($owner, 'attachBehavior') === false) {
+            return null;
+        }
+
+        $resolved = $this->resolvedClass($id, $scope);
+
+        return $resolved !== null
+            && $resolved->isClass()
+            && $resolved->isAbstract() === false
+            && $resolved->is(Behavior::class) === false
+            && $resolved->hasNativeMethod('__invoke') === false
+            ? [$class->getDisplayName(), $resolved->getDisplayName(), null]
+            : null;
+    }
+
+    /**
+     * Returns the defined class, resolved class and value description of an `as` value that the component rejects or
+     * can't attach, or `null` when it is accepted or not certain.
+     *
+     * Follows `Component::__set()`: a {@see Behavior} instance or a `Closure` is accepted, a configuration array is
+     * checked by its non-null `__class`, else `class`, element, and any other value except a string is rejected.
+     *
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return array{string|null, string|null, string|null}|null
+     */
+    private function asRejection(Type $type, ClassReflection $owner, Scope $scope): array|null
+    {
+        foreach ($type->getReferencedClasses() as $className) {
+            $scope->trackClassDependency($className);
+        }
+
+        if ($type->isObject()->no() === false) {
+            // a possible `ArrayAccess` object may pass the class element check
+            return $type->isObject()->yes()
+                && (new ObjectType(Behavior::class))->isSuperTypeOf($type)->no()
+                && (new ObjectType(Closure::class))->isSuperTypeOf($type)->no()
+                && (new ObjectType(ArrayAccess::class))->isSuperTypeOf($type)->no()
+                ? [null, null, $type->describe(VerbosityLevel::typeOnly())]
+                : null;
+        }
+
+        $id = ObjectConfigurationReader::constantString($type);
+
+        if ($id === null) {
+            $array = ObjectConfigurationReader::constantArray($type);
+
+            if ($array === null) {
+                return $type->isString()->no() && $type->isArray()->no()
+                    ? [null, null, $type->describe(VerbosityLevel::typeOnly())]
+                    : null;
+            }
+
+            $id = self::configurationClass($array);
+
+            if ($id === false) {
+                return [null, null, null];
+            }
+        }
+
+        return $id === null ? null : $this->asClassRejection($id, $owner, $scope);
     }
 
     /**

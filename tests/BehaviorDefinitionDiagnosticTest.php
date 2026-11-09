@@ -6,7 +6,11 @@ namespace yii2\extensions\phpstan\tests;
 
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
-use yii2\extensions\phpstan\rules\{AttachBehaviorInvalidDefinitionRule, BehaviorsInvalidDefinitionRule};
+use yii2\extensions\phpstan\rules\{
+    AttachBehaviorInvalidDefinitionRule,
+    BehaviorsInvalidDefinitionRule,
+    CreateObjectInvalidAsDefinitionRule,
+};
 use yii2\extensions\phpstan\tests\provider\BehaviorDefinitionDiagnosticProvider;
 use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
@@ -15,8 +19,9 @@ use function dirname;
 use const DIRECTORY_SEPARATOR;
 
 /**
- * Integration tests for the switch of {@see BehaviorsInvalidDefinitionRule} and
- * {@see AttachBehaviorInvalidDefinitionRule} beside native diagnostics in a real PHPStan run.
+ * Integration tests for the switches of {@see BehaviorsInvalidDefinitionRule},
+ * {@see AttachBehaviorInvalidDefinitionRule} and {@see CreateObjectInvalidAsDefinitionRule} beside native diagnostics
+ * in a real PHPStan run.
  *
  * {@see BehaviorDefinitionDiagnosticProvider} for test case data providers.
  */
@@ -81,6 +86,25 @@ final class BehaviorDefinitionDiagnosticTest extends TestCase
         $this->writeFile(
             'project/src/Plain.php',
             "<?php\n\ndeclare(strict_types=1);\n\nnamespace Probe;\n\nfinal class Plain extends \\yii\\base\\BaseObject {}\n",
+        );
+        $this->writeFile(
+            'project/src/Factory.php',
+            <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Probe;
+
+            final class Factory
+            {
+                public function create(): object
+                {
+                    return \yii\BaseYii::createObject(['class' => Owner::class, 'as plain' => Plain::class]);
+                }
+            }
+
+            PHP,
         );
         $this->writeFile(
             'project/src/Owner.php',

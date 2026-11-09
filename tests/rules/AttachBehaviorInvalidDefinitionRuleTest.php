@@ -25,6 +25,11 @@ final class AttachBehaviorInvalidDefinitionRuleTest extends RuleTestCase
 {
     use BehaviorRuleTestTrait;
 
+    /**
+     * Error identifier reported by the rule.
+     */
+    private const string IDENTIFIER = 'yii2.behavior.invalidDefinition';
+
     public static function getAdditionalConfigFiles(): array
     {
         return [dirname(__DIR__) . '/support/extension-behavior-definition-test.neon'];

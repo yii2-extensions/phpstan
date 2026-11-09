@@ -7,9 +7,7 @@ namespace yii2\extensions\phpstan\tests\rules;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 use Throwable;
-use Yii;
 use yii\base\{Component, UnknownMethodException};
-use yii\di\Container;
 use yii2\extensions\phpstan\rules\{AttachBehaviorInvalidDefinitionRule, BehaviorsInvalidDefinitionRule};
 use yii2\extensions\phpstan\tests\provider\BehaviorDefinitionRuntimeProvider;
 use yii2\extensions\phpstan\tests\support\behavior\{
@@ -20,11 +18,10 @@ use yii2\extensions\phpstan\tests\support\behavior\{
     StaticAttachObject,
     StaticAttachOnly,
 };
+use yii2\extensions\phpstan\tests\support\BehaviorContainerTrait;
 
 use function array_intersect_key;
 use function array_keys;
-use function dirname;
-use function is_array;
 use function is_subclass_of;
 use function sprintf;
 
@@ -36,10 +33,7 @@ use function sprintf;
  */
 final class BehaviorDefinitionRuntimeTest extends TestCase
 {
-    /**
-     * Container in place before the test, restored afterwards.
-     */
-    private Container|null $previousContainer = null;
+    use BehaviorContainerTrait;
 
     /**
      * @phpstan-param class-string $owner
@@ -137,42 +131,6 @@ final class BehaviorDefinitionRuntimeTest extends TestCase
                 sprintf('Every entry of `%s` must have a recorded outcome.', $owner),
             );
         }
-    }
-
-    protected function setUp(): void
-    {
-        $config = require dirname(__DIR__) . '/config/behavior-definition-config.php';
-
-        self::assertTrue(
-            is_array($config) && is_array($config['container'] ?? null),
-            'Analysis configuration must hold a container section.',
-        );
-
-        $definitions = $config['container']['definitions'] ?? [];
-        $singletons = $config['container']['singletons'] ?? [];
-
-        self::assertTrue(
-            is_array($definitions) && is_array($singletons),
-            'Container definitions and singletons must be arrays.',
-        );
-
-        $container = new Container();
-
-        $container->setDefinitions($definitions);
-        $container->setSingletons($singletons);
-
-        $this->previousContainer = Yii::$container;
-
-        Yii::$container = $container;
-    }
-
-    protected function tearDown(): void
-    {
-        if ($this->previousContainer !== null) {
-            Yii::$container = $this->previousContainer;
-        }
-
-        $this->previousContainer = null;
     }
 
     /**

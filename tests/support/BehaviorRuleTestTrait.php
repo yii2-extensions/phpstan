@@ -11,6 +11,8 @@ use function implode;
 
 /**
  * Provides the diagnostic assertions of the behavior definition rule tests, analysing each fixture once per test class.
+ *
+ * The using class declares the reported identifier as `IDENTIFIER`.
  */
 trait BehaviorRuleTestTrait
 {
@@ -48,7 +50,7 @@ trait BehaviorRuleTestTrait
         foreach ($expected as [$needle, $start, $message]) {
             $expectedDiagnostics[] = [
                 BehaviorFixture::line($class, $method, $needle, $start),
-                'yii2.behavior.invalidDefinition',
+                self::IDENTIFIER,
                 $message,
             ];
         }
