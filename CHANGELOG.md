@@ -43,6 +43,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add opt-in `yii2.behavior.invalidDefinition` rule for `behaviors()` and `attachBehavior()` definitions Yii can't attach.
 - feat: add opt-in `yii2.behavior.invalidAsDefinition` rule for `as` behavior options of `Yii::createObject()` that Yii rejects.
 - build: run the test suite in parallel with `ParaTest` on `PHPUnit` `^12.5`.
+- feat: add opt-in `yii2.behavior.unknownOption` rule for behavior configuration options that the created behavior class cannot assign.
 
 ## 0.5.2 October 23, 2026
 
