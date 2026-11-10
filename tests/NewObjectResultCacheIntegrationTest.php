@@ -310,7 +310,6 @@ final class NewObjectResultCacheIntegrationTest extends TestCase
      */
     private function runSequence(array $before, array $after, int $reanalysed, callable $change): void
     {
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(

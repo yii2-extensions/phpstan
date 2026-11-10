@@ -330,7 +330,6 @@ final class CreateObjectConstructorArgumentResultCacheIntegrationTest extends Te
      */
     private function runSequence(array $before, array $after, int $reanalysed, callable $change): void
     {
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
