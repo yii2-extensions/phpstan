@@ -23,8 +23,6 @@ use yii2\extensions\phpstan\tests\support\createobject\{
     UnresolvedTarget,
 };
 
-use function random_int;
-
 /**
  * Data provider for {@see \yii2\extensions\phpstan\tests\rules\CreateObjectUnknownOptionRuntimeTest} test cases.
  */
@@ -357,17 +355,18 @@ final class CreateObjectUnknownOptionRuntimeProvider
             Target::class,
             '1',
         ];
-        yield 'union of one shape' => [
-            static function (): object {
-                $config = random_int(0, 1) === 1
-                    ? Options::CONFIG
-                    : [
-                        'class' => Target::class,
-                        'colour' => 'same keys, other value',
-                    ];
-
-                return Yii::createObject($config);
-            },
+        yield 'union of one shape, constant member' => [
+            static fn(): object => Yii::createObject(Options::CONFIG),
+            Target::class,
+            'colour',
+        ];
+        yield 'union of one shape, literal member' => [
+            static fn(): object => Yii::createObject(
+                [
+                    'class' => Target::class,
+                    'colour' => 'same keys, other value',
+                ],
+            ),
             Target::class,
             'colour',
         ];

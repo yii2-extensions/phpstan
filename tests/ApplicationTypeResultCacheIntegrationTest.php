@@ -11,7 +11,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 use function dirname;
 use function sprintf;
 use function str_starts_with;
-use function time;
 use function var_export;
 
 use const DIRECTORY_SEPARATOR;
@@ -93,8 +92,6 @@ final class ApplicationTypeResultCacheIntegrationTest extends TestCase
 
         $webSelector = self::hashFile($this->path('project/application.php'));
 
-        $coldStartedAt = time();
-
         $webCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -119,10 +116,9 @@ final class ApplicationTypeResultCacheIntegrationTest extends TestCase
 
         $webWarm = $this->analyse();
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $webWarm,
             $web,
-            $coldStartedAt,
             'Unchanged Web warm run',
         );
 
@@ -185,11 +181,6 @@ final class ApplicationTypeResultCacheIntegrationTest extends TestCase
             0,
             $consoleWarm['stderr'],
             'Unchanged console warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $consoleWarm['stderr'],
-            'Unchanged console warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $console,

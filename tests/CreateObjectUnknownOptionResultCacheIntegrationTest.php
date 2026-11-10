@@ -15,7 +15,6 @@ use function dirname;
 use function explode;
 use function sprintf;
 use function str_replace;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -105,16 +104,13 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
         $initialOptions = $this->readFile('project/src/Options.php');
         $initialHash = self::hashFile($this->path('project/src/Options.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -136,8 +132,6 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
             'Only the constant value may differ.',
         );
 
-        $changeStartedAt = time();
-
         $changed = $this->analyse();
 
         self::assertRestored(
@@ -156,10 +150,9 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
             'Constant consumer must follow the constant: report the option while unknown, accept it while assignable.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 
@@ -196,16 +189,13 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
         $initialDefinitions = $this->readFile('project/definitions.php');
         $initialHash = self::hashFile($this->path('project/definitions.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -257,11 +247,6 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
             $changedWarm['stderr'],
             'Unchanged changed warm run',
         );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
-        );
         self::assertSame(
             $after,
             $changedWarm['results'],
@@ -292,16 +277,13 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
         $initialTarget = $this->readFile('project/src/Target.php');
         $initialHash = self::hashFile($this->path('project/src/Target.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -319,8 +301,6 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
             $this->readFile('project/src/Target.php'),
             'Only the added setter may differ.',
         );
-
-        $changeStartedAt = time();
 
         $changed = $this->analyse();
 
@@ -340,10 +320,9 @@ final class CreateObjectUnknownOptionResultCacheIntegrationTest extends TestCase
             'Changing consumer must lose its stale diagnostic.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 

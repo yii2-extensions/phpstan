@@ -16,7 +16,6 @@ use function count;
 use function dirname;
 use function explode;
 use function is_file;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -77,8 +76,6 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
             'Change must alter the expected diagnostics.',
         );
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -96,10 +93,9 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
             $initialCold['results'],
             'Initial run must report the initial results.',
         );
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -119,8 +115,6 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
             'Only one line of the declaration may differ.',
         );
 
-        $changeStartedAt = time();
-
         $changedRun = $this->analyse();
 
         self::assertRestored(
@@ -138,10 +132,9 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
             $changedRun['results'],
             'Consumers must follow the changed native type.',
         );
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 

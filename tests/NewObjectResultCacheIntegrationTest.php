@@ -15,7 +15,6 @@ use function array_values;
 use function dirname;
 use function implode;
 use function sort;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -311,7 +310,6 @@ final class NewObjectResultCacheIntegrationTest extends TestCase
      */
     private function runSequence(array $before, array $after, int $reanalysed, callable $change): void
     {
-        $coldStartedAt = time();
 
         $initialCold = $this->analyse();
 
@@ -331,16 +329,13 @@ final class NewObjectResultCacheIntegrationTest extends TestCase
             'Initial run must report the initial results.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
         $change();
-
-        $changeStartedAt = time();
 
         $changed = $this->analyse();
 
@@ -355,10 +350,9 @@ final class NewObjectResultCacheIntegrationTest extends TestCase
             'Consumers must report only what the changed declarations and bindings prove.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 

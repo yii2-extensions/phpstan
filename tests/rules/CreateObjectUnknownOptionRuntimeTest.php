@@ -32,10 +32,10 @@ final class CreateObjectUnknownOptionRuntimeTest extends TestCase
     #[DataProviderExternal(CreateObjectUnknownOptionRuntimeProvider::class, 'validOptionProvider')]
     public function testCreateObjectWithValidOptions(Closure $create, string $class): void
     {
-        self::assertInstanceOf(
+        self::assertSame(
             $class,
-            $create(),
-            'Every option must be assigned.',
+            $create()::class,
+            'Yii must create the class without rejecting any option.',
         );
     }
 

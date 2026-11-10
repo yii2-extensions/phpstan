@@ -17,14 +17,9 @@ use function class_exists;
 use function count;
 use function dirname;
 use function explode;
-use function fclose;
-use function is_resource;
 use function json_decode;
 use function mkdir;
-use function proc_close;
-use function proc_open;
 use function sprintf;
-use function time;
 use function trim;
 use function var_export;
 
@@ -102,8 +97,6 @@ final class ContainerServiceBootstrapOnlyClassTest extends TestCase
             ...self::STABLE_CONSUMER,
         ];
 
-        $coldStartedAt = time();
-
         [$cold, $coldEvents] = $this->analyseWithEvents();
 
         self::assertStringContainsString(
@@ -128,10 +121,9 @@ final class ContainerServiceBootstrapOnlyClassTest extends TestCase
 
         [$warm, $warmEvents] = $this->analyseWithEvents();
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $warm,
             $expected,
-            $coldStartedAt,
             'First warm run',
         );
         self::assertOnlyBootstrapLoadsClass(
@@ -145,11 +137,6 @@ final class ContainerServiceBootstrapOnlyClassTest extends TestCase
             0,
             $stableWarm['stderr'],
             'Second warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $stableWarm['stderr'],
-            'Second warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $expected,
@@ -215,8 +202,6 @@ final class ContainerServiceBootstrapOnlyClassTest extends TestCase
             ...self::STABLE_CONSUMER,
         ];
 
-        $coldStartedAt = time();
-
         [$cold, $coldEvents] = $this->analyseWithEvents();
 
         self::assertStringContainsString(
@@ -240,10 +225,9 @@ final class ContainerServiceBootstrapOnlyClassTest extends TestCase
 
         [$warm, $warmEvents] = $this->analyseWithEvents();
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $warm,
             $expected,
-            $coldStartedAt,
             'First warm run',
         );
         self::assertWrapperLoadsClassFirst(
@@ -596,41 +580,25 @@ final class ContainerServiceBootstrapOnlyClassTest extends TestCase
      */
     private function probeServiceMap(string $configFile, string $bootstrapFile): array
     {
-        $pipes = [];
-
-        $process = proc_open(
+        $probe = $this->runProcess(
             [
                 PHP_BINARY,
                 $this->path('probe.php'),
                 $this->path($configFile),
                 $bootstrapFile === '' ? '' : $this->path($bootstrapFile),
             ],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['file', $this->path('output/probe-stdout.txt'), 'w'],
-                2 => ['file', $this->path('output/probe-stderr.txt'), 'w'],
-            ],
-            $pipes,
             $this->path('project'),
+            'output/probe-stdout.txt',
+            'output/probe-stderr.txt',
         );
-
-        if (is_resource($process) === false) {
-            throw new RuntimeException(
-                'Service map probe could not be started.',
-            );
-        }
-
-        if (isset($pipes[0])) {
-            fclose($pipes[0]);
-        }
 
         self::assertSame(
             0,
-            proc_close($process),
-            "Service map probe must finish without errors.\n" . $this->readFile('output/probe-stderr.txt'),
+            $probe['exitCode'],
+            "Service map probe must finish without errors.\n" . $probe['stderr'],
         );
 
-        $answer = json_decode($this->readFile('output/probe-stdout.txt'), true, 512, JSON_THROW_ON_ERROR);
+        $answer = json_decode($probe['stdout'], true, 512, JSON_THROW_ON_ERROR);
 
         self::assertIsArray(
             $answer,

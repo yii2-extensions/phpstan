@@ -12,7 +12,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
 use function dirname;
 use function sort;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -55,8 +54,6 @@ final class TraitPropertyDefinitionResultCacheIntegrationTest extends TestCase
 
         $stableInputs = $this->inputHashes(self::stableInputs());
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -70,16 +67,13 @@ final class TraitPropertyDefinitionResultCacheIntegrationTest extends TestCase
             'Initial run must report the initial results.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             self::results($initialReported),
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
         $this->writeTrait($changedProperty);
-
-        $changeStartedAt = time();
 
         $changedRun = $this->analyse();
 
@@ -95,10 +89,9 @@ final class TraitPropertyDefinitionResultCacheIntegrationTest extends TestCase
             'Consumer must follow the trait declaration.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             self::results($changedReported),
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 

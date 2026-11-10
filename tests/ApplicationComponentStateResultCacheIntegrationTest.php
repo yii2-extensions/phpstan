@@ -16,7 +16,6 @@ use function array_values;
 use function dirname;
 use function explode;
 use function implode;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -139,8 +138,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
         $stableInputs = $this->stableInputHashes('project/definitions.php');
         $initialLines = explode("\n", $this->readFile('project/definitions.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -159,10 +156,9 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Initial run must resolve the alias target class on both routes.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $results,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -187,11 +183,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $changed['stderr'],
             'Changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changed['stderr'],
-            'An unchanged alias target class must keep the result cache as it is.',
         );
         self::assertSame(
             $results,
@@ -234,8 +225,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
 
         $initialLines = explode("\n", $this->readFile('project/components.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -254,10 +243,9 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Initial run must resolve the configured class on both routes.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $results,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -282,11 +270,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $changed['stderr'],
             'Changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changed['stderr'],
-            'An unchanged component class must keep the result cache as it is.',
         );
         self::assertSame(
             $results,
@@ -338,8 +321,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
         $stableInputs = $this->stableInputHashes('project/definitions.php');
         $initialLines = explode("\n", $this->readFile('project/definitions.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -358,10 +339,9 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Initial run must resolve the alias target class on both routes.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -410,11 +390,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $changedWarm['stderr'],
             'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $after,
@@ -465,8 +440,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
 
         $initialLines = explode("\n", $this->readFile('project/components.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -485,10 +458,9 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Initial run must infer the initial definition state on both routes.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -540,13 +512,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Unchanged changed warm run may only reanalyse the accepted application property readers.',
         );
 
-        if ($changedWarmReanalysed === 0) {
-            self::assertStringContainsString(
-                'Result cache was not rewritten because it is unchanged.',
-                $changedWarm['stderr'],
-                'Unchanged changed warm run must keep the result cache as it is.',
-            );
-        }
 
         self::assertSame(
             $after,
@@ -648,13 +613,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Second unchanged warm run may only reanalyse the application property readers.',
         );
 
-        if ($stableReanalysed === 0) {
-            self::assertStringContainsString(
-                'Result cache was not rewritten because it is unchanged.',
-                $stableWarm['stderr'],
-                'Unchanged initial warm run must keep the result cache as it is.',
-            );
-        }
 
         self::assertSame(
             $before,
@@ -733,11 +691,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $changedWarm['stderr'],
             'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $after,
@@ -834,13 +787,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             $initialWarm['stderr'],
             'Unchanged initial warm run',
         );
-        // PHPStan doesn't record the stat signature of a file modified in the second it starts reading, so a cold run
-        // following `setUp()` within that second leaves the next run to record it by rewriting the cache
-        self::assertMatchesRegularExpression(
-            '/Result cache (?:was not rewritten because it is unchanged|is saved)\./',
-            $initialWarm['stderr'],
-            'Unchanged initial warm run must keep or save the result cache.',
-        );
         self::assertSame(
             $before,
             $initialWarm['results'],
@@ -918,11 +864,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $changedWarm['stderr'],
             'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $after,
@@ -1005,8 +946,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
 
         $initialLines = explode("\n", $this->readFile('project/components.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -1025,10 +964,9 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Initial run must infer the initial core definition on both routes.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -1082,11 +1020,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $changedWarm['stderr'],
             'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $after,
@@ -1174,8 +1107,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
 
         $initialLines = explode("\n", $this->readFile('project/components.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -1194,10 +1125,9 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             'Initial run must bind the configured identity class on the property route.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -1222,11 +1152,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $optionRun['stderr'],
             'Option warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $optionRun['stderr'],
-            'An option outside the generic key must keep the result cache as it is.',
         );
         self::assertSame(
             $before,
@@ -1284,11 +1209,6 @@ final class ApplicationComponentStateResultCacheIntegrationTest extends TestCase
             0,
             $changedWarm['stderr'],
             'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $after,

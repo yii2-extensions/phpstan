@@ -14,7 +14,6 @@ use function array_diff;
 use function array_values;
 use function dirname;
 use function implode;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -331,7 +330,6 @@ final class CreateObjectConstructorArgumentResultCacheIntegrationTest extends Te
      */
     private function runSequence(array $before, array $after, int $reanalysed, callable $change): void
     {
-        $coldStartedAt = time();
 
         $initialCold = $this->analyse();
 
@@ -351,16 +349,13 @@ final class CreateObjectConstructorArgumentResultCacheIntegrationTest extends Te
             'Initial run must report the initial results.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
         $change();
-
-        $changeStartedAt = time();
 
         $changed = $this->analyse();
 
@@ -375,10 +370,9 @@ final class CreateObjectConstructorArgumentResultCacheIntegrationTest extends Te
             'Consumers must report only while their constructor arguments prove the assigned configuration.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 
