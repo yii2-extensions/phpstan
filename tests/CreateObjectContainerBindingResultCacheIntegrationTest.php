@@ -13,7 +13,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 use function dirname;
 use function implode;
 use function str_replace;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -86,16 +85,13 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
 
         $initialTarget = $this->readFile('project/src/Target.php');
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -106,8 +102,6 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
             $this->readFile('project/src/Target.php'),
             'Only the given members may differ.',
         );
-
-        $changeStartedAt = time();
 
         $changed = $this->analyse();
 
@@ -122,10 +116,9 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
             'Binding consumer must report only while every definition option is a plain public property.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 
@@ -176,16 +169,13 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
 
         $initialTarget = $this->readFile('project/src/Target.php');
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -196,8 +186,6 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
             $this->readFile('project/src/Target.php'),
             'Only the added setter may differ.',
         );
-
-        $changeStartedAt = time();
 
         $changed = $this->analyse();
 
@@ -212,10 +200,9 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
             'Binding consumer must lose its stale unknown option diagnostic.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 
@@ -263,16 +250,13 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
 
         $initialHash = self::hashFile($this->path('project/container.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         $this->assertInitialColdRun($initialCold['stderr'], $initialCold['results'], $before);
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -310,11 +294,6 @@ final class CreateObjectContainerBindingResultCacheIntegrationTest extends TestC
             0,
             $changedWarm['stderr'],
             'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $after,

@@ -4,81 +4,41 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\support;
 
-use FilesystemIterator;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use RuntimeException;
-use SplFileInfo;
 
 use function array_filter;
 use function array_values;
-use function bin2hex;
-use function clearstatcache;
 use function count;
 use function dirname;
-use function fclose;
-use function file_get_contents;
-use function file_put_contents;
 use function hash_file;
 use function is_array;
-use function is_dir;
 use function is_file;
 use function is_int;
-use function is_link;
-use function is_resource;
 use function is_string;
 use function json_decode;
-use function max;
-use function mkdir;
 use function preg_match_all;
-use function proc_close;
-use function proc_open;
-use function random_bytes;
 use function realpath;
-use function rmdir;
 use function sort;
 use function sprintf;
-use function stat;
 use function str_replace;
-use function str_starts_with;
 use function strlen;
 use function strpos;
 use function substr;
-use function sys_get_temp_dir;
-use function unlink;
+use function ucfirst;
 
 use const DIRECTORY_SEPARATOR;
 use const JSON_THROW_ON_ERROR;
-use const PHP_BINARY;
 
 /**
  * Runs real PHPStan processes on a project generated in a test-owned temporary directory and normalizes their results,
  * for result cache integration tests.
  *
  * The using test case declares the `TEMPORARY_PREFIX` constant and writes `project/phpstan.neon`, whose analysed paths,
- * `tmpDir` and configuration point inside the work directory. Only the work directory created by
- * {@see createWorkDirectory()} is ever removed, after checking that it carries that prefix under the resolved system
- * temporary directory.
+ * `tmpDir` and configuration point inside the work directory that {@see createWorkDirectory()} creates.
  */
 trait ResultCacheIntegrationTrait
 {
-    /**
-     * Temporary directory owned by the current test, or an empty string before it is created.
-     */
-    private string $workDirectory = '';
-
-    protected function tearDown(): void
-    {
-        $workDirectory = $this->workDirectory;
-
-        $this->workDirectory = '';
-
-        if (self::isOwnedDirectory($workDirectory, $workDirectory) === false) {
-            return;
-        }
-
-        self::removeDirectory($workDirectory);
-    }
+    use OwnedWorkDirectoryTrait;
 
     /**
      * Runs PHPStan in a separate process and collects its error output and normalized results.
@@ -92,51 +52,20 @@ trait ResultCacheIntegrationTrait
      */
     private function analyse(string ...$options): array
     {
-        $pipes = [];
-
-        $process = proc_open(
-            [
-                PHP_BINARY,
-                dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR
-                    . 'phpstan',
-                'analyse',
-                '--configuration',
-                $this->path('project/phpstan.neon'),
-                '--error-format=json',
-                '--memory-limit=-1',
-                '--no-progress',
-                '-vvv',
-                ...array_values($options),
-            ],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['file', $this->path('output/stdout.txt'), 'w'],
-                2 => ['file', $this->path('output/stderr.txt'), 'w'],
-            ],
-            $pipes,
+        $run = $this->runProcess(
+            self::phpstanCommand($this->path('project/phpstan.neon'), '-vvv', ...$options),
             $this->path('project'),
+            'output/stdout.txt',
+            'output/stderr.txt',
         );
-
-        if (is_resource($process) === false) {
-            throw new RuntimeException(
-                'PHPStan process could not be started.',
-            );
-        }
-
-        if (isset($pipes[0])) {
-            fclose($pipes[0]);
-        }
-
-        $exitCode = proc_close($process);
-        $stderr = $this->readFile('output/stderr.txt');
 
         self::assertSame(
             1,
-            $exitCode,
-            "Analysis must report the dumped types without crashing.\n" . $stderr,
+            $run['exitCode'],
+            "Analysis must report the dumped types without crashing.\n" . $run['stderr'],
         );
 
-        $report = $this->report($this->readFile('output/stdout.txt'), $stderr);
+        $report = $this->report($run['stdout'], $run['stderr']);
 
         self::assertSame(
             [],
@@ -144,7 +73,10 @@ trait ResultCacheIntegrationTrait
             'No configuration or internal error must be reported.',
         );
 
-        return ['stderr' => $stderr, 'results' => $report['results']];
+        return [
+            'stderr' => $run['stderr'],
+            'results' => $report['results'],
+        ];
     }
 
     /**
@@ -157,44 +89,63 @@ trait ResultCacheIntegrationTrait
     }
 
     /**
-     * Asserts that the first warm run after the cold run restored the result cache, reanalysed no file and kept the
-     * results.
+     * Runs the cold, warm, changed, changed warm and final cold analyses around one change, asserting the expected
+     * results of each and that the changed run reanalyses the given subject.
      *
-     * PHPStan records no stat signature for an analysed file changed in or after the second its run started, and the
-     * next run then saves the cache again; that save is accepted only when an analysed file changed in or after the
-     * second the cold run was started.
+     * @param string $subject Lowercase name of the reanalysed subject in assertion messages, such as `owner`.
      *
-     * @phpstan-param array{stderr: string, results: list<array{string, int, string, string|null}>} $warm
-     * @phpstan-param list<array{string, int, string, string|null}> $expected
+     * @phpstan-param list<array{string, int, string, string|null}> $before
+     * @phpstan-param list<array{string, int, string, string|null}> $after
+     * @phpstan-param callable(): void $change
      */
-    private function assertFirstWarmRunUnchanged(array $warm, array $expected, int $coldStartedAt, string $run): void
+    private function assertChangeSequence(array $before, array $after, callable $change, string $subject): void
     {
-        self::assertRestored(0, $warm['stderr'], $run);
+        $initialCold = $this->analyse();
 
-        $outcomes = [];
-
+        self::assertStringContainsString(
+            'Result cache not used because the cache file does not exist.',
+            $initialCold['stderr'],
+            'Initial run must start without a result cache.',
+        );
         self::assertSame(
-            1,
-            preg_match_all(
-                '/Result cache (was not rewritten because it is unchanged|is saved)\./',
-                $warm['stderr'],
-                $outcomes,
-            ),
-            sprintf("%s must either keep or save the result cache, once.\n%s", $run, $warm['stderr']),
+            $before,
+            $initialCold['results'],
+            'Initial run must report the initial results.',
         );
 
-        if (($outcomes[1][0] ?? null) === 'is saved') {
-            self::assertGreaterThanOrEqual(
-                $coldStartedAt,
-                $this->lastAnalysedFileChange(),
-                sprintf('%s may save the result cache only for analysed files changed as the cold run started.', $run),
-            );
-        }
+        $this->assertWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            'Unchanged initial warm run',
+        );
+
+        $change();
+
+        $changed = $this->analyse();
+
+        self::assertGreaterThanOrEqual(
+            1,
+            self::reanalysedFiles($changed['stderr'], 'Changed warm run'),
+            sprintf('Changed warm run must reanalyse the %s.', $subject),
+        );
+        self::assertSame(
+            $after,
+            $changed['results'],
+            sprintf('%s must follow the change.', ucfirst($subject)),
+        );
+
+        $this->assertWarmRunUnchanged(
+            $this->analyse(),
+            $after,
+            'Unchanged changed warm run',
+        );
+
+        $this->removeTemporaryCacheDirectory();
 
         self::assertSame(
-            $expected,
-            $warm['results'],
-            sprintf('%s must restore the initial results.', $run),
+            $after,
+            $this->analyse()['results'],
+            'Final cold results must match the results after detecting the change.',
         );
     }
 
@@ -211,29 +162,31 @@ trait ResultCacheIntegrationTrait
     }
 
     /**
+     * Asserts that the warm run restored the result cache, reanalysed no file and kept the expected results.
+     *
+     * @phpstan-param array{stderr: string, results: list<array{string, int, string, string|null}>} $warm
+     * @phpstan-param list<array{string, int, string, string|null}> $expected
+     */
+    private function assertWarmRunUnchanged(array $warm, array $expected, string $run): void
+    {
+        self::assertRestored(
+            0,
+            $warm['stderr'],
+            $run,
+        );
+        self::assertSame(
+            $expected,
+            $warm['results'],
+            sprintf('%s must restore the expected results.', $run),
+        );
+    }
+
+    /**
      * Creates the owned work directory with its `output` and `project/src` subdirectories.
      */
     private function createWorkDirectory(): void
     {
-        $temporaryDirectory = realpath(sys_get_temp_dir());
-
-        if ($temporaryDirectory === false) {
-            throw new RuntimeException(
-                'System temporary directory is not available.',
-            );
-        }
-
-        $workDirectory = $temporaryDirectory . DIRECTORY_SEPARATOR . self::TEMPORARY_PREFIX . bin2hex(random_bytes(8));
-
-        foreach (['output', 'project' . DIRECTORY_SEPARATOR . 'src'] as $directory) {
-            if (mkdir($workDirectory . DIRECTORY_SEPARATOR . $directory, 0o700, true) === false) {
-                throw new RuntimeException(
-                    sprintf('Temporary directory "%s" could not be created.', $workDirectory),
-                );
-            }
-        }
-
-        $this->workDirectory = $workDirectory;
+        $this->createOwnedWorkDirectory('output', 'project/src');
     }
 
     private static function hashFile(string $path): string
@@ -259,9 +212,10 @@ trait ResultCacheIntegrationTrait
     private function inputHashes(array $projectFiles): array
     {
         $root = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR;
+
         $inputs = [
-            'extension.neon' => $root . 'extension.neon',
-            'stubs/yii.stub' => $root . 'stubs' . DIRECTORY_SEPARATOR . 'yii.stub',
+            'extension.neon' => "{$root}extension.neon",
+            'stubs/yii.stub' => "{$root}stubs/yii.stub",
             'tests/support/application-classes.stub' => self::applicationClassesStub(),
         ];
 
@@ -290,54 +244,6 @@ trait ResultCacheIntegrationTrait
     }
 
     /**
-     * Returns whether the given path is the test's own temporary directory or a directory inside it.
-     */
-    private static function isOwnedDirectory(string $workDirectory, string $path): bool
-    {
-        $temporaryDirectory = realpath(sys_get_temp_dir());
-
-        return $workDirectory !== ''
-            && $temporaryDirectory !== false
-            && str_starts_with($workDirectory, $temporaryDirectory . DIRECTORY_SEPARATOR . self::TEMPORARY_PREFIX)
-            && ($path === $workDirectory || str_starts_with($path, $workDirectory . DIRECTORY_SEPARATOR))
-            && is_link($path) === false
-            && is_dir($path);
-    }
-
-    /**
-     * Returns the latest modification or status change time, in seconds, of the analysed files under `project/src`.
-     */
-    private function lastAnalysedFileChange(): int
-    {
-        clearstatcache();
-
-        $latest = 0;
-        $files = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($this->path('project/src'), FilesystemIterator::SKIP_DOTS),
-        );
-
-        /** @var SplFileInfo $file */
-        foreach ($files as $file) {
-            $stat = stat($file->getPathname());
-
-            if ($stat === false) {
-                throw new RuntimeException(
-                    sprintf('Analysed file "%s" could not be inspected.', $file->getPathname()),
-                );
-            }
-
-            $latest = max($latest, $stat['mtime'], $stat['ctime']);
-        }
-
-        return $latest;
-    }
-
-    private function neonPath(string $path): string
-    {
-        return "'" . str_replace(['\\', "'"], ['/', "''"], $path) . "'";
-    }
-
-    /**
      * Returns the resolved path with forward slashes, or the given path when it can't be resolved.
      */
     private static function normalizedPath(string $path): string
@@ -345,24 +251,6 @@ trait ResultCacheIntegrationTrait
         $resolved = realpath($path);
 
         return str_replace('\\', '/', $resolved === false ? $path : $resolved);
-    }
-
-    private function path(string $name): string
-    {
-        return $this->workDirectory . DIRECTORY_SEPARATOR . str_replace('/', DIRECTORY_SEPARATOR, $name);
-    }
-
-    private function readFile(string $name): string
-    {
-        $contents = file_get_contents($this->path($name));
-
-        if ($contents === false) {
-            throw new RuntimeException(
-                sprintf('File "%s" could not be read.', $name),
-            );
-        }
-
-        return $contents;
     }
 
     /**
@@ -392,23 +280,6 @@ trait ResultCacheIntegrationTrait
         return (int) $matches[1][0];
     }
 
-    private static function removeDirectory(string $directory): void
-    {
-        $entries = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST,
-        );
-
-        /** @var SplFileInfo $entry */
-        foreach ($entries as $entry) {
-            $entry->isDir() && $entry->isLink() === false
-                ? rmdir($entry->getPathname())
-                : unlink($entry->getPathname());
-        }
-
-        rmdir($directory);
-    }
-
     /**
      * Removes the `tmpDir` the test created, after checking that it is the expected child of the owned directory.
      */
@@ -423,7 +294,6 @@ trait ResultCacheIntegrationTrait
         }
 
         self::removeDirectory($cacheDirectory);
-
         self::assertDirectoryDoesNotExist(
             $cacheDirectory,
             'Owned `tmpDir` must be removed before the final cold run.',
@@ -510,14 +380,5 @@ trait ResultCacheIntegrationTrait
     private static function resultsOf(string $file, array $results): array
     {
         return array_values(array_filter($results, static fn(array $result): bool => $result[0] === $file));
-    }
-
-    private function writeFile(string $name, string $contents): void
-    {
-        if (file_put_contents($this->path($name), $contents) === false) {
-            throw new RuntimeException(
-                sprintf('File "%s" could not be written.', $name),
-            );
-        }
     }
 }

@@ -10,7 +10,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
 use function dirname;
 use function sprintf;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -66,7 +65,6 @@ final class ParamsResultCacheIntegrationTest extends TestCase
         $this->writeParams("['mode' => 'alpha']");
 
         $initialParams = self::hashFile($this->path('project/params.php'));
-        $coldStartedAt = time();
         $cold = $this->analyse();
 
         self::assertStringContainsString(
@@ -91,10 +89,9 @@ final class ParamsResultCacheIntegrationTest extends TestCase
 
         $warm = $this->analyse();
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $warm,
             $initial,
-            $coldStartedAt,
             'Unchanged warm run',
         );
 

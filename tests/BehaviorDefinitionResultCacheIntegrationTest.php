@@ -12,7 +12,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
 use function dirname;
 use function sort;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -222,62 +221,7 @@ final class BehaviorDefinitionResultCacheIntegrationTest extends TestCase
      */
     private function assertSequence(array $before, array $after, callable $change): void
     {
-        $expectedBefore = self::results($before);
-        $expectedAfter = self::results($after);
-
-        $coldStartedAt = time();
-
-        $initialCold = $this->analyse();
-
-        self::assertStringContainsString(
-            'Result cache not used because the cache file does not exist.',
-            $initialCold['stderr'],
-            'Initial run must start without a result cache.',
-        );
-        self::assertSame(
-            $expectedBefore,
-            $initialCold['results'],
-            'Initial run must report the initial results.',
-        );
-
-        $this->assertFirstWarmRunUnchanged(
-            $this->analyse(),
-            $expectedBefore,
-            $coldStartedAt,
-            'Unchanged initial warm run',
-        );
-
-        $change();
-
-        $changeStartedAt = time();
-
-        $changed = $this->analyse();
-
-        self::assertGreaterThanOrEqual(
-            1,
-            self::reanalysedFiles($changed['stderr'], 'Changed warm run'),
-            'Changed warm run must reanalyse the owner.',
-        );
-        self::assertSame(
-            $expectedAfter,
-            $changed['results'],
-            'Owner must follow the change.',
-        );
-
-        $this->assertFirstWarmRunUnchanged(
-            $this->analyse(),
-            $expectedAfter,
-            $changeStartedAt,
-            'Unchanged changed warm run',
-        );
-
-        $this->removeTemporaryCacheDirectory();
-
-        self::assertSame(
-            $expectedAfter,
-            $this->analyse()['results'],
-            'Final cold results must match the results after detecting the change.',
-        );
+        $this->assertChangeSequence(self::results($before), self::results($after), $change, 'owner');
     }
 
     /**

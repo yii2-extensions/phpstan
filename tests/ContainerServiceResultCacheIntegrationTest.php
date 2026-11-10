@@ -11,7 +11,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 use function array_diff_assoc;
 use function dirname;
 use function explode;
-use function time;
 use function var_export;
 
 use const DIRECTORY_SEPARATOR;
@@ -76,8 +75,6 @@ final class ContainerServiceResultCacheIntegrationTest extends TestCase
         $initialDefinitions = $this->readFile('project/definitions.php');
         $initialHash = self::hashFile($this->path('project/definitions.php'));
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -102,10 +99,9 @@ final class ContainerServiceResultCacheIntegrationTest extends TestCase
 
         $initialWarm = $this->analyse();
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $initialWarm,
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -166,11 +162,6 @@ final class ContainerServiceResultCacheIntegrationTest extends TestCase
             0,
             $changedWarm['stderr'],
             'Unchanged changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $after,

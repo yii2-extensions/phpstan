@@ -13,7 +13,6 @@ use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 use function dirname;
 use function implode;
 use function str_replace;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -247,8 +246,6 @@ final class ExternalActionResultCacheIntegrationTest extends TestCase
 
         $stableInputs = $this->inputHashes($stableFiles);
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -262,16 +259,13 @@ final class ExternalActionResultCacheIntegrationTest extends TestCase
             'Initial run must report the initial results.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
         $change();
-
-        $changeStartedAt = time();
 
         $changed = $this->analyse();
 
@@ -286,10 +280,9 @@ final class ExternalActionResultCacheIntegrationTest extends TestCase
             'Controller must follow the change: report while the definition is proven, stand aside otherwise.',
         );
 
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 

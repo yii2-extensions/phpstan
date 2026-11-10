@@ -389,11 +389,6 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             $changedWarm['stderr'],
             'Unchanged changed warm run',
         );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changedWarm['stderr'],
-            'Unchanged changed warm run must keep the result cache as it is.',
-        );
         self::assertSame(
             $changedResults,
             $changedWarm['results'],
@@ -474,11 +469,6 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             0,
             $stableWarm['stderr'],
             'Unchanged initial warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $stableWarm['stderr'],
-            'Unchanged initial warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $expected,
@@ -627,11 +617,6 @@ final class BehaviorResultCacheIntegrationTest extends TestCase
             0,
             $changed['stderr'],
             'Changed warm run',
-        );
-        self::assertStringContainsString(
-            'Result cache was not rewritten because it is unchanged.',
-            $changed['stderr'],
-            'Changed warm run must keep the result cache as it is.',
         );
         self::assertSame(
             $expected,

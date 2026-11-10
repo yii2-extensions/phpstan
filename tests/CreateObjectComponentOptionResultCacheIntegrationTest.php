@@ -17,7 +17,6 @@ use function explode;
 use function in_array;
 use function is_file;
 use function str_replace;
-use function time;
 
 use const DIRECTORY_SEPARATOR;
 
@@ -87,8 +86,6 @@ final class CreateObjectComponentOptionResultCacheIntegrationTest extends TestCa
             'Change must alter the expected diagnostics.',
         );
 
-        $coldStartedAt = time();
-
         $initialCold = $this->analyse();
 
         self::assertStringContainsString(
@@ -106,10 +103,9 @@ final class CreateObjectComponentOptionResultCacheIntegrationTest extends TestCa
             $initialCold['results'],
             'Initial run must report the initial results.',
         );
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
-            $coldStartedAt,
             'Unchanged initial warm run',
         );
 
@@ -129,8 +125,6 @@ final class CreateObjectComponentOptionResultCacheIntegrationTest extends TestCa
             'Only one line of the changed file may differ.',
         );
 
-        $changeStartedAt = time();
-
         $changedRun = $this->analyse();
 
         self::assertRestored(
@@ -148,10 +142,9 @@ final class CreateObjectComponentOptionResultCacheIntegrationTest extends TestCa
             $changedRun['results'],
             'Consumers must follow the changed behaviors or native type.',
         );
-        $this->assertFirstWarmRunUnchanged(
+        $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,
-            $changeStartedAt,
             'Unchanged changed warm run',
         );
 

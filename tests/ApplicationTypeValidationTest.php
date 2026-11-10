@@ -4,47 +4,28 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests;
 
-use FilesystemIterator;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
-use RecursiveDirectoryIterator;
-use RecursiveIteratorIterator;
 use RuntimeException;
-use SplFileInfo;
 use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\reflection\ApplicationClassResolver;
 use yii2\extensions\phpstan\tests\provider\ApplicationTypeValidationProvider;
+use yii2\extensions\phpstan\tests\support\OwnedWorkDirectoryTrait;
 
-use function bin2hex;
 use function dirname;
-use function fclose;
-use function file_get_contents;
-use function file_put_contents;
 use function implode;
 use function is_array;
-use function is_dir;
-use function is_resource;
 use function is_string;
 use function json_decode;
-use function mkdir;
 use function preg_match;
-use function proc_close;
-use function proc_open;
-use function random_bytes;
-use function realpath;
-use function rmdir;
 use function sprintf;
 use function str_replace;
-use function str_starts_with;
 use function strpos;
 use function substr;
-use function sys_get_temp_dir;
-use function unlink;
 use function var_export;
 
 use const DIRECTORY_SEPARATOR;
 use const JSON_THROW_ON_ERROR;
-use const PHP_BINARY;
 
 /**
  * Integration tests for the validation of `phpstan.application_type` by {@see ApplicationClassResolver} in a real
@@ -59,15 +40,12 @@ use const PHP_BINARY;
  */
 final class ApplicationTypeValidationTest extends TestCase
 {
+    use OwnedWorkDirectoryTrait;
+
     /**
      * Prefix of the temporary directory owned by each test.
      */
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-application-type-';
-
-    /**
-     * Temporary directory owned by the current test, or an empty string before it is created.
-     */
-    private string $workDirectory = '';
 
     /**
      * @phpstan-param list<string> $expected
@@ -205,25 +183,7 @@ final class ApplicationTypeValidationTest extends TestCase
 
     protected function setUp(): void
     {
-        $temporaryDirectory = realpath(sys_get_temp_dir());
-
-        if ($temporaryDirectory === false) {
-            throw new RuntimeException(
-                'System temporary directory is not available.',
-            );
-        }
-
-        $workDirectory = $temporaryDirectory . DIRECTORY_SEPARATOR . self::TEMPORARY_PREFIX . bin2hex(random_bytes(8));
-
-        foreach (['lib', 'src', 'stubs'] as $directory) {
-            if (mkdir($workDirectory . DIRECTORY_SEPARATOR . $directory, 0o700, true) === false) {
-                throw new RuntimeException(
-                    sprintf('Temporary directory "%s" could not be created.', $workDirectory),
-                );
-            }
-        }
-
-        $this->workDirectory = $workDirectory;
+        $this->createOwnedWorkDirectory('lib', 'src', 'stubs');
 
         $this->writeFile(
             'bootstrap.php',
@@ -297,39 +257,6 @@ final class ApplicationTypeValidationTest extends TestCase
         );
     }
 
-    protected function tearDown(): void
-    {
-        $workDirectory = $this->workDirectory;
-
-        $this->workDirectory = '';
-
-        $temporaryDirectory = realpath(sys_get_temp_dir());
-
-        if (
-            $workDirectory === ''
-            || $temporaryDirectory === false
-            || str_starts_with($workDirectory, $temporaryDirectory . DIRECTORY_SEPARATOR . self::TEMPORARY_PREFIX)
-                === false
-            || is_dir($workDirectory) === false
-        ) {
-            return;
-        }
-
-        $entries = new RecursiveIteratorIterator(
-            new RecursiveDirectoryIterator($workDirectory, FilesystemIterator::SKIP_DOTS),
-            RecursiveIteratorIterator::CHILD_FIRST,
-        );
-
-        /** @var SplFileInfo $entry */
-        foreach ($entries as $entry) {
-            $entry->isDir() && $entry->isLink() === false
-                ? rmdir($entry->getPathname())
-                : unlink($entry->getPathname());
-        }
-
-        rmdir($workDirectory);
-    }
-
     /**
      * Writes the configuration for the given application type, runs PHPStan in a separate process, and collects its
      * exit code, non-file-specific errors, dumped types and error output.
@@ -378,72 +305,20 @@ final class ApplicationTypeValidationTest extends TestCase
             NEON,
         );
 
-        $pipes = [];
-
-        $process = proc_open(
-            [
-                PHP_BINARY,
-                dirname(__DIR__) . DIRECTORY_SEPARATOR . 'vendor' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR
-                    . 'phpstan',
-                'analyse',
-                '--configuration',
-                $this->path('phpstan.neon'),
-                '--error-format=json',
-                '--memory-limit=-1',
-                '--no-progress',
-                '-vvv',
-            ],
-            [
-                0 => ['pipe', 'r'],
-                1 => ['file', $this->path('stdout.txt'), 'w'],
-                2 => ['file', $this->path('stderr.txt'), 'w'],
-            ],
-            $pipes,
+        $run = $this->runProcess(
+            self::phpstanCommand($this->path('phpstan.neon'), '-vvv'),
             $this->workDirectory,
+            'stdout.txt',
+            'stderr.txt',
         );
-
-        if (is_resource($process) === false) {
-            throw new RuntimeException(
-                'PHPStan process could not be started.',
-            );
-        }
-
-        if (isset($pipes[0])) {
-            fclose($pipes[0]);
-        }
-
-        $exitCode = proc_close($process);
-        $report = self::report($this->readFile('stdout.txt'));
+        $report = self::report($run['stdout']);
 
         return [
-            'exitCode' => $exitCode,
+            'exitCode' => $run['exitCode'],
             'errors' => $report['errors'],
-            'stderr' => $this->readFile('stderr.txt'),
+            'stderr' => $run['stderr'],
             'types' => $report['types'],
         ];
-    }
-
-    private function neonPath(string $path): string
-    {
-        return "'" . str_replace(['\\', "'"], ['/', "''"], $path) . "'";
-    }
-
-    private function path(string $name): string
-    {
-        return $this->workDirectory . DIRECTORY_SEPARATOR . $name;
-    }
-
-    private function readFile(string $name): string
-    {
-        $contents = file_get_contents($this->path($name));
-
-        if ($contents === false) {
-            throw new RuntimeException(
-                sprintf('File "%s" could not be read.', $name),
-            );
-        }
-
-        return $contents;
     }
 
     /**
@@ -488,14 +363,5 @@ final class ApplicationTypeValidationTest extends TestCase
         }
 
         return ['errors' => $errors, 'types' => $types];
-    }
-
-    private function writeFile(string $name, string $contents): void
-    {
-        if (file_put_contents($this->path($name), $contents) === false) {
-            throw new RuntimeException(
-                sprintf('File "%s" could not be written.', $name),
-            );
-        }
     }
 }
