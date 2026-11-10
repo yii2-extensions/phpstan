@@ -13,6 +13,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `component_generics`                    | `user: identityClass` | Component ID to configuration key holding its single generic class argument.     |
 | `rules.behaviorInvalidAsDefinition`     | `false`               | Enables the [`as` behavior option rule](#invalid-as-behavior-options).           |
 | `rules.behaviorInvalidDefinition`       | `false`               | Enables the [behavior definition rule](#invalid-behavior-definitions).           |
+| `rules.behaviorInvalidOptionType`       | `false`               | Enables the [behavior option type rule](#invalid-behavior-option-types).         |
 | `rules.behaviorUnknownOption`           | `false`               | Enables the [behavior unknown option rule](#unknown-behavior-options).           |
 | `rules.createObjectInvalidOptionType`   | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).           |
 | `rules.createObjectUnknownOption`       | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).             |
@@ -759,6 +760,59 @@ that the container resolves to a class that is not a behavior, which the
 on, such as read-only properties, behavior classes that override the constructor or `__set()`, container factories and
 singletons, unknown classes and values that are not one constant. Changing a container definition, the declaration of
 the created class or one of its parents, or the owner reanalyses the affected file.
+
+## Invalid behavior option types
+
+A second opt-in rule reports behavior configuration values that the created behavior can never accept, in the same
+lists, arguments and `as name` options as the [behavior unknown option rule](#unknown-behavior-options). It is
+independent of that rule; enable either or both:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            behaviorInvalidOptionType: true
+```
+
+```php
+final class SlugBehavior extends yii\base\Behavior
+{
+    public string $attribute = 'title';
+    public int $maxLength = 64;
+}
+
+final class Article extends yii\base\Component
+{
+    public function behaviors(): array
+    {
+        return [
+            'slug' => [
+                'class' => SlugBehavior::class,
+                'maxLength' => '32',      // valid: coerced to `int`
+                'attribute' => ['title'], // reported
+            ],
+        ];
+    }
+}
+
+$article = Yii::createObject([
+    'class' => Article::class,
+    'as headline' => ['class' => SlugBehavior::class, 'maxLength' => 'none'], // reported
+]);
+```
+
+Yii assigns every option before attaching the behavior, so such a value throws `TypeError` in every channel. The rule
+reports, with the identifier `yii2.behavior.invalidOptionType`, the values that the
+[option type rule](#invalid-yiicreateobject-option-types) would report for the same configuration: values that PHP's
+weak type coercion can't convert to the native type of the public property or of the first parameter of the `set` method
+that Yii calls, with the same exceptions, such as PHPDoc-only types, partly incompatible types and `callable`
+parameters. A name without a public property or setter is left to the unknown option rule.
+
+Configurations, created classes, report lines and abstentions are those of the unknown option rule, including owners
+that override `ensureBehaviors()`, receivers that override the attach method, components that override `__set()` and
+behavior classes that override the constructor or `__set()`. The message names the behavior or `as` option, the owner,
+the created class and option, the value type and the type that the property or setter accepts. Changing a container
+definition, the declaration of the created class or one of its parents, or the owner reanalyses the affected file.
 
 ## Constants and result cache
 

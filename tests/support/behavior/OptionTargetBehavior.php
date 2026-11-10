@@ -12,4 +12,5 @@ use yii\base\Behavior;
 class OptionTargetBehavior extends Behavior
 {
     public mixed $onlyOnTarget = null;
+    public int $targetCount = 0;
 }

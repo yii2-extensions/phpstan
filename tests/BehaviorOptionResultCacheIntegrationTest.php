@@ -7,27 +7,34 @@ namespace yii2\extensions\phpstan\tests;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 use yii2\extensions\phpstan\rules\{
+    AttachBehaviorInvalidOptionTypeRule,
     AttachBehaviorUnknownOptionRule,
+    BehaviorsInvalidOptionTypeRule,
     BehaviorsUnknownOptionRule,
+    CreateObjectBehaviorInvalidOptionTypeRule,
     CreateObjectBehaviorUnknownOptionRule,
 };
-use yii2\extensions\phpstan\tests\provider\BehaviorUnknownOptionResultCacheIntegrationProvider;
+use yii2\extensions\phpstan\tests\provider\BehaviorOptionResultCacheIntegrationProvider;
 use yii2\extensions\phpstan\tests\support\ResultCacheIntegrationTrait;
 
 use function dirname;
 use function sort;
+use function sprintf;
 
 use const DIRECTORY_SEPARATOR;
 
 /**
  * Integration tests for the class, container and owner dependencies of {@see BehaviorsUnknownOptionRule},
- * {@see AttachBehaviorUnknownOptionRule} and {@see CreateObjectBehaviorUnknownOptionRule} across result cache runs.
+ * {@see AttachBehaviorUnknownOptionRule}, {@see CreateObjectBehaviorUnknownOptionRule},
+ * {@see BehaviorsInvalidOptionTypeRule}, {@see AttachBehaviorInvalidOptionTypeRule} and
+ * {@see CreateObjectBehaviorInvalidOptionTypeRule} across result cache runs.
  *
- * {@see BehaviorUnknownOptionResultCacheIntegrationProvider} for test case data providers.
+ * {@see BehaviorOptionResultCacheIntegrationProvider} for test case data providers.
  *
- * @phpstan-import-type Rows from BehaviorUnknownOptionResultCacheIntegrationProvider
+ * @phpstan-import-type Rows from BehaviorOptionResultCacheIntegrationProvider
+ * @phpstan-import-type Rule from BehaviorOptionResultCacheIntegrationProvider
  */
-final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
+final class BehaviorOptionResultCacheIntegrationTest extends TestCase
 {
     use ResultCacheIntegrationTrait;
 
@@ -51,20 +58,31 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
     /**
      * Prefix of the temporary directory owned by each test.
      */
-    private const string TEMPORARY_PREFIX = 'yii2-phpstan-behavior-unknown-option-result-cache-';
+    private const string TEMPORARY_PREFIX = 'yii2-phpstan-behavior-option-result-cache-';
 
     /**
+     * Error identifier of the rule switch enabled by {@see writeProject()}.
+     */
+    private string $identifier = '';
+
+    /**
+     * @phpstan-param Rule $rule
      * @phpstan-param Rows $before
      * @phpstan-param Rows $after
      */
-    #[DataProviderExternal(BehaviorUnknownOptionResultCacheIntegrationProvider::class, 'suppliedClassProvider')]
+    #[DataProviderExternal(BehaviorOptionResultCacheIntegrationProvider::class, 'suppliedClassProvider')]
     public function testReanalyseFactoryWhenAsClassNamedOnlyAsStringChanges(
+        string $rule,
         string $initial,
         string $changed,
         array $before,
         array $after,
     ): void {
-        $this->writeClass('Supplied', $initial);
+        $this->writeProject($rule);
+        $this->writeClass(
+            'Supplied',
+            $initial,
+        );
 
         $this->assertSequence(
             $before,
@@ -74,17 +92,23 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
     }
 
     /**
+     * @phpstan-param Rule $rule
      * @phpstan-param Rows $before
      * @phpstan-param Rows $after
      */
-    #[DataProviderExternal(BehaviorUnknownOptionResultCacheIntegrationProvider::class, 'boundClassProvider')]
+    #[DataProviderExternal(BehaviorOptionResultCacheIntegrationProvider::class, 'boundClassProvider')]
     public function testReanalyseOwnerWhenClassReachedOnlyThroughContainerChanges(
+        string $rule,
         string $initial,
         string $changed,
         array $before,
         array $after,
     ): void {
-        $this->writeClass('Target', $initial);
+        $this->writeProject($rule);
+        $this->writeClass(
+            'Target',
+            $initial,
+        );
 
         $this->assertSequence(
             $before,
@@ -94,16 +118,19 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
     }
 
     /**
+     * @phpstan-param Rule $rule
      * @phpstan-param Rows $before
      * @phpstan-param Rows $after
      */
-    #[DataProviderExternal(BehaviorUnknownOptionResultCacheIntegrationProvider::class, 'containerProvider')]
+    #[DataProviderExternal(BehaviorOptionResultCacheIntegrationProvider::class, 'containerProvider')]
     public function testReanalyseOwnerWhenContainerBindingChanges(
+        string $rule,
         string $initial,
         string $changed,
         array $before,
         array $after,
     ): void {
+        $this->writeProject($rule);
         $this->writeContainer($initial);
 
         $this->assertSequence(
@@ -114,17 +141,23 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
     }
 
     /**
+     * @phpstan-param Rule $rule
      * @phpstan-param Rows $before
      * @phpstan-param Rows $after
      */
-    #[DataProviderExternal(BehaviorUnknownOptionResultCacheIntegrationProvider::class, 'namedClassProvider')]
+    #[DataProviderExternal(BehaviorOptionResultCacheIntegrationProvider::class, 'namedClassProvider')]
     public function testReanalyseOwnerWhenNamedClassChanges(
+        string $rule,
         string $initial,
         string $changed,
         array $before,
         array $after,
     ): void {
-        $this->writeClass('Named', $initial);
+        $this->writeProject($rule);
+        $this->writeClass(
+            'Named',
+            $initial,
+        );
 
         $this->assertSequence(
             $before,
@@ -134,17 +167,23 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
     }
 
     /**
+     * @phpstan-param Rule $rule
      * @phpstan-param Rows $before
      * @phpstan-param Rows $after
      */
-    #[DataProviderExternal(BehaviorUnknownOptionResultCacheIntegrationProvider::class, 'parentProvider')]
+    #[DataProviderExternal(BehaviorOptionResultCacheIntegrationProvider::class, 'parentProvider')]
     public function testReanalyseOwnerWhenParentInAnotherFileChanges(
+        string $rule,
         string $initial,
         string $changed,
         array $before,
         array $after,
     ): void {
-        $this->writeClass('Mid', $initial);
+        $this->writeProject($rule);
+        $this->writeClass(
+            'Mid',
+            $initial,
+        );
 
         $this->assertSequence(
             $before,
@@ -154,18 +193,27 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
     }
 
     /**
+     * @phpstan-param Rule $rule
      * @phpstan-param Rows $before
      * @phpstan-param Rows $after
      */
-    #[DataProviderExternal(BehaviorUnknownOptionResultCacheIntegrationProvider::class, 'ensureOverrideProvider')]
+    #[DataProviderExternal(BehaviorOptionResultCacheIntegrationProvider::class, 'ensureOverrideProvider')]
     public function testReanalyseOwnerWhenParentOwnerChangesEnsureBehaviors(
+        string $rule,
         string $initial,
         string $changed,
         array $before,
         array $after,
     ): void {
-        $this->writeClass('Named', 'class Named extends \\yii\\base\\Behavior {}');
-        $this->writeClass('BaseOwner', $initial);
+        $this->writeProject($rule);
+        $this->writeClass(
+            'Named',
+            sprintf(BehaviorOptionResultCacheIntegrationProvider::REJECTING[$rule], 'Named'),
+        );
+        $this->writeClass(
+            'BaseOwner',
+            $initial,
+        );
 
         $this->assertSequence(
             $before,
@@ -178,26 +226,6 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
     {
         $this->createWorkDirectory();
 
-        $this->writeFile(
-            'project/phpstan.neon',
-            <<<NEON
-            includes:
-                - {$this->neonPath(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'extension.neon')}
-
-            parameters:
-                level: max
-                paths:
-                    - {$this->neonPath($this->path('project/src'))}
-                tmpDir: {$this->neonPath($this->path('tmp'))}
-                stubFiles:
-                    - {$this->neonPath(self::applicationClassesStub())}
-                yii2:
-                    config_path: {$this->neonPath($this->path('project/config.php'))}
-                    rules:
-                        behaviorUnknownOption: true
-
-            NEON,
-        );
         // params keep project stub validation from reporting the plain `Module::$params` array at level max
         $this->writeFile(
             'project/config.php',
@@ -206,23 +234,17 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
         );
         $this->writeContainer('Probe\\Target');
 
-        $labelled = "extends \\yii\\base\\Behavior\n{\n    public mixed \$label = null;\n}";
-
         $this->writeClass(
             'Bound',
             'class Bound extends \\yii\\base\\Behavior {}',
         );
         $this->writeClass(
             'Target',
-            "class Target {$labelled}",
-        );
-        $this->writeClass(
-            'Unlabelled',
-            'class Unlabelled extends \\yii\\base\\Behavior {}',
+            sprintf(BehaviorOptionResultCacheIntegrationProvider::ACCEPTING, 'Target'),
         );
         $this->writeClass(
             'Mid',
-            "class Mid {$labelled}",
+            sprintf(BehaviorOptionResultCacheIntegrationProvider::ACCEPTING, 'Mid'),
         );
         $this->writeClass(
             'Leaf',
@@ -230,7 +252,7 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
         );
         $this->writeClass(
             'Named',
-            "class Named {$labelled}",
+            sprintf(BehaviorOptionResultCacheIntegrationProvider::ACCEPTING, 'Named'),
         );
         $this->writeClass(
             'BaseOwner',
@@ -240,17 +262,13 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
             'Supplied',
             'class Supplied extends \\yii\\base\\BaseObject {}',
         );
-        $this->writeClass(
-            'SuppliedTarget',
-            'class SuppliedTarget extends \\yii\\base\\Behavior {}',
-        );
         // the supplied class is named only as a string, so that only the rule makes the file depend on it
         $this->writeClass(
             'SuppliedFactory',
             "final class SuppliedFactory\n{\n    public function create(): object\n    {\n"
                 . "        return \\yii\\BaseYii::createObject([\n"
                 . "            'class' => \\yii\\base\\Component::class,\n"
-                . "            'as supplied' => ['class' => 'Probe\\\\Supplied', 'label' => 1],\n"
+                . "            'as supplied' => ['class' => 'Probe\\\\Supplied', 'label' => 'all'],\n"
                 . "        ]);\n    }\n}",
         );
         $this->writeClass(
@@ -261,34 +279,35 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
                 public function behaviors(): array
                 {
                     return [
-                        'named' => ['class' => Named::class, 'label' => 1],
-                        'leaf' => ['class' => Leaf::class, 'label' => 1],
-                        'bound' => ['class' => Bound::class, 'label' => 1],
+                        'named' => ['class' => Named::class, 'label' => 'all'],
+                        'leaf' => ['class' => Leaf::class, 'label' => 'all'],
+                        'bound' => ['class' => Bound::class, 'label' => 'all'],
                     ];
                 }
 
                 public function register(): object
                 {
                     $this->attachBehaviors([
-                        'named' => ['class' => Named::class, 'label' => 1],
-                        'leaf' => ['class' => Leaf::class, 'label' => 1],
-                        'bound' => ['class' => Bound::class, 'label' => 1],
+                        'named' => ['class' => Named::class, 'label' => 'all'],
+                        'leaf' => ['class' => Leaf::class, 'label' => 'all'],
+                        'bound' => ['class' => Bound::class, 'label' => 'all'],
                     ]);
 
                     return \yii\BaseYii::createObject([
                         'class' => \yii\base\Component::class,
-                        'as named' => ['class' => Named::class, 'label' => 1],
-                        'as leaf' => ['class' => Leaf::class, 'label' => 1],
-                        'as bound' => ['class' => Bound::class, 'label' => 1],
+                        'as named' => ['class' => Named::class, 'label' => 'all'],
+                        'as leaf' => ['class' => Leaf::class, 'label' => 'all'],
+                        'as bound' => ['class' => Bound::class, 'label' => 'all'],
                     ]);
                 }
             }
             PHP,
         );
+        // `Probe\Stable` rejects the value under each rule, so that every run reports a diagnostic
         $this->writeClass(
             'StableOwner',
             "final class StableOwner extends \\yii\\base\\Component\n{\n    public function behaviors(): array\n"
-                . "    {\n        return ['stable' => ['class' => \\yii\\base\\Behavior::class, 'missing' => 1]];\n"
+                . "    {\n        return ['stable' => ['class' => Stable::class, 'label' => 'all']];\n"
                 . "    }\n}",
         );
     }
@@ -307,7 +326,12 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
      */
     private function assertSequence(array $before, array $after, callable $change): void
     {
-        $this->assertChangeSequence(self::results($before), self::results($after), $change, 'owner');
+        $this->assertChangeSequence(
+            $this->results($before),
+            $this->results($after),
+            $change,
+            'owner',
+        );
     }
 
     /**
@@ -318,14 +342,14 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
      * @phpstan-param Rows $reported
      * @phpstan-return list<array{string, int, string, null}>
      */
-    private static function results(array $reported): array
+    private function results(array $reported): array
     {
-        $results = [['src/StableOwner.php', 11, 'yii2.behavior.unknownOption', null]];
+        $results = [['src/StableOwner.php', 11, $this->identifier, null]];
 
         foreach ($reported as $row) {
             [$file, $line] = self::PROBE_ROWS[$row];
 
-            $results[] = ["src/{$file}.php", $line, 'yii2.behavior.unknownOption', null];
+            $results[] = ["src/{$file}.php", $line, $this->identifier, null];
         }
 
         sort($results);
@@ -355,5 +379,41 @@ final class BehaviorUnknownOptionResultCacheIntegrationTest extends TestCase
             "<?php\n\ndeclare(strict_types=1);\n\nreturn ['definitions' => ['Probe\\\\Bound' => '{$class}', "
                 . "'Probe\\\\Supplied' => 'Probe\\\\SuppliedTarget']];\n",
         );
+    }
+
+    /**
+     * Writes the analysis configuration enabling only the rule switch, and the classes that reject the probe value
+     * under that rule.
+     *
+     * @phpstan-param Rule $rule
+     */
+    private function writeProject(string $rule): void
+    {
+        $this->identifier = BehaviorOptionResultCacheIntegrationProvider::IDENTIFIERS[$rule];
+
+        $this->writeFile(
+            'project/phpstan.neon',
+            <<<NEON
+            includes:
+                - {$this->neonPath(dirname(__DIR__) . DIRECTORY_SEPARATOR . 'extension.neon')}
+
+            parameters:
+                level: max
+                paths:
+                    - {$this->neonPath($this->path('project/src'))}
+                tmpDir: {$this->neonPath($this->path('tmp'))}
+                stubFiles:
+                    - {$this->neonPath(self::applicationClassesStub())}
+                yii2:
+                    config_path: {$this->neonPath($this->path('project/config.php'))}
+                    rules:
+                        {$rule}: true
+
+            NEON,
+        );
+
+        foreach (['Rejecting', 'Stable', 'SuppliedTarget'] as $name) {
+            $this->writeClass($name, sprintf(BehaviorOptionResultCacheIntegrationProvider::REJECTING[$rule], $name));
+        }
     }
 }

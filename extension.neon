@@ -16,6 +16,7 @@ parameters:
         rules:
             behaviorInvalidAsDefinition: false
             behaviorInvalidDefinition: false
+            behaviorInvalidOptionType: false
             behaviorUnknownOption: false
             createObjectInvalidOptionType: false
             createObjectUnknownOption: false
@@ -35,6 +36,7 @@ parametersSchema:
                 [
                     behaviorInvalidAsDefinition: bool(),
                     behaviorInvalidDefinition: bool(),
+                    behaviorInvalidOptionType: bool(),
                     behaviorUnknownOption: bool(),
                     createObjectInvalidOptionType: bool(),
                     createObjectUnknownOption: bool(),
@@ -52,12 +54,18 @@ parametersSchema:
 conditionalTags:
     yii2\extensions\phpstan\rules\AttachBehaviorInvalidDefinitionRule:
         phpstan.rules.rule: %yii2.rules.behaviorInvalidDefinition%
+    yii2\extensions\phpstan\rules\AttachBehaviorInvalidOptionTypeRule:
+        phpstan.rules.rule: %yii2.rules.behaviorInvalidOptionType%
     yii2\extensions\phpstan\rules\AttachBehaviorUnknownOptionRule:
         phpstan.rules.rule: %yii2.rules.behaviorUnknownOption%
     yii2\extensions\phpstan\rules\BehaviorsInvalidDefinitionRule:
         phpstan.rules.rule: %yii2.rules.behaviorInvalidDefinition%
+    yii2\extensions\phpstan\rules\BehaviorsInvalidOptionTypeRule:
+        phpstan.rules.rule: %yii2.rules.behaviorInvalidOptionType%
     yii2\extensions\phpstan\rules\BehaviorsUnknownOptionRule:
         phpstan.rules.rule: %yii2.rules.behaviorUnknownOption%
+    yii2\extensions\phpstan\rules\CreateObjectBehaviorInvalidOptionTypeRule:
+        phpstan.rules.rule: %yii2.rules.behaviorInvalidOptionType%
     yii2\extensions\phpstan\rules\CreateObjectBehaviorUnknownOptionRule:
         phpstan.rules.rule: %yii2.rules.behaviorUnknownOption%
     yii2\extensions\phpstan\rules\CreateObjectInvalidAsDefinitionRule:
@@ -94,11 +102,17 @@ services:
     -
         class: yii2\extensions\phpstan\rules\AttachBehaviorInvalidDefinitionRule
     -
+        class: yii2\extensions\phpstan\rules\AttachBehaviorInvalidOptionTypeRule
+    -
         class: yii2\extensions\phpstan\rules\AttachBehaviorUnknownOptionRule
     -
         class: yii2\extensions\phpstan\rules\BehaviorsInvalidDefinitionRule
     -
+        class: yii2\extensions\phpstan\rules\BehaviorsInvalidOptionTypeRule
+    -
         class: yii2\extensions\phpstan\rules\BehaviorsUnknownOptionRule
+    -
+        class: yii2\extensions\phpstan\rules\CreateObjectBehaviorInvalidOptionTypeRule
     -
         class: yii2\extensions\phpstan\rules\CreateObjectBehaviorUnknownOptionRule
     -
