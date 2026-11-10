@@ -78,6 +78,18 @@ enum Message: string
     case BEHAVIOR_PROPERTY_NOT_FOUND = 'Property %s::$%s is not provided by any behavior attached to the class.';
 
     /**
+     * Error when a behavior configuration of an `as` option sets an option that the behavior class can't assign.
+     */
+    case BEHAVIOR_UNKNOWN_AS_OPTION = "%s::createObject() option '%s' of %s sets unknown property %s::\$%s: the "
+        . 'class has no public property or setter with that name.';
+
+    /**
+     * Error when a behavior configuration sets an option that the behavior class can't assign.
+     */
+    case BEHAVIOR_UNKNOWN_OPTION = 'Behavior %s in %s::%s() sets unknown property %s::$%s: the class has no public '
+        . 'property or setter with that name.';
+
+    /**
      * Error when the configuration file does not return an array.
      */
     case CONFIG_FILE_NOT_ARRAY = "Configuration file '%s' must return an array.";

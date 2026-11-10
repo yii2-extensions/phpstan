@@ -26,30 +26,12 @@ use function str_starts_with;
 use function strtolower;
 
 /**
- * Finds behavior definitions that {@see Component} can't attach, in `behaviors()` returns, in `attachBehavior()` and
- * `attachBehaviors()` arguments, and in the `as` options of `Yii::createObject()` configurations.
+ * Finds behavior definitions that {@see Component} can't attach, and behavior configuration options that the created
+ * {@see Behavior} can't assign, in `behaviors()` returns, `attachBehavior()` and `attachBehaviors()` arguments and `as`
+ * options of `Yii::createObject()` configurations.
  *
- * Yii passes each definition that isn't a {@see Behavior} instance to `Yii::createObject()` and calls `attach()` on the
- * result without a type check. A definition is reported only when that is certain to fail:
- *
- * - its class string or configuration class resolves, through the container definitions, to a concrete class that is
- *   not a {@see Behavior}, has no public `attach()` (static or not) and has no `__call()` other than the one declared
- *   by {@see BaseObject}, which always throws;
- * - it is a configuration array with no non-null `__class` or `class` element that `Yii::createObject()` can't invoke
- *   as a callable, unless the declared element type of the `behaviors()` return already rejects it.
- *
- * Definitions are read from literal lists, with their item lines, or from lists proven as one constant array by native
- * types, at the return or argument line. Container factories, singletons, unknown classes, closures, invocable objects,
- * callable arrays, unions, unpacked or dynamic lists, abstract classes, interfaces and {@see Component} results stand
- * aside, as do owners overriding `ensureBehaviors()` and receivers overriding the attach method.
- *
- * `as` options reach `Component::__set()`, which checks the supplied value before the container resolves it: it accepts
- * only a {@see Behavior} instance, a `Closure`, or a class name or configuration class (a non-null `__class` wins over
- * `class`) that is a strict subclass of {@see Behavior}. An option is reported only for a configuration that
- * {@see CreateObjectConfigurationResolver::resolve()} proves, on a component that inherits `__set()` from
- * {@see Component}, when that check certainly fails for a class known to the analysis, a configuration array or a
- * value that is neither, or when the container resolves an accepted class to a concrete class that is neither a
- * {@see Behavior} nor invocable and the component inherits `attachBehavior()` from {@see Component}.
+ * A definition or option is reported only when Yii certainly fails on it; dynamic, uncertain or overridden paths stand
+ * aside. Options are classified by {@see ObjectOptionAssignment::unknownOptions()}.
  */
 final class BehaviorDefinitionResolver
 {
@@ -61,6 +43,10 @@ final class BehaviorDefinitionResolver
      * Option name prefix with which `Component::__set()` attaches a behavior.
      */
     private const string BEHAVIOR_PREFIX = 'as ';
+    /**
+     * Class through which {@see Component} calls `createObject()` for a behavior definition.
+     */
+    private const string CREATE_OBJECT_CLASS = 'Yii';
 
     /**
      * Resolves the `Yii::createObject()` configurations whose assignment path is certain.
@@ -90,63 +76,40 @@ final class BehaviorDefinitionResolver
      */
     public function resolveAttachCall(MethodCall $node, Scope $scope): array
     {
-        if ($node->name instanceof Identifier === false || $node->isFirstClassCallable()) {
+        $call = self::attachCallEntries($node, $scope);
+
+        if ($call === null) {
             return [];
         }
 
-        $method = strtolower($node->name->toString());
+        [$owner, $method, $entries] = $call;
 
-        $parameter = self::ATTACH_METHODS[$method] ?? null;
+        return $this->invalidDefinitions($entries, $owner, $method, null, $scope);
+    }
 
-        if ($parameter === null) {
+    /**
+     * Returns the options of the behavior configurations of an `attachBehavior()` or `attachBehaviors()` call that the
+     * created behavior can't assign, in definition and configuration order.
+     *
+     * Records the dependencies of {@see CreateObjectConfigurationResolver::resolveTypeOptions()} for each
+     * configuration.
+     *
+     * @param MethodCall $node Method call to inspect.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return list<UnknownBehaviorOption>
+     */
+    public function resolveAttachCallUnknownOptions(MethodCall $node, Scope $scope): array
+    {
+        $call = self::attachCallEntries($node, $scope);
+
+        if ($call === null) {
             return [];
         }
 
-        $receiverType = $scope->getType($node->var);
-        $receivers = $receiverType->getObjectClassReflections();
+        [$owner, $method, $entries] = $call;
 
-        if ($receivers === []) {
-            return [];
-        }
-
-        foreach ($receivers as $receiver) {
-            if (
-                $receiver->is(Component::class) === false
-                || self::isDeclaredByComponent($receiver, $method) === false
-            ) {
-                return [];
-            }
-        }
-
-        $arguments = self::arguments($node, $method === 'attachbehavior' ? ['name', 'behavior'] : ['behaviors']);
-
-        $definitions = $arguments[$parameter] ?? null;
-
-        if ($definitions === null) {
-            return [];
-        }
-
-        $owner = $receiverType->describe(VerbosityLevel::typeOnly());
-
-        if ($method === 'attachbehaviors') {
-            return $this->resolveList($definitions, $node->getStartLine(), $owner, 'attachBehaviors', null, $scope);
-        }
-
-        $nameType = isset($arguments['name']) ? $scope->getNativeType($arguments['name']) : null;
-        $names = $nameType?->getConstantScalarValues() ?? [];
-        $name = count($names) === 1 && (is_int($names[0]) || is_string($names[0])) ? $names[0] : null;
-
-        $invalid = $this->resolveDefinition(
-            $definitions,
-            $definitions->getStartLine(),
-            $owner,
-            'attachBehavior',
-            $name,
-            null,
-            $scope,
-        );
-
-        return $invalid === null ? [] : [$invalid];
+        return $this->unknownEntryOptions($entries, $owner, $method, $scope);
     }
 
     /**
@@ -162,39 +125,40 @@ final class BehaviorDefinitionResolver
      */
     public function resolveBehaviorsReturn(Return_ $node, Scope $scope): array
     {
-        if ($node->expr === null || $scope->isInAnonymousFunction() || $scope->isInTrait()) {
+        $return = self::behaviorsReturnEntries($node, $scope);
+
+        if ($return === null) {
             return [];
         }
 
-        $function = $scope->getFunction();
-        $owner = $scope->getClassReflection();
+        [$owner, $entries, $declaredType] = $return;
 
-        if (
-            $function instanceof MethodReflection === false
-            || $owner === null
-            || strtolower($function->getName()) !== 'behaviors'
-            || $owner->isClass() === false
-            || $owner->isAnonymous()
-            || $owner->getName() === Component::class
-            || $owner->is(Component::class) === false
-        ) {
+        return $this->invalidDefinitions($entries, $owner, 'behaviors', $declaredType, $scope);
+    }
+
+    /**
+     * Returns the options of the behavior configurations of a `behaviors()` return statement that the created behavior
+     * can't assign, in definition and configuration order.
+     *
+     * Records the declaration dependency of the owner and the dependencies of
+     * {@see CreateObjectConfigurationResolver::resolveTypeOptions()} for each configuration.
+     *
+     * @param Return_ $node Return statement to inspect.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return list<UnknownBehaviorOption>
+     */
+    public function resolveBehaviorsReturnUnknownOptions(Return_ $node, Scope $scope): array
+    {
+        $return = self::behaviorsReturnEntries($node, $scope);
+
+        if ($return === null) {
             return [];
         }
 
-        $scope->trackClassDependency($owner->getName());
+        [$owner, $entries] = $return;
 
-        if (self::isDeclaredByComponent($owner, 'ensureBehaviors') === false) {
-            return [];
-        }
-
-        return $this->resolveList(
-            $node->expr,
-            $node->getStartLine(),
-            $owner->getDisplayName(),
-            'behaviors',
-            $function->getReturnType()->getIterableValueType(),
-            $scope,
-        );
+        return $this->unknownEntryOptions($entries, $owner, 'behaviors', $scope);
     }
 
     /**
@@ -247,6 +211,64 @@ final class BehaviorDefinitionResolver
         }
 
         return $invalid;
+    }
+
+    /**
+     * Returns the options of the behavior configurations in the `as` options of a `Yii::createObject()` call that the
+     * created behavior can't assign, in configuration order.
+     *
+     * Only configurations whose class `Component::__set()` certainly accepts are read, since it checks the supplied
+     * class before `Yii::createObject()` assigns any option.
+     *
+     * Records the dependencies of {@see CreateObjectConfigurationResolver::resolve()}, the class dependency of each
+     * accepted class and the dependencies of {@see CreateObjectConfigurationResolver::resolveTypeOptions()} for each
+     * configuration.
+     *
+     * @param StaticCall $node Static call to inspect.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return list<UnknownBehaviorOption>
+     */
+    public function resolveCreateObjectAsUnknownOptions(StaticCall $node, Scope $scope): array
+    {
+        $configuration = $this->configurationResolver->resolve($node, $scope);
+
+        if ($configuration === null) {
+            return [];
+        }
+
+        $owner = $configuration->classReflection;
+
+        if (self::isDeclaredByComponent($owner, '__set') === false) {
+            return [];
+        }
+
+        $unknown = [];
+
+        foreach ($configuration->options as [$option, $line, $value]) {
+            $type = $value instanceof Expr ? $scope->getNativeType($value) : $value;
+
+            if (
+                str_starts_with($option, self::BEHAVIOR_PREFIX) === false
+                || $this->isAcceptedAsConfiguration($type, $scope) === false
+            ) {
+                continue;
+            }
+
+            foreach ($this->unknownOptions($value, $line, $scope) as [$behaviorClass, $name, $optionLine]) {
+                $unknown[] = new UnknownBehaviorOption(
+                    $owner->getDisplayName(),
+                    'createObject',
+                    $option,
+                    $optionLine,
+                    $behaviorClass,
+                    $name,
+                    $configuration->calledClass,
+                );
+            }
+        }
+
+        return $unknown;
     }
 
     /**
@@ -370,6 +392,109 @@ final class BehaviorDefinitionResolver
     }
 
     /**
+     * Returns the receiver type, the method and the definition entries of an `attachBehavior()` or `attachBehaviors()`
+     * call whose every receiver class inherits the method from {@see Component}, or `null` otherwise.
+     *
+     * @return array{string, string, list<array{int|string|null, int, Expr|Type}>}|null
+     */
+    private static function attachCallEntries(MethodCall $node, Scope $scope): array|null
+    {
+        if ($node->name instanceof Identifier === false || $node->isFirstClassCallable()) {
+            return null;
+        }
+
+        $method = strtolower($node->name->toString());
+
+        $parameter = self::ATTACH_METHODS[$method] ?? null;
+
+        if ($parameter === null) {
+            return null;
+        }
+
+        $receiverType = $scope->getType($node->var);
+        $receivers = $receiverType->getObjectClassReflections();
+
+        if ($receivers === []) {
+            return null;
+        }
+
+        foreach ($receivers as $receiver) {
+            if (
+                $receiver->is(Component::class) === false
+                || self::isDeclaredByComponent($receiver, $method) === false
+            ) {
+                return null;
+            }
+        }
+
+        $arguments = self::arguments($node, $method === 'attachbehavior' ? ['name', 'behavior'] : ['behaviors']);
+
+        $definitions = $arguments[$parameter] ?? null;
+
+        if ($definitions === null) {
+            return null;
+        }
+
+        $owner = $receiverType->describe(VerbosityLevel::typeOnly());
+
+        if ($method === 'attachbehaviors') {
+            return [$owner, 'attachBehaviors', self::entries($definitions, $node->getStartLine(), $scope) ?? []];
+        }
+
+        $nameType = isset($arguments['name']) ? $scope->getNativeType($arguments['name']) : null;
+
+        $names = $nameType?->getConstantScalarValues() ?? [];
+
+        $name = count($names) === 1 && (is_int($names[0]) || is_string($names[0])) ? $names[0] : null;
+
+        return [$owner, 'attachBehavior', [[$name, $definitions->getStartLine(), $definitions]]];
+    }
+
+    /**
+     * Returns the owner, the definition entries and the declared element type of a `behaviors()` return statement of
+     * a {@see Component} subclass that inherits `ensureBehaviors()` from {@see Component}, or `null` otherwise.
+     *
+     * Records the declaration dependency of the owner.
+     *
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return array{string, list<array{int|string, int, Expr|Type}>, Type}|null
+     */
+    private static function behaviorsReturnEntries(Return_ $node, Scope $scope): array|null
+    {
+        if ($node->expr === null || $scope->isInAnonymousFunction() || $scope->isInTrait()) {
+            return null;
+        }
+
+        $function = $scope->getFunction();
+        $owner = $scope->getClassReflection();
+
+        if (
+            $function instanceof MethodReflection === false
+            || $owner === null
+            || strtolower($function->getName()) !== 'behaviors'
+            || $owner->isClass() === false
+            || $owner->isAnonymous()
+            || $owner->getName() === Component::class
+            || $owner->is(Component::class) === false
+        ) {
+            return null;
+        }
+
+        $scope->trackClassDependency($owner->getName());
+
+        if (self::isDeclaredByComponent($owner, 'ensureBehaviors') === false) {
+            return null;
+        }
+
+        return [
+            $owner->getDisplayName(),
+            self::entries($node->expr, $node->getStartLine(), $scope) ?? [],
+            $function->getReturnType()->getIterableValueType(),
+        ];
+    }
+
+    /**
      * Returns whether a class fails to attach: not a {@see Behavior}, concrete, without public `attach()` and without a
      * `__call()` that could provide it.
      */
@@ -460,6 +585,74 @@ final class BehaviorDefinitionResolver
         }
 
         return $entries;
+    }
+
+    /**
+     * Returns the definitions of a list that can't be attached, in list order.
+     *
+     * @param list<array{int|string|null, int, Expr|Type}> $entries Name, line and definition of each entry.
+     * @param Type|null $declaredType Declared element type of the `behaviors()` return, or `null` for attach calls.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return list<InvalidBehaviorDefinition>
+     */
+    private function invalidDefinitions(
+        array $entries,
+        string $owner,
+        string $method,
+        Type|null $declaredType,
+        Scope $scope,
+    ): array {
+        $invalid = [];
+
+        foreach ($entries as [$name, $line, $definition]) {
+            $definitionError = $this->resolveDefinition(
+                $definition,
+                $line,
+                $owner,
+                $method,
+                $name,
+                $declaredType,
+                $scope,
+            );
+
+            if ($definitionError !== null) {
+                $invalid[] = $definitionError;
+            }
+        }
+
+        return $invalid;
+    }
+
+    /**
+     * Returns whether `Component::__set()` certainly accepts an `as` value as a configuration array: one constant array
+     * whose class, a non-null `__class` before `class`, is a strict {@see Behavior} subclass known to the analysis.
+     *
+     * Records the class dependency of that class.
+     *
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     */
+    private function isAcceptedAsConfiguration(Type $type, Scope $scope): bool
+    {
+        $array = ObjectConfigurationReader::constantArray($type);
+
+        $id = $array === null ? null : self::configurationClass($array);
+
+        if (is_string($id) === false) {
+            return false;
+        }
+
+        $className = ltrim($id, '\\');
+
+        $scope->trackClassDependency($className);
+
+        if ($this->reflectionProvider->hasClass($className) === false) {
+            return false;
+        }
+
+        $class = $this->reflectionProvider->getClass($className);
+
+        return $class->getName() !== Behavior::class && $class->is(Behavior::class);
     }
 
     /**
@@ -580,43 +773,6 @@ final class BehaviorDefinitionResolver
     }
 
     /**
-     * Returns the definitions of a list that can't be attached, in list order.
-     *
-     * @param Type|null $declaredType Declared element type of the `behaviors()` return, or `null` for attach calls.
-     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
-     *
-     * @return list<InvalidBehaviorDefinition>
-     */
-    private function resolveList(
-        Expr $list,
-        int $line,
-        string $owner,
-        string $method,
-        Type|null $declaredType,
-        Scope $scope,
-    ): array {
-        $invalid = [];
-
-        foreach (self::entries($list, $line, $scope) ?? [] as [$name, $entryLine, $definition]) {
-            $definitionError = $this->resolveDefinition(
-                $definition,
-                $entryLine,
-                $owner,
-                $method,
-                $name,
-                $declaredType,
-                $scope,
-            );
-
-            if ($definitionError !== null) {
-                $invalid[] = $definitionError;
-            }
-        }
-
-        return $invalid;
-    }
-
-    /**
      * Returns the entries of a list proven as one constant array, all at the given line, or `null` otherwise.
      *
      * @return list<array{int|string, int, Type}>|null
@@ -636,5 +792,78 @@ final class BehaviorDefinitionResolver
         }
 
         return $entries;
+    }
+
+    /**
+     * Returns the options of the behavior configurations of a definition list that the created behavior can't assign,
+     * in definition and configuration order.
+     *
+     * @param list<array{int|string|null, int, Expr|Type}> $entries Name, line and definition of each entry.
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return list<UnknownBehaviorOption>
+     */
+    private function unknownEntryOptions(array $entries, string $owner, string $method, Scope $scope): array
+    {
+        $unknown = [];
+
+        foreach ($entries as [$name, $line, $definition]) {
+            foreach ($this->unknownOptions($definition, $line, $scope) as [$behaviorClass, $option, $optionLine]) {
+                $unknown[] = new UnknownBehaviorOption($owner, $method, $name, $optionLine, $behaviorClass, $option);
+            }
+        }
+
+        return $unknown;
+    }
+
+    /**
+     * Returns the behavior class, name and line of each option of a behavior configuration that the created
+     * {@see Behavior} can't assign, in configuration order.
+     *
+     * The configuration is resolved as `Yii::createObject()` receives it, through
+     * {@see CreateObjectConfigurationResolver::resolveTypeOptions()}, and its options are classified by
+     * {@see ObjectOptionAssignment::unknownOptions()}; a class that isn't a {@see Behavior} stands aside.
+     *
+     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
+     *
+     * @return list<array{string, string, int}>
+     */
+    private function unknownOptions(Expr|Type $definition, int $line, Scope $scope): array
+    {
+        $options = $definition instanceof Expr
+            ? ObjectConfigurationReader::options($definition, $line, $scope)
+            : ObjectConfigurationReader::optionsFromType($definition, $line);
+
+        if ($options === null) {
+            return [];
+        }
+
+        $configuration = $this->configurationResolver->resolveTypeOptions(
+            self::CREATE_OBJECT_CLASS,
+            $options,
+            $line,
+            $scope,
+        );
+
+        if ($configuration === null || $configuration->classReflection->is(Behavior::class) === false) {
+            return [];
+        }
+
+        $class = $configuration->classReflection;
+
+        $unknownOptions = ObjectOptionAssignment::unknownOptions(
+            $class,
+            $configuration->options,
+            $this->serviceMap,
+            $scope,
+        );
+
+        $unknown = [];
+
+        foreach ($unknownOptions as [$option, $optionLine]) {
+            $unknown[] = [$class->getDisplayName(), $option, $optionLine];
+        }
+
+        return $unknown;
     }
 }

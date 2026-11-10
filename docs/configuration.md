@@ -13,6 +13,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `component_generics`                    | `user: identityClass` | Component ID to configuration key holding its single generic class argument.     |
 | `rules.behaviorInvalidAsDefinition`     | `false`               | Enables the [`as` behavior option rule](#invalid-as-behavior-options).           |
 | `rules.behaviorInvalidDefinition`       | `false`               | Enables the [behavior definition rule](#invalid-behavior-definitions).           |
+| `rules.behaviorUnknownOption`           | `false`               | Enables the [behavior unknown option rule](#unknown-behavior-options).           |
 | `rules.createObjectInvalidOptionType`   | `false`               | Enables the [option type rule](#invalid-yiicreateobject-option-types).           |
 | `rules.createObjectUnknownOption`       | `false`               | Enables the [unknown option rule](#unknown-yiicreateobject-options).             |
 | `rules.externalActionInvalidOptionType` | `false`               | Enables the [external action option type rule](#options-of-external-actions).    |
@@ -701,6 +702,63 @@ values that are not one constant, closures, possible `ArrayAccess` objects, cont
 cycles, abstract or invocable container results and, for container results only, components that override
 `attachBehavior()`. Changing a container definition, the declaration of a named or resolved class or one of its parents,
 or an `attachBehavior()` override of the component reanalyses the affected file.
+
+## Unknown behavior options
+
+An opt-in rule reports the options of behavior configuration arrays that the created behavior can't assign, in
+`behaviors()` lists, `attachBehavior()` and `attachBehaviors()` arguments and `as name` options of
+`Yii::createObject()`:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            behaviorUnknownOption: true
+```
+
+```php
+final class Article extends yii\base\Component
+{
+    public function behaviors(): array
+    {
+        return [
+            'timestamp' => [
+                'class' => yii\behaviors\TimestampBehavior::class,
+                'value' => time(...),      // valid
+                'createdAt' => 'created', // reported: the property is `createdAtAttribute`
+            ],
+        ];
+    }
+}
+
+$article = Yii::createObject([
+    'class' => Article::class,
+    'as stamp' => ['class' => yii\behaviors\TimestampBehavior::class, 'updated' => false], // reported
+]);
+```
+
+Yii creates the behavior through `Yii::createObject()` and assigns every option before attaching it, so an option that
+reaches `yii\base\BaseObject::__set()` throws `yii\base\UnknownPropertyException`. The rule reports, with the identifier
+`yii2.behavior.unknownOption`, the options that the [unknown option rule](#unknown-yiicreateobject-options) would report
+for the same configuration: names without a public property or a `set` method of the class that Yii creates, compared
+case-sensitively, including protected and private properties without a setter and `as` or `on` keys, which a behavior
+treats as plain property names.
+
+Only classes that are `yii\base\Behavior` or a subclass are checked, after `__class` and `class` precedence, the
+container definitions, aliases and constructor arguments of the analysis configuration, under the same conditions as
+that rule. Options are reported at their key, and configurations that native types prove constant at the line of the
+list item, argument, `as` option, `return` or call. The message names the behavior or `as` option, the owner, and the
+created class and option.
+
+An `as` configuration is checked only when its class is one the analysis knows as a strict subclass of
+`yii\base\Behavior`, since `Component::__set()` rejects any other class first. The rule stands aside for owners that
+override `ensureBehaviors()`, receivers that override the attach method, components that override `__set()`, classes
+that the container resolves to a class that is not a behavior, which the
+[behavior definition rule](#invalid-behavior-definitions) and the
+[`as` behavior option rule](#invalid-as-behavior-options) cover, and for everything the unknown option rule stands aside
+on, such as read-only properties, behavior classes that override the constructor or `__set()`, container factories and
+singletons, unknown classes and values that are not one constant. Changing a container definition, the declaration of
+the created class or one of its parents, or the owner reanalyses the affected file.
 
 ## Constants and result cache
 
