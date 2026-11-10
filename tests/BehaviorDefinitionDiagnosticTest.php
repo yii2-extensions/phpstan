@@ -8,9 +8,12 @@ use PHPUnit\Framework\Attributes\DataProviderExternal;
 use PHPUnit\Framework\TestCase;
 use yii2\extensions\phpstan\rules\{
     AttachBehaviorInvalidDefinitionRule,
+    AttachBehaviorInvalidOptionTypeRule,
     AttachBehaviorUnknownOptionRule,
     BehaviorsInvalidDefinitionRule,
+    BehaviorsInvalidOptionTypeRule,
     BehaviorsUnknownOptionRule,
+    CreateObjectBehaviorInvalidOptionTypeRule,
     CreateObjectBehaviorUnknownOptionRule,
     CreateObjectInvalidAsDefinitionRule,
 };
@@ -24,8 +27,10 @@ use const DIRECTORY_SEPARATOR;
 /**
  * Integration tests for the switches of {@see BehaviorsInvalidDefinitionRule},
  * {@see AttachBehaviorInvalidDefinitionRule}, {@see CreateObjectInvalidAsDefinitionRule},
- * {@see BehaviorsUnknownOptionRule}, {@see AttachBehaviorUnknownOptionRule} and
- * {@see CreateObjectBehaviorUnknownOptionRule} beside native diagnostics in a real PHPStan run.
+ * {@see BehaviorsUnknownOptionRule}, {@see AttachBehaviorUnknownOptionRule},
+ * {@see CreateObjectBehaviorUnknownOptionRule}, {@see BehaviorsInvalidOptionTypeRule},
+ * {@see AttachBehaviorInvalidOptionTypeRule} and {@see CreateObjectBehaviorInvalidOptionTypeRule} beside native
+ * diagnostics in a real PHPStan run.
  *
  * {@see BehaviorDefinitionDiagnosticProvider} for test case data providers.
  */
@@ -140,6 +145,37 @@ final class BehaviorDefinitionDiagnosticTest extends TestCase
                     return \yii\BaseYii::createObject([
                         'class' => \yii\base\Component::class,
                         'as labelled' => ['class' => Labelled::class, 'missing' => 1],
+                    ]);
+                }
+            }
+
+            PHP,
+        );
+        $this->writeFile(
+            'project/src/TypedOwner.php',
+            <<<'PHP'
+            <?php
+
+            declare(strict_types=1);
+
+            namespace Probe;
+
+            final class TypedOwner extends \yii\base\Component
+            {
+                public function behaviors(): array
+                {
+                    return [
+                        'labelled' => ['class' => Labelled::class, 'label' => []],
+                    ];
+                }
+
+                public function register(): object
+                {
+                    $this->attachBehavior('attached', ['class' => Labelled::class, 'label' => []]);
+
+                    return \yii\BaseYii::createObject([
+                        'class' => \yii\base\Component::class,
+                        'as labelled' => ['class' => Labelled::class, 'label' => []],
                     ]);
                 }
             }

@@ -50,6 +50,12 @@ enum Message: string
         . 'configuration array.';
 
     /**
+     * Error when a behavior configuration of an `as` option sets a value that the behavior class never accepts.
+     */
+    case BEHAVIOR_INVALID_AS_OPTION_TYPE = "%s::createObject() option '%s' of %s sets %s::\$%s to %s, but %s accepts "
+        . 'only %s, even with type coercion.';
+
+    /**
      * Error when a behavior configuration array has no class element that `Yii::createObject()` can read.
      */
     case BEHAVIOR_INVALID_DEFINITION_ARRAY = 'Behavior %s in %s::%s() is a configuration array without a non-null '
@@ -66,6 +72,12 @@ enum Message: string
      */
     case BEHAVIOR_INVALID_DEFINITION_RESOLVED_CLASS = 'Behavior %s in %s::%s() uses %s, which the container resolves '
         . 'to %s; Yii cannot attach it: it is not a yii\base\Behavior and has no public attach() method.';
+
+    /**
+     * Error when a behavior configuration sets a value that the behavior class never accepts.
+     */
+    case BEHAVIOR_INVALID_OPTION_TYPE = 'Behavior %s in %s::%s() sets %s::$%s to %s, but %s accepts only %s, even with '
+        . 'type coercion.';
 
     /**
      * Error when no attached behavior provides the requested method.
