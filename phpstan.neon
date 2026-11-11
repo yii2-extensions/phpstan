@@ -35,6 +35,7 @@ parameters:
             - tests/data/rule/traitproperty/
             - tests/data/rule/action/hook/
             - tests/data/rule/behavior/
+            - tests/data/rule/validator/
             - tests/data/rule/action/CreateActionOverrideController.php
             - tests/data/rule/action/InvalidOptionTypeActionController.php
             - tests/data/rule/action/OpenMapActionController.php

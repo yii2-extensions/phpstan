@@ -47,6 +47,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - test: drop PHPStan-owned result cache write assertions and share process, work directory and change sequence test helpers.
 - feat: add opt-in `yii2.behavior.invalidOptionType` rule for behavior configuration values that the created behavior never accepts.
 - docs: complete constructor and rule node type PHPDoc for API documentation.
+- feat: add opt-in `yii2.validator.incompleteRule` rule for `Model::rules()` entries without non-null attribute names or validator type.
 
 ## 0.5.2 October 23, 2026
 

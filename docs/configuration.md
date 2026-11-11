@@ -21,6 +21,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `rules.externalActionUnknownOption`     | `false`               | Enables the [external action unknown option rule](#options-of-external-actions). |
 | `rules.newInvalidOptionType`            | `false`               | Enables the [`new` option type rule](#options-of-new-constructions).             |
 | `rules.newUnknownOption`                | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).          |
+| `rules.validatorIncompleteRule`         | `false`               | Enables the [incomplete validation rule check](#incomplete-validation-rules).    |
 | `rules.widgetInvalidOptionType`         | `false`               | Enables the [widget option type rule](#options-of-widget-calls).                 |
 | `rules.widgetUnknownOption`             | `false`               | Enables the [widget unknown option rule](#options-of-widget-calls).              |
 
@@ -813,6 +814,51 @@ that override `ensureBehaviors()`, receivers that override the attach method, co
 behavior classes that override the constructor or `__set()`. The message names the behavior or `as` option, the owner,
 the created class and option, the value type and the type that the property or setter accepts. Changing a container
 definition, the declaration of the created class or one of its parents, or the owner reanalyses the affected file.
+
+## Incomplete validation rules
+
+An opt-in rule reports the validation rules of `yii\base\Model::rules()` that Yii rejects because they don't specify the
+attribute names at key `0` and the validator type at key `1`:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            validatorIncompleteRule: true
+```
+
+```php
+final class Article extends yii\base\Model
+{
+    public function rules(): array
+    {
+        return [
+            [['title', 'body'], 'required'], // valid
+            [1 => 'trim', 0 => 'title'],     // valid: the keys count, not their order
+            ['title', 'max' => 255],         // reported: no validator type
+            [null, 'required'],              // reported: `null` attribute names
+        ];
+    }
+}
+```
+
+`Model::createValidators()` keeps `yii\validators\Validator` instances and requires every other rule to be an array with
+non-null values at keys `0` and `1`; otherwise `getValidators()`, which `validate()` and `scenarios()` call, throws
+`yii\base\InvalidConfigException`. The rule reports, with the identifier `yii2.validator.incompleteRule`, each rule that
+native types prove to be one constant array whose key `0` or `1` is absent or `null`, after PHP's key normalization and
+duplicate-key handling, such as `['title']`, `[]`, `['title', 'validator' => 'string']` or
+`['title', 'required', 1 => null]`. An empty `rules()` list declares no rule and is valid.
+
+Literal list items are reported at their own line, and lists that native types prove constant at the line of `return`.
+The message names the rule, the model and the absent or `null` keys.
+
+The rule analyses only `rules()` returns of non-anonymous models that inherit `createValidators()` and `getValidators()`
+from `yii\base\Model`. It stands aside for rules whose key `0` or `1` may be `null`, unions and other values that are
+not one constant array, PHPDoc-only shapes, merged, built or dynamically keyed lists, `rules()` declared in a trait or
+returned from a closure, and models that override `createValidators()` or `getValidators()`, directly, through a trait
+or in a parent class. Rules that are not arrays are left to Yii's declared `rules()` type, which PHPStan already
+reports; validator names, options and attribute existence are not checked. Changing the model or one of its parents
+reanalyses the affected file.
 
 ## Constants and result cache
 

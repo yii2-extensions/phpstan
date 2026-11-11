@@ -167,6 +167,12 @@ enum Message: string
     case UNSUPPORTED_DEFINITION = "Unsupported definition for '%s'.";
 
     /**
+     * Error when a validation rule has no non-null attribute names at key `0` or validator type at key `1`.
+     */
+    case VALIDATOR_INCOMPLETE_RULE = 'Validation rule %s in %s::rules() has %s, which Model::createValidators() '
+        . 'rejects: a rule must specify the attribute names at key 0 and the validator type at key 1.';
+
+    /**
      * Error when a configuration value or identifier is not a string.
      */
     case VALUE_NOT_STRING = "'%s': '%s' must be a 'string', got '%s'.";
