@@ -17,6 +17,8 @@ use yii\BaseYii;
 final readonly class CreateObjectConfiguration
 {
     /**
+     * Stores the called class, resolved class and effective configuration options.
+     *
      * @param string $calledClass Class through which `createObject()` is called, as PHPStan displays it.
      * @param ClassReflection $classReflection Class Yii creates and configures.
      * @param list<array{string, int, Expr|Type}> $options Name, reported line and effective value of each distinct

@@ -52,6 +52,11 @@ final class NewObjectInvalidOptionTypeRule implements Rule
         $this->configurationResolver = new NewObjectConfigurationResolver($reflectionProvider);
     }
 
+    /**
+     * Returns the node class this rule analyses.
+     *
+     * @return class-string<New_>
+     */
     public function getNodeType(): string
     {
         return New_::class;

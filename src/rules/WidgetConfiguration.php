@@ -15,6 +15,8 @@ use yii\base\Widget;
 final readonly class WidgetConfiguration
 {
     /**
+     * Stores the widget creation method and its resolved configuration.
+     *
      * @param string $method Name of the called method as {@see Widget} declares it: `widget` or `begin`.
      * @param CreateObjectConfiguration $configuration Configuration that `Yii::createObject()` receives from the
      * method: the called class as PHPStan displays it, the widget class Yii creates and the options it assigns.

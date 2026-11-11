@@ -52,6 +52,11 @@ final class CreateObjectInvalidOptionTypeRule implements Rule
         $this->configurationResolver = new CreateObjectConfigurationResolver($reflectionProvider, $serviceMap);
     }
 
+    /**
+     * Returns the node class this rule analyses.
+     *
+     * @return class-string<StaticCall>
+     */
     public function getNodeType(): string
     {
         return StaticCall::class;

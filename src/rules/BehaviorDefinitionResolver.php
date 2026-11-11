@@ -55,6 +55,8 @@ final class BehaviorDefinitionResolver
     private readonly CreateObjectConfigurationResolver $configurationResolver;
 
     /**
+     * Initializes the resolver with class reflection and the analysis configuration.
+     *
      * @param ReflectionProvider $reflectionProvider Provides class reflection for owners and resolved classes.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */

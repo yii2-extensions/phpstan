@@ -32,6 +32,8 @@ final class BehaviorsInvalidDefinitionRule implements Rule
     private readonly BehaviorDefinitionResolver $definitionResolver;
 
     /**
+     * Initializes the rule with class reflection and the analysis configuration.
+     *
      * @param ReflectionProvider $reflectionProvider Provides class reflection for owners and resolved classes.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
@@ -40,6 +42,11 @@ final class BehaviorsInvalidDefinitionRule implements Rule
         $this->definitionResolver = new BehaviorDefinitionResolver($reflectionProvider, $serviceMap);
     }
 
+    /**
+     * Returns the node class this rule analyses.
+     *
+     * @return class-string<Return_>
+     */
     public function getNodeType(): string
     {
         return Return_::class;

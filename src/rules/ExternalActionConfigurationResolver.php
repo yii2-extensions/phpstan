@@ -35,6 +35,8 @@ final class ExternalActionConfigurationResolver
     private readonly CreateObjectConfigurationResolver $createObjectResolver;
 
     /**
+     * Initializes the resolver with class reflection and the analysis configuration.
+     *
      * @param ReflectionProvider $reflectionProvider Provides class reflection for the created actions.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */

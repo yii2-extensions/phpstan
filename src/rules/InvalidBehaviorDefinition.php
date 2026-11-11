@@ -15,6 +15,8 @@ use function is_int;
 final readonly class InvalidBehaviorDefinition
 {
     /**
+     * Stores an unattachable behavior definition and its diagnostic location.
+     *
      * @param string $owner Class whose `behaviors()` returns the definition, or receiver type of the attach call, as
      * PHPStan displays it.
      * @param string $method Method that supplies the definition: `behaviors`, `attachBehavior` or `attachBehaviors`.

@@ -54,6 +54,11 @@ final class WidgetInvalidOptionTypeRule implements Rule
         $this->configurationResolver = new WidgetConfigurationResolver($reflectionProvider, $serviceMap);
     }
 
+    /**
+     * Returns the node class this rule analyses.
+     *
+     * @return class-string<StaticCall>
+     */
     public function getNodeType(): string
     {
         return StaticCall::class;

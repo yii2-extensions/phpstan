@@ -14,6 +14,8 @@ use yii2\extensions\phpstan\exception\Message;
 final readonly class InvalidBehaviorAsDefinition
 {
     /**
+     * Stores a rejected `as` behavior definition and its diagnostic location.
+     *
      * @param string $calledClass Class through which `createObject()` is called, as PHPStan displays it.
      * @param string $owner Created component that receives the option, as PHPStan displays it.
      * @param string $option Option name as written, including the `as ` prefix.
