@@ -35,6 +35,8 @@ final class AttachBehaviorInvalidOptionTypeRule implements Rule
     private readonly BehaviorDefinitionResolver $definitionResolver;
 
     /**
+     * Initializes the rule with class reflection and the analysis configuration.
+     *
      * @param ReflectionProvider $reflectionProvider Provides class reflection for owners and behavior classes.
      * @param ServiceMap $serviceMap Service and component map for Yii Application static analysis.
      */
@@ -43,6 +45,11 @@ final class AttachBehaviorInvalidOptionTypeRule implements Rule
         $this->definitionResolver = new BehaviorDefinitionResolver($reflectionProvider, $serviceMap);
     }
 
+    /**
+     * Returns the node class this rule analyses.
+     *
+     * @return class-string<MethodCall>
+     */
     public function getNodeType(): string
     {
         return MethodCall::class;

@@ -16,6 +16,8 @@ use PHPStan\Type\Type;
 final readonly class NewObjectConfiguration
 {
     /**
+     * Stores the constructed class and effective configuration options.
+     *
      * @param ClassReflection $classReflection Class that `new` constructs and configures.
      * @param list<array{string, int, Expr|Type}> $options Name, reported line and effective value of each distinct
      * option, in first-occurrence order, as {@see ObjectConfigurationReader::options()} reads them. Every key is

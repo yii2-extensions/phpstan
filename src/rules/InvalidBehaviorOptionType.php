@@ -16,6 +16,8 @@ use function is_int;
 final readonly class InvalidBehaviorOptionType
 {
     /**
+     * Stores a rejected behavior option, its actual and expected types and diagnostic location.
+     *
      * @param string $owner Class whose `behaviors()` returns the configuration, receiver type of the attach call, or
      * component created by `createObject()`, as PHPStan displays it.
      * @param string $method Method that supplies the configuration: `behaviors`, `attachBehavior`, `attachBehaviors` or

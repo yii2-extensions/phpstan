@@ -14,6 +14,8 @@ use yii\base\Controller;
 final readonly class ExternalActionConfiguration
 {
     /**
+     * Stores the controller, action ID and resolved action configuration.
+     *
      * @param string $controllerClass Controller whose `actions()` returns the definition, as PHPStan displays it.
      * @param string $actionId Action ID that maps to the definition.
      * @param CreateObjectConfiguration $configuration Configuration that `Yii::createObject()` receives from
