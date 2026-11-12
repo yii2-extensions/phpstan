@@ -22,6 +22,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `rules.newInvalidOptionType`            | `false`               | Enables the [`new` option type rule](#options-of-new-constructions).             |
 | `rules.newUnknownOption`                | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).          |
 | `rules.validatorIncompleteRule`         | `false`               | Enables the [incomplete validation rule check](#incomplete-validation-rules).    |
+| `rules.validatorInvalidDefinition`      | `false`               | Enables the [invalid validator type check](#invalid-validator-types).            |
 | `rules.widgetInvalidOptionType`         | `false`               | Enables the [widget option type rule](#options-of-widget-calls).                 |
 | `rules.widgetUnknownOption`             | `false`               | Enables the [widget unknown option rule](#options-of-widget-calls).              |
 
@@ -858,6 +859,57 @@ not one constant array, PHPDoc-only shapes, merged, built or dynamically keyed l
 returned from a closure, and models that override `createValidators()` or `getValidators()`, directly, through a trait
 or in a parent class. Rules that are not arrays are left to Yii's declared `rules()` type, which PHPStan already
 reports; validator names, options and attribute existence are not checked. Changing the model or one of its parents
+reanalyses the affected file.
+
+## Invalid validator types
+
+An opt-in rule reports the validation rules of `yii\base\Model::rules()` whose validator type at key `1` is an array or
+an object other than a `Closure`:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            validatorInvalidDefinition: true
+```
+
+```php
+final class Article extends yii\base\Model
+{
+    public function rules(): array
+    {
+        return [
+            ['title', 'string', 'max' => 255],                                 // valid
+            ['title', $this->checkTitle(...)],                                 // valid: a Closure
+            new yii\validators\RequiredValidator(['attributes' => ['title']]), // valid: a whole rule
+            ['title', ['class' => yii\validators\StringValidator::class]],     // reported: an array
+            ['title', [$this, 'checkTitle']],                                  // reported: an array
+            ['title', new yii\validators\RequiredValidator()],                 // reported: an object
+        ];
+    }
+
+    public function checkTitle(string $attribute): void {}
+}
+```
+
+`Validator::createValidator()` turns a `Closure` into an inline validator and looks every other type up with
+`isset(Validator::$builtInValidators[$type])`, where PHP throws a `TypeError` for an array or an object offset; so
+`getValidators()`, which `validate()` and `scenarios()` call, fails before any validator class is resolved. The rule
+reports, with the identifier `yii2.validator.invalidDefinition`, each rule that native types prove to be one constant
+array with a non-null key `0` and a key `1` whose every possible value is an array or an object that can't be a
+`Closure`, such as a configuration array, a callable array, a validator instance, an invocable object or an enum case.
+Give a built-in name, a class name or a model method name instead, with the options after key `1`, or a `Closure` such
+as `$this->checkTitle(...)`.
+
+Literal list items are reported at their own line, and lists that native types prove constant at the line of `return`.
+The message names the rule, the model and the validator type.
+
+The rule analyses the same `rules()` returns as the [incomplete validation rule check](#incomplete-validation-rules). It
+stands aside for types that may be a `Closure`, a string or another valid key, such as `object`, `callable`, `mixed` or
+a class unknown to the analysis, unions that include such a type, PHPDoc-only types, and rules whose key `0` or `1` is
+absent or may be `null`, which belong to the incomplete rule check. Validator names, classes, aliases, container IDs,
+scalar types and options are not checked. The rule relies on `Validator::$builtInValidators` holding an array, as Yii
+declares it. Changing the model, one of its parents or a class whose declaration determines the validator type
 reanalyses the affected file.
 
 ## Constants and result cache

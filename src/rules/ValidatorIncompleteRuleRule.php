@@ -5,21 +5,15 @@ declare(strict_types=1);
 namespace yii2\extensions\phpstan\rules;
 
 use PhpParser\Node;
-use PhpParser\Node\Expr;
-use PhpParser\Node\Expr\Array_;
 use PhpParser\Node\Stmt\Return_;
 use PHPStan\Analyser\{DependencyTracker, Scope};
-use PHPStan\Reflection\{ClassReflection, MethodReflection};
 use PHPStan\Rules\{IdentifierRuleError, Rule, RuleErrorBuilder};
 use PHPStan\Type\Type;
 use yii\base\Model;
 use yii2\extensions\phpstan\exception\Message;
 
-use function count;
 use function implode;
 use function is_int;
-use function is_string;
-use function strtolower;
 
 /**
  * Reports validation rules returned by {@see Model::rules()} that {@see Model::createValidators()} rejects because the
@@ -61,7 +55,7 @@ final class ValidatorIncompleteRuleRule implements Rule
      */
     public function processNode(Node $node, Scope $scope): array
     {
-        $owner = self::owner($node, $scope);
+        $owner = ModelRulesReader::owner($node, $scope);
 
         if ($owner === null || $node->expr === null) {
             return [];
@@ -69,8 +63,10 @@ final class ValidatorIncompleteRuleRule implements Rule
 
         $errors = [];
 
-        foreach (self::entries($node->expr, $node->getStartLine(), $scope) ?? [] as [$index, $line, $rule]) {
-            $defects = self::defects($rule instanceof Expr ? $scope->getNativeType($rule) : $rule);
+        foreach (
+            ModelRulesReader::entries($node->expr, $node->getStartLine(), $scope) ?? [] as [$index, $line, $rule]
+        ) {
+            $defects = self::defects($rule);
 
             if ($defects === null) {
                 continue;
@@ -99,16 +95,10 @@ final class ValidatorIncompleteRuleRule implements Rule
      */
     private static function defects(Type $rule): string|null
     {
-        $array = ObjectConfigurationReader::constantArray($rule);
+        $values = ModelRulesReader::ruleValues($rule);
 
-        if ($array === null) {
+        if ($values === null) {
             return null;
-        }
-
-        $values = [];
-
-        foreach ($array->getKeyTypes() as $keyType) {
-            $values[$keyType->getValue()] = $array->getOffsetValueType($keyType);
         }
 
         $defects = [];
@@ -126,131 +116,5 @@ final class ValidatorIncompleteRuleRule implements Rule
         }
 
         return $defects === [] ? null : implode(' and ', $defects);
-    }
-
-    /**
-     * Returns the entries of a rule list as `[index, line, rule]`, in list order, or `null` when the list isn't certain.
-     *
-     * Literal items keep their lines, with PHP's key normalization, implicit keys (after a negative key, its successor)
-     * and last-duplicate semantics; other lists, and literals with unpacking or non-constant keys, must be one constant
-     * array and use the return line.
-     *
-     * @return list<array{int|string, int, Expr|Type}>|null
-     */
-    private static function entries(Expr $list, int $line, Scope $scope): array|null
-    {
-        if ($list instanceof Array_ === false) {
-            return self::typeEntries($scope->getNativeType($list), $line);
-        }
-
-        $entries = [];
-        $positions = [];
-        $next = null;
-
-        foreach ($list->items as $item) {
-            $key = $item->key === null ? $next ?? 0 : self::literalKey($scope->getNativeType($item->key));
-
-            if ($item->unpack || $key === null) {
-                return self::typeEntries($scope->getNativeType($list), $line);
-            }
-
-            // since PHP 8.3 the next implicit key follows the first integer key, even a negative one
-            if (is_int($key) && ($next === null || $key >= $next)) {
-                $next = $key + 1;
-            }
-
-            $entry = [$key, $item->getStartLine(), $item->value];
-
-            if (isset($positions[$key])) {
-                $entries[$positions[$key]] = $entry;
-            } else {
-                $positions[$key] = count($entries);
-                $entries[] = $entry;
-            }
-        }
-
-        return $entries;
-    }
-
-    /**
-     * Returns whether {@see Model} declares the method that the class inherits.
-     */
-    private static function isDeclaredByModel(ClassReflection $class, string $method): bool
-    {
-        return $class->hasNativeMethod($method)
-            && $class->getNativeMethod($method)->getDeclaringClass()->getName() === Model::class;
-    }
-
-    /**
-     * Returns the array key that PHP stores for a literal key, or `null` when it isn't one `int` or `string` constant.
-     */
-    private static function literalKey(Type $type): int|string|null
-    {
-        $values = $type->getConstantScalarValues();
-
-        if (count($values) !== 1 || (is_int($values[0]) === false && is_string($values[0]) === false)) {
-            return null;
-        }
-
-        $key = $values[0];
-
-        return is_string($key) && (string) (int) $key === $key ? (int) $key : $key;
-    }
-
-    /**
-     * Returns the class whose `rules()` returns the statement when {@see Model} consumes it unchanged, or `null`.
-     *
-     * Records the declaration dependency of the owner before checking its `createValidators()` and `getValidators()`.
-     *
-     * @param DependencyTracker&Scope $scope Current PHPStan analysis scope.
-     */
-    private static function owner(Return_ $node, Scope $scope): ClassReflection|null
-    {
-        if ($node->expr === null || $scope->isInAnonymousFunction() || $scope->isInTrait()) {
-            return null;
-        }
-
-        $function = $scope->getFunction();
-        $owner = $scope->getClassReflection();
-
-        if (
-            $function instanceof MethodReflection === false
-            || $owner === null
-            || strtolower($function->getName()) !== 'rules'
-            || $owner->isClass() === false
-            || $owner->isAnonymous()
-            || $owner->getName() === Model::class
-            || $owner->is(Model::class) === false
-        ) {
-            return null;
-        }
-
-        $scope->trackClassDependency($owner->getName());
-
-        return self::isDeclaredByModel($owner, 'createValidators') && self::isDeclaredByModel($owner, 'getValidators')
-            ? $owner
-            : null;
-    }
-
-    /**
-     * Returns the entries of a list proven as one constant array, all at the given line, or `null` otherwise.
-     *
-     * @return list<array{int|string, int, Type}>|null
-     */
-    private static function typeEntries(Type $type, int $line): array|null
-    {
-        $array = ObjectConfigurationReader::constantArray($type);
-
-        if ($array === null) {
-            return null;
-        }
-
-        $entries = [];
-
-        foreach ($array->getKeyTypes() as $keyType) {
-            $entries[] = [$keyType->getValue(), $line, $array->getOffsetValueType($keyType)];
-        }
-
-        return $entries;
     }
 }
