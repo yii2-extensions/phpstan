@@ -14,7 +14,8 @@ use yii\mail\MailerInterface;
 use yii\web\{Application as WebApplication, AssetManager, UrlManager};
 use yii2\extensions\phpstan\tests\support\stub\{ApplicationCustom, User};
 
-use function PHPStan\Testing\{assertSuperType, assertType};
+use function PHPStan\Testing\assertSuperType;
+use function PHPStan\Testing\assertType;
 
 /**
  * Type assertion fixture for {@see Application} property reflection via `Yii::$app` in PHPStan analysis.

@@ -173,6 +173,13 @@ enum Message: string
         . 'rejects: a rule must specify the attribute names at key 0 and the validator type at key 1.';
 
     /**
+     * Error when a validation rule uses an array or an object other than a `Closure` as validator type.
+     */
+    case VALIDATOR_INVALID_DEFINITION = 'Validation rule %s in %s::rules() uses %s as validator type, which '
+        . 'Validator::createValidator() looks up as a key of Validator::$builtInValidators: an array or an object '
+        . 'other than a Closure throws a TypeError.';
+
+    /**
      * Error when a configuration value or identifier is not a string.
      */
     case VALUE_NOT_STRING = "'%s': '%s' must be a 'string', got '%s'.";
