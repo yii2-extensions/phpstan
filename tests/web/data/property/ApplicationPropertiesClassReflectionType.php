@@ -23,7 +23,8 @@ use yii\web\{
 };
 use yii2\extensions\phpstan\tests\support\stub\{ApplicationCustom, ApplicationDbSession};
 
-use function PHPStan\Testing\{assertSuperType, assertType};
+use function PHPStan\Testing\assertSuperType;
+use function PHPStan\Testing\assertType;
 
 /**
  * Type assertion fixture for {@see Application} property reflection via `Yii::$app` in PHPStan analysis.

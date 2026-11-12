@@ -7,7 +7,8 @@ namespace yii2\extensions\phpstan\tests\data\type;
 use yii\log\{FileTarget, Logger, Target};
 use yii2\extensions\phpstan\tests\support\stub\MessageContainer;
 
-use function PHPStan\Testing\{assertSuperType, assertType};
+use function PHPStan\Testing\assertSuperType;
+use function PHPStan\Testing\assertType;
 
 /**
  * Type assertion fixture for Yii logger message inference.
