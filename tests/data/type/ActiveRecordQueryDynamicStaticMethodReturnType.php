@@ -18,6 +18,7 @@ use yii2\extensions\phpstan\tests\support\stub\{
     Voucher,
 };
 
+use function PHPStan\Testing\assertSuperType;
 use function PHPStan\Testing\assertType;
 
 /**
@@ -289,7 +290,8 @@ final class ActiveRecordQueryDynamicStaticMethodReturnType
             'yii2\extensions\phpstan\tests\support\stub\InvoiceQuery',
             ActiveRecordQueryFactory::invoices(),
         );
-        assertType(
+        // PHPStan 2.3.6 also records that this first-class callable is static.
+        assertSuperType(
             'Closure(): yii2\extensions\phpstan\tests\support\stub\InvoiceQuery',
             Invoice::find(...),
         );

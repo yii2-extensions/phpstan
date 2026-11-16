@@ -6,6 +6,7 @@ namespace yii2\extensions\phpstan\tests\type;
 
 use PHPStan\Analyser\{DeclarationDependencyTracker, NameScope};
 use PHPStan\PhpDocParser\Ast\Type\{IdentifierTypeNode, TypeNode};
+use PHPStan\Reflection\ClassReflection;
 use PHPStan\Testing\PHPStanTestCase;
 use PHPStan\Type\VerbosityLevel;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
@@ -14,7 +15,6 @@ use yii\BaseYii;
 use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\{ServiceMap, ServiceMapResultCacheValueExtension};
 use yii2\extensions\phpstan\tests\provider\{ApplicationClassResolverProvider, ApplicationTypeNodeResolverExtensionProvider};
-use yii2\extensions\phpstan\tests\support\stub\RecordingDeclarationDependencyTracker;
 use yii2\extensions\phpstan\type\ApplicationTypeNodeResolverExtension;
 
 use function dirname;
@@ -81,18 +81,14 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
     #[DataProviderExternal(ApplicationTypeNodeResolverExtensionProvider::class, 'unrelatedTypeNodeProvider')]
     public function testResolveReturnsNullForUnrelatedTypeNode(TypeNode $typeNode): void
     {
-        $tracker = new RecordingDeclarationDependencyTracker();
+        $tracker = $this->createMock(DeclarationDependencyTracker::class);
+        $tracker->expects(self::never())->method('trackValueDependency');
 
         $extension = self::createExtension(new ServiceMap(self::BASE_PATH . 'params-config.php'), $tracker);
 
         self::assertNull(
             $extension->resolve($typeNode, new NameScope(null, [], BaseYii::class)),
             'Node must be left to PHPStan.',
-        );
-        self::assertSame(
-            [],
-            $tracker->dependencies,
-            'No dependency must be recorded.',
         );
     }
 
@@ -118,7 +114,8 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
 
     public function testResolveSkipsTrackingOutsideClassScope(): void
     {
-        $tracker = new RecordingDeclarationDependencyTracker();
+        $tracker = $this->createMock(DeclarationDependencyTracker::class);
+        $tracker->expects(self::never())->method('trackValueDependency');
 
         $extension = self::createExtension(new ServiceMap(self::BASE_PATH . 'params-config.php'), $tracker);
 
@@ -126,18 +123,17 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
             new IdentifierTypeNode(ApplicationTypeNodeResolverExtension::PARAMS_TYPE),
             new NameScope(null, []),
         );
-
-        self::assertSame(
-            [],
-            $tracker->dependencies,
-            'No declaring class means no dependency.',
-        );
     }
 
     #[DataProviderExternal(ApplicationTypeNodeResolverExtensionProvider::class, 'trackedPlaceholderProvider')]
     public function testResolveTracksPlaceholderOnDeclaringClass(string $name, string $className, string $key): void
     {
-        $tracker = new RecordingDeclarationDependencyTracker();
+        $tracker = $this->createMock(DeclarationDependencyTracker::class);
+        $tracker->expects(self::exactly(2))->method('trackValueDependency')->with(
+            self::callback(static fn(ClassReflection $class): bool => $class->getName() === $className),
+            ServiceMapResultCacheValueExtension::class,
+            $key,
+        );
 
         $extension = self::createExtension(new ServiceMap(self::BASE_PATH . 'params-config.php'), $tracker);
 
@@ -145,15 +141,6 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
 
         $extension->resolve(new IdentifierTypeNode($name), $nameScope);
         $extension->resolve(new IdentifierTypeNode($name), $nameScope);
-
-        self::assertSame(
-            [
-                [$className, ServiceMapResultCacheValueExtension::class, $key],
-                [$className, ServiceMapResultCacheValueExtension::class, $key],
-            ],
-            $tracker->dependencies,
-            'Every resolution must record the configuration key on the declaring class.',
-        );
     }
 
     public function testStubDeclaresPlaceholderTypes(): void
@@ -196,7 +183,7 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
         return new ApplicationTypeNodeResolverExtension(
             $serviceMap,
             self::createReflectionProvider(),
-            $tracker ?? new RecordingDeclarationDependencyTracker(),
+            $tracker ?? self::createStub(DeclarationDependencyTracker::class),
         );
     }
 

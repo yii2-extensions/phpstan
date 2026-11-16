@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\property;
 
+use PHPStan\Analyser\DeclarationDependencyTracker;
 use PHPStan\Reflection\Annotations\AnnotationsPropertiesClassReflectionExtension;
 use PHPStan\Testing\PHPStanTestCase;
 use PHPUnit\Framework\Attributes\DataProviderExternal;
@@ -13,7 +14,6 @@ use yii2\extensions\phpstan\exception\Message;
 use yii2\extensions\phpstan\property\ApplicationPropertiesClassReflectionExtension;
 use yii2\extensions\phpstan\ServiceMap;
 use yii2\extensions\phpstan\tests\provider\ApplicationClassResolverProvider;
-use yii2\extensions\phpstan\tests\support\stub\RecordingDeclarationDependencyTracker;
 
 /**
  * Unit tests for {@see ApplicationPropertiesClassReflectionExtension} rejection of an invalid configured application
@@ -68,7 +68,7 @@ final class ApplicationPropertiesApplicationTypeTest extends PHPStanTestCase
             self::getContainer()->getByType(AnnotationsPropertiesClassReflectionExtension::class),
             self::createReflectionProvider(),
             new ServiceMap(self::BASE_PATH . $config),
-            new RecordingDeclarationDependencyTracker(),
+            self::createStub(DeclarationDependencyTracker::class),
         );
     }
 }
