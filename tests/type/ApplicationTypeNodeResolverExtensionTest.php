@@ -82,7 +82,10 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
     public function testResolveReturnsNullForUnrelatedTypeNode(TypeNode $typeNode): void
     {
         $tracker = $this->createMock(DeclarationDependencyTracker::class);
-        $tracker->expects(self::never())->method('trackValueDependency');
+
+        $tracker
+            ->expects(self::never())
+            ->method('trackValueDependency');
 
         $extension = self::createExtension(new ServiceMap(self::BASE_PATH . 'params-config.php'), $tracker);
 
@@ -115,7 +118,10 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
     public function testResolveSkipsTrackingOutsideClassScope(): void
     {
         $tracker = $this->createMock(DeclarationDependencyTracker::class);
-        $tracker->expects(self::never())->method('trackValueDependency');
+
+        $tracker
+            ->expects(self::never())
+            ->method('trackValueDependency');
 
         $extension = self::createExtension(new ServiceMap(self::BASE_PATH . 'params-config.php'), $tracker);
 
@@ -129,11 +135,15 @@ final class ApplicationTypeNodeResolverExtensionTest extends PHPStanTestCase
     public function testResolveTracksPlaceholderOnDeclaringClass(string $name, string $className, string $key): void
     {
         $tracker = $this->createMock(DeclarationDependencyTracker::class);
-        $tracker->expects(self::exactly(2))->method('trackValueDependency')->with(
-            self::callback(static fn(ClassReflection $class): bool => $class->getName() === $className),
-            ServiceMapResultCacheValueExtension::class,
-            $key,
-        );
+
+        $tracker
+            ->expects(self::exactly(2))
+            ->method('trackValueDependency')
+            ->with(
+                self::callback(static fn(ClassReflection $class): bool => $class->getName() === $className),
+                ServiceMapResultCacheValueExtension::class,
+                $key,
+            );
 
         $extension = self::createExtension(new ServiceMap(self::BASE_PATH . 'params-config.php'), $tracker);
 
