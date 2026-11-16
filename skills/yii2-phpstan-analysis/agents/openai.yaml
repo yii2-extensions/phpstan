@@ -1,0 +1,4 @@
+interface:
+  display_name: "Yii2 PHPStan Analysis"
+  short_description: "Configure and diagnose Yii PHPStan inference"
+  default_prompt: "Use $yii2-phpstan-analysis to configure yii2-extensions/phpstan or diagnose an inferred Yii type."
