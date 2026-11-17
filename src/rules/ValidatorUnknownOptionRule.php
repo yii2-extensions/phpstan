@@ -10,8 +10,8 @@ use PhpParser\Node\Stmt\Return_;
 use PHPStan\Analyser\{DependencyTracker, Scope};
 use PHPStan\Reflection\{ClassReflection, ReflectionProvider};
 use PHPStan\Rules\{IdentifierRuleError, Rule, RuleErrorBuilder};
-use PHPStan\Type\Constant\{ConstantBooleanType, ConstantStringType};
-use PHPStan\Type\{ObjectType, Type};
+use PHPStan\Type\Constant\ConstantStringType;
+use PHPStan\Type\{MixedType, ObjectType, Type};
 use yii\base\Component;
 use yii2\extensions\phpstan\exception\Message;
 use yii\validators\{InlineValidator, Validator};
@@ -23,7 +23,6 @@ use function array_merge;
 use function array_slice;
 use function in_array;
 use function is_array;
-use function is_bool;
 use function is_int;
 use function is_string;
 use function str_contains;
@@ -171,15 +170,9 @@ final readonly class ValidatorUnknownOptionRule implements Rule
             if (is_array($alias)) {
                 $aliasOptions = [];
 
+                // Only a class value selects the validator; other defaults are neither written nor reported.
                 foreach ($alias as $key => $value) {
-                    if (is_string($value)) {
-                        $aliasOptions[$key] = new ConstantStringType($value);
-                    } elseif (is_bool($value)) {
-                        $aliasOptions[$key] = new ConstantBooleanType($value);
-                    } else {
-                        // The supported Yii defaults contain only string and boolean configuration values.
-                        return [];
-                    }
+                    $aliasOptions[$key] = is_string($value) ? new ConstantStringType($value) : new MixedType();
                 }
 
                 $params = array_merge($aliasOptions, $params);

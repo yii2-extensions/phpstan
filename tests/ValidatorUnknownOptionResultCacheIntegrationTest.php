@@ -19,6 +19,11 @@ final class ValidatorUnknownOptionResultCacheIntegrationTest extends TestCase
 {
     use ResultCacheIntegrationTrait;
 
+    /**
+     * Files the first unchanged warm run may reanalyse: none, or the model, whose dependencies PHPStan may rehash once
+     * after a cold run.
+     */
+    private const array INITIAL_WARM_REANALYSED = [0, 1];
     private const string TEMPORARY_PREFIX = 'yii2-phpstan-validator-unknown-option-result-cache-';
 
     #[TestWith(['property'])]
@@ -33,15 +38,22 @@ final class ValidatorUnknownOptionResultCacheIntegrationTest extends TestCase
             $this->analyse()['results'],
             'Initial cold results must match.',
         );
-        self::assertSame(
-            $before,
-            $this->analyse()['results'],
-            'Initial warm results must match.',
+        $initialWarm = $this->analyse();
+
+        self::assertContains(
+            self::reanalysedFiles($initialWarm['stderr'], 'First unchanged warm run'),
+            self::INITIAL_WARM_REANALYSED,
+            'First unchanged warm run may only reanalyse the model.',
         );
         self::assertSame(
             $before,
-            $this->analyse()['results'],
-            'Repeated warm results must match.',
+            $initialWarm['results'],
+            'First unchanged warm run must keep the initial results.',
+        );
+        $this->assertWarmRunUnchanged(
+            $this->analyse(),
+            $before,
+            'Unchanged initial warm run',
         );
 
         if ($change === 'property') {
@@ -62,10 +74,10 @@ final class ValidatorUnknownOptionResultCacheIntegrationTest extends TestCase
             $warm['results'],
             'Changed warm results must follow the dependency.',
         );
-        self::assertSame(
+        $this->assertWarmRunUnchanged(
+            $this->analyse(),
             $after,
-            $this->analyse()['results'],
-            'Repeated changed results must match.',
+            'Unchanged changed warm run',
         );
 
         $this->removeTemporaryCacheDirectory();
