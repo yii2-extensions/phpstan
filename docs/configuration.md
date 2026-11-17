@@ -23,6 +23,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `rules.newUnknownOption`                | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).          |
 | `rules.validatorIncompleteRule`         | `false`               | Enables the [incomplete validation rule check](#incomplete-validation-rules).    |
 | `rules.validatorInvalidDefinition`      | `false`               | Enables the [invalid validator type check](#invalid-validator-types).            |
+| `rules.validatorMissingRequiredOption`  | `false`               | Enables the [missing validator option check](#missing-validator-options).        |
 | `rules.validatorUnknownOption`          | `false`               | Enables the [unknown validator option check](#unknown-validator-options).        |
 | `rules.widgetInvalidOptionType`         | `false`               | Enables the [widget option type rule](#options-of-widget-calls).                 |
 | `rules.widgetUnknownOption`             | `false`               | Enables the [widget unknown option rule](#options-of-widget-calls).              |
@@ -971,6 +972,46 @@ non-validator classes and model overrides of `createValidators()` or `getValidat
 unknown properties. Only written options are reported, at the rule's line; injected Yii options are not reported.
 
 Changes to the validator declaration, declared alias table, model ancestry and relevant container construction mappings
-invalidate the dependent result cache. This check does not verify required options or option value types.
+invalidate the dependent result cache. This check does not verify option value types; required options belong to
+[missing validator options](#missing-validator-options).
+
+## Missing validator options
+
+Enable `yii2.rules.validatorMissingRequiredOption` to report `yii2.validator.missingRequiredOption` for `Model::rules()`
+entries that create a validator without the option its `init()` requires:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            validatorMissingRequiredOption: true
+```
+
+| Validator class                             | Built-in alias | Required option |
+| ------------------------------------------- | -------------- | --------------- |
+| `yii\validators\FilterValidator`            | `filter`       | `filter`        |
+| `yii\validators\RangeValidator`             | `in`           | `range`         |
+| `yii\validators\RegularExpressionValidator` | `match`        | `pattern`       |
+
+The option is missing when neither the rule nor a container definition of the validator sets it, or when the rule sets
+it to a value whose native type is `null`. Yii then throws `yii\base\InvalidConfigException`, such as
+`The "range" property must be set.`, while it creates the model's validators, including those of inactive scenarios. For
+example, `['status', 'in']` and `['code', 'match', 'pattern' => null]` are reported at the rule's line, while
+`['status', 'in', 'range' => []]` and `['code', 'match', 'pattern' => '']` are valid.
+
+The check uses the dispatch of [unknown validator options](#unknown-validator-options), including its declared default
+alias table assumption: a built-in alias takes priority over a model method with the same name, `__class` selects the
+class, and a written `class` doesn't replace the class of a string alias. Only these exact classes are checked;
+subclasses stand aside because they may declare a default or override `init()`.
+
+The check stands aside when the option's type may be non-`null`, such as `?array`, when a container definition of the
+validator sets the option, and when another option may act before `init()`: an `as` behavior, a setter, or a read-only,
+unknown or non-public property. Unknown options belong to `validatorUnknownOption`, because Yii rejects them first.
+Uncertain dispatch, factories, singletons and model overrides of `createValidators()`, `getValidators()` or
+`hasMethod()` stand aside as for unknown options. A non-iterable `range` value, rules nested in `EachValidator` and
+container definitions available only at runtime aren't checked.
+
+Changes to the validator declarations, the declared alias table, model ancestry and the container definitions of the
+validator invalidate the dependent result cache.
 
 [Back to documentation](../README.md#documentation)
