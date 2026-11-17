@@ -180,6 +180,12 @@ enum Message: string
         . 'other than a Closure throws a TypeError.';
 
     /**
+     * Error when a validation rule writes an unknown option of its resolved validator.
+     */
+    case VALIDATOR_UNKNOWN_OPTION = 'Validation rule %s in %s::rules() sets unknown property %s::$%s: the class '
+        . 'has no public property or setter with that name.';
+
+    /**
      * Error when a configuration value or identifier is not a string.
      */
     case VALUE_NOT_STRING = "'%s': '%s' must be a 'string', got '%s'.";

@@ -32,6 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add opt-in `yii2.validator.incompleteRule` rule for `Model::rules()` entries without non-null attribute names or validator type.
 - feat: add opt-in `yii2.validator.invalidDefinition` rule for `Model::rules()` validator types that are arrays or non-`Closure` objects.
 - docs: align `README.md` badges and Security section with the standard, add skill prompts, rule contracts and Codex metadata, and add Scorecard.
+- feat: add opt-in `yii2.validator.unknownOption` for closures, qualified classes and declared built-in aliases.
 
 ## 0.5.2 October 23, 2026
 
