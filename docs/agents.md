@@ -56,4 +56,34 @@ Open a fresh session at the application root, check the client's available skill
 Ask the agent to configure separate Web/console analyses, resolve a typed factory or diagnose an unresolved service. Run
 the selected PHPStan configuration and check the inferred types. See [testing](testing.md).
 
+## Example prompts
+
+Start a fresh client session at the application root. The explicit example uses Codex's `$skill-name` notation; use
+`/yii2-phpstan-analysis` in Claude Code or the installed client's native skill mechanism. Do not paste the skill body
+and count that as native activation. These are tasks to execute and verify, not claims that an evaluation has passed.
+
+### Explicit invocation
+
+```text
+$yii2-phpstan-analysis
+Review separate Web and console PHPStan configurations and diagnose an unresolved typed service using the installed
+extension. Include an inferred-type assertion and run the relevant analysis without broadening ignored errors.
+Inspect the installed revision first. Do not install dependencies or change files without authorization.
+```
+
+### Natural selection
+
+```text
+A Web application service is being inferred on an unrelated console application receiver. Which configuration and
+receiver-type checks should reproduce the difference before changing runtime code?
+```
+
+### Verify the outcome
+
+Run the relevant analysis and assert the actual inferred type or diagnostic. Configuration text and a successful skill
+response are not analysis results. Record native loading evidence separately from configuration review, executable
+checks and browser/runtime results. For a negative selection control, ask an unrelated question in a fresh session and
+confirm this package skill is not loaded. Keep evaluation traces private; report unavailable checks rather than treating
+discovery as execution.
+
 [Back to documentation](../README.md#documentation)

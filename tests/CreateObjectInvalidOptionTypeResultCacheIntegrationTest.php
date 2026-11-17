@@ -56,7 +56,7 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
         string $file,
         array $initial,
         array $changed,
-        int $reanalysed,
+        int|null $reanalysed,
     ): void {
         $this->writeDeclarations($initial);
 
@@ -68,6 +68,7 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
         $after = self::results($changed);
 
         $initialContents = $this->readFile("project/{$file}");
+
         $initialHash = self::hashFile($this->path("project/{$file}"));
 
         self::assertNotSame(
@@ -93,6 +94,7 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
             $initialCold['results'],
             'Initial run must report the initial results.',
         );
+
         $this->assertWarmRunUnchanged(
             $this->analyse(),
             $before,
@@ -117,11 +119,29 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
 
         $changedRun = $this->analyse();
 
-        self::assertRestored(
-            $reanalysed,
-            $changedRun['stderr'],
-            'Changed warm run',
-        );
+        if ($reanalysed === null) {
+            // PHPStan versions differ in how far a class-to-interface change propagates. Require selective
+            // invalidation; the exact consumer diagnostics below must still match a fresh analysis.
+            $actual = self::reanalysedFiles($changedRun['stderr'], 'Changed warm run');
+
+            self::assertGreaterThan(
+                0,
+                $actual,
+                'The changed declaration must invalidate its consumers.',
+            );
+            self::assertLessThan(
+                8,
+                $actual,
+                'The eight-file project must not fall back to full analysis.',
+            );
+        } else {
+            self::assertRestored(
+                $reanalysed,
+                $changedRun['stderr'],
+                'Changed warm run',
+            );
+        }
+
         self::assertStringContainsString(
             'Result cache is saved.',
             $changedRun['stderr'],
@@ -132,6 +152,7 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationTest extends Test
             $changedRun['results'],
             'Consumers must follow the changed native type.',
         );
+
         $this->assertWarmRunUnchanged(
             $this->analyse(),
             $after,

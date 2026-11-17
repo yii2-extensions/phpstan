@@ -9,12 +9,12 @@ namespace yii2\extensions\phpstan\tests\provider;
  * test cases.
  *
  * Provides the declaration that changes, its native types before and after the change, and the number of files the
- * changed run reanalyses.
+ * changed run reanalyses, or null when only selective invalidation is part of the contract.
  */
 final class CreateObjectInvalidOptionTypeResultCacheIntegrationProvider
 {
     /**
-     * @phpstan-return iterable<string, array{string, array{string, string, string}, array{string, string, string}, int}>
+     * @phpstan-return iterable<string, array{string, array{string, string, string}, array{string, string, string}, int|null}>
      */
     public static function declarationProvider(): iterable
     {
@@ -40,7 +40,7 @@ final class CreateObjectInvalidOptionTypeResultCacheIntegrationProvider
             'src/Shape.php',
             ['string', 'int', 'final class'],
             ['string', 'int', 'interface'],
-            5,
+            null,
         ];
     }
 }

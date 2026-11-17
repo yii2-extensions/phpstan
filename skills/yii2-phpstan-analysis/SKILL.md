@@ -1,6 +1,6 @@
 ---
 name: yii2-phpstan-analysis
-description: Configure yii2-extensions/phpstan in a Yii application, diagnose its component, params, behavior, container and Active Record inference, or migrate its PHPStan setup. Use for this extension rather than unrelated PHPStan errors or general Yii runtime configuration.
+description: Configure yii2-extensions/phpstan in a Yii application, diagnose its component, params, behavior, container and Active Record inference, enable its opt-in configuration rules, or migrate its PHPStan setup. Not for unrelated PHPStan errors, general Yii runtime configuration, or changes to the extension's own source.
 license: BSD-3-Clause
 metadata:
     guide: https://yii2-framework.github.io/docs/extensions/phpstan/
@@ -27,7 +27,7 @@ Inspect existing NEON includes, analysis bootstrap and selected PHP configuratio
 supplied Markdown or package `docs/`. Otherwise check these published pages against the resolved revision:
 
 - Setup and bootstrap: <https://yii2-framework.github.io/docs/extensions/phpstan/installation/index.md>.
-- Components, params, behaviors and container definitions:
+- Components, params, behaviors, container definitions and opt-in rules:
   <https://yii2-framework.github.io/docs/extensions/phpstan/configuration/index.md>.
 - Inference recipes and query limitations: <https://yii2-framework.github.io/docs/extensions/phpstan/examples/index.md>.
 - 0.4-to-0.5 inferred type and extension API changes:
@@ -85,6 +85,50 @@ query classes retain PHPStan's broader answer. Preserve existing intentional gen
 For upgrades, read the migration guide before removing annotations or runtime checks. It covers static stubs, removed
 APIs and inferred type changes. Including the extension outside `vendor/` also changes project-stub validation. PHPStan
 2.3 tracks configuration-derived cache dependencies; routine cache clearing is unnecessary after edits.
+
+## Enable the opt-in rules
+
+`parameters.yii2.rules` holds 14 diagnostic rules, all `false` by default. They report configuration that Yii rejects or
+cannot assign at runtime: unknown options and option types for `Yii::createObject()`, `new` constructions of
+`BaseObject` classes, `Widget::widget()`/`begin()`, `Controller::actions()` and behavior configurations; invalid
+`behaviors()`, `attachBehavior()` and `as` behavior definitions; incomplete `Model::rules()` entries and invalid
+validator types. Enable only the keys the task needs, in the application's NEON configuration:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            createObjectUnknownOption: true
+```
+
+Keys are camel-cased (`newUnknownOption`); error identifiers are dotted (`yii2.new.unknownOption`). Read the
+configuration guide's section for a rule before acting on its report, and ignore an intended case narrowly by identifier
+and path.
+
+## Intended behavior
+
+These look like bugs and are package contracts; do not "fix" them in package or application code:
+
+- `Yii::$app->get()` with a container-only ID or alias is `object`; only `Yii::$container->get()` resolves it. With
+  `false` as `$throwException`, a configured component is nullable (`yii\web\View|null`).
+- Params scalars widen to their types (`'admin@example.com'` is `string`, not a literal); without params,
+  `Yii::$app->params` is `array`.
+- With the built-in `user: identityClass` mapping, `Yii::$app->user->identity` stays `<identityClass>|null`.
+- `asArray()` row shapes mark `@property-read` and relation keys optional, for example `slug?: string`.
+- `Yii::$app` is the selected application class, never `null`: from level 4, `isset(Yii::$app)` is reported as
+  `isset.property`. Keep the stub contract; code that really runs before the application exists keeps its check and a
+  narrow ignore.
+- A relative `yii2.config_path` resolves against the working directory: run from elsewhere, analysis stops with
+  `Provided config path '<path>' must be a readable PHP file.`
+- The option-assignment rules report only when Yii's assignment path is certain; their abstentions include custom
+  constructors or `__set()`, container factories and singletons, and PHPDoc-only configurations. Other rule families
+  have different boundaries: the validator structure rules require inherited `Model::createValidators()` and
+  `getValidators()`, not an inherited constructor or `__set()`. Read each rule's documented scope. No report does not
+  prove a configuration valid.
+
+Classes under `src/` implement the extension, including internal helpers. `extension.neon` registers its PHPStan
+services; applications configure the extension through NEON and the PHP description, not by calling those services. Code
+that extends or registers them directly follows the migration guide's removed and changed API section.
 
 ## Verify and report
 

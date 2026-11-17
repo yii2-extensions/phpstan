@@ -8,18 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## 0.5.3 Under development
 
 - fix: stop applying the configured application's members and components to unrelated application receivers, such as console under Web.
-- test: pin custom Web application inference for classless and configured `user` components with explicit `application_type`.
 - docs: document that `config_path` can't rely on `bootstrapFiles`, recommend idempotent `require_once` loading and test the order.
 - fix: reject a `phpstan.application_type` that doesn't name `yii\base\Application` or a subclass with a precise configuration error.
-- test: pin `Yii::$app` and `Module::$params` declared-property types and diagnostics, and document the non-null `Yii::$app` contract.
-- test: pin params-only result cache reuse and reanalysis across cold and warm PHPStan runs, with an unaffected control file.
-- test: pin result cache reuse and reanalysis when only `phpstan.application_type` switches from Web to console, with unaffected control files.
-- test: pin result cache reuse and reanalysis when only one container service definition changes, with unaffected service and control files.
-- test: pin result cache reuse and reanalysis when only one application component definition changes, for locator and property readers.
-- test: pin result cache reuse and reanalysis when only one behavior definition changes, for method, property and `getAttribute()` readers.
-- test: pin result cache reuse and reanalysis when a missing application component gains a class, for locator and property readers.
-- test: pin result cache reanalysis when a resolved application component becomes unresolved, for locator and property readers.
-- test: accept a first warm result cache save without reanalysis only after same-second analysed file writes in four cache tests.
 - feat: add opt-in `yii2.createObject.unknownOption` rule for literal `Yii::createObject()` options a `BaseObject` class cannot assign.
 - feat: extend `yii2.createObject.unknownOption` to configurations proven by native types, such as constants, local variables and unpacked arrays.
 - feat: add opt-in `yii2.createObject.invalidOptionType` rule for `Yii::createObject()` option values a property or setter never accepts.
@@ -33,22 +23,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add opt-in `yii2.externalAction.unknownOption` and `yii2.externalAction.invalidOptionType` rules for `Controller::actions()` definitions.
 - fix: stand aside in the eight option rules when a trait redeclares an inherited option property, such as with a PHP `8.5` set hook.
 - fix: stand aside in `createObject`, widget and external action option rules when a container definition sets a trait-redeclared property.
-- test: pin the shared option semantics of `ObjectOptionAssignment` and `CreateObjectConfigurationResolver` with direct tests, hooks and traits.
-- test: pin real result cache runs for an application component removal and an unresolved definition gaining its class.
-- test: pin real result cache runs for classless core components gaining or losing their class and typed component factories.
-- test: pin real result cache runs for a generic `user` identity class change and component alias target transitions.
-- test: pin real result cache runs for owner behavior lists that reverse, gain a first behavior or lose their first behavior.
-- test: pin real result cache runs for a missing or empty owner behavior list gaining or losing a behavior, or switching form.
-- test: pin real cold and warm runs for a container service ID whose class only `bootstrapFiles` load, with a wrapper control.
 - feat: add opt-in `yii2.behavior.invalidDefinition` rule for `behaviors()` and `attachBehavior()` definitions Yii can't attach.
 - feat: add opt-in `yii2.behavior.invalidAsDefinition` rule for `as` behavior options of `Yii::createObject()` that Yii rejects.
 - build: run the test suite in parallel with `ParaTest` on `PHPUnit` `^12.5`.
 - feat: add opt-in `yii2.behavior.unknownOption` rule for behavior configuration options that the created behavior class cannot assign.
-- test: drop PHPStan-owned result cache write assertions and share process, work directory and change sequence test helpers.
 - feat: add opt-in `yii2.behavior.invalidOptionType` rule for behavior configuration values that the created behavior never accepts.
 - docs: complete constructor and rule node type PHPDoc for API documentation.
 - feat: add opt-in `yii2.validator.incompleteRule` rule for `Model::rules()` entries without non-null attribute names or validator type.
 - feat: add opt-in `yii2.validator.invalidDefinition` rule for `Model::rules()` validator types that are arrays or non-`Closure` objects.
+- docs: align `README.md` badges and Security section with the standard, add skill prompts, rule contracts and Codex metadata, and add Scorecard.
 
 ## 0.5.2 October 23, 2026
 
