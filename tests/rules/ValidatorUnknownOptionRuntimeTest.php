@@ -42,6 +42,7 @@ final class ValidatorUnknownOptionRuntimeTest extends TestCase
             );
         }
     }
+
     public function testRejectTheFirstReportedOptionOfEachRule(): void
     {
         $model = new ReportedModel();
