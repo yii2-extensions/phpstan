@@ -26,6 +26,7 @@ parameters:
             newUnknownOption: false
             validatorIncompleteRule: false
             validatorInvalidDefinition: false
+            validatorUnknownOption: false
             widgetInvalidOptionType: false
             widgetUnknownOption: false
 
@@ -48,6 +49,7 @@ parametersSchema:
                     newUnknownOption: bool(),
                     validatorIncompleteRule: bool(),
                     validatorInvalidDefinition: bool(),
+                    validatorUnknownOption: bool(),
                     widgetInvalidOptionType: bool(),
                     widgetUnknownOption: bool()
                 ]
@@ -90,6 +92,8 @@ conditionalTags:
         phpstan.rules.rule: %yii2.rules.validatorIncompleteRule%
     yii2\extensions\phpstan\rules\ValidatorInvalidDefinitionRule:
         phpstan.rules.rule: %yii2.rules.validatorInvalidDefinition%
+    yii2\extensions\phpstan\rules\ValidatorUnknownOptionRule:
+        phpstan.rules.rule: %yii2.rules.validatorUnknownOption%
     yii2\extensions\phpstan\rules\WidgetInvalidOptionTypeRule:
         phpstan.rules.rule: %yii2.rules.widgetInvalidOptionType%
     yii2\extensions\phpstan\rules\WidgetUnknownOptionRule:
@@ -141,6 +145,8 @@ services:
         class: yii2\extensions\phpstan\rules\ValidatorIncompleteRuleRule
     -
         class: yii2\extensions\phpstan\rules\ValidatorInvalidDefinitionRule
+    -
+        class: yii2\extensions\phpstan\rules\ValidatorUnknownOptionRule
     -
         class: yii2\extensions\phpstan\rules\WidgetInvalidOptionTypeRule
     -

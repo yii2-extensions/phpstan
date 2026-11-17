@@ -23,6 +23,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `rules.newUnknownOption`                | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).          |
 | `rules.validatorIncompleteRule`         | `false`               | Enables the [incomplete validation rule check](#incomplete-validation-rules).    |
 | `rules.validatorInvalidDefinition`      | `false`               | Enables the [invalid validator type check](#invalid-validator-types).            |
+| `rules.validatorUnknownOption`          | `false`               | Enables the [unknown validator option check](#unknown-validator-options).        |
 | `rules.widgetInvalidOptionType`         | `false`               | Enables the [widget option type rule](#options-of-widget-calls).                 |
 | `rules.widgetUnknownOption`             | `false`               | Enables the [widget unknown option rule](#options-of-widget-calls).              |
 
@@ -936,5 +937,40 @@ vendor/bin/phpstan diagnose -c phpstan.neon
 Inspect the factory return type, component ID and chosen application class before adding annotations. Keep unresolved
 services as `object` until the type can be established. Use a small type assertion or `PHPStan\dumpType()` probe and
 remove temporary probes after diagnosis.
+
+## Unknown validator options
+
+Enable `yii2.rules.validatorUnknownOption` to report `yii2.validator.unknownOption` for unknown options explicitly
+written in `Model::rules()`:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            validatorUnknownOption: true
+```
+
+The rule checks closures, qualified validator class names and the installed Yii version's **declared default**
+`Validator::$builtInValidators` table, including array aliases such as `integer`, `datetime` and `time`. For example,
+`['title', 'string', 'maxx' => 100]` reports the unknown `StringValidator::$maxx` option. A built-in alias takes
+priority over a model method with the same name. Array alias defaults are merged before rule options, as Yii does.
+
+This is an opt-in approximation: runtime changes to the alias table can change which class Yii constructs and cause
+false positives or missed diagnostics. The analysis does not execute application models or attempt to infer arbitrary
+alias-table mutations. Disable this check for applications that replace these aliases, or ignore individual diagnostics
+with this identifier after verifying the runtime behavior.
+
+Names that are not built-in aliases and do not contain a backslash stand aside, including model and behavior method
+names. Qualified names stand aside when the model overrides `hasMethod()`. Runtime aliases keyed by a qualified name,
+behavior overrides of `hasMethod()` and container definitions available only at runtime remain limitations. Closure
+dispatch does not consult the alias table or `hasMethod()`.
+
+The check follows the existing object-option resolver for container definitions and assignment semantics. It stands
+aside on uncertain rule shapes and types, factories, custom constructors or `__set()`, behavior-dependent assignments,
+non-validator classes and model overrides of `createValidators()` or `getValidators()`. Getters without setters are not
+unknown properties. Only written options are reported, at the rule's line; injected Yii options are not reported.
+
+Changes to the validator declaration, declared alias table, model ancestry and relevant container construction mappings
+invalidate the dependent result cache. This check does not verify required options or option value types.
 
 [Back to documentation](../README.md#documentation)
