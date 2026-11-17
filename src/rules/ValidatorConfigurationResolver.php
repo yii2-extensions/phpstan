@@ -143,19 +143,21 @@ final readonly class ValidatorConfigurationResolver
             $options[] = [(string) $key, $line, $value];
         }
 
+        // the class value Yii::createObject() selects: `__class` when present, else `class`
+        $classValue = $params['__class'] ?? $params['class'] ?? null;
+
+        $id = $classValue === null ? null : ObjectConfigurationReader::constantString($classValue);
+
+        if ($id === null) {
+            return null;
+        }
+
         $configuration = $this->resolver->resolveTypeOptions('Yii', $options, $line, $scope);
 
         if ($configuration === null || $configuration->classReflection->is(Validator::class) === false) {
             return null;
         }
 
-        // the class value Yii::createObject() selects: `__class` when present, else `class`
-        $classValue = $params['__class'] ?? $params['class'] ?? null;
-
-        $id = $classValue === null ? null : ObjectConfigurationReader::constantString($classValue);
-
-        return $id === null
-            ? null
-            : new ValidatorConfiguration($id, $configuration, $written);
+        return new ValidatorConfiguration($id, $configuration, $written);
     }
 }

@@ -58,6 +58,7 @@ final class ValidatorMissingRequiredOptionRuntimeTest extends TestCase
             null,
             null,
             InvalidConfigException::class,
+            InvalidConfigException::class,
         ];
 
         self::assertSame(
