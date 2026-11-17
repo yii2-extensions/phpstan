@@ -180,6 +180,12 @@ enum Message: string
         . 'other than a Closure throws a TypeError.';
 
     /**
+     * Error when a validation rule leaves unset the option that the `init()` of its resolved validator requires.
+     */
+    case VALIDATOR_MISSING_REQUIRED_OPTION = 'Validation rule %s in %s::rules() leaves required property %s::$%s '
+        . 'unset: its init() throws an InvalidConfigException when the option is missing or null.';
+
+    /**
      * Error when a validation rule writes an unknown option of its resolved validator.
      */
     case VALIDATOR_UNKNOWN_OPTION = 'Validation rule %s in %s::rules() sets unknown property %s::$%s: the class '
