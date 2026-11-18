@@ -34,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - docs: align `README.md` badges and Security section with the standard, add skill prompts, rule contracts and Codex metadata, and add Scorecard.
 - feat: add opt-in `yii2.validator.unknownOption` for closures, qualified classes and declared built-in aliases.
 - feat: add opt-in `yii2.validator.missingRequiredOption` for `range`, `pattern` and `filter` missing or `null` in Yii's validators.
+- feat: add opt-in `yii2.validator.invalidOptionType` for `Model::rules()` option values the created validator never accepts.
 
 ## 0.5.2 October 23, 2026
 
