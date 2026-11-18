@@ -88,12 +88,12 @@ APIs and inferred type changes. Including the extension outside `vendor/` also c
 
 ## Enable the opt-in rules
 
-`parameters.yii2.rules` holds 16 diagnostic rules, all `false` by default. They report configuration that Yii rejects or
+`parameters.yii2.rules` holds 17 diagnostic rules, all `false` by default. They report configuration that Yii rejects or
 cannot assign at runtime: unknown options and option types for `Yii::createObject()`, `new` constructions of
 `BaseObject` classes, `Widget::widget()`/`begin()`, `Controller::actions()` and behavior configurations; invalid
 `behaviors()`, `attachBehavior()` and `as` behavior definitions; incomplete `Model::rules()` entries, invalid validator
-types, unknown validator options and missing required validator options. Enable only the keys the task needs, in the
-application's NEON configuration:
+types, unknown validator options, missing required validator options and validator option types. Enable only the keys
+the task needs, in the application's NEON configuration:
 
 ```neon
 parameters:
@@ -121,11 +121,13 @@ These look like bugs and are package contracts; do not "fix" them in package or 
   narrow ignore.
 - A relative `yii2.config_path` resolves against the working directory: run from elsewhere, analysis stops with
   `Provided config path '<path>' must be a readable PHP file.`
-- `validatorUnknownOption` and `validatorMissingRequiredOption` assume Yii's declared default validator alias table.
-  Runtime alias replacements can cause false positives or missed reports; check the runtime mapping before acting.
-  Method names that are not built-in aliases stand aside. The qualified-class route also assumes no runtime alias keyed
-  by that name or behavior overriding `hasMethod()`. `validatorMissingRequiredOption` checks only the exact `in`,
-  `match` and `filter` classes; subclasses stand aside.
+- `validatorUnknownOption`, `validatorMissingRequiredOption` and `validatorInvalidOptionType` assume Yii's declared
+  default validator alias table. Runtime alias replacements can cause false positives or missed reports; check the
+  runtime mapping before acting. Method names that are not built-in aliases stand aside. The qualified-class route also
+  assumes no runtime alias keyed by that name or behavior overriding `hasMethod()`. `validatorMissingRequiredOption`
+  checks only the exact `in`, `match` and `filter` classes; subclasses stand aside. `validatorInvalidOptionType` reports
+  only written values that the native property or setter type never accepts, even with coercion; Yii `2.0.55` built-in
+  validators declare no native option types.
 - The other option-assignment rules report only when Yii's assignment path is certain; their abstentions include custom
   constructors or `__set()`, container factories and singletons, and PHPDoc-only configurations. Other rule families
   have different boundaries: the validator structure rules require inherited `Model::createValidators()` and

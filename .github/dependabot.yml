@@ -19,4 +19,10 @@ updates:
       interval: "daily"
     cooldown:
       default-days: 7
+    groups:
+      composer:
+        patterns: ["*"]
+    ignore:
+      - dependency-name: "phpunit/phpunit"
+        update-types: ["version-update:semver-major"]
     versioning-strategy: increase-if-necessary

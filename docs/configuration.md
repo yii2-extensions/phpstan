@@ -23,6 +23,7 @@ The extension registers `parameters.yii2` in `extension.neon`:
 | `rules.newUnknownOption`                | `false`               | Enables the [`new` unknown option rule](#options-of-new-constructions).          |
 | `rules.validatorIncompleteRule`         | `false`               | Enables the [incomplete validation rule check](#incomplete-validation-rules).    |
 | `rules.validatorInvalidDefinition`      | `false`               | Enables the [invalid validator type check](#invalid-validator-types).            |
+| `rules.validatorInvalidOptionType`      | `false`               | Enables the [validator option type check](#invalid-validator-option-types).      |
 | `rules.validatorMissingRequiredOption`  | `false`               | Enables the [missing validator option check](#missing-validator-options).        |
 | `rules.validatorUnknownOption`          | `false`               | Enables the [unknown validator option check](#unknown-validator-options).        |
 | `rules.widgetInvalidOptionType`         | `false`               | Enables the [widget option type rule](#options-of-widget-calls).                 |
@@ -972,7 +973,8 @@ non-validator classes and model overrides of `createValidators()` or `getValidat
 unknown properties. Only written options are reported, at the rule's line; injected Yii options are not reported.
 
 Changes to the validator declaration, declared alias table, model ancestry and relevant container construction mappings
-invalidate the dependent result cache. This check does not verify option value types; required options belong to
+invalidate the dependent result cache. Option value types belong to
+[invalid validator option types](#invalid-validator-option-types) and required options to
 [missing validator options](#missing-validator-options).
 
 ## Missing validator options
@@ -1013,5 +1015,62 @@ container definitions available only at runtime aren't checked.
 
 Changes to the validator declarations, the declared alias table, model ancestry and the container definitions of the
 validator invalidate the dependent result cache.
+
+## Invalid validator option types
+
+Enable `yii2.rules.validatorInvalidOptionType` to report `yii2.validator.invalidOptionType` for option values written in
+`Model::rules()` that the validator Yii creates can never accept:
+
+```neon
+parameters:
+    yii2:
+        rules:
+            validatorInvalidOptionType: true
+```
+
+```php
+final class LimitValidator extends yii\validators\Validator
+{
+    public int $limit = 10;
+
+    public function setTags(array $tags): void {}
+}
+
+final class Article extends yii\base\Model
+{
+    public function rules(): array
+    {
+        return [
+            ['count', LimitValidator::class, 'limit' => '20', 'tags' => ['news']], // valid
+            ['count', LimitValidator::class, 'limit' => 'all', 'tags' => 'news'],  // two reported
+        ];
+    }
+}
+```
+
+`Validator::createValidator()` passes the rule options to `Yii::createObject()`, so such a value throws `TypeError` when
+the model creates its validators, including those of inactive scenarios. Each option is reported at the rule's line; the
+message names the rule, the model, the created class and option, the value type and the type that the property or setter
+accepts.
+
+The values checked and the exceptions are those of the [option type rule](#invalid-yiicreateobject-option-types): PHP's
+weak type coercion is applied, PHPDoc types are not consulted, partly incompatible types, `callable` parameters, objects
+for types that accept `string`, read-only, hooked and asymmetric-visibility properties and private setters stand aside,
+and a `yii\di\Instance` value is also checked as the object or `null` that the container may resolve it to. Yii's
+built-in validators declare no native option types in Yii `2.0.55`; Yii `22` declares `clientScript` as
+`array|ClientValidatorScriptInterface|null` on several of them, so `['name', 'trim', 'clientScript' => 'script']` is
+reported there, while on Yii `2.0.55` the same option belongs to
+[unknown validator options](#unknown-validator-options).
+
+The check uses the dispatch of [unknown validator options](#unknown-validator-options), including its declared default
+alias table assumption, `__class`, container definitions and its abstentions. Only options written in the rule are
+reported: defaults of an array alias, such as the `type` of `datetime`, and the options that Yii sets, such as
+`attributes`, are not, even when a container definition maps the alias class to one that rejects them. Each option is
+checked on its own, so a value is also reported after an unknown option that Yii rejects first. Values supplied by
+container definitions and validation inside `init()` or `validate()` aren't checked. Unknown names belong to
+`validatorUnknownOption` and missing required options to `validatorMissingRequiredOption`.
+
+Changes to the declaration of the created validator or one of its parents, the declared alias table, model ancestry and
+the container definitions of the validator invalidate the dependent result cache.
 
 [Back to documentation](../README.md#documentation)

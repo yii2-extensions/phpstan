@@ -180,6 +180,13 @@ enum Message: string
         . 'other than a Closure throws a TypeError.';
 
     /**
+     * Error when a validation rule writes an option value that the property or setter of its resolved validator never
+     * accepts.
+     */
+    case VALIDATOR_INVALID_OPTION_TYPE = 'Validation rule %s in %s::rules() sets %s::$%s to %s, but %s accepts only '
+        . '%s, even with type coercion.';
+
+    /**
      * Error when a validation rule leaves unset the option that the `init()` of its resolved validator requires.
      */
     case VALIDATOR_MISSING_REQUIRED_OPTION = 'Validation rule %s in %s::rules() leaves required property %s::$%s '
