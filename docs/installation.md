@@ -18,7 +18,7 @@ The selected Yii release may require a newer PHP version.
 Install the extension as a development dependency:
 
 ```bash
-composer require --dev yii2-extensions/phpstan:^0.5
+composer require --dev yii2-extensions/phpstan:^0.6
 ```
 
 See [migration](migration.md) when updating an existing integration.

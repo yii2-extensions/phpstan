@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.5.3 Under development
+## 0.6.0 Under development
 
 - fix: stop applying the configured application's members and components to unrelated application receivers, such as console under Web.
 - docs: document that `config_path` can't rely on `bootstrapFiles`, recommend idempotent `require_once` loading and test the order.
@@ -35,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add opt-in `yii2.validator.unknownOption` for closures, qualified classes and declared built-in aliases.
 - feat: add opt-in `yii2.validator.missingRequiredOption` for `range`, `pattern` and `filter` missing or `null` in Yii's validators.
 - feat: add opt-in `yii2.validator.invalidOptionType` for `Model::rules()` option values the created validator never accepts.
+- chore: prepare `0.6.0` with `^0.6` install commands, application receiver and type migration notes, and maintainer files excluded from archives.
+- docs: updated installation commands and migration notes.
 
 ## 0.5.2 October 23, 2026
 

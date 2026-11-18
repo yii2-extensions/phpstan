@@ -1,5 +1,52 @@
 # Migration guide
 
+## Upgrading to 0.6.0
+
+The requirements don't change. The new configuration rules are disabled by default and report nothing until you enable
+them under `parameters.yii2.rules`; see [NEON parameters](configuration.md#neon-parameters). Two fixes can change the
+errors an existing analysis reports.
+
+### Application receivers
+
+The configured application's components and members now apply only to `Yii::$app` and to receivers typed as the
+configured application class, a subclass of it, or an ancestor of it, such as `yii\base\Application`. A receiver typed
+as an unrelated application class keeps its own members and no longer receives the configured components. For a
+`yii\console\Application $app` parameter analyzed under a Web description:
+
+| Expression                               | Before (0.5.x)            | After (0.6.0)                      |
+| ---------------------------------------- | ------------------------- | ---------------------------------- |
+| `$app->request`                          | `yii\web\Request`         | `yii\console\Request`              |
+| `$app->notifier`, a configured component | `app\components\Notifier` | not resolved; calls act on `mixed` |
+| `Yii::$app->notifier`                    | `app\components\Notifier` | `app\components\Notifier`          |
+
+New errors can appear in such code, such as `method.notFound` for `yii\console\Request::getBodyParams()` and, at level 9
+or higher, `method.nonObject` and `return.type` for calls on a configured component. Errors can also disappear, such as
+`method.notFound` for `yii\web\Request::getParams()` on a console receiver; remove the baseline entries and
+`ignoreErrors` patterns PHPStan reports as unmatched. Analyze console paths with their own description that selects
+`yii\console\Application`, as described in
+[Web, console and custom applications](configuration.md#web-console-and-custom-applications).
+
+### Application type validation
+
+`phpstan.application_type` must name `yii\base\Application` or a class extending it that PHPStan can discover. In 0.5.x,
+an unknown class or a class that isn't an application was accepted as the type of `Yii::$app`, which led to errors such
+as `class.notFound` for an unknown class, or `property.notFound` for a configured component under `yii\base\Component`.
+Now the analysis stops with an internal error, and the result is incomplete until the value is fixed:
+
+```text
+Application type 'app\MissingApplication' in 'phpstan.application_type' is an unknown class; it must be
+'yii\base\Application' or a class extending it that PHPStan can discover.
+```
+
+Correct the value, or make the class discoverable through Composer autoloading, an analyzed path or `bootstrapFiles`;
+see [Web, console and custom applications](configuration.md#web-console-and-custom-applications).
+
+### Verify the upgrade
+
+Run every analysis configuration, such as the Web and console ones, with `vendor/bin/phpstan analyse -c <file>`. The
+absence of an internal error with the message `Application type '<value>' in 'phpstan.application_type' ...` confirms
+the application type. Review new and unmatched errors on application receivers as described above.
+
 ## PHP 8.3 requirement
 
 PHP 8.3 or later is now required. Update the PHP runtime used for analysis, CI and development containers. If the

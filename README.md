@@ -37,7 +37,7 @@
 ### Installation
 
 ```bash
-composer require --dev yii2-extensions/phpstan:^0.5
+composer require --dev yii2-extensions/phpstan:^0.6
 ```
 
 ### Quick start
