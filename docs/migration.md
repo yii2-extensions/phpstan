@@ -21,9 +21,9 @@ as an unrelated application class keeps its own members and no longer receives t
 
 New errors can appear in such code, such as `method.notFound` for `yii\console\Request::getBodyParams()` and, at level 9
 or higher, `method.nonObject` and `return.type` for calls on a configured component. Errors can also disappear, such as
-`method.notFound` for `yii\web\Request::getParams()` on a console receiver; remove the baseline entries and
-`ignoreErrors` patterns PHPStan reports as unmatched. Analyze console paths with their own description that selects
-`yii\console\Application`, as described in
+`method.notFound` for `yii\web\Request::getParams()` on a console receiver; remove a baseline entry or `ignoreErrors`
+pattern only when every analysis configuration that uses it reports it as unmatched. Analyze console paths with their
+own description that selects `yii\console\Application`, as described in
 [Web, console and custom applications](configuration.md#web-console-and-custom-applications).
 
 ### Application type validation
@@ -45,7 +45,8 @@ see [Web, console and custom applications](configuration.md#web-console-and-cust
 
 Run every analysis configuration, such as the Web and console ones, with `vendor/bin/phpstan analyse -c <file>`. The
 absence of an internal error with the message `Application type '<value>' in 'phpstan.application_type' ...` confirms
-the application type. Review new and unmatched errors on application receivers as described above.
+the application type when the analyzed code reads `Yii::$app` or an application property; without such reads, the class
+isn't checked. Review new and unmatched errors on application receivers as described above.
 
 ## PHP 8.3 requirement
 

@@ -35,7 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - feat: add opt-in `yii2.validator.unknownOption` for closures, qualified classes and declared built-in aliases.
 - feat: add opt-in `yii2.validator.missingRequiredOption` for `range`, `pattern` and `filter` missing or `null` in Yii's validators.
 - feat: add opt-in `yii2.validator.invalidOptionType` for `Model::rules()` option values the created validator never accepts.
-- chore: prepare `0.6.0` with `^0.6` install commands, application receiver and type migration notes, and maintainer files excluded from archives.
 - docs: updated installation commands and migration notes.
 
 ## 0.5.2 October 23, 2026
