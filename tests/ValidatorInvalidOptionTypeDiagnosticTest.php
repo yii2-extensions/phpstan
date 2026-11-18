@@ -119,7 +119,7 @@ final class ValidatorInvalidOptionTypeDiagnosticTest extends TestCase
 
                 public function limit(): Limit
                 {
-                    return \Yii::createObject(['class' => Limit::class, 'limit' => 'all']);
+                    return \yii\BaseYii::createObject(['class' => Limit::class, 'limit' => 'all']);
                 }
             }
 
