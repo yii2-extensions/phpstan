@@ -16,6 +16,7 @@ use yii\validators\{TrimValidator, Validator};
 use yii2\extensions\phpstan\tests\data\rule\validator\type\{
     AliasDefaultModel,
     ClientScriptModel,
+    InlineMethodModel,
     MethodOverrideModel,
     ReportedModel,
     UncertainModel,
@@ -82,6 +83,30 @@ final class ValidatorInvalidOptionTypeRuntimeTest extends TestCase
             [$rejection, $rejection, property_exists(TrimValidator::class, 'clientScript') ? null : $rejection],
             self::outcomes(new ClientScriptModel()),
             "Only a declared 'clientScript' must reach its type check.",
+        );
+    }
+
+    public function testRejectEveryClosureRuleOfAnIncompatibleInlineMapping(): void
+    {
+        $config = require dirname(__DIR__) . '/config/validator-type-inline-config.php';
+
+        $definitions = is_array($config) && is_array($config['container'] ?? null)
+            ? $config['container']['definitions'] ?? null
+            : null;
+
+        self::assertIsArray(
+            $definitions,
+            'Inline analysis configuration must hold container definitions.',
+        );
+
+        Yii::$container = new Container();
+
+        Yii::$container->setDefinitions($definitions);
+
+        self::assertSame(
+            [TypeError::class, TypeError::class, TypeError::class, null],
+            self::outcomes(new InlineMethodModel()),
+            "Yii must assign the closure to 'method' whether or not the rule writes it.",
         );
     }
 

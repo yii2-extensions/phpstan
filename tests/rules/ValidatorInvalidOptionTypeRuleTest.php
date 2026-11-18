@@ -113,7 +113,7 @@ final class ValidatorInvalidOptionTypeRuleTest extends RuleTestCase
             ["'tags' => 'news'", 3, $typed, 'tags', "'news'", 'array', "{$typed}::setTags()"],
             ["'list' => 'a'", 4, $typed, 'list', "'a'", 'array'],
             ["'list' => 'a'", 4, $typed, 'limit', "''", 'int'],
-            ["'__class' => TypedValidator::class", 5, $typed, 'limit', "'all'", 'int'],
+            ["'__class' => TypedValidator::class", 5, $typed, 'tags', "'news'", 'array', "{$typed}::setTags()"],
             ["'app\\validators\\Limited'", 6, $typed, 'limit', 'array{1}', 'int'],
             ["['count', 'string', 'limit'", 7, TypedStringValidator::class, 'limit', "'all'", 'int'],
             ["'on' => 'inactive'", 8, $typed, 'limit', "'all'", 'int'],

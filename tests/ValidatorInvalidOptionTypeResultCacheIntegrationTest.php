@@ -89,9 +89,16 @@ final class ValidatorInvalidOptionTypeResultCacheIntegrationTest extends TestCas
 
         $this->writeChange(null);
 
+        $reverted = $this->analyse();
+
+        self::assertGreaterThanOrEqual(
+            1,
+            self::reanalysedFiles($reverted['stderr'], 'Reverted'),
+            'Model must be reanalysed from the restored result cache.',
+        );
         self::assertSame(
             $before,
-            $this->analyse()['results'],
+            $reverted['results'],
             'Reverted warm results must restore the diagnostics.',
         );
 

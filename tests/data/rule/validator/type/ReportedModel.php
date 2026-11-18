@@ -22,7 +22,7 @@ final class ReportedModel extends Model
             ['count', TypedValidator::class, 'label' => ['short']],
             ['count', TypedValidator::class, 'tags' => 'news'],
             ['count', TypedValidator::class, 'list' => 'a', 'limit' => ''],
-            ['count', 'string', '__class' => TypedValidator::class, 'limit' => 'all'],
+            ['count', 'string', '__class' => TypedValidator::class, 'tags' => 'news'],
             ['count', 'app\validators\Limited', 'limit' => [1]],
             ['count', 'string', 'limit' => 'all'],
             ['count', TypedValidator::class, 'limit' => 'all', 'on' => 'inactive'],

@@ -1029,14 +1029,16 @@ parameters:
 ```
 
 ```php
-final class LimitValidator extends yii\validators\Validator
+namespace app\models;
+
+final class LimitValidator extends \yii\validators\Validator
 {
     public int $limit = 10;
 
     public function setTags(array $tags): void {}
 }
 
-final class Article extends yii\base\Model
+final class Article extends \yii\base\Model
 {
     public function rules(): array
     {
@@ -1063,12 +1065,14 @@ reported there, while on Yii `2.0.55` the same option belongs to
 [unknown validator options](#unknown-validator-options).
 
 The check uses the dispatch of [unknown validator options](#unknown-validator-options), including its declared default
-alias table assumption, `__class`, container definitions and its abstentions. Only options written in the rule are
-reported: defaults of an array alias, such as the `type` of `datetime`, and the options that Yii sets, such as
-`attributes`, are not, even when a container definition maps the alias class to one that rejects them. Each option is
-checked on its own, so a value is also reported after an unknown option that Yii rejects first. Values supplied by
-container definitions and validation inside `init()` or `validate()` aren't checked. Unknown names belong to
-`validatorUnknownOption` and missing required options to `validatorMissingRequiredOption`.
+alias table assumption, `__class`, container definitions and its abstentions: a class name without a namespace that
+isn't a built-in alias stands aside, because Yii may call a model method of that name. Only options written in the rule
+are reported: defaults of an array alias, such as the `type` of `datetime`, and the values that Yii sets, `attributes`
+and the closure that a closure rule assigns to `method`, are not, even when written or when a container definition maps
+the created class to one that rejects them. Each option is checked on its own, so a value is also reported after an
+unknown option that Yii rejects first. Values supplied by container definitions and validation inside `init()` or
+`validate()` aren't checked. Unknown names belong to `validatorUnknownOption` and missing required options to
+`validatorMissingRequiredOption`.
 
 Changes to the declaration of the created validator or one of its parents, the declared alias table, model ancestry and
 the container definitions of the validator invalidate the dependent result cache.
