@@ -17,14 +17,16 @@ permissions:
 
 jobs:
   phpstan:
-    uses: yii2-framework/actions/.github/workflows/phpstan.yml@7a2d60325d59c5c9377fd445c912f2f1bfacf9d9 # v2.0.2
+    uses: yii2-framework/actions/.github/workflows/phpstan.yml@e3e99bd1c54fb350911bf446690e6146acf7660d # v2.0.6
     with:
-      php-version: '["8.3","8.5"]'
+      ignore-platform-reqs-php-version: "[8.6]"
+      php-version: "[8.3, 8.4, 8.5, 8.6]"
       concurrency-group: phpstan-${{ github.workflow }}-${{ github.ref }}
   phpstan-console:
-    uses: yii2-framework/actions/.github/workflows/phpstan.yml@7a2d60325d59c5c9377fd445c912f2f1bfacf9d9 # v2.0.2
+    uses: yii2-framework/actions/.github/workflows/phpstan.yml@e3e99bd1c54fb350911bf446690e6146acf7660d # v2.0.6
     with:
-      php-version: '["8.3","8.5"]'
+      ignore-platform-reqs-php-version: "[8.6]"
+      php-version: "[8.3, 8.4, 8.5, 8.6]"
       configuration: "phpstan-console.neon"
       concurrency-group: |
         phpstan-console-${{ github.workflow }}-${{ github.ref }}
