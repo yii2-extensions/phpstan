@@ -95,7 +95,7 @@ Run static analysis with the console application configuration (`phpstan-console
 composer static-console
 ```
 
-Static analysis targets PHP 8.3 and runs on PHP 8.3, 8.5 and 8.6 in CI, with both configurations.
+Static analysis targets PHP 8.3 and runs on PHP 8.3, 8.4, 8.5 and 8.6 in CI, with both configurations.
 
 ## Unit tests (PHPUnit)
 
