@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 0.6.1 Under development
 
+- ci: update shared workflows to `v2.0.6`, add PHP `8.6`.
+
 ## 0.6.0 November 18, 2026
 
 - fix: stop applying the configured application's members and components to unrelated application receivers, such as console under Web.

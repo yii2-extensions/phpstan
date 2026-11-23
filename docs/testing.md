@@ -95,7 +95,7 @@ Run static analysis with the console application configuration (`phpstan-console
 composer static-console
 ```
 
-Static analysis targets PHP 8.3 and runs on PHP 8.3 and 8.5 in CI, with both configurations.
+Static analysis targets PHP 8.3 and runs on PHP 8.3, 8.4, 8.5 and 8.6 in CI, with both configurations.
 
 ## Unit tests (PHPUnit)
 
@@ -177,7 +177,8 @@ composer show yiisoft/yii2
 vendor/bin/phpstan --version
 ```
 
-The library's lockfile is ignored; CI resolves dependencies for Yii 2.0.55 and Yii 22 on PHP 8.3, 8.4 and 8.5.
+The library's lockfile is ignored; CI resolves dependencies for Yii 2.0.55 and Yii 22 on PHP 8.3, 8.4, 8.5 and 8.6. Only
+the PHP 8.6 jobs pass `--ignore-platform-reqs` to Composer.
 
 ## Package checks
 
