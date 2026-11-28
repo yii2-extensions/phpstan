@@ -1,5 +1,10 @@
 # Upgrade Guide
 
+## 0.6.1
+
+- Remove `ignoreErrors` or baseline entries for the `Yii::$app = null` assignment, which is no longer reported; see the
+  [migration notes](docs/migration.md#upgrading-to-061).
+
 ## 0.6.0
 
 - Follow the [migration notes](docs/migration.md#upgrading-to-060) for application receivers unrelated to the configured

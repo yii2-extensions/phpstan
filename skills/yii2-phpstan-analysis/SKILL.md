@@ -30,7 +30,7 @@ supplied Markdown or package `docs/`. Otherwise check these published pages agai
 - Components, params, behaviors, container definitions and opt-in rules:
   <https://yii2-framework.github.io/docs/extensions/phpstan/configuration/index.md>.
 - Inference recipes and query limitations: <https://yii2-framework.github.io/docs/extensions/phpstan/examples/index.md>.
-- Upgrade notes for 0.5.0 and 0.6.0, with inferred type and extension API changes:
+- Upgrade notes for each release since 0.5.0, with inferred type and extension API changes:
   <https://yii2-framework.github.io/docs/extensions/phpstan/migration/index.md>.
 
 For documentation outside the local checkout, use the package source at
@@ -142,8 +142,9 @@ that extends or registers them directly follows the migration guide's removed an
 ## Verify and report
 
 Run PHPStan with the selected configuration and inspect relevant types using a minimal probe. Check Web and console
-separately when both are affected, and remove temporary probes after diagnosis. Use `docs/testing.md` for package checks
-and the application's tests for its integration.
+separately when both are affected, and remove temporary probes after diagnosis. Use the application's tests for its
+integration. The package's own checks are described in `docs/testing.md` of a package source checkout; an installed
+package doesn't ship that file.
 
 Report the installed versions, configurations, inferred types and checks performed, including any runtime checks still
 needed. Report dependency resolution, native client discovery, skill activation and PHPStan analysis separately.

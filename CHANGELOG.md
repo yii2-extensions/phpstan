@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - ci: update shared workflows to `v2.0.6`, add PHP `8.6`.
 - fix: stop reporting `assign.propertyType` when code resets the application with `Yii::$app = null`; other values are still reported.
+- docs: add a recipe for reusing the application's own configuration as the analysis description.
 
 ## 0.6.0 November 18, 2026
 
