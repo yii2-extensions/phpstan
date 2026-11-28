@@ -70,7 +70,7 @@ return [
         'feed' => ['class' => app\components\Feed::class],
         // identityClass also types Yii::$app->user->identity.
         'user' => [
-            'class' => yii\web\User::class, 
+            'class' => yii\web\User::class,
             'identityClass' => app\models\User::class,
         ],
     ],
