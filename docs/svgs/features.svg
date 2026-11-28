@@ -1,4 +1,4 @@
-<svg viewBox="0 0 1200 380" width="100%" height="340" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 1200 500" width="100%" height="447" xmlns="http://www.w3.org/2000/svg">
     <style>
         text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         .box-bg { fill: #e6f4ea; stroke: #a7cdb3; stroke-width: 1; }
@@ -9,48 +9,64 @@
     <g>
         <rect class="box-bg" x="20" y="20" width="570" height="100" rx="6"/>
         <rect x="20" y="20" width="4" height="100" fill="#1f883d"/>
-        <text class="title" x="40" y="50">ActiveRecord &amp; ActiveQuery Analysis</text>
+        <text class="title" x="40" y="50">Active Record &amp; Active Query</text>
         <text class="content" x="40" y="78">asArray() row shapes &#8226; getAttribute() types</text>
-        <text class="content" x="40" y="98">Model inference for non-generic query classes</text>
+        <text class="content" x="40" y="98">Model binding for custom query classes</text>
     </g>
 
     <g>
         <rect class="box-bg" x="610" y="20" width="570" height="100" rx="6"/>
         <rect x="610" y="20" width="4" height="100" fill="#1f883d"/>
-        <text class="title" x="630" y="50">Application Component Resolution</text>
-        <text class="content" x="630" y="78">Auto type inference &#8226; behavior reflection</text>
-        <text class="content" x="630" y="98">Custom configurations &#8226; user component</text>
+        <text class="title" x="630" y="50">Application Components</text>
+        <text class="content" x="630" y="78">Yii::$app typed as the configured application</text>
+        <text class="content" x="630" y="98">Component classes &#8226; user identity class</text>
     </g>
 
     <g>
         <rect class="box-bg" x="20" y="140" width="570" height="100" rx="6"/>
         <rect x="20" y="140" width="4" height="100" fill="#1f883d"/>
-        <text class="title" x="40" y="170">Behavior Integration</text>
-        <text class="content" x="40" y="198">ServiceMap configuration &#8226; hierarchical resolution</text>
-        <text class="content" x="40" y="218">Property &amp; method types</text>
+        <text class="title" x="40" y="170">Application Params</text>
+        <text class="content" x="40" y="198">Array shape from the configured values</text>
+        <text class="content" x="40" y="218">Nested arrays &#8226; inherited module params</text>
     </g>
 
     <g>
         <rect class="box-bg" x="610" y="140" width="570" height="100" rx="6"/>
         <rect x="610" y="140" width="4" height="100" fill="#1f883d"/>
-        <text class="title" x="630" y="170">Dependency Injection Container</text>
-        <text class="content" x="630" y="198">Service map integration &#8226; type-safe resolution</text>
-        <text class="content" x="630" y="218">Closures &amp; singletons</text>
+        <text class="title" x="630" y="170">Behaviors</text>
+        <text class="content" x="630" y="198">Properties and methods of attached behaviors</text>
+        <text class="content" x="630" y="218">Native members and PHPDoc</text>
     </g>
 
     <g>
         <rect class="box-bg" x="20" y="260" width="570" height="100" rx="6"/>
         <rect x="20" y="260" width="4" height="100" fill="#1f883d"/>
-        <text class="title" x="40" y="290">Framework Integration</text>
-        <text class="content" x="40" y="318">Header collection types &#8226; logger messages</text>
-        <text class="content" x="40" y="338">Yii2 constants support</text>
+        <text class="title" x="40" y="290">Container &amp; Service Locator</text>
+        <text class="content" x="40" y="318">Definitions, singletons, aliases and typed factories</text>
+        <text class="content" x="40" y="338">Component IDs kept apart from container IDs</text>
     </g>
 
     <g>
         <rect class="box-bg" x="610" y="260" width="570" height="100" rx="6"/>
         <rect x="610" y="260" width="4" height="100" fill="#1f883d"/>
-        <text class="title" x="630" y="290">Service Locator Resolution</text>
-        <text class="content" x="630" y="318">Dynamic type inference &#8226; priority-based resolution</text>
-        <text class="content" x="630" y="338">Fallback support</text>
+        <text class="title" x="630" y="290">Framework Integration</text>
+        <text class="content" x="630" y="318">Header collection types &#8226; logger messages</text>
+        <text class="content" x="630" y="338">YII_DEBUG and YII_ENV constants</text>
+    </g>
+
+    <g>
+        <rect class="box-bg" x="20" y="380" width="570" height="100" rx="6"/>
+        <rect x="20" y="380" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="40" y="410">Opt-in Configuration Rules</text>
+        <text class="content" x="40" y="438">Unknown options &#8226; invalid option types</text>
+        <text class="content" x="40" y="458">createObject() &#8226; new &#8226; widgets &#8226; behaviors &#8226; validators &#8226; actions</text>
+    </g>
+
+    <g>
+        <rect class="box-bg" x="610" y="380" width="570" height="100" rx="6"/>
+        <rect x="610" y="380" width="4" height="100" fill="#1f883d"/>
+        <text class="title" x="630" y="410">PHP 8.3+</text>
+        <text class="content" x="630" y="438">Supports Yii 2.0.55 and Yii 22.0</text>
+        <text class="content" x="630" y="458">Requires PHPStan 2.3 or later</text>
     </g>
 </svg>
