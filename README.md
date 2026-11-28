@@ -48,8 +48,8 @@ Requirements, version selection and bootstrap files are covered in the
 ### Usage
 
 A blog: `Article` declares `@property` tags for `id`, `title` and `status`, and its `find()` returns an `ArticleQuery`
-with a `published()` scope. `SlugBehavior` adds a `slug` property and a `permalink()` method, `Feed` is a component with
-a string `url` and an integer `limit`, and `User` is the identity class.
+with a `published(): static` scope. `SlugBehavior` adds a `slug` property and a `permalink()` method, `Feed` is a
+component with a string `url` and an integer `limit`, and `User` is the identity class.
 
 Create `config/phpstan.php`. PHPStan reads it to learn what the application contains; it never configures the running
 application:
