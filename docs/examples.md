@@ -51,6 +51,52 @@ Scalars are widened, so `100` becomes `int`. The params shape also applies to in
 single class return type for precise service inference; its body alone does not provide that type. Configuring a core
 component such as `request` without a class preserves the application's annotated property type.
 
+## Reuse the application configuration
+
+The analysis sections have the names and shapes of Yii's own configuration, so `config/phpstan.php` can start from the
+file the application already has instead of repeating it. Other keys, such as `id`, `basePath`, `bootstrap` or
+`modules`, are ignored:
+
+```php
+<?php
+
+declare(strict_types=1);
+
+// The extension doesn't define YII_ENV: define every constant the configuration reads before requiring it.
+defined('YII_ENV') || define('YII_ENV', 'test');
+
+$config = require __DIR__ . '/web.php';
+
+// Analysis-only additions.
+$config['components']['user']['class'] = yii\web\User::class;
+$config['behaviors'] = [
+    app\models\Article::class => [app\behaviors\SlugBehavior::class],
+];
+
+return $config;
+```
+
+Components, params and container definitions then follow the application without a second list to maintain. A component
+defined as a container ID, such as `'mailer' => MailerInterface::class`, resolves through the container section of the
+same file. The added `class` gives `Yii::$app->user->identity` the configured identity class; see
+[generic components](configuration.md#generic-components).
+
+Reuse the whole file only when requiring it has no side effects. A configuration that reads a constant nobody defined
+stops the analysis with an error such as `Undefined constant "YII_ENV"`. When the file throws without environment
+values, reads secrets or opens connections, reuse only its side-effect-free parts and list the rest:
+
+```php
+return [
+    'params' => require __DIR__ . '/params.php',
+    'components' => [
+        'cache' => ['class' => yii\caching\FileCache::class],
+    ],
+];
+```
+
+For a console entry point, build a second description from `console.php` and select its application class, as described
+below.
+
 ## Separate console analysis
 
 For a console description, select `yii\console\Application` explicitly under `phpstan.application_type` and avoid

@@ -65,7 +65,9 @@ return [
 
 This file is executed with `require` and must return an array. It describes types for analysis rather than configuring a
 running application. Keep it free of database connections and other startup side effects. See
-[configuration](configuration.md) for params, components, factories and behaviors.
+[configuration](configuration.md) for params, components, factories and behaviors. An application whose own
+configuration loads without side effects can [reuse it](examples.md#reuse-the-application-configuration) instead of
+repeating it.
 
 For no configuration-derived types, omit `config_path` or set it to `''`. The defaults are a Web application and
 unshaped params. See [source-checkout stubs](migration.md#upgrading-to-050) if including the extension outside

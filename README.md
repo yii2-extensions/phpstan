@@ -87,6 +87,11 @@ return [
 ];
 ```
 
+The sections have the shapes of Yii's own configuration, so an application whose configuration loads without side
+effects can
+[reuse it](https://github.com/yii2-extensions/phpstan/blob/main/docs/examples.md#reuse-the-application-configuration)
+instead of repeating it.
+
 Create `phpstan.neon` in the project root, choosing paths that exist in your application, and run
 `vendor/bin/phpstan analyse`:
 
