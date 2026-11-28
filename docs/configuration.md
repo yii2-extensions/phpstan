@@ -106,8 +106,8 @@ the application kinds swapped.
 
 Resetting the application with `Yii::$app = null` or `yii\BaseYii::$app = null` isn't reported, because Yii allows it
 and test suites rely on it: the extension ignores the `assign.propertyType` error for that `null` assignment only.
-Assigning any other incompatible value is still reported, and a read after the reset in the same scope is `null`, so
-`Yii::$app->getRequest()` there is reported as `method.nonObject`.
+Assigning any other incompatible value is still reported. A read after the reset in the same scope is `null` only for
+the spelling that was reset: after `Yii::$app = null`, `Yii::$app->getRequest()` is reported as `method.nonObject`.
 
 Web and console are analyzed separately so that each run keeps the exact application type. Code included in both runs,
 such as a helper that checks the application kind, receives these diagnostics in the run where its check is constant.
