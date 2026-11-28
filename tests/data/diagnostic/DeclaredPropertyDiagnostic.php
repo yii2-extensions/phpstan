@@ -19,6 +19,11 @@ final class DeclaredPropertyDiagnostic
         return Yii::$app ?? $fallback;
     }
 
+    public function assignOtherType(): void
+    {
+        Yii::$app = 'application';
+    }
+
     public function hasApplication(): bool
     {
         return isset(Yii::$app);
@@ -62,10 +67,5 @@ final class DeclaredPropertyDiagnostic
         Yii::$app = null;
 
         Yii::$app->getRequest();
-    }
-
-    public function assignOtherType(): void
-    {
-        Yii::$app = 'application';
     }
 }
