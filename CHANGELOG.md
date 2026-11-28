@@ -5,9 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 0.6.1 Under development
+## 0.6.1 November 28, 2026
 
-- ci: update shared workflows to `v2.0.6`, add PHP `8.6`.
+- ci: update shared workflows to `v2.0.8`, add PHP `8.6`.
 - fix: stop reporting `assign.propertyType` when code resets the application with `Yii::$app = null`; other values are still reported.
 - docs: add a recipe for reusing the application's own configuration as the analysis description.
 
