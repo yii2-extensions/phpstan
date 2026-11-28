@@ -1,5 +1,16 @@
 # Migration guide
 
+## Upgrading to 0.6.1
+
+Resetting the application with `Yii::$app = null` or `yii\BaseYii::$app = null` is no longer reported as
+`assign.propertyType`; see [non-null `Yii::$app`](configuration.md#non-null-yiiapp). Reads keep the selected application
+class, and assigning any other incompatible value is still reported.
+
+An entry under `ignoreErrors` or in a baseline that matched this error no longer matches anything. PHPStan reports it as
+`Ignored error pattern ... was not matched in reported errors.` with the identifier `ignore.unmatched`, unless
+`reportUnmatchedIgnoredErrors` is `false`. Remove the entry or regenerate the baseline. An inline `@phpstan-ignore`
+comment on the assignment isn't reported as unmatched; remove it when convenient.
+
 ## Upgrading to 0.6.0
 
 The requirements don't change. The new configuration rules are disabled by default and report nothing until you enable
