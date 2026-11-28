@@ -26,7 +26,6 @@ jobs:
       composer-command: update --with yiisoft/yii2:${{ matrix.yii }}
       concurrency-group: phpstan-${{ matrix.yii }}-${{ github.workflow }}-${{ github.ref }}
       ignore-platform-reqs-php-version: "[8.6]"
-      php-version: "[8.3, 8.4, 8.5, 8.6]"
   phpstan-console:
     strategy:
       fail-fast: false
@@ -36,6 +35,5 @@ jobs:
     with:
       composer-command: update --with yiisoft/yii2:${{ matrix.yii }}
       concurrency-group: phpstan-console-${{ matrix.yii }}-${{ github.workflow }}-${{ github.ref }}
-      ignore-platform-reqs-php-version: "[8.6]"
-      php-version: "[8.3, 8.4, 8.5, 8.6]"
       configuration: "phpstan-console.neon"
+      ignore-platform-reqs-php-version: "[8.6]"
