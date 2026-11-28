@@ -99,11 +99,15 @@ impossible. With a Web application, PHPStan 2.3.1 reports:
 - `isset(Yii::$app)` as `isset.property` and `Yii::$app ?? $fallback` as `nullCoalesce.property`, from level 4;
 - `Yii::$app instanceof yii\console\Application` as `instanceof.alwaysFalse`, typing its branch as `*NEVER*`, and the
   check for the selected class as `instanceof.alwaysTrue`, from level 4; code after a branch that always returns can be
-  reported as `deadCode.unreachable`;
-- `Yii::$app = null` as `assign.propertyType`, from level 3.
+  reported as `deadCode.unreachable`.
 
 `Yii::$app === null` isn't reported, but its branch is `*NEVER*` as well. A console analysis gives the same results with
 the application kinds swapped.
+
+Resetting the application with `Yii::$app = null` or `yii\BaseYii::$app = null` isn't reported, because Yii allows it
+and test suites rely on it: the extension ignores the `assign.propertyType` error for that `null` assignment only.
+Assigning any other incompatible value is still reported, and a read after the reset in the same scope is `null`, so
+`Yii::$app->getRequest()` there is reported as `method.nonObject`.
 
 Web and console are analyzed separately so that each run keeps the exact application type. Code included in both runs,
 such as a helper that checks the application kind, receives these diagnostics in the run where its check is constant.

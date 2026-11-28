@@ -38,8 +38,6 @@
 /.github                        export-ignore
 /.gitignore                     export-ignore
 /.phpunit.cache                 export-ignore
-/.prettierignore                export-ignore
-/.prettierrc.json               export-ignore
 /.styleci.yml                   export-ignore
 /.vscode                        export-ignore
 /artifacts                      export-ignore

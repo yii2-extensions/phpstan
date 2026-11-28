@@ -57,29 +57,15 @@ composer check-dependencies
 
 ## Repository quality checks
 
-Make the CLI tools used by the shared quality workflow available on `PATH`: actionlint with its ShellCheck helper,
-codespell, EditorConfig Checker, markdownlint-cli2, Prettier and yamllint. Run all checks:
+CI runs actionlint, codespell, EditorConfig Checker, markdownlint-cli2, Prettier and yamllint through the shared
+[yii2-framework/actions](https://github.com/yii2-framework/actions) quality workflow. The repository's formatting rules
+stay in `.editorconfig`.
 
-```bash
-composer quality
-```
-
-Each tool also has its own script:
+Make actionlint and ShellCheck available on `PATH` to lint workflows locally.
 
 ```bash
 composer actionlint
-composer codespell
-composer editorconfig-checker
-composer markdownlint
-composer prettier
-composer yamllint
 ```
-
-The linter configuration lives in `.github/linters`, and the Prettier configuration in `.prettierrc.json` and
-`.prettierignore`. CI uses the same files.
-
-Check changed files and relative links. Use headings or bullets when numbered-list continuations conflict with
-EditorConfig indentation.
 
 ## Static analysis (PHPStan)
 
@@ -120,27 +106,16 @@ vendor/bin/phpunit tests/ServiceMapTest.php
 
 ## Workflow security checks
 
-Make zizmor and Gitleaks available on `PATH`. Audit the current workflow files with the same pedantic persona used by
-the shared security workflow:
+CI runs zizmor and Gitleaks through the shared security workflow. Gitleaks uses its default rules and the allowlist in
+`.github/linters/.gitleaks.toml`. The Gitleaks scan requires `GITLEAKS_LICENSE` in the workflow.
+
+Make zizmor available on `PATH` to audit the workflows locally with the same pedantic persona.
 
 ```bash
 composer zizmor
 ```
 
-Scan Git history for secrets with the repository's Gitleaks configuration:
-
-```bash
-composer gitleaks
-```
-
-Run both checks. Findings make the command fail; inspect them rather than disabling the checks.
-
-```bash
-composer security
-```
-
-Zizmor needs GitHub API access for its online audits. If the tool runs offline, report that limit separately. To request
-an offline audit explicitly:
+Zizmor needs GitHub API access for its online audits. Use the offline flag to run without API access.
 
 ```bash
 composer zizmor -- --offline

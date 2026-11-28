@@ -56,4 +56,16 @@ final class DeclaredPropertyDiagnostic
     {
         Yii::$app = null;
     }
+
+    public function resetApplicationThenRead(): void
+    {
+        Yii::$app = null;
+
+        Yii::$app->getRequest();
+    }
+
+    public function assignOtherType(): void
+    {
+        Yii::$app = 'application';
+    }
 }

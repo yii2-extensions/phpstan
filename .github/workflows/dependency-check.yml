@@ -17,6 +17,12 @@ permissions:
 
 jobs:
   composer-require-checker:
-    uses: yii2-framework/actions/.github/workflows/composer-require-checker.yml@e3e99bd1c54fb350911bf446690e6146acf7660d # v2.0.6
+    strategy:
+      fail-fast: false
+      matrix:
+        yii: ["2.0.55", "22.0.x-dev"]
+    uses: yii2-framework/actions/.github/workflows/composer-require-checker.yml@1a1132f393d2572abaf9cc1fe75c5c86fce8c211 # v2.0.8
     with:
+      composer-command: update --with yiisoft/yii2:${{ matrix.yii }}
+      concurrency-group: composer-require-checker-${{ matrix.yii }}-${{ github.workflow }}-${{ github.ref }}
       ignore-platform-reqs-php-version: "[8.6]"
