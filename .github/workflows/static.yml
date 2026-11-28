@@ -17,23 +17,13 @@ permissions:
 
 jobs:
   phpstan:
-    strategy:
-      fail-fast: false
-      matrix:
-        yii: ["2.0.55", "22.0.x-dev"]
     uses: yii2-framework/actions/.github/workflows/phpstan.yml@1a1132f393d2572abaf9cc1fe75c5c86fce8c211 # v2.0.8
     with:
-      composer-command: update --with yiisoft/yii2:${{ matrix.yii }}
-      concurrency-group: phpstan-${{ matrix.yii }}-${{ github.workflow }}-${{ github.ref }}
+      concurrency-group: phpstan-${{ github.workflow }}-${{ github.ref }}
       ignore-platform-reqs-php-version: "[8.6]"
   phpstan-console:
-    strategy:
-      fail-fast: false
-      matrix:
-        yii: ["2.0.55", "22.0.x-dev"]
     uses: yii2-framework/actions/.github/workflows/phpstan.yml@1a1132f393d2572abaf9cc1fe75c5c86fce8c211 # v2.0.8
     with:
-      composer-command: update --with yiisoft/yii2:${{ matrix.yii }}
-      concurrency-group: phpstan-console-${{ matrix.yii }}-${{ github.workflow }}-${{ github.ref }}
+      concurrency-group: phpstan-console-${{ github.workflow }}-${{ github.ref }}
       configuration: "phpstan-console.neon"
       ignore-platform-reqs-php-version: "[8.6]"
