@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\provider;
 
+use yii\base\Component;
+use yii2\extensions\phpstan\tests\support\YiiDeclaration;
+
 use function sort;
 
 /**
@@ -63,13 +66,6 @@ final class BehaviorDefinitionDiagnosticProvider
         bool $invalidOptionType,
     ): array {
         $results = [
-            // Yii's declared `behaviors()` element type rejects the array without class; the rule doesn't repeat it
-            [
-                'src/Owner.php',
-                11,
-                'return.type',
-                null,
-            ],
             // Yii's declared `attachBehavior()` parameter type rejects closures, which Yii invokes at runtime
             [
                 'src/Owner.php',
@@ -78,6 +74,18 @@ final class BehaviorDefinitionDiagnosticProvider
                 null,
             ],
         ];
+
+        $requiresClass = YiiDeclaration::requiresClassElement(Component::class, 'behaviors');
+
+        if ($requiresClass) {
+            // Yii's declared `behaviors()` element type rejects the array without class; the rule doesn't repeat it
+            $results[] = [
+                'src/Owner.php',
+                11,
+                'return.type',
+                null,
+            ];
+        }
 
         if ($asDefinition) {
             $results[] = [
@@ -101,6 +109,16 @@ final class BehaviorDefinitionDiagnosticProvider
                 'yii2.behavior.invalidDefinition',
                 null,
             ];
+
+            if ($requiresClass === false) {
+                // the declared element type accepts the array without class, so the rule reports it
+                $results[] = [
+                    'src/Owner.php',
+                    13,
+                    'yii2.behavior.invalidDefinition',
+                    null,
+                ];
+            }
         }
 
         if ($unknownOption) {
