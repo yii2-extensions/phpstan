@@ -68,7 +68,7 @@ defined('YII_ENV') || define('YII_ENV', 'test');
 $config = require __DIR__ . '/web.php';
 
 // Analysis-only additions.
-$config['components']['user']['class'] = yii\web\User::class;
+$config['components']['user']['class'] ??= yii\web\User::class;
 $config['behaviors'] = [
     app\models\Article::class => [app\behaviors\SlugBehavior::class],
 ];
@@ -79,7 +79,8 @@ return $config;
 Components, params and container definitions then follow the application without a second list to maintain. A component
 defined as a container ID, such as `'mailer' => MailerInterface::class`, resolves through the container section of the
 same file. The added `class` gives `Yii::$app->user->identity` the configured identity class; see
-[generic components](configuration.md#generic-components).
+[generic components](configuration.md#generic-components). `??=` keeps a `class` the application already sets. Omit that
+line when `user` is defined as a class name or a factory instead of an array: assigning a key to it stops the analysis.
 
 Reuse the whole file only when requiring it has no side effects. A configuration that reads a constant nobody defined
 stops the analysis with an error such as `Undefined constant "YII_ENV"`. When the file throws without environment
