@@ -165,6 +165,9 @@ $ids = $headers->get('X-Request-ID', [], false); // array<string>
 $messages = yii\log\Target::filterMessages([]); // array{}
 ```
 
+With Yii 22, a single header value also includes `false`, as in `string|false|null`: Yii returns it when the header
+exists with an empty value list.
+
 Logger and target messages are list tuples containing payload, integer level, string category, float timestamp, trace
 list and an optional memory field. Payload types depend on the installed Yii revision. Filtering preserves input key and
 tuple types while permitting an empty result.

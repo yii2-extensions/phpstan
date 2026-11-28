@@ -17,26 +17,23 @@ permissions:
 
 jobs:
   phpunit:
-    uses: yii2-framework/actions/.github/workflows/phpunit.yml@e3e99bd1c54fb350911bf446690e6146acf7660d # v2.0.6
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    name: PHPUnit tests with Yii ${{ matrix.yii }}.
+    strategy:
+      fail-fast: false
+      matrix:
+        yii: ["2.0.55", "22.0.x-dev"]
+        include:
+          - yii: "2.0.55"
+            extensions: intl, sodium
+          - yii: "22.0.x-dev"
+            extensions: sodium
+    uses: yii2-framework/actions/.github/workflows/phpunit.yml@1a1132f393d2572abaf9cc1fe75c5c86fce8c211 # v2.0.8
     with:
-      composer-command: require yiisoft/yii2:22.0.x-dev
-      concurrency-group: phpunit-${{ github.workflow }}-${{ github.ref }}
-      extensions: sodium
+      composer-command: require yiisoft/yii2:${{ matrix.yii }}
+      concurrency-group: phpunit-${{ matrix.yii }}-${{ github.workflow }}-${{ github.ref }}
+      extensions: ${{ matrix.extensions }}
       ignore-platform-reqs-php-version: "[8.6]"
       php-version: "[8.3, 8.4, 8.5, 8.6]"
       phpunit-path: vendor/bin/paratest
-
-  phpunit-compatibility:
-    uses: yii2-framework/actions/.github/workflows/phpunit.yml@e3e99bd1c54fb350911bf446690e6146acf7660d # v2.0.6
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-    with:
-      composer-command: require yiisoft/yii2:2.0.55
-      concurrency-group: |
-        phpunit-compatibility-${{ github.workflow }}-${{ github.ref }}
-      extensions: intl, sodium
-      ignore-platform-reqs-php-version: "[8.6]"
-      php-version: "[8.3, 8.4, 8.5, 8.6]"
-      phpunit-path: vendor/bin/paratest

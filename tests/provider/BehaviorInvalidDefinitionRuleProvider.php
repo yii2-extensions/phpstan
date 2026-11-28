@@ -28,6 +28,7 @@ use yii2\extensions\phpstan\tests\support\behavior\{
     ProtectedAttachObject,
     ProtectedStaticAttachObject,
 };
+use yii2\extensions\phpstan\tests\support\YiiDeclaration;
 
 use function array_slice;
 use function sprintf;
@@ -241,6 +242,23 @@ final class BehaviorInvalidDefinitionRuleProvider
             ];
         }
 
+        if (YiiDeclaration::requiresClassElement(Component::class, 'behaviors') === false) {
+            yield 'array without class that the inherited declared type accepts' => [
+                InheritedDocBehaviorsOwner::class,
+                [
+                    [
+                        "'noClass' =>",
+                        null,
+                        self::arrayMessage(
+                            "'noClass'",
+                            InheritedDocBehaviorsOwner::class,
+                            'behaviors',
+                        ),
+                    ],
+                ],
+            ];
+        }
+
         // in the fixture's list order, which is the report order
         yield 'literal list with item lines' => [
             $owner,
@@ -392,7 +410,12 @@ final class BehaviorInvalidDefinitionRuleProvider
      */
     public static function standAsideProvider(): iterable
     {
-        yield 'array without class under the inherited declared type' => [[InheritedDocBehaviorsOwner::class]];
+        if (YiiDeclaration::requiresClassElement(Component::class, 'behaviors')) {
+            yield 'array without class that the inherited declared type rejects' => [
+                [InheritedDocBehaviorsOwner::class],
+            ];
+        }
+
         yield 'attachable definitions, including static and magic attach()' => [[ValidBehaviorsOwner::class]];
         yield 'behaviors() declared in a trait' => [[TraitBehaviorsOwner::class, BehaviorsListTrait::class]];
         yield 'class that is not a component' => [[NotComponentBehaviors::class]];

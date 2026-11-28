@@ -99,11 +99,15 @@ impossible. With a Web application, PHPStan 2.3.1 reports:
 - `isset(Yii::$app)` as `isset.property` and `Yii::$app ?? $fallback` as `nullCoalesce.property`, from level 4;
 - `Yii::$app instanceof yii\console\Application` as `instanceof.alwaysFalse`, typing its branch as `*NEVER*`, and the
   check for the selected class as `instanceof.alwaysTrue`, from level 4; code after a branch that always returns can be
-  reported as `deadCode.unreachable`;
-- `Yii::$app = null` as `assign.propertyType`, from level 3.
+  reported as `deadCode.unreachable`.
 
 `Yii::$app === null` isn't reported, but its branch is `*NEVER*` as well. A console analysis gives the same results with
 the application kinds swapped.
+
+Resetting the application with `Yii::$app = null` or `yii\BaseYii::$app = null` isn't reported, because Yii allows it
+and test suites rely on it: the extension ignores the `assign.propertyType` error for that `null` assignment only.
+Assigning any other incompatible value is still reported. A read after the reset in the same scope is `null` only for
+the spelling that was reset: after `Yii::$app = null`, `Yii::$app->getRequest()` is reported as `method.nonObject`.
 
 Web and console are analyzed separately so that each run keeps the exact application type. Code included in both runs,
 such as a helper that checks the application kind, receives these diagnostics in the run where its check is constant.
@@ -166,9 +170,22 @@ created standalone locator at runtime.
 
 ## Generic components
 
-The built-in mapping is `user: identityClass`. For an array component definition containing that key, the component
-property becomes `yii\web\User<IdentityClass>`. The identity can still be `null`; preserve null checks before reading
-its members. Generic component mapping applies to application property access, not every `get()` return type.
+The built-in mapping is `user: identityClass`. For an array component definition that sets both `class` and that key,
+the component property becomes `yii\web\User<IdentityClass>`:
+
+```php
+return [
+    'components' => [
+        'user' => ['class' => yii\web\User::class, 'identityClass' => app\models\User::class],
+    ],
+];
+```
+
+`Yii::$app->user->identity` is then `app\models\User|null`. The identity can still be `null`; preserve null checks
+before reading its members. Without `class`, the definition is a core component configured without a class, as described
+in [definition forms](#definition-forms): the property keeps the application's declared
+`yii\web\User<yii\web\IdentityInterface>` and the identity is `yii\web\IdentityInterface|null`. Generic component
+mapping applies to application property access, not every `get()` return type.
 
 Add a mapping by component ID for a custom component that actually declares a generic parameter:
 
@@ -643,8 +660,9 @@ the result without checking its type. The rule reports, with the identifier `yii
   the analysis configuration, is a concrete class that is not a `yii\base\Behavior`, has no public `attach()` method and
   no `__call()` other than the one `yii\base\BaseObject` declares, which always throws;
 - a configuration array without a non-null `__class` or `class` element that Yii can't call as a callable. In
-  `behaviors()` this is reported only when the method's declared return type accepts the array, since Yii's own
-  declaration already makes PHPStan report it.
+  `behaviors()` this is reported only when the method's declared return type accepts the array. Yii 2.0.55 declares
+  `class` as required there, so PHPStan reports the array as `return.type` and the rule stays silent; Yii 22 declares it
+  optional, so the rule reports it.
 
 `__class` takes precedence over `class`, as in `Yii::createObject()`. A class that isn't a behavior but declares a
 public `attach()`, static or not, is attached by Yii and is not reported; a missing `detach()` fails only on a later

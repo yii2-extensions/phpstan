@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace yii2\extensions\phpstan\tests\provider;
 
+use yii\base\Controller;
+use yii2\extensions\phpstan\tests\support\YiiDeclaration;
+
 use function sort;
 
 /**
@@ -76,10 +79,14 @@ final class ExternalActionDiagnosticProvider
         bool $newObject,
     ): array {
         $results = [
-            ['src/ProbeController.php', self::RETURN_LINE, 'return.type', null],
             ['src/ProbeController.php', self::FIRST_LINE + 2, 'array.duplicateKey', null],
             ['src/ProbeController.php', self::FIRST_LINE + 4, 'class.notFound', null],
         ];
+
+        if (YiiDeclaration::requiresClassElement(Controller::class, 'actions')) {
+            // Yii's declared `actions()` element type rejects the definition that has only `__class`
+            $results[] = ['src/ProbeController.php', self::RETURN_LINE, 'return.type', null];
+        }
 
         if ($unknownOption) {
             $results[] = ['src/ProbeController.php', self::FIRST_LINE, 'yii2.externalAction.unknownOption', null];

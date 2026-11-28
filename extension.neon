@@ -9,6 +9,12 @@ parameters:
         - YII_ENV_PROD
         - YII_ENV_TEST
 
+    ignoreErrors:
+        -
+            identifier: assign.propertyType
+            message: '#^Static property yii\\BaseYii(<.+>)?::\$app \(.+\) does not accept null\.$#'
+            reportUnmatched: false
+
     yii2:
         config_path: ''
         component_generics:

@@ -26,7 +26,8 @@ final class DeclaredPropertyDiagnosticProvider
                 [38, 'deadCode.unreachable'],
                 [43, 'instanceof.alwaysFalse'],
                 [52, 'nullCoalesce.offset'],
-                [57, 'assign.propertyType'],
+                [64, 'method.nonObject'],
+                [69, 'assign.propertyType'],
             ],
         ];
         yield 'web application' => [
@@ -38,7 +39,8 @@ final class DeclaredPropertyDiagnosticProvider
                 [43, 'instanceof.alwaysTrue'],
                 [47, 'deadCode.unreachable'],
                 [52, 'nullCoalesce.offset'],
-                [57, 'assign.propertyType'],
+                [64, 'method.nonObject'],
+                [69, 'assign.propertyType'],
             ],
         ];
     }
