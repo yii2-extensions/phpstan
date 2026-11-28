@@ -661,8 +661,8 @@ the result without checking its type. The rule reports, with the identifier `yii
   no `__call()` other than the one `yii\base\BaseObject` declares, which always throws;
 - a configuration array without a non-null `__class` or `class` element that Yii can't call as a callable. In
   `behaviors()` this is reported only when the method's declared return type accepts the array. Yii 2.0.55 declares
-  `class` as required there, so PHPStan reports the array as `return.type` and the rule stays silent; Yii 22 declares
-  it optional, so the rule reports it.
+  `class` as required there, so PHPStan reports the array as `return.type` and the rule stays silent; Yii 22 declares it
+  optional, so the rule reports it.
 
 `__class` takes precedence over `class`, as in `Yii::createObject()`. A class that isn't a behavior but declares a
 public `attach()`, static or not, is attached by Yii and is not reported; a missing `detach()` fails only on a later
