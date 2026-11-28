@@ -189,7 +189,7 @@ verification.
 
 - 🤖 [`yii2-phpstan-analysis` skill](https://github.com/yii2-extensions/phpstan/blob/main/docs/agents.md): extension
   setup with separate Web and console analyses, diagnosis of component, params, behavior, container and Active Record
-  inference, the opt-in configuration rules, and 0.4-to-0.5 migration.
+  inference, the opt-in configuration rules, and upgrade migration.
 - 🧭 [`yii2-framework` skill](https://yii2-framework.github.io/docs/guide/skills/yii2-framework/): Yii 22.0 application
   conventions.
 

@@ -30,7 +30,7 @@ supplied Markdown or package `docs/`. Otherwise check these published pages agai
 - Components, params, behaviors, container definitions and opt-in rules:
   <https://yii2-framework.github.io/docs/extensions/phpstan/configuration/index.md>.
 - Inference recipes and query limitations: <https://yii2-framework.github.io/docs/extensions/phpstan/examples/index.md>.
-- 0.4-to-0.5 inferred type and extension API changes:
+- Upgrade notes for 0.5.0 and 0.6.0, with inferred type and extension API changes:
   <https://yii2-framework.github.io/docs/extensions/phpstan/migration/index.md>.
 
 For documentation outside the local checkout, use the package source at
@@ -114,7 +114,8 @@ These look like bugs and are package contracts; do not "fix" them in package or 
   `false` as `$throwException`, a configured component is nullable (`yii\web\View|null`).
 - Params scalars widen to their types (`'admin@example.com'` is `string`, not a literal); without params,
   `Yii::$app->params` is `array`.
-- With the built-in `user: identityClass` mapping, `Yii::$app->user->identity` stays `<identityClass>|null`.
+- With the built-in `user: identityClass` mapping and a `user` definition that also sets `class`,
+  `Yii::$app->user->identity` is `<identityClass>|null`; without `class` it stays `yii\web\IdentityInterface|null`.
 - `asArray()` row shapes mark `@property-read` and relation keys optional, for example `slug?: string`.
 - `Yii::$app` is the selected application class, never `null`: from level 4, `isset(Yii::$app)` is reported as
   `isset.property`. Keep the stub contract; code that really runs before the application exists keeps its check and a
